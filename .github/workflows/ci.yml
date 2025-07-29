@@ -1,0 +1,51 @@
+name: AutoAudit CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    paths:  # Trigger only on relevant changes (add paths for other teams as they contribute)
+      - 'src/**'
+      - 'infrastructure/**'
+      - 'tests/**'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python/Node.js (multi-language support)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f package.json ]; then npm install; fi
+      - name: Lint code
+        run: |
+          pip install flake8 && flake8 src/ infrastructure/ || true  # Lint Python
+          npm run lint || true  # Assuming ESLint for JS (add to teams' folders)
+      - name: Run tests
+        run: |
+          pytest tests/ || true  # Unit/integration tests
+          npm test || true
+      - name: Build Docker images (for microservices)
+        run: docker build -t autoaudit:${{ github.sha }} -f src/backend/Dockerfile .  # Example for Backend; add per team
+      - name: Security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'autoaudit:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'  # Fail on critical vulnerabilities
+
+  compliance-check:  # Separate job for compliance gates (expand with OPA later)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run policy checks
+        run: echo "Placeholder for OPA/JSON lint on configs"  # Integrate team-specific checks
