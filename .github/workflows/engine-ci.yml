@@ -2,9 +2,9 @@ name: Engine Container Build
 
 on:
   push:
-    branches: [engine]
+    branches: [Compliance-Engine]
   pull_request:
-    branches: [engine]
+    branches: [Compliance-Engine]
 
 jobs:
   build-engine:
