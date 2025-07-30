@@ -1,0 +1,9 @@
+{
+  "id": "CIS_2.10",
+  "description": "Ensure phishing protection is enabled in Microsoft Forms",
+  "expected_setting": "enabled",
+  "severity": "High",
+  "score_weight": 5,
+  "remediation": "Enable 'Phishing protection' in Microsoft Forms settings to block suspicious forms.",
+  "tag": "Forms, PhishingProtection"
+}
