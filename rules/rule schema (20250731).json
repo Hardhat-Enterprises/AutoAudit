@@ -1,0 +1,301 @@
+[
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.1,
+    "id_level_2": "",
+    "title": "Users",
+    "profile": "",
+    "level": "",
+    "status": "",
+    "description": "",
+    "expected_value": "",
+    "comparison": "",
+    "evaluation_path": "",
+    "remediation": "",
+    "risk": "",
+    "tags": ""
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.1,
+    "id_level_2": "1.1.1",
+    "title": "Ensure Administrative accounts are cloud-only",
+    "profile": "E3 E5",
+    "level": "L1",
+    "status": "Automated",
+    "description": "Ensure administrative accounts are not On-premises sync enabled",
+    "expected_value": False,
+    "comparison": "equals",
+    "evaluation_path": "user.OnPremisesSyncEnabled",
+    "remediation": "Migrate hybrid admin accounts to new cloud-only accounts and update roles accordingly.",
+    "risk": "High",
+    "tags": "MFA
+Identity 
+HybridEnvironment"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.1,
+    "id_level_2": "1.1.2",
+    "title": "Ensure two emergency access accounts have been defined",
+    "profile": "E3 E5",
+    "level": "L1",
+    "status": "Manual",
+    "description": "Emergency access or �break glass� accounts are limited for emergency scenarios where normal administrative accounts are unavailable.",
+    "expected_value": "Two emergency access accounts defined",
+    "comparison": "Manual validation",
+    "evaluation_path": "Microsoft 365 admin center > Users > Active Users and Entra admin center > Protection > Conditional Access",
+    "remediation": "Create two cloud-only accounts with Global Admin role, no license, exclude from Conditional Access rules.",
+    "risk": "High",
+    "tags": "Accounts
+EmergencyAccess
+GlobalAdmin"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.1,
+    "id_level_2": "1.1.3",
+    "title": "Ensure that between two and four global admins are designated",
+    "profile": "E3 E5",
+    "level": "L1",
+    "status": "Automated",
+    "description": "Between two and four global administrators should be designated in the tenant to ensure redundancy and limit exposure.",
+    "expected_value": "2�4 Global Administrators",
+    "comparison": "Count and range check",
+    "evaluation_path": "Microsoft 365 admin center > Roles > Global Administrator",
+    "remediation": "Add or remove users from Global Admin role to maintain 2�4 total.",
+    "risk": "High",
+    "tags": "AdminAccounts
+PrivilegeManagement"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.1,
+    "id_level_2": "1.1.4",
+    "title": "Ensure administrative accounts use licenses with reduced application footprint",
+    "profile": "E3 E5",
+    "level": "L1",
+    "status": "Automated",
+    "description": "Administrative accounts should not use licenses with applications to reduce attack surface.",
+    "expected_value": "License with no user applications (e.g. Entra ID P1/P2)",
+    "comparison": "License check",
+    "evaluation_path": "Microsoft 365 admin center > Users > Active users > License column",
+    "remediation": "Assign minimal license or Entra ID P1/P2 to admin accounts. Use PIM if applicable.",
+    "risk": "Medium",
+    "tags": "Licensing
+AdminAccounts
+LeastPrivilege"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.2,
+    "id_level_2": "",
+    "title": "Teams & groups",
+    "profile": "",
+    "level": "",
+    "status": "",
+    "description": "",
+    "expected_value": "",
+    "comparison": "",
+    "evaluation_path": "",
+    "remediation": "",
+    "risk": "",
+    "tags": ""
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.2,
+    "id_level_2": "1.2.1",
+    "title": "Ensure that only organizationally managed/approved public groups exist",
+    "profile": "E3 E5",
+    "level": "L2",
+    "status": "Automated",
+    "description": "Ensure that only organizationally managed and approved public groups exist to prevent unauthorized access to internal data.",
+    "expected_value": "No groups with public visibility",
+    "comparison": "Group.Visibility != Public",
+    "evaluation_path": "Microsoft 365 admin center > Teams & groups > Active teams & groups",
+    "remediation": "Change group privacy from Public to Private in group settings.",
+    "risk": "High",
+    "tags": "Groups
+Privacy
+AccessControl"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.2,
+    "id_level_2": "1.2.2",
+    "title": "Ensure sign-in to shared mailboxes is blocked",
+    "profile": "E3 E5",
+    "level": "L1",
+    "status": "Automated",
+    "description": "Block sign-in access for shared mailboxes to reduce exposure to unauthorized access.",
+    "expected_value": "Sign-in disabled for shared mailboxes",
+    "comparison": "user.AccountEnabled == false",
+    "evaluation_path": "Microsoft 365 admin center > Users > Active users > Shared mailbox properties",
+    "remediation": "Uncheck the 'Sign-in allowed' option under mailbox settings.",
+    "risk": "Medium",
+    "tags": "Mailbox
+AccountAccess
+Security"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.3,
+    "id_level_2": "",
+    "title": "Settings",
+    "profile": "",
+    "level": "",
+    "status": "",
+    "description": "",
+    "expected_value": "",
+    "comparison": "",
+    "evaluation_path": "",
+    "remediation": "",
+    "risk": "",
+    "tags": ""
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.3,
+    "id_level_2": "1.3.1",
+    "title": "Ensure the 'Password expiration policy' is set to 'Set passwords to never expire (recommended)'",
+    "profile": "E3 E5",
+    "level": "L1",
+    "status": "Automated",
+    "description": "Avoid enforcing periodic password changes unless a compromise is suspected.",
+    "expected_value": "Set passwords to never expire",
+    "comparison": "PasswordExpiration == Never",
+    "evaluation_path": "Microsoft 365 admin center > Org Settings > Security & Privacy > Password expiration policy",
+    "remediation": "Enable the 'Set passwords to never expire' option in org settings.",
+    "risk": "Medium",
+    "tags": "PasswordPolicy
+UserSettings
+Authentication"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.3,
+    "id_level_2": "1.3.2",
+    "title": "Ensure 'Idle session timeout' is set to '3 hours (or less)' for unmanaged devices",
+    "profile": "E3 E5",
+    "level": "L2",
+    "status": "Automated",
+    "description": "Limit idle session timeout for unmanaged devices to reduce session hijack risks.",
+    "expected_value": "Idle timeout set to = 3 hours",
+    "comparison": "IdleTimeout <= 3h",
+    "evaluation_path": "Microsoft 365 admin center > Org settings > Security & privacy > Idle session timeout",
+    "remediation": "Configure timeout policy in settings for unmanaged device sessions.",
+    "risk": "High",
+    "tags": "SessionTimeout
+DeviceManagement
+UnmanagedAccess"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.3,
+    "id_level_2": "1.3.3",
+    "title": "Ensure 'External sharing' of calendars is not available",
+    "profile": "E3 E5",
+    "level": "L2",
+    "status": "Automated",
+    "description": "Prevent external calendar sharing to avoid data leakage and preserve internal privacy.",
+    "expected_value": "External sharing disabled",
+    "comparison": "CalendarSharing == InternalOnly",
+    "evaluation_path": "Microsoft 365 admin center > Settings > Org settings > Calendar",
+    "remediation": "Disable external calendar sharing in org settings.",
+    "risk": "High",
+    "tags": "Calendar
+ExternalSharing
+Privacy"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.3,
+    "id_level_2": "1.3.4",
+    "title": "Ensure 'User owned apps and services' is restricted",
+    "profile": "E3 E5",
+    "level": "L1",
+    "status": "Automated",
+    "description": "Restrict user ability to register applications to control third-party integrations.",
+    "expected_value": "App registration disabled for users",
+    "comparison": "AppRegistration == Disabled",
+    "evaluation_path": "Microsoft Entra admin center > User settings > App registrations",
+    "remediation": "Disable 'Users can register applications' in user settings.",
+    "risk": "Medium",
+    "tags": "UserApps
+ThirdPartyAccess
+AppRegistration"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.3,
+    "id_level_2": "1.3.5",
+    "title": "Ensure internal phishing protection for Forms is enabled",
+    "profile": "E3 E5",
+    "level": "L1",
+    "status": "Automated",
+    "description": "Enable internal phishing detection for Microsoft Forms to prevent credential harvesting.",
+    "expected_value": "Phishing protection enabled",
+    "comparison": "FormsPhishingProtection == On",
+    "evaluation_path": "Microsoft 365 admin center > Settings > Org settings > Microsoft Forms",
+    "remediation": "Enable internal phishing protection in Microsoft Forms settings.",
+    "risk": "Medium",
+    "tags": "Forms
+PhishingProtection
+ThreatDetection"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.3,
+    "id_level_2": "1.3.6",
+    "title": "Ensure the customer lockbox feature is enabled",
+    "profile": "E5",
+    "level": "L2",
+    "status": "Automated",
+    "description": "Require explicit customer approval before Microsoft can access customer content.",
+    "expected_value": "Customer lockbox enabled",
+    "comparison": "Lockbox == Enabled",
+    "evaluation_path": "Microsoft 365 compliance center > Solutions > Customer Lockbox",
+    "remediation": "Enable Customer Lockbox via Microsoft 365 compliance center.",
+    "risk": "High",
+    "tags": "CustomerLockbox
+AccessControl
+DataProtection"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.3,
+    "id_level_2": "1.3.7",
+    "title": "Ensure 'third-party storage services' are restricted in 'Microsoft 365 on the web'",
+    "profile": "E3 E5",
+    "level": "L2",
+    "status": "Automated",
+    "description": "Restrict access to third-party storage services like Dropbox or Google Drive to protect data.",
+    "expected_value": "Third-party storage access disabled",
+    "comparison": "ThirdPartyStorage == Disabled",
+    "evaluation_path": "Microsoft 365 admin center > Org settings > Services > Office for the web",
+    "remediation": "Disable integration with third-party storage services.",
+    "risk": "High",
+    "tags": "Storage
+ExternalServices
+DataControl"
+  },
+  {
+    "product": "Microsoft 365 admin center",
+    "id_level_1": 1.3,
+    "id_level_2": "1.3.8",
+    "title": "Ensure that Sways cannot be shared with people outside of your organization",
+    "profile": "E3 E5",
+    "level": "L2",
+    "status": "Manual",
+    "description": "Prevent sharing of Microsoft Sway content outside the organization to maintain internal content privacy.",
+    "expected_value": "External sharing disabled for Sways",
+    "comparison": "SwaySharing == InternalOnly",
+    "evaluation_path": "Microsoft 365 admin center > Settings > Org settings > Sway",
+    "remediation": "Manually disable external sharing for Sway presentations.",
+    "risk": "Medium",
+    "tags": "Sway
+ContentSharing
+ExternalAccess"
+  },
+  
