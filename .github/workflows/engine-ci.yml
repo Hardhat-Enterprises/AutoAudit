@@ -13,7 +13,7 @@ jobs:
       - name: Checkout engine branch code
         uses: actions/checkout@v3
         with:
-          ref: engine
+          ref: Compliance-Engine
 
       - name: Confirm branch
         run: git branch
