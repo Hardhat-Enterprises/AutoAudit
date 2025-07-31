@@ -43,7 +43,7 @@ jobs:
       id: scan
       
       with:
-        image: compliance-engine:latest
+        image: docker:compliance-engine:latest
         fail-build: true
         severity-cutoff: critical
         
