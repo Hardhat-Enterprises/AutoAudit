@@ -1,9 +1,0 @@
-{
-  "id": "CIS_5.2",
-  "description": "Ensure Microsoft 365 audit log search is enabled",
-  "expected_setting": "enabled",
-  "severity": "High",
-  "score_weight": 5,
-  "remediation": "Go to Microsoft Purview → Audit and enable 'Start recording user and admin activity'.",
-  "tag": "AuditLogging, Purview"
-}

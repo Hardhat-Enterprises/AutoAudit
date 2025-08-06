@@ -1,9 +1,0 @@
-{
-  "id": "CIS_1.1.2",
-  "description": "Ensure MFA is enabled",
-  "expected_setting": "enabled",
-  "severity": "High",
-  "score_weight": 5,
-  "remediation": "Enable MFA using Conditional Access or Security Defaults.",
-  "tag": "MFA"
-}

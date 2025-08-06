@@ -28,7 +28,7 @@ def load_rules(directory="rules"):
                 with open(os.path.join(directory, file)) as f:
                     rule = json.load(f)
                     # Validate required keys
-                    if all(k in rule for k in ("id", "tag", "expected_setting", "path", "description")):
+                    if all(k in rule for k in ("id_level_2", "tags", "expected_value", "evaluation_path", "description")):
                         rules.append(rule)
                     else:
                         print(f"⚠️ Skipping {file}: Missing required keys")
@@ -50,12 +50,12 @@ def get_value_from_path(config, path):
 # Evaluate one rule against the config
 def evaluate_rule(rule, config):
     """Compare the expected setting with the actual config value."""
-    expected = rule.get("expected_setting")
-    value = get_value_from_path(config, rule.get("path"))
+    expected = rule.get("expected_value")
+    value = get_value_from_path(config, rule.get("evaluation_path"))
 
     if value == expected:
         return True, "Pass"
-    return False, f"{rule['tag']} = {value}, expected {expected}"
+    return False, f"{rule['tags']} = {value}, expected {expected}"
 
 # Main function to run all rules and show results
 def main():
@@ -71,7 +71,7 @@ def main():
     for rule in rules:
         result, reason = evaluate_rule(rule, config)
         status = "PASS" if result else "FAIL"
-        print(f"[{status}] {rule['id']} - {rule['description']}")
+        print(f"[{status}] {rule['id_level_2']} - {rule['description']}")
         if not result:
             print(f"  Reason: {reason}")
         passed += result
