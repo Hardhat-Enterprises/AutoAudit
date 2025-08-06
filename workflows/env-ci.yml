@@ -1,0 +1,40 @@
+name: Environment Build CI
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - development
+  pull_request:
+    branches:
+      - main
+      - staging
+      - development
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Show environment file
+        run: |
+          echo "Using environment:"
+          cat env || echo "No env file found"
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Run Unit Tests
+        run: npm test
