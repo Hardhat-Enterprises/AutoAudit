@@ -13,9 +13,8 @@ name: "CodeQL Advanced"
 
 on:
   push:
-    branches: [ main, Compliance-Engine, DevSecOps ]
   pull_request:
-    branches: [ main, Compliance-Engine, DevSecOps ]
+    branches: [ '**' ]
   schedule:
     - cron: '32 23 * * 6'
 
