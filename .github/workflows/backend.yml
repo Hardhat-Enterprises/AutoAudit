@@ -1,4 +1,4 @@
-name: "Test Engine"
+name: "Test Backend"
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
         with:
           filters: |
             engine:
-              - 'engine/**'
+              - 'backend/**'
           base: ${{ github.ref }} 
           # Detect changes against the most recent commit on the same branch
 
@@ -48,7 +48,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'python' ]
+        language: ['javascript-typescript']
         # 'actions'  'c-cpp' 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
@@ -100,23 +100,3 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
-    
-  run-lint:
-    runs-on: ubuntu-latest
-    needs: changes
-    # Depend on changes job
-    if: github.event_name != 'push' || needs.changes.outputs.engine == 'true'  
-    # Run always for non-push events, or if engine changed on push
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          # Full git history is needed to get a proper list of changed files within `super-linter`
-          fetch-depth: 0
-
-      - name: Lint Code Base
-        uses: github/super-linter@v4
-        env:
-          VALIDATE_ALL_CODEBASE: false
-          DEFAULT_BRANCH: "main"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
