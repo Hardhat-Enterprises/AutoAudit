@@ -1,4 +1,4 @@
-name: "Test API"
+name: "API CI/CD"
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
 
 jobs:
   changes:
+    name: Allocating Push Filter
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     # Only run this job for push events
@@ -16,23 +17,24 @@ jobs:
       # Required if adapting for pull requests later
       pull-requests: read
     outputs:
-      engine: ${{ steps.filter.outputs.engine }}
+      api: ${{ steps.filter.outputs.api }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
-            engine:
+            api:
               - 'api/**'
           base: ${{ github.ref }} 
           # Detect changes against the most recent commit on the same branch
 
   analyze:
-    name: Analyze (${{ matrix.language }})
+    name: Security Analysis on (${{ matrix.language }})
     needs: changes
     # Depend on changes job
-    if: github.event_name != 'push' || needs.changes.outputs.engine == 'true'  # Run always for non-push events, or if engine changed on push
+    if: github.event_name != 'push' || needs.changes.outputs.api == 'true'  
+    # Run always for non-push events, or if engine changed on push
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
       # required for all workflows
@@ -100,3 +102,51 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
+    
+  run-lint:
+    name: Linting Code
+    runs-on: ubuntu-latest
+    needs: [changes, analyze]
+    # Depend on changes job
+    if: github.event_name != 'push' || needs.changes.outputs.api == 'true'  
+    # Run always for non-push events, or if engine changed on push
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Full git history is needed to get a proper list of changed files within `super-linter`
+          fetch-depth: 0
+
+      - name: Lint Code Base
+        uses: github/super-linter@v4
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_BRANCH: "main"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_YAML: false
+          VALIDATE_GITHUB_ACTIONS: false
+          # Disable Black linter for Python
+          VALIDATE_PYTHON_BLACK: false
+          VALIDATE_PYTHON_FLAKE8: false
+
+#  build-api:
+#    name: Build API w/ Docker 
+#    runs-on: ubuntu-latest
+#    needs: [changes, analyze, run-lint]
+
+#    steps:
+#      - name: Checkout API w/ Docker
+#        uses: actions/checkout@v3
+#        with:
+#          ref: main
+#
+#      - name: Confirm Branch
+#        run: git branch
+#
+#      - name: Build API Container
+#        run: |
+#          docker build -t autoaudit/api -f api/docker/api.Dockerfile .
+#
+#      - name: Run API Container
+#        run: |
+#          docker run --rm autoaudit/api
