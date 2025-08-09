@@ -1,4 +1,4 @@
-name: "Test Engine"
+name: "Engine CI/CD"
 
 on:
   push:
@@ -103,7 +103,7 @@ jobs:
     
   run-lint:
     runs-on: ubuntu-latest
-    needs: changes
+    needs: [changes, analyze]
     # Depend on changes job
     if: github.event_name != 'push' || needs.changes.outputs.engine == 'true'  
     # Run always for non-push events, or if engine changed on push
@@ -120,3 +120,24 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-engine-from-devops:
+    name: Build Engine Code 
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout engine branch code
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Confirm branch
+        run: git branch
+
+      - name: Build container
+        run: |
+          docker build -t autoaudit/engine -f docker/engine.Dockerfile .
+
+      - name: Run engine container
+        run: |
+          docker run --rm autoaudit/engine
