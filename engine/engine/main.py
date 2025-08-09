@@ -88,7 +88,7 @@ def main():
     # Summary output
     print("\n📊 Summary:")
     print(f"  Total Rules: {len(rules)}")
-    print(f"  ✅ Passed: {passed}")
+    print(f"  ✅ Passeds: {passed}")
     print(f"  ❌ Failed: {failed}")
 
 if __name__ == "__main__":
