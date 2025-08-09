@@ -137,7 +137,7 @@ jobs:
 
       - name: Build container
         run: |
-          docker build -t autoaudit/engine -f docker/engine.Dockerfile .
+          docker build -t autoaudit/engine -f engine/docker/engine.Dockerfile .
 
       - name: Run engine container
         run: |

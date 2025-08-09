@@ -1,0 +1,9 @@
+{
+  "azure_ad": {
+    "mfa_status": "enabled",
+    "legacy_authentication": "disabled"
+  },
+  "microsoft_forms": {
+    "phishing_protection": "enabled"
+  }
+}
