@@ -6,4 +6,4 @@ COPY engine/engine/ ./engine/
 COPY engine/rules/ ./rules/
 COPY engine/test-configs/ ./test-configs/
 
-CMD ["python", "engine/engine/main.py"]
+CMD ["python", "engine/main.py"]
