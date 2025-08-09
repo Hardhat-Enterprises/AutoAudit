@@ -124,6 +124,7 @@ jobs:
   build-engine-from-devops:
     name: Build Engine Code 
     runs-on: ubuntu-latest
+    needs: [changes, analyze, run-lint]
 
     steps:
       - name: Checkout engine branch code
