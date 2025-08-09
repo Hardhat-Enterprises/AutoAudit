@@ -9,7 +9,7 @@ on:
 
 jobs:
   changes:
-    name: 
+    name: Allocating Push Filter
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     # Only run this job for push events
@@ -30,7 +30,7 @@ jobs:
           # Detect changes against the most recent commit on the same branch
 
   analyze:
-    name: Analyze (${{ matrix.language }})
+    name: Security Analysis on (${{ matrix.language }})
     needs: changes
     # Depend on changes job
     if: github.event_name != 'push' || needs.changes.outputs.engine == 'true'  
