@@ -1,6 +1,7 @@
 import json
 import os
 
+
 # Load a JSON config file (mock tenant settings)
 def load_config(path="test-configs/compliant.json"):
     """Load the configuration JSON file. Returns an empty dict if file not found or invalid."""
@@ -13,6 +14,7 @@ def load_config(path="test-configs/compliant.json"):
     except json.JSONDecodeError:
         print(f"❌ Invalid JSON in config file: {path}")
         return {}
+
 
 # Load all JSON rules from the rules directory
 def load_rules(directory="rules"):
@@ -28,13 +30,16 @@ def load_rules(directory="rules"):
                 with open(os.path.join(directory, file)) as f:
                     rule = json.load(f)
                     # Validate required keys
-                    if all(k in rule for k in ("id_level_2", "tags", "expected_value", "evaluation_path", "description")):
+                    if all(k in rule for k in ("id_level_2", "tags", 
+                                               "expected_value", "evaluation_path", 
+                                               "description")):
                         rules.append(rule)
                     else:
                         print(f"⚠️ Skipping {file}: Missing required keys")
             except json.JSONDecodeError:
                 print(f"⚠️ Invalid JSON in {file}")
     return rules
+
 
 # Helper to get nested value using dot notation (e.g. "azure_ad.mfa_status")
 def get_value_from_path(config, path):
@@ -47,6 +52,7 @@ def get_value_from_path(config, path):
             return None
     return config if config != {} else None
 
+
 # Evaluate one rule against the config
 def evaluate_rule(rule, config):
     """Compare the expected setting with the actual config value."""
@@ -56,6 +62,7 @@ def evaluate_rule(rule, config):
     if value == expected:
         return True, "Pass"
     return False, f"{rule['tags']} = {value}, expected {expected}"
+
 
 # Main function to run all rules and show results
 def main():
@@ -76,6 +83,7 @@ def main():
             print(f"  Reason: {reason}")
         passed += result
         failed += not result
+
 
     # Summary output
     print("\n📊 Summary:")

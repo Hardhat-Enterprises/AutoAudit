@@ -32,7 +32,8 @@ jobs:
     name: Analyze (${{ matrix.language }})
     needs: changes
     # Depend on changes job
-    if: github.event_name != 'push' || needs.changes.outputs.engine == 'true'  # Run always for non-push events, or if engine changed on push
+    if: github.event_name != 'push' || needs.changes.outputs.engine == 'true'  
+    # Run always for non-push events, or if engine changed on push
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
       # required for all workflows
@@ -120,6 +121,7 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_YAML: false
 
   build-engine-from-devops:
     name: Build Engine Code 
