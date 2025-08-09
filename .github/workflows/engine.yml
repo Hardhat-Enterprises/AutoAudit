@@ -3,16 +3,18 @@ name: "Test Engine"
 on:
   push:
   pull_request:
-    branches: [ 'main' ]
+    branches: ['main']
   schedule:
     - cron: '32 23 * * 6'
 
 jobs:
   changes:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'  # Only run this job for push events
+    if: github.event_name == 'push'
+    # Only run this job for push events
     permissions:
-      pull-requests: read  # Required if adapting for pull requests later
+      # Required if adapting for pull requests later
+      pull-requests: read
     outputs:
       engine: ${{ steps.filter.outputs.engine }}
     steps:
@@ -23,11 +25,13 @@ jobs:
           filters: |
             engine:
               - 'engine/**'
-          base: ${{ github.ref }}  # Detect changes against the most recent commit on the same branch
+          base: ${{ github.ref }} 
+          # Detect changes against the most recent commit on the same branch
 
   analyze:
     name: Analyze (${{ matrix.language }})
-    needs: changes  # Depend on changes job
+    needs: changes
+    # Depend on changes job
     if: github.event_name != 'push' || needs.changes.outputs.engine == 'true'  # Run always for non-push events, or if engine changed on push
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
