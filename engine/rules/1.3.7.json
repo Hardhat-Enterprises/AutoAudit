@@ -9,7 +9,7 @@
   "description": "Restrict access to third-party storage services like Dropbox or Google Drive to protect data.",
   "expected_value": "Third-party storage access disabled",
   "comparison": "ThirdPartyStorage == Disabled",
-  "evaluation_path": "Microsoft 365 admin center > Org settings > Services > Office for the web",
+  "evaluation_path": "office.ThirdPartyStorage",
   "remediation": "Disable integration with third-party storage services.",
   "risk": "High",
   "tags": [
