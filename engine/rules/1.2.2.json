@@ -9,7 +9,7 @@
   "description": "Block sign-in access for shared mailboxes to reduce exposure to unauthorized access.",
   "expected_value": "Sign-in disabled for shared mailboxes",
   "comparison": "user.AccountEnabled == false",
-  "evaluation_path": "Microsoft 365 admin center > Users > Active users > Shared mailbox properties",
+  "evaluation_path": "mailboxes.shared",
   "remediation": "Uncheck the 'Sign-in allowed' option under mailbox settings.",
   "risk": "Medium",
   "tags": [
