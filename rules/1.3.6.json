@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft 365 compliance center > Solutions > Customer Lockbox",
   "remediation": "Enable Customer Lockbox via Microsoft 365 compliance center.",
   "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "CustomerLockbox",
     "AccessControl",

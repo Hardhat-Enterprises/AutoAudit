@@ -1,7 +1,6 @@
 import json
 import os
 
-# Load a mock JSON config file
 def load_mock_config(path="test-configs/compliant.json"):
     try:
         with open(path) as f:
@@ -13,7 +12,6 @@ def load_mock_config(path="test-configs/compliant.json"):
         print(f"Invalid JSON in config file: {path}")
         return {}
 
-# Load all JSON rules from the rules directory
 def load_rules(directory="rules"):
     rules = []
     for file in os.listdir(directory):
@@ -26,7 +24,6 @@ def load_rules(directory="rules"):
                 print(f"Invalid JSON in {file}")
     return rules
 
-# Getting Nested values
 def get_value_from_path(config, path):
     placeholder_value = config
     for key in path.split("."):
@@ -37,7 +34,6 @@ def get_value_from_path(config, path):
     return placeholder_value
  
 
-# Evaluate one rule against the config
 def evaluate_rule(rule, config):
     expected = rule.get("expected_value")
     value = get_value_from_path(config, rule.get("evaluation_path"))
@@ -46,31 +42,32 @@ def evaluate_rule(rule, config):
         return True, "Pass"
     return False, f"{rule['tags']} = {value}, expected {expected}"
 
-# Main function to run all rules and show results
 def main():
-    config = load_mock_config()  # Load tenant configuration
-    rules = load_rules()    # Load all CIS rules
-
-    if not config or not rules:
-        print("No config or rules found. Exiting.")
-        return
+    config = load_mock_config() 
+    rules = load_rules()
 
     passed, failed = 0, 0
 
     for rule in rules:
         result, reason = evaluate_rule(rule, config)
         status = "PASS" if result else "FAIL"
-        print(f"[{status}] {rule['id_level_2']} - {rule['description']}")
+        print(f"[{status}] {rule['id_level_2']} - {rule['title']}")
+
         if not result:
-            print(f"  Reason: {reason}")
+            print(f"  Description : {rule['description']}")
+            print(f"  Reason      : {reason}")
+            print(f"  Remediation : {rule['remediation']}")
+            print("  --- Risk Assessment ---")
+            print(f"  Risk Level  : {rule.get('risk', 'N/A')}")
+            print(f"  Impact      : {rule.get('Impact', 'N/A')}")
+            print(f"  Likelihood  : {rule.get('Likelihood', 'N/A')}")
+            print(f"  Overall     : {rule.get('Risk level', 'N/A')}")
+        print("-------------------------------------------------------------------")
+
         passed += result
         failed += not result
 
-    # Summary output
-    print("Summary:")
-    print(f"  Total Rules: {len(rules)}")
-    print(f"  Passed: {passed}")
-    print(f"  Failed: {failed}")
-
+    print(f"\nSummary: {passed} rules passed, {failed} rules failed")
+    
 if __name__ == "__main__":
     main()

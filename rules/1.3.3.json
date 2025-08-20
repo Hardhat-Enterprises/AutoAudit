@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft 365 admin center > Settings > Org settings > Calendar",
   "remediation": "Disable external calendar sharing in org settings.",
   "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "Calendar",
     "ExternalSharing",

@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft 365 admin center > Settings > Org settings > Microsoft Forms",
   "remediation": "Enable internal phishing protection in Microsoft Forms settings.",
   "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "Forms",
     "PhishingProtection",

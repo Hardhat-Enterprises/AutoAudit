@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft 365 admin center > Org settings > Security & privacy > Idle session timeout",
   "remediation": "Configure timeout policy in settings for unmanaged device sessions.",
   "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "SessionTimeout",
     "DeviceManagement",

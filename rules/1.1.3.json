@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft 365 admin center > Roles > Global Administrator",
   "remediation": "Add or remove users from Global Admin role to maintain 2\ufffd4 total.",
   "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "AdminAccounts",
     "PrivilegeManagement"

@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft Entra admin center > User settings > App registrations",
   "remediation": "Disable 'Users can register applications' in user settings.",
   "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "UserApps",
     "ThirdPartyAccess",

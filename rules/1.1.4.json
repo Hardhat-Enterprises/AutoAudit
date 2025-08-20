@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft 365 admin center > Users > Active users > License column",
   "remediation": "Assign minimal license or Entra ID P1/P2 to admin accounts. Use PIM if applicable.",
   "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "Licensing",
     "AdminAccounts",

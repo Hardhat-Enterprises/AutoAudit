@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft 365 admin center > Users > Active users > Shared mailbox properties",
   "remediation": "Uncheck the 'Sign-in allowed' option under mailbox settings.",
   "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "Mailbox",
     "AccountAccess",

@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft 365 admin center > Teams & groups > Active teams & groups",
   "remediation": "Change group privacy from Public to Private in group settings.",
   "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "Groups",
     "Privacy",

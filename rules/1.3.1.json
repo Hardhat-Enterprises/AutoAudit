@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft 365 admin center > Org Settings > Security & Privacy > Password expiration policy",
   "remediation": "Enable the 'Set passwords to never expire' option in org settings.",
   "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "PasswordPolicy",
     "UserSettings",

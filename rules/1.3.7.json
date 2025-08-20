@@ -12,6 +12,9 @@
   "evaluation_path": "Microsoft 365 admin center > Org settings > Services > Office for the web",
   "remediation": "Disable integration with third-party storage services.",
   "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "Storage",
     "ExternalServices",
