@@ -67,10 +67,10 @@ def main():
         failed += not result
 
     # Summary output
-    print("\n📊 Summary:")
+    print("Summary:")
     print(f"  Total Rules: {len(rules)}")
-    print(f"  ✅ Passed: {passed}")
-    print(f"  ❌ Failed: {failed}")
+    print(f"  Passed: {passed}")
+    print(f"  Failed: {failed}")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Fabric",
+  "id_level_1": 9.1,
+  "id_level_2": "9.1.11",
+  "title": "Ensure app permission grants are reviewed",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Manual",
+  "description": "Periodically reviews and revokes unnecessary app permissions.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "fabric.reviewAppPermissionGrants",
+  "remediation": "Schedule periodic review of app permissions in Fabric admin center.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Apps",
+    "Governance"
+  ]
+}

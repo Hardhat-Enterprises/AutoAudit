@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Fabric",
+  "id_level_1": 9.1,
+  "id_level_2": "9.1.2",
+  "title": "Ensure external user invitations are restricted",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Manual",
+  "description": "Limits which users can send Fabric invitations to external accounts.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "fabric.restrictExternalInvitations",
+  "remediation": "Restrict external invitation privileges to specific users/groups.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Guests",
+    "Governance"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Teams admin center",
+  "id_level_1": 8.5,
+  "id_level_2": "8.5.1",
+  "title": "Ensure anonymous users can't join a meeting",
+  "profile": "E3 E5",
+  "level": "L2",
+  "status": "Automated",
+  "description": "Blocks anonymous users from joining meetings.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "teams.meetings.blockAnonymousJoin",
+  "remediation": "Set meeting policy to block anonymous users.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Meetings",
+    "External"
+  ]
+}

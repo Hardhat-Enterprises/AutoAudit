@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Purview",
+  "id_level_1": 3.2,
+  "id_level_2": "3.2.1",
+  "title": "Ensure DLP policies are enabled",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Manual",
+  "description": "Data Loss Prevention policies monitor and restrict sharing of sensitive content.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "purview.dlpPoliciesEnabled",
+  "remediation": "Create and enable DLP policies in Purview to protect sensitive information.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "DLP",
+    "DataProtection"
+  ]
+}
