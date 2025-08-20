@@ -59,9 +59,9 @@ def main():
             print(f"  Remediation : {rule['remediation']}")
             print("  --- Risk Assessment ---")
             print(f"  Risk Level  : {rule.get('risk', 'N/A')}")
-            print(f"  Impact      : {rule.get('Impact', 'N/A')}")
-            print(f"  Likelihood  : {rule.get('Likelihood', 'N/A')}")
-            print(f"  Overall     : {rule.get('Risk level', 'N/A')}")
+            print(f"  Impact      : {rule.get('impact', 'N/A')}")
+            print(f"  Likelihood  : {rule.get('likelihood', 'N/A')}")
+            print(f"  Overall     : {rule.get('risk_level', 'N/A')}")
         print("-------------------------------------------------------------------")
 
         passed += result
