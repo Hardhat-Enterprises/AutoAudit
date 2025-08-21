@@ -9,7 +9,7 @@
   "description": "Prevent sharing of Microsoft Sway content outside the organization to maintain internal content privacy.",
   "expected_value": "External sharing disabled for Sways",
   "comparison": "SwaySharing == InternalOnly",
-  "evaluation_path": "Microsoft 365 admin center > Settings > Org settings > Sway",
+  "evaluation_path": "sway.externalSharing",
   "remediation": "Manually disable external sharing for Sway presentations.",
   "risk": "Medium",
   "impact": "",
