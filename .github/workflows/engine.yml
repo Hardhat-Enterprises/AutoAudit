@@ -130,23 +130,25 @@ jobs:
           VALIDATE_PYTHON_FLAKE8: false
 
   build-and-deploy:
-    name: Build and Deploy Engine
-    runs-on: ubuntu-latest
-    needs: [changes, analyze, run-lint]
+    # Dynamically select environment by branch
     environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
+
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4  # Upgrade to v4 for latest features
+      - name: Checkout source code
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}  # Checkout the triggering branch, not always 'main'
+          ref: ${{ github.ref }}
 
-      - name: Confirm branch
-        run: git branch
-
-      - name: Set environment variables
+      - name: Set environment name
         id: set-env
         run: |
-          echo "ENV_NAME=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            echo "ENV_NAME=production" >> $GITHUB_OUTPUT
+          else
+            echo "ENV_NAME=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -154,13 +156,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and tag container
+      - name: Build and tag Docker image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }} \
             --build-arg ENV=${{ steps.set-env.outputs.ENV_NAME }} \
             -f engine/docker/engine.Dockerfile .
 
-      - name: Push container to registry
+      - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }}
 
