@@ -9,7 +9,7 @@
   "description": "Ensure that only organizationally managed and approved public groups exist to prevent unauthorized access to internal data.",
   "expected_value": "No groups with public visibility",
   "comparison": "Group.Visibility != Public",
-  "evaluation_path": "Microsoft 365 admin center > Teams & groups > Active teams & groups",
+  "evaluation_path": "groups.approved",
   "remediation": "Change group privacy from Public to Private in group settings.",
   "risk": "High",
   "impact": "",
