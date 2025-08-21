@@ -6,4 +6,4 @@ COPY ./ ./
 
 WORKDIR /app/backend/backend
 
-CMD ["python", "app.py"]
+CMD ["python", "backend/app.py"]
