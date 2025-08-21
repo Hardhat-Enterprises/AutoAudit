@@ -3,7 +3,7 @@ name: "Engine CI/CD"
 on:
   push:
   pull_request:
-    branches: ['main']
+    branches: ['main', 'staging', 'dev']
   schedule:
     - cron: '32 23 * * 6'
 
@@ -129,24 +129,42 @@ jobs:
           VALIDATE_PYTHON_BLACK: false
           VALIDATE_PYTHON_FLAKE8: false
 
-  build-engine-from-devops:
-    name: Build Engine Code 
+  build-and-deploy:
+    name: Build and Deploy Engine
     runs-on: ubuntu-latest
     needs: [changes, analyze, run-lint]
-
+    environment: ${{ github.ref_name == 'main' && 'production' || github.ref_name }}
     steps:
-      - name: Checkout engine branch code
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4  # Upgrade to v4 for latest features
         with:
-          ref: main
+          ref: ${{ github.ref }}  # Checkout the triggering branch, not always 'main'
 
       - name: Confirm branch
         run: git branch
 
-      - name: Build container
+      - name: Set environment variables
+        id: set-env
         run: |
-          docker build -t autoaudit/engine -f engine/docker/engine.Dockerfile .
+          echo "ENV_NAME=${{ github.ref_name }}" >> $GITHUB_OUTPUT
 
-      - name: Run engine container
+      - name: Login to Docker registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and tag container
         run: |
-          docker run --rm autoaudit/engine
+          docker build -t autoaudit/engine:${{ steps.set-env.outputs.ENV_NAME }} \
+            --build-arg ENV=${{ steps.set-env.outputs.ENV_NAME }} \
+            -f engine/docker/engine.Dockerfile .
+
+      - name: Push container to registry
+        run: |
+          docker push autoaudit/engine:${{ steps.set-env.outputs.ENV_NAME }}
+
+#      - name: Deploy to environment (azure?)
+
+#        run: |
+
