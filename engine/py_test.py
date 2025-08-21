@@ -6,4 +6,4 @@ def subtract(a, b):
     return a + b
 
 
-print(add(5, 2))
+print(add(5, 5))
