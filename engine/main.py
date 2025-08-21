@@ -2,26 +2,17 @@ import json
 import os
 
 def load_mock_config(path="test-configs/compliant.json"):
-    try:
-        with open(path) as f:
-            return json.load(f)
-    except FileNotFoundError:
-        print(f"Config file not found: {path}")
-        return {}
-    except json.JSONDecodeError:
-        print(f"Invalid JSON in config file: {path}")
-        return {}
+    with open(path) as f:
+        return json.load(f)
+    
 
 def load_rules(directory="rules"):
     rules = []
     for file in os.listdir(directory):
         if file.endswith(".json"):
-            try:
-                with open(os.path.join(directory, file)) as f:
-                    rule = json.load(f)
-                    rules.append(rule)
-            except json.JSONDecodeError:
-                print(f"Invalid JSON in {file}")
+            with open(os.path.join(directory, file)) as f:
+                rule = json.load(f)
+                rules.append(rule)
     return rules
 
 def get_value_from_path(config, path):
@@ -54,14 +45,17 @@ def main():
         print(f"[{status}] {rule['id_level_2']} - {rule['title']}")
 
         if not result:
+            print("")
+            print("  --- Cause of Failure ---")
             print(f"  Description : {rule['description']}")
             print(f"  Reason      : {reason}")
             print(f"  Remediation : {rule['remediation']}")
+            print("")
             print("  --- Risk Assessment ---")
-            print(f"  Risk Level  : {rule.get('risk', 'N/A')}")
-            print(f"  Impact      : {rule.get('impact', 'N/A')}")
-            print(f"  Likelihood  : {rule.get('likelihood', 'N/A')}")
-            print(f"  Overall     : {rule.get('risk_level', 'N/A')}")
+            print(f"  Risk Level  : {rule['risk']}")
+            print(f"  Impact      : {rule['impact']}")
+            print(f"  Likelihood  : {rule['likelihood']}")
+            print(f"  Overall     : {rule['risk_level']}")
         print("-------------------------------------------------------------------")
 
         passed += result

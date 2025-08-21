@@ -13,6 +13,27 @@
       "block_legacy_auth": "Legacy authentication blocked"
     }
   }
+  },
+  "purview" : {
+
+  },
+  "entra" : {
+
+  },
+  "exchange" : {
+
+  }, 
+  "sharepoint" : {
+
+  },
+  "teams" : {
+
+  },
+  "defender" : {
+
+  },
+  "fabric" : {
+
   }
 
 }
