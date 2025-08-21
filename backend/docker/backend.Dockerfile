@@ -5,4 +5,4 @@ WORKDIR /app
 COPY backend/requirements.txt ./backend/
 COPY backend/backend/app.py/ ./backend/
 
-CMD ["python", "backend/app.py"]
+CMD ["python", "app.py"]
