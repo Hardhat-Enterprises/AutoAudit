@@ -4,6 +4,6 @@ WORKDIR /app
 
 COPY ./ ./
 
-WORKDIR /app/backend/backend
+WORKDIR /app/backend
 
 CMD ["python", "backend/main.py"]
