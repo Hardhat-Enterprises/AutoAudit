@@ -130,7 +130,8 @@ jobs:
           VALIDATE_PYTHON_FLAKE8: false
 
   build-and-deploy:
-    # Dynamically select environment by branch
+    name: Build and Deploy Engine
+    needs: [changes, analyze, run-lint]
     environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
 
     runs-on: ubuntu-latest
