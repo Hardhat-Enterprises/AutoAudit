@@ -1,0 +1,20 @@
+{
+  "product": "Microsoft 365 admin center",
+  "id_level_1": 1.1,
+  "id_level_2": "1.1.4",
+  "title": "Ensure administrative accounts use licenses with reduced application footprint",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Administrative accounts should not use licenses with applications to reduce attack surface.",
+  "expected_value": "License with no user applications (e.g. Entra ID P1/P2)",
+  "comparison": "License check",
+  "evaluation_path": "Microsoft 365 admin center > Users > Active users > License column",
+  "remediation": "Assign minimal license or Entra ID P1/P2 to admin accounts. Use PIM if applicable.",
+  "risk": "Medium",
+  "tags": [
+    "Licensing",
+    "AdminAccounts",
+    "LeastPrivilege"
+  ]
+}
