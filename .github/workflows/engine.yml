@@ -156,13 +156,13 @@ jobs:
 
       - name: Build and tag container
         run: |
-          docker build -t autoaudit/engine:${{ steps.set-env.outputs.ENV_NAME }} \
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }} \
             --build-arg ENV=${{ steps.set-env.outputs.ENV_NAME }} \
             -f engine/docker/engine.Dockerfile .
 
       - name: Push container to registry
         run: |
-          docker push autoaudit/engine:${{ steps.set-env.outputs.ENV_NAME }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }}
 
 #      - name: Deploy to environment (azure?)
 
