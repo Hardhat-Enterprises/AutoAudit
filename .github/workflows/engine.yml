@@ -146,7 +146,7 @@ jobs:
         id: set-env
         run: |
           if [ "${{ github.ref_name }}" == "main" ]; then
-            echo "ENV_NAME=production" >> $GITHUB_OUTPUT
+            echo "ENV_NAME=prod" >> $GITHUB_OUTPUT
           else
             echo "ENV_NAME=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           fi

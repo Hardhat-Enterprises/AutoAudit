@@ -25,7 +25,7 @@ jobs:
         with:
           filters: |
             backend:
-              - 'backend/**'
+              - 'frontend/**'
           base: ${{ github.ref }} 
           # Detect changes against the most recent commit on the same branch
 
