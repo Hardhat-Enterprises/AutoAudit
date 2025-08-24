@@ -9,7 +9,7 @@
   "description": "Limit idle session timeout for unmanaged devices to reduce session hijack risks.",
   "expected_value": "Idle timeout set to = 3 hours",
   "comparison": "IdleTimeout <= 3h",
-  "evaluation_path": "Microsoft 365 admin center > Org settings > Security & privacy > Idle session timeout",
+  "evaluation_path": "session.idleTimeout",
   "remediation": "Configure timeout policy in settings for unmanaged device sessions.",
   "risk": "High",
   "impact": "",
