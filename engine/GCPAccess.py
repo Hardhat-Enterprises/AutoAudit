@@ -16,4 +16,3 @@ policy = crm.projects().getIamPolicy(
 with open("iam_policy.json", "w") as f:
     json.dump(policy, f, indent=2)
 
-print("IAM policy written to iam_policy.json")
