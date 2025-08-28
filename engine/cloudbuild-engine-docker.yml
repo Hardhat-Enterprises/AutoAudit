@@ -1,31 +1,6 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'build'
-      - '-t'
-      - 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine'
-      - '--build-arg'
-      - '-f'
-      - 'engine/docker/engine.Dockerfile'
-      - '.'
-    # The `dir` specifies the working directory for the build context
-    # Adjust this if your Dockerfile or source context is not at the root
-    # or specifically in the 'engine' directory relative to the trigger.
-    dir: 'engine' # Assuming engine.Dockerfile is in engine/docker/ and context is `engine/`
-  
-  # Push Docker Image to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine'
-
-# Specify the images to be pushed to Artifact Registry
-images:
-  - 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine'
-
-# Define custom substitutions to be passed from GitHub Actions
-# substitutions:
-#  _ENV_NAME: 'default' # A default value for safety
+    args: [ 'build', '-t', 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine', '.' ]
 
 options:
   logging: CLOUD_LOGGING_ONLY
