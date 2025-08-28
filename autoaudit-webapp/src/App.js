@@ -1,25 +1,11 @@
-import logo from './logo.svg';
-import './App.css';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          AutoAudit React webapp - Ready for editing!
-        </a>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
   );
 }
-
-export default App;

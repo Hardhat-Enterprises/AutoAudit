@@ -1,0 +1,36 @@
+:root{
+  /* uses your existing theme vars */
+  --aa-card-bg: var(--surface);
+  --aa-card-bd: 1px solid var(--border);
+  --aa-card-br: 16px;
+  --aa-card-pad: 16px;
+  --aa-card-head-h: 44px;
+}
+
+.aa-card{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  min-height:100%;          /* fill the grid cell/row height */
+  background:var(--aa-card-bg);
+  border:var(--aa-card-bd);
+  border-radius:var(--aa-card-br);
+  overflow:hidden;
+}
+
+.aa-card-head{
+  display:flex; align-items:center; justify-content:space-between;
+  min-height:var(--aa-card-head-h);
+  padding:0 var(--aa-card-pad);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.aa-card-title{ margin:0; font-size:.95rem; font-weight:600; color:#e6edf3; }
+.aa-card-tools{ display:inline-flex; gap:8px; }
+
+.aa-card-body{ padding:var(--aa-card-pad); flex:1; min-height:0; display:grid; place-items:center; }
+
+.aa-card-foot{ padding:12px var(--aa-card-pad); border-top:1px solid rgba(255,255,255,.06); }
+
+/* Variant: metric tile */
+.aa-metric .aa-card-body{ font-size:2rem; font-weight:700; line-height:1.1; }
+.aa-metric .aa-sub{ margin-top:6px; font-size:.85rem; color:var(--muted); }
