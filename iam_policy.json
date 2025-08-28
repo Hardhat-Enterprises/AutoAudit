@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "etag": "BwY9WRutdgg=",
+  "bindings": [
+    {
+      "role": "roles/editor",
+      "members": [
+        "serviceAccount:sa-noperms@coastal-stone-470308-a0.iam.gserviceaccount.com"
+      ]
+    },
+    {
+      "role": "roles/owner",
+      "members": [
+        "user:AdityaHindocha3@gmail.com"
+      ]
+    }
+  ]
+}
