@@ -1,6 +1,22 @@
+#GCP Engine Docker Build
+#References sourced: 
+# https://cloud.google.com/build/docs/securing-builds/store-manage-build-logs?hl=pt-br#yaml_1
+# https://discuss.google.dev/t/cloudbuild-error-failed-to-trigger-build/106701
+
+#Build engine/docker/engine.Dockerfile
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'build', '-t', 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine', '.' ]
+  - name: 'gcr.io/cloud-builders/docker' #gcp docker step
+    args: [
+      'build',
+      '--file', 'engine/docker/engine.Dockerfile', #specified file location in github struct
+      '-t', 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine/my-engine-image:dev', #build engine dev container using GCP container registry, added image name as 'my-engine-image' with ':dev' tag
+      '.' #build all directroy components in engine 
+    ]
+  
+  - name: 'gcr.io/cloud-builders/docker' #repeat for push
+    args: ['push', 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine/my-engine-image:dev'] 
+images:
+- 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine/my-engine-image:dev' 
 
 options:
-  logging: CLOUD_LOGGING_ONLY
+  logging: CLOUD_LOGGING_ONLY #syntax to bypass 'build.service_account'
