@@ -1,11 +1,9 @@
-# engine/cloudbuild-docker-build.yaml
 steps:
-  # Build Docker Image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
-      - 'australia-southeast2-docker.pkg.dev/$PROJECT_ID/engine/engine:${_ENV_NAME}'
+      - 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine'
       - '--build-arg'
       - 'ENV=${_ENV_NAME}'
       - '-f'
@@ -20,12 +18,12 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'australia-southeast2-docker.pkg.dev/$PROJECT_ID/engine/engine:${_ENV_NAME}'
+      - 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine'
 
 # Specify the images to be pushed to Artifact Registry
 images:
-  - 'australia-southeast2-docker.pkg.dev/$PROJECT_ID/engine/engine:${_ENV_NAME}'
+  - 'australia-southeast2-docker.pkg.dev/dynamic-fulcrum-470401-e8/engine'
 
 # Define custom substitutions to be passed from GitHub Actions
-substitutions:
-  _ENV_NAME: 'default' # A default value for safety
+# substitutions:
+#  _ENV_NAME: 'default' # A default value for safety
