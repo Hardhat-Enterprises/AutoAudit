@@ -107,6 +107,7 @@ jobs:
             echo "ENV_NAME=prod" >> $GITHUB_OUTPUT
           else
             echo "ENV_NAME=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
 
   grype-scan:
     name: Grype Security Scan
