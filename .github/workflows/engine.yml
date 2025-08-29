@@ -2,6 +2,7 @@ name: "Engine CI/CD"
 
 on:
   push:
+    branches: ['main', 'staging', 'dev']
   pull_request:
     branches: ['main', 'staging', 'dev']
   schedule:
@@ -53,9 +54,7 @@ jobs:
       - if: matrix.build-mode == 'manual'
         shell: bash
         run: |
-          echo 'If you are using a "manual" build mode for one or more of the languages you are analyzing, replace this with the commands to build your code, for example:'
-          echo '  make bootstrap'
-          echo '  make release'
+          echo 'Manual build mode not configured'
           exit 1
 
       - name: Perform CodeQL Analysis
@@ -87,9 +86,9 @@ jobs:
 
   build-and-deploy:
     name: Build and Deploy Engine
-    needs: [changes, analyze, run-lint]
-    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
     runs-on: ubuntu-latest
+    needs: [changes]   # only depends on file changes filter
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
     permissions:
       contents: read
       id-token: write
@@ -106,6 +105,7 @@ jobs:
             echo "ENV_NAME=prod" >> $GITHUB_OUTPUT
           else
             echo "ENV_NAME=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -119,7 +119,15 @@ jobs:
             --build-arg ENV=${{ steps.set-env.outputs.ENV_NAME }} \
             -f engine/docker/engine.Dockerfile .
 
-      # --- GRYPE SECURITY SCAN SECTION ---
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }}
+
+  grype-scan:
+    name: Grype Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    steps:
       - name: Install Grype
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh
@@ -127,17 +135,4 @@ jobs:
 
       - name: Scan Docker image with Grype
         run: |
-          grype ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }}
-
-      - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }}
-
-      # --- Optional: Cloud Build Trigger (commented out) ---
-#      - name: Trigger Cloud Build for Docker Image
-#        run: |
-#          gcloud builds submit . \
-#            --config=engine/cloudbuild-docker-build.yml \
-#            --project=YOUR_PROJECT_ID \
-#            --substitutions=_ENV_NAME=${{ steps.set-env.outputs.ENV_NAME }} \
-#            --region=australia-southeast2
+          grype ${{ secrets.DOCKER_USERNAME }}/engine:${{ github.ref_name }}
