@@ -87,11 +87,13 @@ jobs:
   build-and-deploy:
     name: Build and Deploy Engine
     runs-on: ubuntu-latest
-    needs: [changes]   # only depends on file changes filter
+    needs: [changes]
     environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
     permissions:
       contents: read
       id-token: write
+    outputs:
+      image_tag: ${{ steps.set-env.outputs.ENV_NAME }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -119,10 +121,6 @@ jobs:
             --build-arg ENV=${{ steps.set-env.outputs.ENV_NAME }} \
             -f engine/docker/engine.Dockerfile .
 
-      - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }}
-
   grype-scan:
     name: Grype Security Scan
     runs-on: ubuntu-latest
@@ -134,4 +132,8 @@ jobs:
 
       - name: Scan Docker image with Grype
         run: |
-          grype ${{ secrets.DOCKER_USERNAME }}/engine:${{ github.ref_name }}
+          grype ${{ secrets.DOCKER_USERNAME }}/engine:${{ needs.build-and-deploy.outputs.image_tag }}
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/engine:${{ needs.build-and-deploy.outputs.image_tag }}
