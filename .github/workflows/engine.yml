@@ -126,3 +126,18 @@ jobs:
           sudo mv ./grype /usr/local/bin/
 
       - name: Scan Docker image with Grype
+        run: |
+          grype ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }}
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }}
+
+      # --- Optional: Cloud Build Trigger (commented out) ---
+#      - name: Trigger Cloud Build for Docker Image
+#        run: |
+#          gcloud builds submit . \
+#            --config=engine/cloudbuild-docker-build.yml \
+#            --project=YOUR_PROJECT_ID \
+#            --substitutions=_ENV_NAME=${{ steps.set-env.outputs.ENV_NAME }} \
+#            --region=australia-southeast2
