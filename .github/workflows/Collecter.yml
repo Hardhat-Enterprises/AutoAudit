@@ -21,6 +21,5 @@ jobs:
       - name: Run GCP Access Collector
         env: 
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-
-      - name: Run GCP Access Collector
         run: python3 engine/GCPAccess.py
+        
