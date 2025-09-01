@@ -1,3 +1,4 @@
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from google.auth import default
 import json
@@ -16,3 +17,7 @@ policy = crm.projects().getIamPolicy(
 with open("iam_policy.json", "w") as f:
     json.dump(policy, f, indent=2)
 
+<<<<<<< Updated upstream
+=======
+print("IAM policy written to iam_policy.json")
+>>>>>>> Stashed changes
