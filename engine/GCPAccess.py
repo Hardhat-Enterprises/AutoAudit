@@ -1,9 +1,15 @@
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from google.auth import default
-import json
+import json 
+import os
 
-creds, _ = default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+service_account_info = json.loads(os.environ["GCP_CREDENTIALS"])
+creds = service_account.Credentials.from_service_account_info(
+    service_account_info,
+    scopes=["https://www.googleapis.com/auth/cloud-platform"],
+)
+
 crm = build("cloudresourcemanager", "v3", credentials=creds)
 
 project_id = "coastal-stone-470308-a0"

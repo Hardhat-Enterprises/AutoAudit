@@ -18,10 +18,9 @@ jobs:
       - name: Install deps
         run: pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
 
-      - name: Configure GCP credentials
-        run: |
-          echo "${{ secrets.GCP_CREDENTIALS }}" > "${HOME}/gcp-key.json"
-          echo "GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcp-key.json" >> $GITHUB_ENV
+      - name: Run GCP Access Collector
+        env: 
+          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
 
       - name: Run GCP Access Collector
         run: python3 engine/GCPAccess.py
