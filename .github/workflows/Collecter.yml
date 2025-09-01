@@ -7,8 +7,12 @@ on:
 jobs:
   run-collector:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -21,5 +25,15 @@ jobs:
       - name: Run GCP Access Collector
         env: 
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-        run: python3 engine/GCPAccess.py
+        run: |
+          python3 engine/GCPAccess.py
+          mv iam_policy.json engine/test-configs/iam_policy.json
+
+      - name: Commit and push IAM policy
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/test-configs/iam_policy.json
+          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Update iam_policy.json [skip ci]"
+          git push origin Compliance-Engine
         
