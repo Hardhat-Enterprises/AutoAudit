@@ -8,11 +8,12 @@
   left: 0;
   height: 100vh;
   width: var(--sidebar-width, 0px); 
-  background-color: #485a8c;
+  background-color: #102034;
   overflow-x: hidden;
   overflow-y: hidden; 
   z-index: 1000;
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+  outline:1px solid #3F3F3F;
 }
 
 /* Content within the sidebar frame */
@@ -58,9 +59,9 @@
 /* Individual navigation items */
 .nav-item {
   margin-bottom: 5px;
-  border-radius: 3%;
-  background-color: #374f91;
-  transition: transform 0.2s ease;
+  border-radius: 4px;
+  background-color: #142942;
+  transition: transform 0.2s ease, color 0.2s ease;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
@@ -69,6 +70,7 @@
   display: block;
   color: white;
   text-decoration: none;
+  transition: transform 0.2s ease, color 0.2s ease;
   padding: 15px 20px;
   font-size: 16px;
   margin: 5px 0;
@@ -78,12 +80,11 @@
 /* Toggle button */
 .toggle-button {
   position: fixed;
-  transition: left 0.4s ease;
-  transition: transform 0.2s ease;
+  transition: left 0.4s ease, transform 0.2s ease;
   top: 20px;
   left: 20px;
   z-index: 1001;
-  background-color: #485a8c;
+  background-color: #142942;
   color: white;
   border: none;
   padding: 10px 15px;
@@ -95,11 +96,11 @@
 
 /* Change the size and colour of the buttons on hover */
 .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #64DFDF;
   transform: scale(1.05); 
 }
 
 .toggle-button:hover {
-  background-color: #3d4f7a;
+  background-color: #64DFDF;
   transform: scale(1.05); 
 }
