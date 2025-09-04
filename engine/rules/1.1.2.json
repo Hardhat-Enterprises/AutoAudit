@@ -9,9 +9,12 @@
   "description": "Emergency access or \ufffdbreak glass\ufffd accounts are limited for emergency scenarios where normal administrative accounts are unavailable.",
   "expected_value": "Two emergency access accounts defined",
   "comparison": "Manual validation",
-  "evaluation_path": "Microsoft 365 admin center > Users > Active Users and Entra admin center > Protection > Conditional Access",
+  "evaluation_path": "user.WithTwoEmergencyAccs",
   "remediation": "Create two cloud-only accounts with Global Admin role, no license, exclude from Conditional Access rules.",
   "risk": "High",
+  "impact": "Serious",
+  "likelihood": "2",
+  "risk_level": "Moderate",
   "tags": [
     "Accounts",
     "EmergencyAccess",

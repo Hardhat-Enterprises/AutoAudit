@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Entra admin center",
+  "id_level_1": 5.3,
+  "id_level_2": "5.3.1",
+  "title": "Ensure 'Privileged Identity Management' is used to manage roles",
+  "profile": "E5",
+  "level": "L2",
+  "status": "Automated",
+  "description": "Uses PIM for time‑bound/elevated access and approvals/auditing.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "entra.pimUsedForRoles",
+  "remediation": "Enable PIM; convert permanent assignments to eligible; configure approvals/notifications.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "PIM",
+    "LeastPrivilege"
+  ]
+}

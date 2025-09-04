@@ -9,9 +9,12 @@
   "description": "Avoid enforcing periodic password changes unless a compromise is suspected.",
   "expected_value": "Set passwords to never expire",
   "comparison": "PasswordExpiration == Never",
-  "evaluation_path": "Microsoft 365 admin center > Org Settings > Security & Privacy > Password expiration policy",
+  "evaluation_path": "password.expiration",
   "remediation": "Enable the 'Set passwords to never expire' option in org settings.",
   "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "PasswordPolicy",
     "UserSettings",

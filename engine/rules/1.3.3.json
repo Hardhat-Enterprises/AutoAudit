@@ -9,9 +9,12 @@
   "description": "Prevent external calendar sharing to avoid data leakage and preserve internal privacy.",
   "expected_value": "External sharing disabled",
   "comparison": "CalendarSharing == InternalOnly",
-  "evaluation_path": "Microsoft 365 admin center > Settings > Org settings > Calendar",
+  "evaluation_path": "calendar.externalSharing",
   "remediation": "Disable external calendar sharing in org settings.",
   "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "Calendar",
     "ExternalSharing",

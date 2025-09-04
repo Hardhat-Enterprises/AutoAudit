@@ -9,9 +9,12 @@
   "description": "Between two and four global administrators should be designated in the tenant to ensure redundancy and limit exposure.",
   "expected_value": "2\ufffd4 Global Administrators",
   "comparison": "Count and range check",
-  "evaluation_path": "Microsoft 365 admin center > Roles > Global Administrator",
+  "evaluation_path": "user.globalAdmins",
   "remediation": "Add or remove users from Global Admin role to maintain 2\ufffd4 total.",
   "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "AdminAccounts",
     "PrivilegeManagement"

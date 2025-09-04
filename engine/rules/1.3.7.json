@@ -12,6 +12,9 @@
   "evaluation_path": "office.ThirdPartyStorage",
   "remediation": "Disable integration with third-party storage services.",
   "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "Storage",
     "ExternalServices",

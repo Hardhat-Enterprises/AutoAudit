@@ -12,6 +12,9 @@
   "evaluation_path": "user.OnPremisesSyncEnabled",
   "remediation": "Migrate hybrid admin accounts to new cloud-only accounts and update roles accordingly.",
   "risk": "High",
+  "impact": "Moderate",
+  "likelihood": "2",
+  "risk_level": "Low",
   "tags": [
     "MFA",
     "Identity",

@@ -12,6 +12,9 @@
   "evaluation_path": "sway.externalSharing",
   "remediation": "Manually disable external sharing for Sway presentations.",
   "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "Sway",
     "ContentSharing",

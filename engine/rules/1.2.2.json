@@ -12,6 +12,9 @@
   "evaluation_path": "mailboxes.shared",
   "remediation": "Uncheck the 'Sign-in allowed' option under mailbox settings.",
   "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "Mailbox",
     "AccountAccess",

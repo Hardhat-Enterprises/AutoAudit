@@ -9,9 +9,12 @@
   "description": "Restrict user ability to register applications to control third-party integrations.",
   "expected_value": "App registration disabled for users",
   "comparison": "AppRegistration == Disabled",
-  "evaluation_path": "Microsoft Entra admin center > User settings > App registrations",
+  "evaluation_path": "apps.userOwned",
   "remediation": "Disable 'Users can register applications' in user settings.",
   "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "UserApps",
     "ThirdPartyAccess",

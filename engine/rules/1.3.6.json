@@ -9,9 +9,12 @@
   "description": "Require explicit customer approval before Microsoft can access customer content.",
   "expected_value": "Customer lockbox enabled",
   "comparison": "Lockbox == Enabled",
-  "evaluation_path": "Microsoft 365 compliance center > Solutions > Customer Lockbox",
+  "evaluation_path": "customer.lockbox",
   "remediation": "Enable Customer Lockbox via Microsoft 365 compliance center.",
   "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
   "tags": [
     "CustomerLockbox",
     "AccessControl",
