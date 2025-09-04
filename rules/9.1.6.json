@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Fabric",
+  "id_level_1": 9.1,
+  "id_level_2": "9.1.6",
+  "title": "Ensure 'Allow users to apply sensitivity labels for content' is enabled",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Manual",
+  "description": "Allows classification and labeling of content in Fabric.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "fabric.enableSensitivityLabels",
+  "remediation": "Enable Microsoft Purview sensitivity labeling integration in Fabric.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Labels",
+    "Compliance"
+  ]
+}

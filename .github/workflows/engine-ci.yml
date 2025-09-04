@@ -1,0 +1,27 @@
+name: Build Engine Branch
+
+on:
+  push:
+    branches: [Compliance-Engine]
+
+jobs:
+  build-engine-from-devops:
+    name: Build Engine Code 
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout engine branch code
+        uses: actions/checkout@v3
+        with:
+          ref: Compliance-Engine
+
+      - name: Confirm branch
+        run: git branch
+
+      - name: Build container
+        run: |
+          docker build -t autoaudit/engine -f docker/engine.Dockerfile .
+
+      - name: Run engine container
+        run: |
+          docker run --rm autoaudit/engine

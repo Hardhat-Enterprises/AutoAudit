@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft 365 admin center",
+  "id_level_1": 1.1,
+  "id_level_2": "1.1.3",
+  "title": "Ensure that between two and four global admins are designated",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Between two and four global administrators should be designated in the tenant to ensure redundancy and limit exposure.",
+  "expected_value": "2\ufffd4 Global Administrators",
+  "comparison": "Count and range check",
+  "evaluation_path": "user.globalAdmins",
+  "remediation": "Add or remove users from Global Admin role to maintain 2\ufffd4 total.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "AdminAccounts",
+    "PrivilegeManagement"
+  ]
+}

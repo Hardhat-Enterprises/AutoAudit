@@ -1,0 +1,19 @@
+{
+  "product": "Microsoft Entra admin center",
+  "id_level_1": 5.1,
+  "id_level_2": "5.1.7",
+  "title": "User experiences",
+  "profile": "nan",
+  "level": "nan",
+  "status": "nan",
+  "description": "nan",
+  "expected_value": "",
+  "comparison": "nan",
+  "evaluation_path": "nan",
+  "remediation": "nan",
+  "risk": "nan",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": []
+}

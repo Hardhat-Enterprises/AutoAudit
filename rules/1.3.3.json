@@ -1,0 +1,23 @@
+{
+  "product": "Microsoft 365 admin center",
+  "id_level_1": 1.3,
+  "id_level_2": "1.3.3",
+  "title": "Ensure 'External sharing' of calendars is not available",
+  "profile": "E3 E5",
+  "level": "L2",
+  "status": "Automated",
+  "description": "Prevent external calendar sharing to avoid data leakage and preserve internal privacy.",
+  "expected_value": "External sharing disabled",
+  "comparison": "CalendarSharing == InternalOnly",
+  "evaluation_path": "calendar.externalSharing",
+  "remediation": "Disable external calendar sharing in org settings.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Calendar",
+    "ExternalSharing",
+    "Privacy"
+  ]
+}

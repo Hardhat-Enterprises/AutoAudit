@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft 365 Defender",
+  "id_level_1": 2.1,
+  "id_level_2": "2.1.11",
+  "title": "Ensure comprehensive attachment filtering is applied",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Applies filtering for a wide range of risky file types.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "defender.comprehensiveAttachmentFilterEnabled",
+  "remediation": "Configure comprehensive attachment filtering in Microsoft Defender.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Attachments",
+    "Malware"
+  ]
+}

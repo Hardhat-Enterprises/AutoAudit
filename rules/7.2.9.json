@@ -1,0 +1,22 @@
+{
+  "product": "SharePoint admin center",
+  "id_level_1": 7.2,
+  "id_level_2": "7.2.9",
+  "title": "Ensure guest access to a site or OneDrive will expire automatically",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Sets expiration period for guest access to resources.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "sharepoint.guestAccessExpiryConfigured",
+  "remediation": "Configure expiration policy for guest access in SharePoint/OneDrive.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Guests",
+    "Governance"
+  ]
+}
