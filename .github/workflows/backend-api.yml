@@ -1,9 +1,9 @@
-name: "API CI/CD"
+name: "Backend + API CI/CD"
 
 on:
   push:
   pull_request:
-    branches: ['main']
+    branches: ['main', 'dev', 'staging']
   schedule:
     - cron: '32 23 * * 6'
 
@@ -17,15 +17,15 @@ jobs:
       # Required if adapting for pull requests later
       pull-requests: read
     outputs:
-      api: ${{ steps.filter.outputs.api }}
+      backend: ${{ steps.filter.outputs.backend }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
-            api:
-              - 'api/**'
+            backend:
+              - 'backend-api/**'
           base: ${{ github.ref }} 
           # Detect changes against the most recent commit on the same branch
 
@@ -33,7 +33,7 @@ jobs:
     name: Security Analysis on (${{ matrix.language }})
     needs: changes
     # Depend on changes job
-    if: github.event_name != 'push' || needs.changes.outputs.api == 'true'  
+    if: github.event_name != 'push' || needs.changes.outputs.backend == 'true'  
     # Run always for non-push events, or if engine changed on push
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
@@ -50,7 +50,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'python', 'javascript-typescript' ]
+        language: [ 'javascript-typescript' ]
         # 'actions'  'c-cpp' 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [changes, analyze]
     # Depend on changes job
-    if: github.event_name != 'push' || needs.changes.outputs.api == 'true'  
+    if: github.event_name != 'push' || needs.changes.outputs.backend == 'true'  
     # Run always for non-push events, or if engine changed on push
     steps:
       - name: Checkout code
@@ -129,24 +129,40 @@ jobs:
           VALIDATE_PYTHON_BLACK: false
           VALIDATE_PYTHON_FLAKE8: false
 
-#  build-api:
-#    name: Build API w/ Docker 
-#    runs-on: ubuntu-latest
-#    needs: [changes, analyze, run-lint]
+  build-and-deploy:
+    name: Build and Deploy Backend
+    needs: [changes, analyze, run-lint]
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
 
-#    steps:
-#      - name: Checkout API w/ Docker
-#        uses: actions/checkout@v3
-#        with:
-#          ref: main
-#
-#      - name: Confirm Branch
-#        run: git branch
-#
-#      - name: Build API Container
-#        run: |
-#          docker build -t autoaudit/api -f api/docker/api.Dockerfile .
-#
-#      - name: Run API Container
-#        run: |
-#          docker run --rm autoaudit/api
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Set Environment
+        id: set-env
+        run: |
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            echo "ENV_NAME=prod" >> $GITHUB_OUTPUT
+          else
+            echo "ENV_NAME=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and tag Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:${{ steps.set-env.outputs.ENV_NAME }} \
+            --build-arg ENV=${{ steps.set-env.outputs.ENV_NAME }} \
+            -f backend/docker/backend.Dockerfile .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/backend:${{ steps.set-env.outputs.ENV_NAME }}
