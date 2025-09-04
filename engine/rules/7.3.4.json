@@ -1,0 +1,22 @@
+{
+  "product": "SharePoint admin center",
+  "id_level_1": 7.3,
+  "id_level_2": "7.3.4",
+  "title": "Ensure custom script execution is restricted on site collections",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Prevents running custom scripts on all site collections.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "sharepoint.restrictCustomScriptsSiteCollections",
+  "remediation": "Configure custom script setting in SharePoint admin center.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Scripts",
+    "Governance"
+  ]
+}

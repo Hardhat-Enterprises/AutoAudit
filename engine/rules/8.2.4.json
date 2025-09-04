@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Teams admin center",
+  "id_level_1": 8.2,
+  "id_level_2": "8.2.4",
+  "title": "Ensure communication with Skype users is disabled",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Blocks Teams communication with Skype consumer accounts.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "teams.blockSkypeUsers",
+  "remediation": "Disable Skype federation in Teams settings.",
+  "risk": "Low",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "External",
+    "Skype"
+  ]
+}

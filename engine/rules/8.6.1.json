@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Teams admin center",
+  "id_level_1": 8.6,
+  "id_level_2": "8.6.1",
+  "title": "Ensure users can report security concerns in Teams",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Allows reporting of suspicious messages within Teams.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "teams.messaging.securityReportEnabled",
+  "remediation": "Enable “Report a security concern” in Teams messaging policy.",
+  "risk": "Low",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Security",
+    "Awareness"
+  ]
+}
