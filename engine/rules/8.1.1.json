@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Teams admin center",
+  "id_level_1": 8.1,
+  "id_level_2": "8.1.1",
+  "title": "Ensure external file sharing in Teams is enabled for only approved cloud storage services",
+  "profile": "E3 E5",
+  "level": "L2",
+  "status": "Automated",
+  "description": "Restricts external file sharing to approved cloud storage providers.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "teams.externalFileSharingApprovedProviders",
+  "remediation": "Configure Teams external file sharing settings to limit to approved providers.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Sharing",
+    "External"
+  ]
+}

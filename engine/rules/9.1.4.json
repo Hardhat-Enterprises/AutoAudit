@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Fabric",
+  "id_level_1": 9.1,
+  "id_level_2": "9.1.4",
+  "title": "Ensure 'Publish to web' is restricted",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Prevents unrestricted public sharing of Fabric content.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "fabric.publishToWebRestricted",
+  "remediation": "Disable “Publish to web” or restrict to approved users.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Sharing",
+    "External"
+  ]
+}

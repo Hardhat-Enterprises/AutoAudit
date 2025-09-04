@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft 365 Defender",
+  "id_level_1": 2.1,
+  "id_level_2": "2.1.8",
+  "title": "Ensure that SPF records are published for all Exchange Domains",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "SPF prevents spoofed mail by specifying authorized sending servers.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "exchange.spfRecordsPublished",
+  "remediation": "Publish SPF DNS TXT records for all Exchange domains.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "SPF",
+    "DNS"
+  ]
+}

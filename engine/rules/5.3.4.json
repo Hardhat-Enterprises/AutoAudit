@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Entra admin center",
+  "id_level_1": 5.3,
+  "id_level_2": "5.3.4",
+  "title": "Ensure approval is required for Global Administrator role activation",
+  "profile": "E5",
+  "level": "L1",
+  "status": "Manual",
+  "description": "Requires approval before GA role elevation (PIM).",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "entra.pim.gaActivationRequiresApproval",
+  "remediation": "In PIM, require approval for GA activation and assign approvers.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "PIM",
+    "Approvals"
+  ]
+}
