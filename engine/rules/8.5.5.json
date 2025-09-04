@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Teams admin center",
+  "id_level_1": 8.5,
+  "id_level_2": "8.5.5",
+  "title": "Ensure meeting that does not allow anonymous users",
+  "profile": "E3 E5",
+  "level": "L2",
+  "status": "Automated",
+  "description": "Blocks meeting creation that allows anonymous join.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "teams.meetings.noAnonymousAllowed",
+  "remediation": "Restrict meeting creation to authenticated participants only.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Meetings",
+    "Policy"
+  ]
+}

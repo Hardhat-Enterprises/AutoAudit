@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Fabric",
+  "id_level_1": 9.1,
+  "id_level_2": "9.1.10",
+  "title": "Ensure only approved APIs by Service Principals are permitted",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Manual",
+  "description": "Restricts API access to approved Service Principals.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "fabric.approvedServicePrincipalsOnly",
+  "remediation": "Limit API permissions to approved Service Principals in Fabric admin center.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "API",
+    "Governance"
+  ]
+}

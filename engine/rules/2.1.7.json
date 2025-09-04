@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft 365 Defender",
+  "id_level_1": 2.1,
+  "id_level_2": "2.1.7",
+  "title": "Ensure that an anti-phishing policy has been created",
+  "profile": "E5",
+  "level": "L2",
+  "status": "Manual",
+  "description": "Anti-phishing policies detect and block impersonation and phishing attempts.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "defender.antiPhishPolicyCreated",
+  "remediation": "Create anti-phishing policies in Microsoft 365 Security & Compliance center.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "AntiPhishing",
+    "Identity"
+  ]
+}

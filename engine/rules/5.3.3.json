@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Entra admin center",
+  "id_level_1": 5.3,
+  "id_level_2": "5.3.3",
+  "title": "Ensure 'Access reviews' for privileged roles are configured",
+  "profile": "E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Periodic reviews of users with privileged roles.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "entra.accessReviews.privilegedConfigured",
+  "remediation": "Create recurring access reviews for admin roles/groups.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "AccessReviews",
+    "Privileged"
+  ]
+}

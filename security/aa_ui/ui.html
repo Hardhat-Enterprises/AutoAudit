@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AutoAudit – Evidence Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --border:#e5e7eb; --bg:#f9fafb; --text:#111827; --muted:#6b7280; --brand:#0d6efd; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:var(--text);
+           max-width: 960px; margin: 32px auto; padding: 0 16px; }
+    h1 { margin:0 0 8px 0; font-size: 24px; }
+    .sub { color:var(--muted); margin:0 0 16px 0; }
+    .card { border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; background:#fff; }
+    label { display:block; margin:10px 0 6px; font-weight:600; }
+    select, input[type=text], input[type=file] { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; }
+    .row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    button { padding:10px 16px; border:0; border-radius:8px; cursor:pointer; background:var(--brand); color:#fff; font-weight:600; }
+    button[disabled] { opacity:.6; cursor:not-allowed; }
+    .help { color:var(--muted); font-size: 13px; margin-top: 6px; }
+    .hidden { display:none; }
+    table { width:100%; border-collapse:collapse; margin-top:12px; }
+    th, td { border:1px solid var(--border); padding:8px; font-size:14px; vertical-align:top; }
+    th { background:var(--bg); text-align:left; }
+    .ok { color:#047857; font-weight:600; }
+    .bad { color:#b00020; font-weight:600; }
+    .tag { display:inline-block; padding:2px 8px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:var(--muted); }
+    .error { color:#b00020; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <h1>AutoAudit – Evidence Scanner</h1>
+  <p class="sub">Pick a strategy, then upload a file. Images, PDF, DOCX, TXT, logs, registry exports are supported.</p>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="strategy">Strategy</label>
+        <select id="strategy"></select>
+        <div id="strategyDesc" class="help"></div>
+      </div>
+      <div>
+        <label for="user">User ID (optional)</label>
+        <input id="user" type="text" placeholder="e.g. bharadwaj" />
+      </div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <label for="file">Evidence file</label>
+      <input id="file" type="file"
+             disabled
+             accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.txt,.docx,.csv,.log,.reg,.ini,.json,.xml,.htm,.html" />
+      <div class="help">Enabled after you choose a strategy.</div>
+    </div>
+
+    <div style="margin-top:14px; display:flex; gap:8px; align-items:center;">
+      <button id="scanBtn" disabled>Scan Evidence</button>
+      <span id="busy" class="help hidden">Scanning…</span>
+      <span id="err" class="error"></span>
+    </div>
+  </div>
+
+  <div id="results" class="card hidden">
+    <h3 style="margin-top:0;">Results</h3>
+    <div id="meta" class="help"></div>
+    <div id="noFindings" class="help hidden">No readable text found or no findings.</div>
+    <table id="rowsTable" class="hidden">
+      <thead>
+        <tr>
+          <th>Test ID</th>
+          <th>Sub-Strategy</th>
+          <th>Level</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Recommendation</th>
+          <th>Evidence Extract</th>
+          <th>Report</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script>
+const API_BASE = location.origin;
+
+const els = {
+  strategy: document.getElementById('strategy'),
+  strategyDesc: document.getElementById('strategyDesc'),
+  user: document.getElementById('user'),
+  file: document.getElementById('file'),
+  scanBtn: document.getElementById('scanBtn'),
+  busy: document.getElementById('busy'),
+  err: document.getElementById('err'),
+  results: document.getElementById('results'),
+  meta: document.getElementById('meta'),
+  noFindings: document.getElementById('noFindings'),
+  rowsTable: document.getElementById('rowsTable'),
+  tbody: document.querySelector('#rowsTable tbody'),
+};
+
+async function loadStrategies() {
+  const res = await fetch(`${API_BASE}/strategies`);
+  const list = await res.json(); // [{name, description}]
+  els.strategy.innerHTML = `<option value="" disabled selected>— select a strategy —</option>`;
+  list.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.name;
+    opt.textContent = s.name;
+    opt.dataset.desc = s.description || '';
+    els.strategy.appendChild(opt);
+  });
+}
+
+function onStrategyChange() {
+  const opt = els.strategy.options[els.strategy.selectedIndex];
+  const desc = opt?.dataset?.desc || '';
+  els.strategyDesc.textContent = desc;
+  const hasChoice = !!els.strategy.value;
+  els.file.disabled = !hasChoice;
+  els.scanBtn.disabled = !hasChoice;
+  els.err.textContent = '';
+}
+
+async function scan() {
+  els.err.textContent = '';
+  const strategy = els.strategy.value;
+  const user = els.user.value || 'user';
+  const file = els.file.files[0];
+
+  if (!strategy) { els.err.textContent = 'Select a strategy.'; return; }
+  if (!file) { els.err.textContent = 'Choose an evidence file.'; return; }
+
+  const fd = new FormData();
+  fd.append('strategy_name', strategy);
+  fd.append('user_id', user);
+  fd.append('evidence', file);
+
+  els.scanBtn.disabled = true;
+  els.busy.classList.remove('hidden');
+
+  try {
+    const res = await fetch(`${API_BASE}/scan`, { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.detail || 'Scan failed');
+    renderResults(strategy, file.name, data);
+  } catch (e) {
+    els.err.textContent = e.message || 'Scan failed';
+  } finally {
+    els.scanBtn.disabled = false;
+    els.busy.classList.add('hidden');
+  }
+}
+
+function renderResults(strategy, filename, data) {
+  els.results.classList.remove('hidden');
+  els.meta.innerHTML = `
+    <div><span class="tag">Strategy</span> ${strategy}</div>
+    <div><span class="tag">File</span> ${filename}</div>
+  `;
+
+  const findings = data?.findings || [];
+  const reports = data?.reports || [];
+  els.tbody.innerHTML = '';
+
+  if (!findings.length) {
+    els.noFindings.classList.remove('hidden');
+    els.rowsTable.classList.add('hidden');
+    return;
+  }
+  els.noFindings.classList.add('hidden');
+  els.rowsTable.classList.remove('hidden');
+
+  findings.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    const status = (r.pass_fail || '').toUpperCase();
+    const statusClass = status === 'PASS' ? 'ok' : status === 'FAIL' ? 'bad' : '';
+    const reportFile = reports[i] ? `${API_BASE}/reports/${encodeURIComponent(reports[i])}` : '';
+
+    tr.innerHTML = `
+      <td>${r.test_id || ''}</td>
+      <td>${r.sub_strategy || ''}</td>
+      <td>${r.detected_level || ''}</td>
+      <td class="${statusClass}">${r.pass_fail || ''}</td>
+      <td>${r.priority || ''}</td>
+      <td>${r.recommendation || ''}</td>
+      <td>${Array.isArray(r.evidence) ? r.evidence.join('<br>') : ''}</td>
+      <td>${reportFile ? `<a href="${reportFile}" target="_blank" rel="noopener">PDF</a>` : ''}</td>
+    `;
+    els.tbody.appendChild(tr);
+  });
+}
+
+els.strategy.addEventListener('change', onStrategyChange);
+els.scanBtn.addEventListener('click', scan);
+loadStrategies();
+</script>
+</body>
+</html>

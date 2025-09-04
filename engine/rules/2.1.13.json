@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft 365 Defender",
+  "id_level_1": 2.1,
+  "id_level_2": "2.1.13",
+  "title": "Ensure the connection filter safe list is off",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Prevents safe list from bypassing spam/malware detection.",
+  "expected_value": "FALSE",
+  "comparison": "equals",
+  "evaluation_path": "exchange.connectionFilterSafeListEnabled",
+  "remediation": "Disable safe list in connection filter settings.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Spam",
+    "EmailFiltering"
+  ]
+}

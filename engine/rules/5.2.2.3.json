@@ -1,0 +1,21 @@
+{
+  "product": "Microsoft Entra admin center",
+  "id_level_1": 5.2,
+  "id_level_2": "5.2.2.3",
+  "title": "Enable Conditional Access policies to block legacy authentication",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Ensure Conditional Access policies are configured to block all legacy authentication protocols to prevent attacks that bypass MFA.",
+  "expected_value": "Legacy authentication blocked",
+  "comparison": "equals",
+  "evaluation_path": "user.conditional_access.policies.block_legacy_auth",
+  "remediation": "Configure a Conditional Access policy in Microsoft Entra ID that targets all users and resources, blocks Exchange ActiveSync and other legacy clients, and excludes only documented break-glass accounts.",
+  "risk": "High",
+  "tags": [
+    "ConditionalAccess",
+    "LegacyAuth",
+    "Authentication",
+    "MFA"
+  ]
+}
