@@ -1,8 +1,0 @@
-UserID,Image,Strategy,TestID,Sub-Strategy,ML Level,Pass/Fail,Priority,Recommendation,Evidence Extract
-bb,ad_group.txt,Configure Microsoft Office Macro Settings,,,,NO_MATCH,Low,No rule matched this file.,
-bb,approved_users.txt,Configure Microsoft Office Macro Settings,ML1-OM-02,Approved users list matches AD group,ML1,PASS,Medium,Approved repository and AD security group are in sync.,approved_users.txt + ad_group.txt
-bb,macro settings.png,Configure Microsoft Office Macro Settings,ML1-OM-01,Disable for unapproved users,ML1,PASS,High,Enforce 'Disable all macros without notification' via GPO.,? x Trusted Publishers Macro Settings Trusted Locations O Disable all macros without notification Trusted Documents O Disable all macros with notification Trusted Add-in Catalogs :…
-bb,macros-blocked-internet.jpg,Configure Microsoft Office Macro Settings,,,,NO_MATCH,Low,No rule matched this file.,
-bb,microsoft-has-blocked-macros-from-running.jpg,Configure Microsoft Office Macro Settings,,,,NO_MATCH,Low,No rule matched this file.,
-bb,Office_macros_security_alert.png,Configure Microsoft Office Macro Settings,,,,NO_MATCH,Low,No rule matched this file.,
-bb,unblock-file.jpg,Configure Microsoft Office Macro Settings,,,,NO_MATCH,Low,No rule matched this file.,
