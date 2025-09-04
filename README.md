@@ -36,14 +36,11 @@ All changes are integrated through Pull Requests (PRs), with branch protections 
 - Follow project code style guides (enforced via automated linting/CI).
 - All PRs must target the correct integration branch and include a clear description and relevant issue/PR references.
 - Tag your team and relevant reviewers for all non-trivial work.
-- Major structural changes should be discussed with the DevOps lead before implementation.
 
 ## CI/CD Pipeline Overview
 - Automated with GitHub Actions and Google Cloud Build
 - On PR or code push, path filters selectively trigger builds & tests only for affected services.
 - On successful checks, images are built and pushed to Google Artifact Registry.
-- Deployments to GCP Kubernetes clusters are triggered for the appropriate environment (dev/staging/production).
-- All secrets and environment-specific settings are managed via Google Secret Manager and encrypted variables.
 
 ## Contact & Support
 For support or questions, please:
