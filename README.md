@@ -6,19 +6,22 @@ AutoAudit is a M365 compliance automation platform built by several specialist t
 ## Repository Structure
 The repo is organized into dedicated top-level folders for each team/service. This ensures clear code ownership, auditability, and minimizes merge conflicts.
 
+# API Team microservices and interfaces
 /api/ 
-# API microservices and interfaces
-/backend/ 
-# Backend and business logic
-/security/ 
-# Compliance scanning and security modules
-/frontend/ 
-# Web frontend/UI code
-/engine/ 
-# Infrastructure as code, Kubernetes manifests, CI/CD configs
-.other-folders/ 
-# Supporting documentation and shared resources
 
+# Backend Team
+/backend/ 
+
+# Compliance Team
+/security/ 
+
+# Web frontend/UI code
+/frontend/ 
+
+# Engine Team
+/engine/ 
+
+.other-folders/ 
 
 Each folder was imported from individual repos, preserving full commit history and enabling future traceability.
 
