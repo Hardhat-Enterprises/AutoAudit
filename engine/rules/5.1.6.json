@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Entra admin center",
+  "id_level_1": 5.1,
+  "id_level_2": "5.1.6",
+  "title": "Ensure guest user invitations are limited to the Guest Inviter role",
+  "profile": "E3 E5",
+  "level": "L2",
+  "status": "Automated",
+  "description": "Only users in Guest Inviter (or designated roles) can invite guests.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "entra.guestInvitationRoleLimited",
+  "remediation": "Limit guest invitation permissions to “Guest Inviter” or specific roles/groups.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Guests",
+    "Governance"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "product": "Microsoft 365 admin center",
+  "id_level_1": 1.3,
+  "id_level_2": "1.3.7",
+  "title": "Ensure 'third-party storage services' are restricted in 'Microsoft 365 on the web'",
+  "profile": "E3 E5",
+  "level": "L2",
+  "status": "Automated",
+  "description": "Restrict access to third-party storage services like Dropbox or Google Drive to protect data.",
+  "expected_value": "Third-party storage access disabled",
+  "comparison": "ThirdPartyStorage == Disabled",
+  "evaluation_path": "office.ThirdPartyStorage",
+  "remediation": "Disable integration with third-party storage services.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Storage",
+    "ExternalServices",
+    "DataControl"
+  ]
+}

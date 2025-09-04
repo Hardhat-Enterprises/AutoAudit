@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Teams admin center",
+  "id_level_1": 8.4,
+  "id_level_2": "8.4.1",
+  "title": "Ensure app permission policies are configured",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Manual",
+  "description": "Defines which apps are allowed/blocked for Teams users.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "teams.appPermissionPoliciesConfigured",
+  "remediation": "Configure Teams app permission policies in Teams admin center.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Apps",
+    "Governance"
+  ]
+}

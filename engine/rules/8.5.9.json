@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Teams admin center",
+  "id_level_1": 8.5,
+  "id_level_2": "8.5.9",
+  "title": "Ensure meeting recording is off by default",
+  "profile": "E3 E5",
+  "level": "L2",
+  "status": "Automated",
+  "description": "Disables automatic meeting recording.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "teams.meetings.recordingOffByDefault",
+  "remediation": "Set meeting policy default recording option to Off.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Meetings",
+    "Recording"
+  ]
+}

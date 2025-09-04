@@ -1,0 +1,23 @@
+{
+  "product": "Microsoft 365 admin center",
+  "id_level_1": 1.3,
+  "id_level_2": "1.3.2",
+  "title": "Ensure 'Idle session timeout' is set to '3 hours (or less)' for unmanaged devices",
+  "profile": "E3 E5",
+  "level": "L2",
+  "status": "Automated",
+  "description": "Limit idle session timeout for unmanaged devices to reduce session hijack risks.",
+  "expected_value": "Idle timeout set to = 3 hours",
+  "comparison": "IdleTimeout <= 3h",
+  "evaluation_path": "session.idleTimeout",
+  "remediation": "Configure timeout policy in settings for unmanaged device sessions.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "SessionTimeout",
+    "DeviceManagement",
+    "UnmanagedAccess"
+  ]
+}

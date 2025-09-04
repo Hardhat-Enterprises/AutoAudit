@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Teams admin center",
+  "id_level_1": 8.2,
+  "id_level_2": "8.2.3",
+  "title": "Ensure external Teams users cannot initiate conversations",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Prevents external users from initiating new chats.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "teams.blockExternalUsersInitiateChats",
+  "remediation": "Configure Teams external access to block chat initiation from external users.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "External",
+    "Chat"
+  ]
+}

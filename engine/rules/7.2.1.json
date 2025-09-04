@@ -1,0 +1,22 @@
+{
+  "product": "SharePoint admin center",
+  "id_level_1": 7.2,
+  "id_level_2": "7.2.1",
+  "title": "Ensure modern authentication for SharePoint applications is required",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Requires modern authentication to block basic auth access to SharePoint.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "sharepoint.modernAuthRequired",
+  "remediation": "Enable modern auth for SharePoint in tenant settings.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Auth",
+    "ModernAuth"
+  ]
+}

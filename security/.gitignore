@@ -1,0 +1,30 @@
+# Ignore Python caches
+__pycache__/
+*.pyc
+
+# Ignore virtual env
+venv/
+Essential8_scanner/venv/
+
+# Ignore Virtual environments
+.venv/
+venv/
+env/
+
+# Ignore individual project outputs/reports
+scan_report.csv          
+reports_out/             
+previews/               
+
+# macOS
+.DS_Store
+.vscode/
+.idea/
+
+
+
+web/venv/
+.previews/
+reports_out/
+scan_report.csv
+*.local.bak

@@ -1,0 +1,22 @@
+{
+  "product": "SharePoint admin center",
+  "id_level_1": 7.2,
+  "id_level_2": "7.2.10",
+  "title": "Ensure reauthentication with verification code is restricted",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Requires reauth with verification code only when appropriate.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "sharepoint.reauthVerificationCodeRestricted",
+  "remediation": "Configure reauth restrictions for verification codes in SharePoint admin center.",
+  "risk": "Low",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Auth",
+    "Reauth"
+  ]
+}

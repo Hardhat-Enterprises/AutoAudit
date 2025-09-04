@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Entra admin center",
+  "id_level_1": 5.3,
+  "id_level_2": "5.3.5",
+  "title": "Ensure approval is required for Privileged Role Administrator activation",
+  "profile": "E5",
+  "level": "L1",
+  "status": "Manual",
+  "description": "Requires approval before PRA role elevation (PIM).",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "entra.pim.praActivationRequiresApproval",
+  "remediation": "In PIM, require approval for PRA activation and assign approvers.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "PIM",
+    "Approvals"
+  ]
+}
