@@ -8,11 +8,8 @@ venv/
 env/
 
 # Ignore project outputs/reports
-scan_report.csv                 
-reports_out/
-previews/ 
 results/*
-!results/report_template.docx          
+!results/report_template.docx       
 
 # macOS
 .DS_Store
