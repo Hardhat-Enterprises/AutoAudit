@@ -9,9 +9,10 @@ env/
 
 # Ignore project outputs/reports
 scan_report.csv                 
-results /  
 reports_out/
-previews/           
+previews/ 
+results/*
+!results/report_template.docx          
 
 # macOS
 .DS_Store
