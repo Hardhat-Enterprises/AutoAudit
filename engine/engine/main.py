@@ -6,7 +6,7 @@ def load_mock_config(path="engine/test-configs/compliant.json"):
         return json.load(f)
     
 
-def load_rules(directory="rules"):
+def load_rules(directory="engine/rules"):
     rules = []
     for file in os.listdir(directory):
         if file.endswith(".json"):
