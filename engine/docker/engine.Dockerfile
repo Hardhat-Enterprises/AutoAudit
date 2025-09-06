@@ -4,4 +4,4 @@ WORKDIR /app
 
 COPY engine/ ./engine/
 
-CMD ["python", "engine/main.py"]
+CMD ["python", "engine/engine/main.py"]
