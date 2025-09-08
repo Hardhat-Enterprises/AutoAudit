@@ -101,6 +101,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./engine
+	  file: ./engine/docker/engine.Dockerfile
           tags: localbuild/engine:${{ github.ref_name }}
           push: false
           load: true
