@@ -84,7 +84,7 @@ jobs:
           VALIDATE_PYTHON_BLACK: false
           VALIDATE_PYTHON_FLAKE8: false
 
-    build-and-scan:
+  build-and-scan:   # 👈 this must be indented under "jobs"
     name: Build and Scan Engine
     runs-on: ubuntu-latest
     needs: [changes]
@@ -110,4 +110,3 @@ jobs:
         uses: anchore/scan-action@v6
         with:
           image: localbuild/engine:${{ github.ref_name }}
-
