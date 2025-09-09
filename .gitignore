@@ -1,0 +1,5 @@
+﻿evidence/
+security/evidence/
+scan_report*.csv
+__pycache__/
+.venv/
