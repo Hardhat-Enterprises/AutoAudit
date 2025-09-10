@@ -104,3 +104,12 @@ jobs:
         with:
           image: localbuild/engine:${{ github.ref_name }}
           fail-build: false
+          output-format: json
+          output-file: grype-report.json
+
+      - name: Upload vulnerability report
+        uses: actions/upload-artifact@v3
+        with:
+          name: grype-report
+          path: grype-report.json
+
