@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Compliance Rule Schema v1",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the rule (e.g., CIS-1.1.1)"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short title of the compliance rule"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed explanation of the compliance requirement"
+    },
+    "frameworks": {
+      "type": "object",
+      "description": "Mappings to multiple frameworks",
+      "additionalProperties": { "type": "string" }
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "weight": {
+      "type": "number",
+      "minimum": 0
+    },
+    "check_type": {
+      "type": "string",
+      "enum": ["graph_query", "regex", "boolean", "custom", "opa"]
+    },
+    "query": {
+      "type": "string",
+      "description": "Graph API endpoint, regex pattern, or OPA policy reference"
+    },
+    "expected_value": {
+      "description": "The expected outcome of the check",
+      "type": ["string", "boolean", "object", "array", "number"]
+    }
+  },
+  "required": ["id", "title", "description", "severity", "weight", "check_type"],
+  "additionalProperties": false
+}
