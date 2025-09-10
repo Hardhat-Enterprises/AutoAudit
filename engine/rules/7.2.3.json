@@ -1,0 +1,22 @@
+{
+  "product": "SharePoint admin center",
+  "id_level_1": 7.2,
+  "id_level_2": "7.2.3",
+  "title": "Ensure external content sharing is restricted",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Restricts external sharing to approved levels (e.g., specific people).",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "sharepoint.externalSharingRestricted",
+  "remediation": "Configure external sharing settings for SharePoint to most restrictive necessary.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Sharing",
+    "External"
+  ]
+}

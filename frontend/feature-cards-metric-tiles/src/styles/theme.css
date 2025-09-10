@@ -1,0 +1,11 @@
+:root{
+  --bg:#0b1118;
+  --surface:#0f1a22;
+  --text:#e6edf3;
+  --muted:#7b8794;
+  --border:rgba(255,255,255,.08);
+  --gap:24px;
+}
+html,body,#root{height:100%}
+body{margin:0;color:var(--text);background:var(--bg)}
+*{box-sizing:border-box}

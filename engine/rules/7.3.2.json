@@ -1,0 +1,22 @@
+{
+  "product": "SharePoint admin center",
+  "id_level_1": 7.3,
+  "id_level_2": "7.3.2",
+  "title": "Ensure OneDrive sync is restricted for unmanaged devices",
+  "profile": "E3 E5",
+  "level": "L2",
+  "status": "Automated",
+  "description": "Prevents syncing files to unmanaged/unknown devices.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "onedrive.restrictSyncUnmanagedDevices",
+  "remediation": "Configure OneDrive admin center to block sync on unmanaged devices.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Sync",
+    "Devices"
+  ]
+}

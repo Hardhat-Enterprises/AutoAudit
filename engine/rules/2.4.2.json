@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft 365 Defender",
+  "id_level_1": 2.4,
+  "id_level_2": "2.4.2",
+  "title": "Ensure Priority accounts have 'Strict protection' presets applied",
+  "profile": "E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Applies stricter security settings to priority accounts.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "system.priorityAccountStrictProtectionApplied",
+  "remediation": "Apply strict protection presets to all priority accounts.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "PriorityAccount",
+    "Identity"
+  ]
+}

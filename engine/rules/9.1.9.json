@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Fabric",
+  "id_level_1": 9.1,
+  "id_level_2": "9.1.9",
+  "title": "Ensure 'Block Reshare/Copy Authentication' is enabled",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Manual",
+  "description": "Prevents recipients from resharing or copying authentication data.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "fabric.blockReshareCopyAuth",
+  "remediation": "Enable “Block Reshare/Copy Authentication” in Fabric settings.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Sharing",
+    "Governance"
+  ]
+}
