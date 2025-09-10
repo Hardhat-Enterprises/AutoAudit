@@ -108,7 +108,7 @@ jobs:
           output-file: grype-report.json
 
       - name: Upload vulnerability report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: grype-report
           path: grype-report.json
