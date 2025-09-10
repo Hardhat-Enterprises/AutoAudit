@@ -100,7 +100,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES = ROOT / "templates"
 OUT_DIR = ROOT / "reports_out"
 PREVIEWS = ROOT / "previews"
-INDEX_HTML = ROOT / "aa_ui" / "ui.html"  # <-- serve ui.html
+INDEX_HTML = ROOT / "frontend_ui" / "ui.html"  # <-- serve ui.html from the new folder
 
 
 @app.get("/", response_class=HTMLResponse)
