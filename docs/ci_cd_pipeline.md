@@ -2,14 +2,14 @@
 
 ## Overview
 
-This document details the design, usage, and maintenance of the AutoAudit CI/CD pipeline implemented via GitHub Actions. It covers pipeline stages, environment configuration, deployment processes, rollback strategies, and troubleshooting.
+This document outlines the design, usage, and maintenance of the AutoAudit CI/CD pipeline, which is implemented using GitHub Actions. It covers pipeline stages, environment configuration, deployment processes, rollback strategies, and troubleshooting.
 
 ## Pipeline Architecture
 
 The pipeline is defined in `.github/workflows/ci_cd.yml` and consists of the following stages:
 
 1. **Checkout Code**  
-   Clones the repository and checks out the relevant branch with submodules, if any.
+   Clones the repository and checks out the relevant branch, including any submodules.
 
 2. **Dependency Installation**  
    Installs Python dependencies using `pipenv` and Node.js dependencies using `npm ci` for deterministic installs.
@@ -63,7 +63,7 @@ Developers can simulate pipeline stages locally using Docker Compose and the pro
 ## Troubleshooting
 
 - Check GitHub Actions logs for detailed error messages.
-- Verify Dockerfile syntax and base image availability if build fails.
+- Verify Dockerfile syntax and base image availability if the build fails.
 - Confirm the validity of Azure credentials and Kubernetes config for authentication errors.
 - Review test reports and coverage summaries for test failures.
 
