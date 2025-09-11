@@ -2,7 +2,7 @@
 
 ## Overview
 
-Secure handling of secrets is critical to maintaining the integrity and confidentiality of the AutoAudit system. This document outlines the best practices and technical implementations for secrets management across development, CI/CD, and production environments.
+Secure handling of secrets is critical to maintaining the integrity and confidentiality of the AutoAudit system. This document outlines best practices and technical implementations for managing secrets across development, CI/CD, and production environments.
 
 ## Local Development
 
