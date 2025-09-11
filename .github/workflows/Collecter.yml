@@ -26,16 +26,37 @@ jobs:
         env: 
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
+          set -euo pipefail
           python3 engine/engine/GCPAccess.py
-          mv engine/iam_policy.json engine/test-configs/iam_policy.json
-          mv engine/networks.json engine/test-configs/networks.json
+          if [ -f iam_policy.json ]; then
+            mv -f iam_policy.json engine/test-configs/iam_policy.json
+          elif [ -f engine/engine/iam_policy.json ]; then
+            mv -f engine/engine/iam_policy.json engine/test-configs/iam_policy.json
+          else
+            echo "ERROR: iam_policy.json not found"; exit 1
+          fi
+          if [ -f networks.json ]; then
+            mv -f networks.json engine/test-configs/networks.json
+          elif [ -f engine/engine/networks.json ]; then
+            mv -f engine/engine/networks.json engine/test-configs/networks.json
+          else
+            echo "ERROR: networks.json not found"; exit 1
+          fi
 
       - name: Commit and push IAM policy & networks config
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add engine/test-configs/iam_policy.json
           git add engine/test-configs/networks.json
-          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Update iam_policy.json & networks.json"
-          git push origin engine-development
+          echo "Staged changes:"
+          git diff --cached --name-only
+          if git diff --cached --quiet; then
+            echo "No changes to commit (either identical content or nothing staged)."
+          else
+            git commit -m "Update iam_policy.json & networks.json"
+            git push origin engine-development
+          fi
+          
         
