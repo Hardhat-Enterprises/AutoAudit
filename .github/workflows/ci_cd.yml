@@ -1,0 +1,150 @@
+name: AutoAudit CI/CD Pipeline v2
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+      - 'hotfix/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  PYTHON_VERSION: 3.11
+  NODE_VERSION: 18.x
+  DOCKER_IMAGE_NAME: autoaudit
+  DOCKER_REGISTRY: myregistry.azurecr.io
+  K8S_NAMESPACE_STAGING: autoaudit-staging
+  K8S_NAMESPACE_PROD: autoaudit-prod
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [${{ env.PYTHON_VERSION }}]
+        node-version: [${{ env.NODE_VERSION }}]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pipenv
+        run: pip install pipenv
+
+      - name: Install Python dependencies
+        run: pipenv install --dev --deploy
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Run linters
+        run: |
+          pipenv run flake8 src/
+          npm run lint
+
+      - name: Run security scans
+        run: |
+          pipenv run bandit -r src/
+          trivy fs --severity CRITICAL,HIGH .
+
+      - name: Run tests
+        run: |
+          pipenv run pytest --cov=src --cov-fail-under=95
+          npm test
+
+      - name: Build Docker image
+        run: |
+          docker build --progress=plain --no-cache -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} .
+
+      - name: Scan Docker image
+        run: |
+          trivy image --severity CRITICAL,HIGH ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+
+  deploy-staging:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 --decode > $HOME/.kube/config
+
+      - name: Deploy to staging namespace
+        run: |
+          helm upgrade --install autoaudit helm/autoaudit --namespace ${{ env.K8S_NAMESPACE_STAGING }} --wait --timeout 10m
+
+      - name: Run post-deployment smoke tests
+        run: |
+          ./scripts/smoke_tests.sh staging
+
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: "Staging deployment of AutoAudit successful for commit ${{ github.sha }}"
+
+  deploy-production:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PROD }}" | base64 --decode > $HOME/.kube/config
+
+      - name: Deploy to production namespace with blue-green strategy
+        run: |
+          ./scripts/deploy_blue_green.sh production
+
+      - name: Run post-deployment smoke tests
+        run: |
+          ./scripts/smoke_tests.sh production
+
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: "Production deployment of AutoAudit successful for commit ${{ github.sha }}"
