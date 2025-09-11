@@ -14,7 +14,7 @@ This guide provides detailed instructions for deploying the AutoAudit applicatio
 
 ## Deployment Steps
 
-### 1. Prepare Environment
+### 1. Prepare The Environment
 
 - Ensure all environment variables and secrets are configured in GitHub repository settings.
 - Validate Kubernetes context is set to the target cluster.
@@ -23,17 +23,17 @@ This guide provides detailed instructions for deploying the AutoAudit applicatio
 kubectl config current-context
 # AutoAudit Deployment Steps
 
-## 2. Trigger CI/CD Pipeline
+## 2. Trigger The CI/CD Pipeline
 
 - Push code changes to the `develop` branch for staging deployment.
 - Merge pull requests into the `main` branch for production deployment.
 
-## 3. Monitor Pipeline Execution
+## 3. Monitor The Pipeline's Execution
 
 - Monitor the GitHub Actions workflow for build, test, and deployment stages.
 - Review logs carefully for any errors or warnings.
 
-## 4. Verify Deployment
+## 4. Verify The Deployment
 
 ### Check Kubernetes Pods Status
 
