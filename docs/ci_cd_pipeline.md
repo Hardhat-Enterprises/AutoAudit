@@ -15,7 +15,7 @@ The pipeline is defined in `.github/workflows/ci_cd.yml` and consists of the fol
    Installs Python dependencies using `pipenv` and Node.js dependencies using `npm ci` for deterministic installs.
 
 3. **Static Code Analysis**  
-   Runs SonarQube scanner and linters (`flake8`, `eslint`) to enforce code quality and security standards.
+   Runs SonarQube scanner and linters (e.g., `flake8`, `eslint`) to enforce code quality and security standards.
 
 4. **Unit and Integration Testing**  
    Executes automated test suites with coverage reporting. Minimum coverage threshold is 90%.
