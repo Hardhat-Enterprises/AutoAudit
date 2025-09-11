@@ -27,8 +27,8 @@ jobs:
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
           python3 engine/engine/GCPAccess.py
-          mv iam_policy.json engine/test-configs/iam_policy.json
-          mv networks.json engine/test-configs/networks.json
+          mv engine/iam_policy.json engine/test-configs/iam_policy.json
+          mv engine/networks.json engine/test-configs/networks.json
 
       - name: Commit and push IAM policy & networks config
         run: |
