@@ -3,26 +3,20 @@ __pycache__/
 *.pyc
 
 # Ignore virtual env
-venv/
-Essential8_scanner/venv/
-
-# Ignore Virtual environments
 .venv/
 venv/
 env/
 
-# Ignore individual project outputs/reports
-scan_report.csv          
-reports_out/             
-previews/               
+# Ignore project outputs/reports
+results/*
+!results/report_template.docx       
 
 # macOS
 .DS_Store
 .vscode/
 .idea/
 
-
-
+# frontend
 web/venv/
 .previews/
 reports_out/
