@@ -1,8 +1,0 @@
-.aa-slot{
-  height:100%;
-  border:1px dashed var(--border);
-  border-radius:16px;
-  background:rgba(255,255,255,.03);
-  display:grid; place-items:center;
-  font:600 14px/1.2 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-}
