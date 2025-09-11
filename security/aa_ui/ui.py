@@ -1,3 +1,4 @@
+# aa_ui/ui.py
 from pathlib import Path
 from typing import Optional
 import io
@@ -22,7 +23,7 @@ except Exception:
     DocxDocument = None
 
 
-# -------- extraction helpers --------
+# -------------------- extraction helpers --------------------
 def _ocr_image_bytes(data: bytes) -> str:
     try:
         with Image.open(io.BytesIO(data)) as img:
@@ -36,7 +37,7 @@ def _extract_pdf_bytes(data: bytes, previews_dir: Path, stem: str) -> tuple[str,
         return "", None
     try:
         doc = fitz.open(stream=data, filetype="pdf")
-        text = "".join(page.get_text() or "" for page in doc)
+        text = "".join((page.get_text() or "") for page in doc)
         preview_path = None
         if len(doc) > 0:
             pix = doc[0].get_pixmap()
@@ -86,7 +87,7 @@ def extract_text_and_preview_bytes(filename: str, data: bytes, previews_dir: Pat
     return "", None
 
 
-# -------- FastAPI app --------
+# -------------------- FastAPI app --------------------
 app = FastAPI(title="AutoAudit Evidence Scanner")
 
 app.add_middleware(
@@ -96,11 +97,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Paths relative to security/
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATES = ROOT / "templates"
-OUT_DIR = ROOT / "reports_out"
-PREVIEWS = ROOT / "previews"
-INDEX_HTML = ROOT / "aa_ui" / "ui.html"  # <-- serve ui.html
+RESULTS = ROOT / "results"                 # <-- your repo has security/results/...
+TEMPLATES = RESULTS                        #     report_template.docx is here
+OUT_DIR = RESULTS / "reports"              #     PDF outputs
+PREVIEWS = RESULTS / "previews"            #     preview images for evidence
+INDEX_HTML = ROOT / "aa_ui" / "ui.html"    #     serve the UI from aa_ui/ui.html
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -141,7 +144,9 @@ async def scan(
     # extract text + preview
     text, preview_path = extract_text_and_preview_bytes(evidence.filename, content, PREVIEWS)
     if not text.strip():
-        return JSONResponse({"ok": True, "findings": [], "reports": [], "note": "No readable text found in evidence."})
+        return JSONResponse(
+            {"ok": True, "findings": [], "reports": [], "note": "No readable text found in evidence."}
+        )
 
     # run rules
     if hasattr(strategy, "emit_hits"):
