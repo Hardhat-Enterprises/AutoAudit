@@ -1,17 +1,16 @@
-package AutoAudit_tester.rules.CIS_GCP_1_5
+package AutoAudit_tester.rules.CIS_GCP_1_8
 import data.AutoAudit_tester.engine.Helpers as H
 
-id    := "CIS_GCP_1_5"
-title := "Service accounts must not have Owner/Editor"
+id    := "CIS_GCP_1_8"
+title := "Ensure That Separation of Duties Is Enforced While Assigning Service Account Related Roles to Users"
 policy_group := "Identity and Access Management"
-blocked_roles := {"roles/editor", "roles/owner"}
+blocked_roles := ["roles/iam.serviceAccountuser", "roles/iam.serviceAccountAdmin"]
 
 deny := { v |
   b := input.bindings[_]
   r := b.role
-  r in blocked_roles
+  r == blocked_roles
   m := b.members[_]
-  startswith(m, "serviceAccount:")
   v := sprintf("Service account %q must not have role %q", [m, r])
 }
 

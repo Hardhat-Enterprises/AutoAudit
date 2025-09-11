@@ -1,10 +1,10 @@
-package AutoAudit_tester.rules.CIS_GCP_1_5
+package AutoAudit_tester.rules.CIS_GCP_1_6
 import data.AutoAudit_tester.engine.Helpers as H
 
-id    := "CIS_GCP_1_5"
-title := "Service accounts must not have Owner/Editor"
+id    := "CIS_GCP_1_6"
+title := "Ensure That IAM Users Are Not Assigned the Service Account User or Service Account Token Creator Roles at Project"
 policy_group := "Identity and Access Management"
-blocked_roles := {"roles/editor", "roles/owner"}
+blocked_roles := {"roles/iam.serviceAccountuser", "roles/iam.serviceAccountTokenCreator"}
 
 deny := { v |
   b := input.bindings[_]
