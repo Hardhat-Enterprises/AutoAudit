@@ -2,21 +2,24 @@ import os
 import csv
 from pathlib import Path
 from typing import List
-import pytesseract
-from pytesseract import TesseractNotFoundError
-from PIL import Image, UnidentifiedImageError
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[1])) 
+from strategies import load_strategies  
 
-# If PATH sometimes fails, uncomment and set your path explicitly:
-# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+#------------------------ Import core_ocr.py----------------
+from backend.core_ocr import extract_text_and_preview, SUPPORTED_ALL_EXTS
 
-# Optional but recommended for better OCR
-try:
-    import cv2
-    _HAS_CV2 = True
-except Exception:
-    _HAS_CV2 = False
+#------------------------ Same result and username environment ----------------
+RESULTS_DIR = Path(os.environ.get("AUTOAUDIT_RESULTS", "results"))
+PREVIEWS    = Path(os.environ.get("AUTOAUDIT_PREVIEWS", RESULTS_DIR / "previews"))
+CSV_PATH    = Path(os.environ.get("AUTOAUDIT_CSV", RESULTS_DIR / "scan_report.csv"))
 
-from strategies import load_strategies  # your plugin loader
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+PREVIEWS.mkdir(parents=True, exist_ok=True)
+
+def get_username() -> str:
+    return os.environ.get("AUTOAUDIT_USER") or (input("Enter your username: ").strip() or "user")
 
 # ---------- Folder mapping for the 8 Essential Eight strategies ----------
 STRAT_DIR_MAP = {
@@ -29,10 +32,6 @@ STRAT_DIR_MAP = {
     "regular backups": "regular_backups",
     "user application hardening": "user_application_hardening",
 }
-
-# ---------- File type support ----------
-SUPPORTED_IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp")
-SUPPORTED_TEXT_EXTS  = (".txt", ".log", ".reg", ".csv", ".ini", ".json", ".xml", ".htm", ".html")
 
 # ---------- UI helpers ----------
 def choose_from_menu(title: str, options: List[str]) -> List[str]:
@@ -47,54 +46,6 @@ def choose_from_menu(title: str, options: List[str]) -> List[str]:
             idxs.append(int(tok) - 1)
     return [options[i] for i in idxs]
 
-# ---------- OCR helpers ----------
-def _ocr_with_pillow(path: Path) -> str:
-    """Plain PIL -> pytesseract (fallback)."""
-    try:
-        with Image.open(path) as img:
-            return pytesseract.image_to_string(img, config="--psm 6")
-    except (UnidentifiedImageError, OSError, TesseractNotFoundError):
-        return ""
-
-def _ocr_with_cv2(path: Path) -> str:
-    """OpenCV preprocessing for clearer OCR."""
-    if not _HAS_CV2:
-        return _ocr_with_pillow(path)
-
-    try:
-        img = cv2.imread(str(path), cv2.IMREAD_COLOR)
-        if img is None:
-            return ""
-
-        # Grayscale
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        # Upscale a bit to help OCR on UI screenshots
-        gray = cv2.resize(gray, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_CUBIC)
-
-        # Boost contrast/brightness
-        gray = cv2.convertScaleAbs(gray, alpha=2.0, beta=15)
-
-        # Binarize adaptively to handle uneven backgrounds
-        thr = cv2.adaptiveThreshold(
-            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY, 35, 11
-        )
-
-        return pytesseract.image_to_string(thr, config="--psm 6")
-    except TesseractNotFoundError:
-        return ""
-    except Exception:
-        # Last-ditch fallback
-        return _ocr_with_pillow(path)
-
-def run_ocr(path: Path) -> str:
-    """Try OpenCV pre-processing first, then fallback to plain OCR."""
-    text = _ocr_with_cv2(path)
-    if text and text.strip():
-        return text
-    return _ocr_with_pillow(path)
-
 # ---------- Content extraction ----------
 def read_text_file(path: Path) -> str:
     """Read small text-like files into a single string."""
@@ -107,31 +58,22 @@ def read_text_file(path: Path) -> str:
             return ""
 
 def extract_text(path: Path) -> str:
-    """Choose OCR for images, direct read for text files."""
-    ext = path.suffix.lower()
-    if ext in SUPPORTED_IMAGE_EXTS:
-        return run_ocr(path)
-    if ext in SUPPORTED_TEXT_EXTS:
-        return read_text_file(path)
-    return ""  # unsupported
-
+    text, _ = extract_text_and_preview(path, PREVIEWS)
+    return text or ""
+    
 def list_supported_files(folder: Path) -> List[Path]:
-    """Recursively gather supported files under folder."""
     if not folder.exists():
         return []
     out = []
-    for p in folder.rglob("*"):  # RECURSIVE now
-        if not p.is_file():
-            continue
-        ext = p.suffix.lower()
-        if ext in SUPPORTED_IMAGE_EXTS or ext in SUPPORTED_TEXT_EXTS:
+    for p in folder.rglob("*"):
+        if p.is_file() and p.suffix.lower() in SUPPORTED_ALL_EXTS:
             out.append(p)
     return sorted(out, key=lambda x: x.name.lower())
 
 # ---------- Main ----------
 def main():
-    # 1) user id
-    user_id = input("Enter your username: ").strip()
+    # 1) user id that was keyed in 
+    user_id = get_username()
 
     # 2) load strategies
     strategies = load_strategies()
@@ -153,7 +95,6 @@ def main():
     print("\n📋 Scanning using strategies:", ", ".join(s.name for s in chosen_strategies), "\n")
 
     # 4) where evidence/files live
-    # Put files in: evidence/<mapped_subdir>/...
     base_dir = Path(os.environ.get("AUTOAUDIT_INPUT_DIR", "evidence"))
 
     # 5) CSV header
@@ -240,22 +181,16 @@ def main():
 
     # 7) save
     try:
-        with open("scan_report.csv", "w", newline="", encoding="utf-8") as f:
+        with open(CSV_PATH, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerows(report_rows)
-        print("\n✅ Report saved as: scan_report.csv")
+        print(f"\n ✅ Report has been saved as: {CSV_PATH}")
     except PermissionError:
         temp_name = "scan_report_temp.csv"
         with open(temp_name, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerows(report_rows)
-        print(f"\n⚠️  'scan_report.csv' was locked. Saved as: {temp_name}")
+        print(f"\n  'scan_report.csv' was locked. Saved as: {temp_name}")
 
 if __name__ == "__main__":
-    # Helpful check: print tesseract path/version once
-    try:
-        ver = pytesseract.get_tesseract_version()
-        print(f"(i) Tesseract found: {ver}")
-    except Exception:
-        print("(i) Tesseract not detected by pytesseract. Ensure the Tesseract OCR engine is installed and on PATH.")
     main()

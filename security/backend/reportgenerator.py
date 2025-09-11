@@ -1,37 +1,30 @@
 import os
 from pathlib import Path
-import pytesseract
-from pytesseract import TesseractNotFoundError
-from PIL import Image
-from strategies import load_strategies
-from reports.report_service import generate_pdf
 from typing import Optional
-try:
-    import fitz  
-except Exception:
-    fitz = None
-try:
-    from docx import Document as DocxDocument
-except Exception:
-    DocxDocument = None
-from shutil import which 
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[1])) 
+from reports.report_service import generate_pdf
+from strategies import load_strategies    
 
-# ------------- Tesseract (not bundled) -------------
+#------------------------ Import core_ocr.py----------------
+from backend.core_ocr import (
+    configure_tesseract,
+    extract_text_and_preview,
+)
 
-def configure_tesseract() -> bool:
-    env_cmd = os.environ.get("TESSERACT_CMD")
-    cmd = env_cmd or which("tesseract")
-    if not cmd:
-        print("[OCR] Tesseract not found. Install it and ensure it's on PATH, or set TESSERACT_CMD.")
-        return False
+#------------------------ Same result and username environment ----------------
+RESULTS_DIR  = Path(os.environ.get("AUTOAUDIT_RESULTS", "results"))
+REPORTS_DIR  = Path(os.environ.get("AUTOAUDIT_REPORTS", RESULTS_DIR / "reports"))
+PREVIEWS_DIR = Path(os.environ.get("AUTOAUDIT_PREVIEWS", RESULTS_DIR / "previews"))
+TEMPLATE_PATH = Path(os.environ.get("AUTOAUDIT_TEMPLATE", RESULTS_DIR / "report_template.docx"))
+CSV_PATH     = Path(os.environ.get("AUTOAUDIT_CSV", RESULTS_DIR / "scan_report.csv"))
 
-    import pytesseract
-    pytesseract.pytesseract.tesseract_cmd = cmd
+for p in (RESULTS_DIR, REPORTS_DIR, PREVIEWS_DIR):
+    p.mkdir(parents=True, exist_ok=True)
 
-    print(f"[OCR] Using tesseract: {cmd}")
-    if "TESSDATA_PREFIX" in os.environ:
-        print(f"[OCR] TESSDATA_PREFIX: {os.environ['TESSDATA_PREFIX']}")
-    return True
+def get_username() -> str:
+    return os.environ.get("AUTOAUDIT_USER") or (input("Enter your username: ").strip() or "user")
 
 # ----------------------- UI helpers -----------------------
 def choose_one(title: str, options: list[str]) -> str:
@@ -88,86 +81,17 @@ def choose_one_evidence(evidence_dir: Path) -> Path | None:
 
         print("Invalid selection. Try again.")
 
-# ------------------- text + preview extraction -------------------
-def _ocr_image(path: Path) -> str:
-    try:
-        img = Image.open(path)
-        return pytesseract.image_to_string(img)
-    except TesseractNotFoundError:
-        print("⚠️  Tesseract not found – continuing without OCR. 'Extract' will be blank.")
-        return ""
-    except Exception as e:
-        print(f"⚠️  OCR failed on {path.name}: {e} — continuing with blank Extract.")
-        return ""
-
-def _extract_pdf(path: Path, previews_dir: Path) -> tuple[str, Optional[Path]]:
-    if not fitz:
-        print("⚠️  PyMuPDF (pymupdf) not installed; cannot parse PDF. `pip install pymupdf`")
-        return "", None
-    try:
-        doc = fitz.open(str(path))
-        text = ""
-        for page in doc:
-            text += page.get_text() or ""
-        preview_path = None
-        if len(doc) > 0:
-            page = doc[0]
-            pix = page.get_pixmap()
-            previews_dir.mkdir(parents=True, exist_ok=True)
-            preview_path = previews_dir / (path.stem + "_page1.png")
-            pix.save(str(preview_path))
-        doc.close()
-        return text, preview_path
-    except Exception as e:
-        print(f"⚠️  PDF parse failed on {path.name}: {e}")
-        return "", None
-
-def _extract_docx(path: Path) -> str:
-    if not DocxDocument:
-        print("⚠️  python-docx not available for DOCX extract (should already be installed).")
-        return ""
-    try:
-        doc = DocxDocument(str(path))
-        parts = []
-        for p in doc.paragraphs:
-            if p.text:
-                parts.append(p.text)
-        for tbl in doc.tables:
-            for row in tbl.rows:
-                for cell in row.cells:
-                    if cell.text:
-                        parts.append(cell.text)
-        return "\n".join(parts)
-    except Exception as e:
-        print(f"⚠️  DOCX extract failed on {path.name}: {e}")
-        return ""
-
-def _extract_txt(path: Path) -> str:
-    try:
-        return path.read_text(encoding="utf-8", errors="ignore")
-    except Exception as e:
-        print(f"⚠️  TXT read failed on {path.name}: {e}")
-        return ""
-
-def extract_text_and_preview(path: Path, previews_dir: Path) -> tuple[str, Optional[Path]]:
-    ext = path.suffix.lower()
-    if ext in {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"}:
-        return _ocr_image(path), path  # preview is original image
-    if ext == ".pdf":
-        return _extract_pdf(path, previews_dir)
-    if ext == ".docx":
-        return _extract_docx(path), None
-    if ext == ".txt":
-        return _extract_txt(path), None
-    print(f"⚠️  Unsupported evidence type: {ext}")
-    return "", None
-
-
 # ------------------------ Main --------------------------
 def main():
     configure_tesseract() 
+    user_id = get_username()
 
-    user_id = input("Enter your username: ").strip()
+    here = Path(__file__).resolve()
+    root = here.parents[1]                      # …/AutoAudit/security
+    evidence_dir = root / "evidence"            # …/AutoAudit/security/evidence
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"Looking for evidence in: {evidence_dir}")
 
     strategies = load_strategies()
     if not strategies:
@@ -190,21 +114,13 @@ def main():
 
     print(f"\n📋 Strategy selected: {chosen_strategy.name}\n")
 
-    evidence_dir = Path("evidence")
-    evidence_dir.mkdir(parents=True, exist_ok=True)
-
     evidence_path = choose_one_evidence(evidence_dir)
     if not evidence_path:
         print("No evidence selected.")
         return
 
-    out_dir = Path("reports_out")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    previews_dir = Path("previews")  
-    template_path = "templates/report_template.docx"
-
     print(f"\n📄  Evidence: {evidence_path.name}")
-    text, preview = extract_text_and_preview(evidence_path, previews_dir)
+    text, preview = extract_text_and_preview(evidence_path, PREVIEWS_DIR)
     preview_text = (text[:300] + "…") if len(text) > 300 else text
     print("📝 Extracted Text:", preview_text)
 
@@ -216,7 +132,7 @@ def main():
             if not rows:
                 print("No findings for this strategy.")
             for idx, r in enumerate(rows, start=1):
-                uid = _safe_uid(user_id)
+                uid = _safe_uid(f"{user_id}-{chosen_strategy.name}-{evidence_path.stem}-{idx:02d}") # unique file names for multiple findings
                 data = {
                     "UniqueID": uid,
                     "UserID": user_id,
@@ -235,8 +151,8 @@ def main():
                 }
                 pdf = generate_pdf(
                     data,
-                    template_path=template_path,
-                    output_dir=str(out_dir),
+                    template_path=str(TEMPLATE_PATH),
+                    output_dir=str(REPORTS_DIR),
                     base_dir="."
                 )
                 print(f"   ✅ {chosen_strategy.name} → {pdf}")
@@ -263,8 +179,8 @@ def main():
                 }
                 pdf = generate_pdf(
                     data,
-                    template_path=template_path,
-                    output_dir=str(out_dir),
+                    template_path=str(TEMPLATE_PATH),
+                    output_dir=str(REPORTS_DIR),
                     base_dir="."
                 )
                 print(f"   ✅ {chosen_strategy.name} → {pdf}")
