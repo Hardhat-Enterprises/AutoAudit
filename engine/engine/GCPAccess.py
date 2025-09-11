@@ -66,7 +66,7 @@ while req is not None:
     req = crm_compute.instances().aggregatedList_next(previous_request=req, previous_response=resp)
 
 sqlinstances = []
-req = sqladmin.sqlinstances().list(project=project_id)
+req = sqladmin.instances().list(project=project_id)
 while req is not None:
     resp = req.execute()
     sqlinstances.extend(resp.get("items", []))
