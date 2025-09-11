@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Entra admin center",
+  "id_level_1": 5.1,
+  "id_level_2": "5.1.3",
+  "title": "Ensure a dynamic group for guest users is created",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Maintains a dynamic group containing all guests for easier targeting of policies and reviews.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "entra.dynamicGroupGuestsExists",
+  "remediation": "Create a dynamic group with rule “(user.userType -eq 'Guest')”.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Guests",
+    "Groups"
+  ]
+}

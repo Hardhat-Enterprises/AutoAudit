@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Teams admin center",
+  "id_level_1": 8.1,
+  "id_level_2": "8.1.2",
+  "title": "Ensure users can't send emails to a channel email address",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Automated",
+  "description": "Prevents sending email to Teams channels to reduce spam/phishing risk.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "teams.blockChannelEmail",
+  "remediation": "Disable channel email addresses in Teams settings.",
+  "risk": "Medium",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Email",
+    "Teams"
+  ]
+}

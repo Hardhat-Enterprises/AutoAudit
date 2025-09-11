@@ -1,0 +1,22 @@
+{
+  "product": "Microsoft Fabric",
+  "id_level_1": 9.1,
+  "id_level_2": "9.1.8",
+  "title": "Ensure enabling of external data sharing is restricted",
+  "profile": "E3 E5",
+  "level": "L1",
+  "status": "Manual",
+  "description": "Controls whether Fabric content can be shared externally.",
+  "expected_value": "TRUE",
+  "comparison": "equals",
+  "evaluation_path": "fabric.restrictExternalDataSharing",
+  "remediation": "Set external data sharing option to disabled or restricted in Fabric admin settings.",
+  "risk": "High",
+  "impact": "",
+  "likelihood": "",
+  "risk_level": "",
+  "tags": [
+    "Sharing",
+    "External"
+  ]
+}

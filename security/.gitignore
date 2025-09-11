@@ -1,0 +1,24 @@
+# Ignore Python caches
+__pycache__/
+*.pyc
+
+# Ignore virtual env
+.venv/
+venv/
+env/
+
+# Ignore project outputs/reports
+results/*
+!results/report_template.docx       
+
+# macOS
+.DS_Store
+.vscode/
+.idea/
+
+# frontend
+web/venv/
+.previews/
+reports_out/
+scan_report.csv
+*.local.bak
