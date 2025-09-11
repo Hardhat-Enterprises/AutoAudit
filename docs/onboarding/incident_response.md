@@ -60,8 +60,5 @@ To provide a structured, repeatable, and auditable process for responding to sec
 
 - Quarterly incident response drills with cross-functional teams.
 - Continuous improvement based on lessons learned.
-
----
-
 _Last updated: 2025-09-11_
 ```
