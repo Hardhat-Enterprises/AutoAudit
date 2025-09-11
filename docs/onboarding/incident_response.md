@@ -2,7 +2,7 @@
 
 ## Purpose
 
-To provide a structured, repeatable, and auditable process for responding to security incidents affecting the AutoAudit platform, minimizing impact and ensuring compliance.
+To provide a structured, repeatable, and auditable process for responding to security incidents affecting the AutoAudit platform, minimising impact and ensuring compliance.
 
 ## Incident Classification
 
@@ -10,14 +10,12 @@ To provide a structured, repeatable, and auditable process for responding to sec
 
 ## Severity Levels
 
-```
 | Severity Level | Description                                   | Response Time Objective | Escalation Path                      |
 |----------------|-----------------------------------------------|------------------------|------------------------------------|
 | Critical       | Active breach, data exfiltration, or service outage | < 15 minutes           | Immediate escalation to CISO and SOC |
 | High           | Exploitable vulnerability or suspicious activity | < 1 hour               | Notify Security Lead and DevOps Manager |
 | Medium         | Policy violation or non-critical anomaly       | < 4 hours              | Document and monitor               |
 | Low            | Informational or false positive                  | N/A                    | Log and review periodically       |
-```
 
 ## Incident Response Workflow
 
@@ -55,7 +53,7 @@ To provide a structured, repeatable, and auditable process for responding to sec
 ## Documentation and Record Keeping
 
 - All incident details recorded with linked evidence.
-- Audit logs from Kubernetes, Azure, and CI/CD pipelines archived securely.
+- Audit logs from Kubernetes, Azure, and CI/CD pipelines are archived securely.
 - Compliance reports generated for regulatory audits.
 
 ## Training and Drills
