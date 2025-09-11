@@ -80,7 +80,7 @@ jobs:
   build-and-scan:
     name: Build, Push and Scan Engine
     runs-on: ubuntu-latest
-    needs: [changes]
+    needs: [changes, analyze, run-lint]
     permissions:
       security-events: write
       packages: write
