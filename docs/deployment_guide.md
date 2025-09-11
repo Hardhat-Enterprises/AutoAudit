@@ -21,6 +21,8 @@ This guide provides detailed instructions for deploying the AutoAudit applicatio
 
 ```bash
 kubectl config current-context
+```bash
+
 # AutoAudit Deployment Steps
 
 ## 2. Trigger The CI/CD Pipeline
@@ -39,6 +41,8 @@ kubectl config current-context
 
 ```bash
 kubectl get pods -n <namespace>
+```bash
+
 # Deployment Verification and Rollback Procedures
 
 ## Confirm Pod Status
@@ -50,12 +54,16 @@ Ensure all Kubernetes pods are in the `Running` state with no restarts.
 ```bash
 kubectl get svc -n <namespace>
 curl -f http://<service-ip>/health || echo "Health check failed"
+```bash
+
 # Rollback Procedure
 
 If deployment fails or issues arise, rollback to the previous stable deployment:
 
 ```bash
 kubectl rollout undo deployment/<deployment-name> -n <namespace>
+```bash
+
 # Rollback Monitoring and Post-Deployment Actions
 
 ## Monitor Rollback Status
