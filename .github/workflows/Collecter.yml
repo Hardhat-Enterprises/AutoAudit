@@ -2,7 +2,7 @@ name: Run Collector
 
 on:
   push:
-    branches: [Compliance-Engine]
+    branches: [engine-development]
     
 jobs:
   run-collector:
@@ -26,16 +26,16 @@ jobs:
         env: 
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
-          python3 engine/GCPAccess.py
-          mv iam_policy.json test-configs/iam_policy.json
-          mv networks.json test-configs/networks.json
+          python3 engine/engine/GCPAccess.py
+          mv iam_policy.json engine/test-configs/iam_policy.json
+          mv networks.json engine/test-configs/networks.json
 
       - name: Commit and push IAM policy & networks config
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add test-configs/iam_policy.json
-          git add test-configs/networks.json
+          git add engine/test-configs/iam_policy.json
+          git add engine/test-configs/networks.json
           git diff --cached --quiet && echo "No changes to commit" || git commit -m "Update iam_policy.json & networks.json"
           git push origin Compliance-Engine
         
