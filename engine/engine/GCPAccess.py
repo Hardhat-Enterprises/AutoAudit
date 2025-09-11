@@ -35,6 +35,13 @@ while req is not None:
     firewalls.extend(resp.get("items", []))
     req = crm_compute.firewalls().list_next(previous_request=req, previous_response=resp)
 
+instances = []
+req = crm_compute.instances().list(project=project_id)
+while req is not None:
+    resp = req.execute()
+    instances.extend(resp.get("items", []))
+    req = crm_compute.instances().list_next(previous_request=req, previous_response=resp)
+
 with open("iam_policy.json", "w") as f:
     json.dump(policy, f, indent=2)
 
@@ -43,4 +50,7 @@ with open("networks.json", "w") as f:
 
 with open("firewalls.json", "w") as f:
     json.dump(firewalls, f, indent=2)
+
+with open("ComputeInstances.json", "w") as f:
+    json.dump(instances, f, indent=2)
 

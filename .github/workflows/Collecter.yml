@@ -49,6 +49,13 @@ jobs:
           else
             echo "ERROR: firewalls.json not found"; exit 1
           fi
+          if [ -f ComputeInstances.json ]; then
+            mv -f ComputeInstances.json engine/test-configs/ComputeInstances.json
+          elif [ -f engine/engine/ComputeInstances.json ]; then
+            mv -f engine/engine/ComputeInstances.json engine/test-configs/ComputeInstances.json
+          else
+            echo "ERROR: ComputeInstances.json not found"; exit 1
+          fi
 
       - name: Commit and push IAM policy & networks config
         run: |
@@ -58,12 +65,13 @@ jobs:
           git add engine/test-configs/iam_policy.json
           git add engine/test-configs/networks.json
           git add engine/test-configs/firewalls.json
+          git add engine/test-configs/ComputeInstances.json
           echo "Staged changes:"
           git diff --cached --name-only
           if git diff --cached --quiet; then
             echo "No changes to commit (either identical content or nothing staged)."
           else
-            git commit -m "Update iam_policy.json & networks.json & firewalls.json"
+            git commit -m "Update iam_policy.json & networks.json & firewalls.json & ComputeInstances.json"
             git push origin engine-development
           fi
           
