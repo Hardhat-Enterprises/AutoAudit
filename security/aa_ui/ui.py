@@ -1,7 +1,7 @@
 # aa_ui/ui.py
 from pathlib import Path
 from typing import Optional
-import io
+import io, os, re, time
 
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
@@ -11,6 +11,7 @@ from strategies import load_strategies
 from reports.report_service import generate_pdf
 
 import pytesseract
+from pytesseract import TesseractNotFoundError
 from PIL import Image, UnidentifiedImageError
 
 try:
@@ -23,11 +24,31 @@ except Exception:
     DocxDocument = None
 
 
+# -------------------- environment checks --------------------
+_HAS_TESSERACT = True
+_TESSERACT_VERSION = ""
+try:
+    _TESSERACT_VERSION = str(pytesseract.get_tesseract_version())
+except Exception:
+    _HAS_TESSERACT = False
+
+
+# -------------------- utility --------------------
+def _safe_uid(s: str) -> str:
+    """make a filesystem-safe id (no spaces/odd chars)"""
+    s = re.sub(r"\s+", "_", s.strip())
+    return re.sub(r"[^A-Za-z0-9._-]", "-", s)
+
+
 # -------------------- extraction helpers --------------------
 def _ocr_image_bytes(data: bytes) -> str:
+    """OCR bytes of an image; if Tesseract is missing, return empty text instead of 500."""
     try:
         with Image.open(io.BytesIO(data)) as img:
-            return pytesseract.image_to_string(img)
+            try:
+                return pytesseract.image_to_string(img)
+            except TesseractNotFoundError:
+                return ""  # no OCR available → behave gracefully
     except (UnidentifiedImageError, OSError):
         return ""
 
@@ -74,12 +95,12 @@ def extract_text_and_preview_bytes(filename: str, data: bytes, previews_dir: Pat
     if ext in {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"}:
         text = _ocr_image_bytes(data)
         previews_dir.mkdir(parents=True, exist_ok=True)
-        preview_path = previews_dir / filename
+        preview_path = previews_dir / _safe_uid(filename)
         with open(preview_path, "wb") as f:
             f.write(data)
         return text, preview_path
     if ext == ".pdf":
-        return _extract_pdf_bytes(data, previews_dir, Path(filename).stem)
+        return _extract_pdf_bytes(data, previews_dir, Path(_safe_uid(filename)).stem)
     if ext == ".docx":
         return _extract_docx_bytes(data), None
     if ext in {".txt", ".log", ".reg", ".csv", ".ini", ".json", ".xml", ".htm", ".html"}:
@@ -98,12 +119,12 @@ app.add_middleware(
 )
 
 # Paths relative to security/
-ROOT = Path(__file__).resolve().parents[1]
-RESULTS = ROOT / "results"                 # <-- your repo has security/results/...
-TEMPLATES = RESULTS                        #     report_template.docx is here
-OUT_DIR = RESULTS / "reports"              #     PDF outputs
-PREVIEWS = RESULTS / "previews"            #     preview images for evidence
-INDEX_HTML = ROOT / "aa_ui" / "ui.html"    #     serve the UI from aa_ui/ui.html
+ROOT = Path(__file__).resolve().parents[1]   # .../security
+RESULTS = ROOT / "results"                   # security/results/...
+TEMPLATES = RESULTS                          # report_template.docx lives here
+OUT_DIR = RESULTS / "reports"                # PDF (or DOCX/TXT) outputs
+PREVIEWS = RESULTS / "previews"              # preview images for evidence
+INDEX_HTML = ROOT / "aa_ui" / "ui.html"      # serve the UI from aa_ui/ui.html
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -123,6 +144,19 @@ def api_strategies():
             desc = ""
         out.append({"name": s.name, "description": desc})
     return out
+
+
+@app.get("/health")
+def health():
+    """Quick status to debug issues without crashing the UI."""
+    return {
+        "ok": True,
+        "has_tesseract": _HAS_TESSERACT,
+        "tesseract_version": _TESSERACT_VERSION,
+        "template_exists": (TEMPLATES / "report_template.docx").exists(),
+        "previews_dir": str(PREVIEWS),
+        "out_dir": str(OUT_DIR),
+    }
 
 
 @app.post("/scan")
@@ -163,12 +197,19 @@ async def scan(
             "evidence": hits,
         }] if hits else []
 
-    # generate PDFs
+    # generate reports (PDF preferred; fallback DOCX/TXT so we never 500)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     generated = []
+    note = ""
+
     for r in findings:
-        data = {
-            "UniqueID": f"{user_id}-{strategy.name}-{Path(evidence.filename).stem}",
+        base_uid = _safe_uid(f"{user_id}-{strategy.name}-{Path(evidence.filename).stem}")
+        # make name unique to avoid 'Permission denied' if file is locked from previous run
+        uid = f"{base_uid}-{int(time.time())}"
+
+        # payload for the existing template flow
+        payload = {
+            "UniqueID": uid,
             "UserID": user_id,
             "Evidence": evidence.filename,
             "Evidence Preview": str(preview_path) if preview_path else "",
@@ -183,15 +224,47 @@ async def scan(
             "Description": r.get("description", ""),
             "Confidence": r.get("confidence", ""),
         }
-        pdf_path = generate_pdf(
-            data,
-            template_path=str(TEMPLATES / "report_template.docx"),
-            output_dir=str(OUT_DIR),
-            base_dir=str(ROOT),
-        )
-        generated.append(Path(pdf_path).name)
 
-    return {"ok": True, "findings": findings, "reports": generated}
+        try:
+            pdf_path = generate_pdf(
+                payload,
+                template_path=str(TEMPLATES / "report_template.docx"),
+                output_dir=str(OUT_DIR),
+                base_dir=str(ROOT),
+            )
+            generated.append(Path(pdf_path).name)
+        except Exception as e:
+            # Fallback: create a simple DOCX (or TXT) so the UI still returns a download
+            note = "PDF converter not available or file was locked; generated a DOCX/TXT fallback."
+            fallback_name = f"{uid}.docx" if DocxDocument else f"{uid}.txt"
+            fallback_path = OUT_DIR / fallback_name
+
+            try:
+                if DocxDocument:
+                    doc = DocxDocument()
+                    doc.add_heading("AutoAudit – Finding", 0)
+                    doc.add_paragraph(f"Strategy: {strategy.name}")
+                    doc.add_paragraph(f"Test ID: {payload['TestID']}")
+                    doc.add_paragraph(f"Pass/Fail: {payload['Pass/Fail']}")
+                    if payload["Recommendation"]:
+                        doc.add_paragraph(f"Recommendation: {payload['Recommendation']}")
+                    if payload["Evidence Extract"]:
+                        doc.add_paragraph("Evidence:")
+                        doc.add_paragraph(payload["Evidence Extract"])
+                    doc.save(str(fallback_path))
+                else:
+                    with open(fallback_path, "w", encoding="utf-8") as f:
+                        f.write(f"Strategy: {strategy.name}\n")
+                        f.write(f"Test ID: {payload['TestID']}\n")
+                        f.write(f"Pass/Fail: {payload['Pass/Fail']}\n")
+                        f.write(f"Recommendation: {payload['Recommendation']}\n")
+                        f.write(f"Evidence: {payload['Evidence Extract']}\n")
+                generated.append(fallback_path.name)
+            except Exception:
+                # If even the fallback fails, keep going without a report link
+                pass
+
+    return {"ok": True, "findings": findings, "reports": generated, "note": note}
 
 
 @app.get("/reports/{filename}")
@@ -199,4 +272,11 @@ def download_report(filename: str):
     path = OUT_DIR / filename
     if not path.exists():
         raise HTTPException(status_code=404, detail="Report not found")
-    return FileResponse(str(path), media_type="application/pdf", filename=filename)
+    # serve whatever we generated (pdf/docx/txt)
+    media = (
+        "application/pdf" if filename.lower().endswith(".pdf")
+        else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        if filename.lower().endswith(".docx")
+        else "text/plain"
+    )
+    return FileResponse(str(path), media_type=media, filename=filename)
