@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document details the monitoring and alerting strategy for the AutoAudit system to ensure high availability, performance, and security.
+This document outlines the monitoring and alerting strategy for the AutoAudit system, ensuring high availability, performance, and security.
 
 ## Monitoring Components
 
@@ -19,3 +19,6 @@ This document details the monitoring and alerting strategy for the AutoAudit sys
 | Deployment Success Rate | Percentage of successful deployments | Alert if < 95% over last 24 hours   |
 | API Error Rate         | HTTP 5xx and 4xx response rates    | Alert if > 1% error rate             |
 | Secret Access Failures | Unauthorised secret access attempts | Immediate alert                      |
+---
+
+_Last updated: 2025-09-11_
