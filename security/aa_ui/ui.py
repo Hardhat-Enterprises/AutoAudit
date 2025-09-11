@@ -1,28 +1,30 @@
-# aa_ui/ui.py
+from __future__ import annotations
+
+import io
+import re
+import time
 from pathlib import Path
 from typing import Optional
-import io, os, re, time
-
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException
-from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
-from fastapi.middleware.cors import CORSMiddleware
-
-from strategies import load_strategies
-from reports.report_service import generate_pdf
 
 import pytesseract
-from pytesseract import TesseractNotFoundError
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from PIL import Image, UnidentifiedImageError
+from pytesseract import TesseractNotFoundError
 
 try:
     import fitz  # PyMuPDF for PDFs
 except Exception:
     fitz = None
+
 try:
     from docx import Document as DocxDocument  # python-docx
 except Exception:
     DocxDocument = None
 
+from reports.report_service import generate_pdf
+from strategies import load_strategies
 
 # -------------------- environment checks --------------------
 _HAS_TESSERACT = True
@@ -35,7 +37,7 @@ except Exception:
 
 # -------------------- utility --------------------
 def _safe_uid(s: str) -> str:
-    """make a filesystem-safe id (no spaces/odd chars)"""
+    """Make a filesystem-safe id (no spaces/odd chars)."""
     s = re.sub(r"\s+", "_", s.strip())
     return re.sub(r"[^A-Za-z0-9._-]", "-", s)
 
@@ -53,13 +55,15 @@ def _ocr_image_bytes(data: bytes) -> str:
         return ""
 
 
-def _extract_pdf_bytes(data: bytes, previews_dir: Path, stem: str) -> tuple[str, Optional[Path]]:
+def _extract_pdf_bytes(
+    data: bytes, previews_dir: Path, stem: str
+) -> tuple[str, Optional[Path]]:
     if not fitz:
         return "", None
     try:
         doc = fitz.open(stream=data, filetype="pdf")
         text = "".join((page.get_text() or "") for page in doc)
-        preview_path = None
+        preview_path: Optional[Path] = None
         if len(doc) > 0:
             pix = doc[0].get_pixmap()
             previews_dir.mkdir(parents=True, exist_ok=True)
@@ -76,7 +80,7 @@ def _extract_docx_bytes(data: bytes) -> str:
         return ""
     try:
         doc = DocxDocument(io.BytesIO(data))
-        parts = []
+        parts: list[str] = []
         for p in doc.paragraphs:
             if p.text:
                 parts.append(p.text)
@@ -90,7 +94,9 @@ def _extract_docx_bytes(data: bytes) -> str:
         return ""
 
 
-def extract_text_and_preview_bytes(filename: str, data: bytes, previews_dir: Path) -> tuple[str, Optional[Path]]:
+def extract_text_and_preview_bytes(
+    filename: str, data: bytes, previews_dir: Path
+) -> tuple[str, Optional[Path]]:
     ext = Path(filename).suffix.lower()
     if ext in {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"}:
         text = _ocr_image_bytes(data)
@@ -103,7 +109,17 @@ def extract_text_and_preview_bytes(filename: str, data: bytes, previews_dir: Pat
         return _extract_pdf_bytes(data, previews_dir, Path(_safe_uid(filename)).stem)
     if ext == ".docx":
         return _extract_docx_bytes(data), None
-    if ext in {".txt", ".log", ".reg", ".csv", ".ini", ".json", ".xml", ".htm", ".html"}:
+    if ext in {
+        ".txt",
+        ".log",
+        ".reg",
+        ".csv",
+        ".ini",
+        ".json",
+        ".xml",
+        ".htm",
+        ".html",
+    }:
         return data.decode("utf-8", errors="ignore"), None
     return "", None
 
@@ -176,7 +192,9 @@ async def scan(
         raise HTTPException(status_code=400, detail="Empty upload")
 
     # extract text + preview
-    text, preview_path = extract_text_and_preview_bytes(evidence.filename, content, PREVIEWS)
+    text, preview_path = extract_text_and_preview_bytes(
+        evidence.filename, content, PREVIEWS
+    )
     if not text.strip():
         return JSONResponse(
             {"ok": True, "findings": [], "reports": [], "note": "No readable text found in evidence."}
@@ -187,19 +205,22 @@ async def scan(
         findings = strategy.emit_hits(text, source_file=evidence.filename) or []
     else:
         hits = strategy.match(text) or []
-        findings = [{
-            "test_id": "",
-            "sub_strategy": "",
-            "detected_level": "",
-            "pass_fail": "",
-            "priority": "",
-            "recommendation": "",
-            "evidence": hits,
-        }] if hits else []
+        findings = (
+            [{
+                "test_id": "",
+                "sub_strategy": "",
+                "detected_level": "",
+                "pass_fail": "",
+                "priority": "",
+                "recommendation": "",
+                "evidence": hits,
+            }]
+            if hits else []
+        )
 
     # generate reports (PDF preferred; fallback DOCX/TXT so we never 500)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    generated = []
+    generated: list[str] = []
     note = ""
 
     for r in findings:
@@ -233,7 +254,7 @@ async def scan(
                 base_dir=str(ROOT),
             )
             generated.append(Path(pdf_path).name)
-        except Exception as e:
+        except Exception:
             # Fallback: create a simple DOCX (or TXT) so the UI still returns a download
             note = "PDF converter not available or file was locked; generated a DOCX/TXT fallback."
             fallback_name = f"{uid}.docx" if DocxDocument else f"{uid}.txt"
@@ -272,9 +293,10 @@ def download_report(filename: str):
     path = OUT_DIR / filename
     if not path.exists():
         raise HTTPException(status_code=404, detail="Report not found")
-    # serve whatever we generated (pdf/docx/txt)
+
     media = (
-        "application/pdf" if filename.lower().endswith(".pdf")
+        "application/pdf"
+        if filename.lower().endswith(".pdf")
         else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         if filename.lower().endswith(".docx")
         else "text/plain"
