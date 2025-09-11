@@ -1,0 +1,3 @@
+Encrypted Backup File Created
+Encryption Algorithm: AES-256
+Access restricted to admin users only
