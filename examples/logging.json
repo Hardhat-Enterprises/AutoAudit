@@ -1,0 +1,8 @@
+{
+  "project_id": "demo",
+  "logging": {
+    "admin_activity_enabled": false,
+    "data_access_read_enabled": true,
+    "data_access_write_enabled": false
+  }
+}
