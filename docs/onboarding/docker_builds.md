@@ -6,7 +6,7 @@ This document provides an in-depth explanation of the Docker build process, cont
 
 ## Dockerfile Structure
 
-The project uses a multi-stage Dockerfile optimized for minimal image size and security:
+The project uses a multi-stage Dockerfile optimised for minimal image size and security:
 
 - **Builder Stage**: Installs build dependencies, compiles source code, and runs tests.
 - **Runtime Stage**: Copies only necessary artifacts from the builder stage, sets non-root user permissions, and configures entrypoints.
@@ -40,7 +40,7 @@ ENTRYPOINT ["python", "src/main.py"]
 - Use slim base images to reduce the attack surface.
 - Remove build dependencies after compilation.
 - Leverage Docker layer caching for faster builds.
-- Scan images with Trivy integrated into CI pipeline to detect vulnerabilities.
+- Scan images with Trivy integrated into the CI pipeline to detect vulnerabilities.
 
 ## Docker Compose Usage
 
@@ -66,7 +66,7 @@ docker-compose up --build
 ## Container Security Best Practices
 
 - Run containers as non-root users.
-- Use read-only filesystem where possible.
+- Use a read-only filesystem where possible.
 - Limit container capabilities using Docker security options.
 - Regularly update base images and dependencies.
 
