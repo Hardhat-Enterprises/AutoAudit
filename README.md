@@ -2,9 +2,9 @@
 
 ## 1. Executive Summary
 
-AutoAudit is a mission-critical, enterprise-grade Microsoft 365 (M365) compliance automation platform architected and developed by multiple specialised teams. This monorepo consolidates all discrete codebases—including backend APIs, compliance scanning engines, security modules, frontend user experience components, and DevSecOps workflows—into a unified repository. This consolidation enables rigorous code ownership, traceability, and auditability, while facilitating a robust, scalable, and secure CI/CD pipeline that supports rapid, automated cloud deployments.
+AutoAudit is a mission-critical, enterprise-grade Microsoft 365 (M365) compliance automation platform architected and developed by multiple specialised teams. This monorepo consolidates all discrete codebases, including backend APIs, compliance scanning engines, security modules, frontend user experience components, and DevSecOps workflows, into a unified repository. This consolidation enables rigorous code ownership, traceability, and auditability, while facilitating a robust, scalable, and secure CI/CD pipeline that supports rapid, automated cloud deployments.
 
-This document serves as the definitive technical reference for all stakeholders—developers, security engineers, DevSecOps professionals, and leadership—detailing repository structure, branching and release strategies, contribution protocols, CI/CD pipeline architecture, and operational governance. It is crafted with exhaustive technical precision to anticipate and address all foreseeable logistical, administrative, and technical queries, ensuring seamless onboarding, development, deployment, and maintenance aligned with enterprise security and compliance mandates.
+This document serves as the definitive technical reference for all stakeholders, including developers, security engineers, DevSecOps professionals, and leadership, detailing repository structure, branching and release strategies, contribution protocols, CI/CD pipeline architecture, and operational governance. It is crafted with exhaustive technical precision to anticipate and address all foreseeable logistical, administrative, and technical queries, ensuring seamless onboarding, development, deployment, and maintenance aligned with enterprise security and compliance mandates.
 
 ---
 
@@ -15,14 +15,14 @@ The repository is meticulously organised into top-level directories, each repres
 | Directory           | Description                                                                                      | Ownership Team          | Key Responsibilities                                  |
 |---------------------|------------------------------------------------------------------------------------------------|------------------------|-------------------------------------------------------|
 | `/backend-api`      | RESTful and GraphQL API services exposing compliance data and orchestration endpoints.          | API & Backend Team      | API development, authentication, data validation     |
-| `/security`         | Security assessment modules, vulnerability scanners, and compliance rule engines.               | Security Team           | Security scanning, threat modeling, compliance rules  |
+| `/security`         | Security assessment modules, vulnerability scanners, and compliance rule engines.               | Security Team           | Security scanning, threat modelling, compliance rules  |
 | `/frontend`         | React-based user interface and user experience components for compliance dashboards and reports.| Frontend & UX Team      | UI/UX design, frontend development, accessibility     |
 | `/engine`           | Core compliance scanning engines and rule evaluation logic.                                    | Engine Team             | Compliance logic, scanning algorithms, data processing|
 | `/.github/workflows`| GitHub Actions workflows defining CI/CD pipelines, automated testing, and deployment triggers. | DevSecOps Team             | Pipeline automation, environment provisioning          |
 
 ### Historical Integrity
 
-Each directory was imported from independent repositories with full commit history preserved, ensuring traceability of all code changes and enabling forensic audits and compliance verification.
+Each directory was imported from independent repositories, preserving the full commit history to ensure traceability of all code changes and enable forensic audits and compliance verification.
 
 ---
 
@@ -74,7 +74,7 @@ The branching model is designed to enforce stability, quality, and controlled fe
 
 ### Overview
 
-The CI/CD pipeline is implemented using **GitHub Actions** integrated with **Google Cloud Build** for container image builds and deployments to Google Cloud Platform (GCP). The pipeline is optimised for efficiency, security, and compliance, with path-based triggers to selectively build and test only affected services.
+The CI/CD pipeline is implemented using **GitHub Actions** integrated with **Google Cloud Build** for container image builds and deployments to Google Cloud Platform (GCP). The pipeline is optimised for efficiency, security, and compliance, with path-based triggers to build and test only affected services selectively.
 
 ### Pipeline Stages
 
@@ -86,7 +86,7 @@ The CI/CD pipeline is implemented using **GitHub Actions** integrated with **Goo
 | Unit & Integration Testing | Executes comprehensive test suites with coverage reporting.                                   | `pytest`, `Jest`                       | Minimum 90% coverage enforced                            |
 | Docker Image Build         | Builds multi-stage Docker images with build secrets and caching.                              | Docker Buildx, BuildKit                | Secrets injected securely; no secrets in image layers   |
 | Container Security Scanning| Scans images for vulnerabilities using Trivy and Aqua Security.                               | Trivy, Aqua Security                   | Zero tolerance for critical/high vulnerabilities        |
-| Image Signing & Notarisation| Signs images with Cosign and uploads signatures to registry.                                  | Cosign, Notary                        | Ensures image provenance and integrity                   |
+| Image Signing & Notarisation| Signs images with Cosign and uploads signatures to the registry.                                  | Cosign, Notary                        | Ensures image provenance and integrity                   |
 | Image Push                 | Pushes images to Google Artifact Registry with immutable tags.                               | Google Artifact Registry               | Enforces retention and immutability policies            |
 | Infrastructure Provisioning| Applies Terraform templates for GCP resource provisioning and drift detection.                | Terraform, gcloud CLI                  | State stored securely with encryption and access control|
 | Kubernetes Deployment      | Deploys Helm charts with blue-green and canary strategies.                                   | Helm, Kubernetes                      | Automated rollback on failure; health checks enforced   |
