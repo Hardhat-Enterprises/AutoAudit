@@ -57,6 +57,38 @@ jobs:
             echo "ERROR: ComputeInstances.json not found"; exit 1
           fi
 
+          if [ -f bigquery_datasets_full.json ]; then
+            mv -f bigquery_datasets_full.json engine/test-configs/bigquery_datasets_full.json
+          elif [ -f engine/engine/bigquery_datasets_full.json ]; then
+            mv -f engine/engine/bigquery_datasets_full.json engine/test-configs/bigquery_datasets_full.json
+          else
+            echo "ERROR: bigquery_datasets_full.json not found"; exit 1
+          fi
+
+          if [ -f sql_instances.json ]; then
+            mv -f sql_instances.json engine/test-configs/sql_instances.json
+          elif [ -f engine/engine/sql_instances.json ]; then
+            mv -f engine/engine/sql_instances.json engine/test-configs/sql_instances.json
+          else
+            echo "ERROR: sql_instances.json not found"; exit 1
+          fi
+
+          if [ -f dataproc_clusters.json ]; then
+            mv -f dataproc_clusters.json engine/test-configs/dataproc_clusters.json
+          elif [ -f engine/engine/dataproc_clusters.json ]; then
+            mv -f engine/engine/dataproc_clusters.json engine/test-configs/dataproc_clusters.json
+          else
+            echo "ERROR: dataproc_clusters.json not found"; exit 1
+          fi
+
+          if [ -f buckets_iam_policies.json ]; then
+            mv -f buckets_iam_policies.json engine/test-configs/buckets_iam_policies.json
+          elif [ -f engine/engine/buckets_iam_policies.json ]; then
+            mv -f engine/engine/buckets_iam_policies.json engine/test-configs/buckets_iam_policies.json
+          else
+            echo "ERROR: buckets_iam_policies.json not found"; exit 1
+          fi
+
       - name: Commit and push IAM policy & networks config
         run: |
           set -euo pipefail
@@ -66,12 +98,17 @@ jobs:
           git add engine/test-configs/networks.json
           git add engine/test-configs/firewalls.json
           git add engine/test-configs/ComputeInstances.json
+          git add engine/test-configs/sql_instances.json
+          git add engine/test-configs/bigquery_datasets_full.json
+          git add engine/test-configs/dataproc_clusters.json
+          git add engine/test-configs/buckets_iam_policies.json
+
           echo "Staged changes:"
           git diff --cached --name-only
           if git diff --cached --quiet; then
             echo "No changes to commit (either identical content or nothing staged)."
           else
-            git commit -m "Update iam_policy.json & networks.json & firewalls.json & ComputeInstances.json"
+            git commit -m "Update iam_policy.json & networks.json & firewalls.json & ComputeInstances.json && sql_instances.json && buckets_iam_policies.json && dataproc_clusters.json && bigquery_datasets_full.json"
             git push origin engine-development
           fi
           
