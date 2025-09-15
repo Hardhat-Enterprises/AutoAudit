@@ -89,6 +89,14 @@ jobs:
             echo "ERROR: bucket_iam_policies.json not found"; exit 1
           fi
 
+          if [ -f dns_zones.json ]; then
+            mv -f dns_zones.json engine/test-configs/dns_zones.json
+          elif [ -f engine/engine/dns_zones.json ]; then
+            mv -f engine/engine/dns_zones.json engine/test-configs/dns_zones.json
+          else
+            echo "ERROR: dns_zones.json not found"; exit 1
+          fi
+
       - name: Commit and push IAM policy & networks config
         run: |
           set -euo pipefail
@@ -102,6 +110,7 @@ jobs:
           git add engine/test-configs/bigquery_datasets_full.json
           git add engine/test-configs/dataproc_clusters.json
           git add engine/test-configs/bucket_iam_policies.json
+          git add engine/test-configs/dns_zones.json
 
           echo "Staged changes:"
           git diff --cached --name-only

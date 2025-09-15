@@ -17,6 +17,7 @@ crm_compute = build("compute", "v1", credentials=creds)
 sqladmin = build("sqladmin", "v1beta4", credentials=creds)
 bq = build("bigquery", "v2", credentials=creds)
 Dataproc = build("dataproc", "v1", credentials=creds)
+dnszone = build("dns", "v1beta2", credentials=creds)
 
 project_id = "coastal-stone-470308-a0"
 res_name = f"projects/{project_id}"
@@ -118,6 +119,27 @@ for region in regions:
             continue
         errors.append({"region": region, "api": "regions", "status": getattr(e.resp, "status", None), "reason": str(e)})
 
+zones = []
+try:
+    req = dnszone.managedZones().list(project=project_id)
+    while req is not None:
+        resp = req.execute()
+        for zone in resp.get("managedZones", []):
+            zone_name = zone["name"]
+            try:
+                zone_config = dnszone.managedZones().get(
+                    project=project_id,
+                    managedZone=zone_name
+                ).execute()
+                zones.append(zone_config)
+            except HttpError as e:
+                print(f"Failed to fetch zone {zone_name}: {e}")
+        req = dnszone.managedZones().list_next(
+            previous_request=req,
+            previous_response=resp
+        )
+except HttpError as e:
+    print(f"Failed to list managed zones: {e}")
 
 with open("iam_policy.json", "w") as f:
     json.dump(policy, f, indent=2)
@@ -145,4 +167,7 @@ with open("buckets.json", "w") as f:
 
 with open("bucket_iam_policies.json", "w") as f:
     json.dump(bucket_iam_policies, f, indent=2)
+
+with open("dns_zones.json", "w") as f:
+    json.dump(zones, f, indent=2)
 
