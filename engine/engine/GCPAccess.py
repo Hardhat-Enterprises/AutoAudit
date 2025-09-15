@@ -70,7 +70,7 @@ req = sqladmin.instances().list(project=project_id)
 while req is not None:
     resp = req.execute()
     sqlinstances.extend(resp.get("items", []))
-    req = sqladmin.sqlinstances().list_next(previous_request=req, previous_response=resp)
+    req = sqladmin.instances().list_next(previous_request=req, previous_response=resp)
 
 full_datasets = []
 req = bq.datasets().list(projectId=project_id, all=True) 
