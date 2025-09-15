@@ -1,0 +1,17 @@
+[
+  {
+    "name": "test1",
+    "dnsName": "test1.example.com.",
+    "description": "",
+    "id": "6627890088856042561",
+    "nameServers": [
+      "ns-gcp-private.googledomains.com."
+    ],
+    "creationTime": "2025-08-29T08:34:04.388Z",
+    "visibility": "private",
+    "cloudLoggingConfig": {
+      "kind": "dns#managedZoneCloudLoggingConfig"
+    },
+    "kind": "dns#managedZone"
+  }
+]
