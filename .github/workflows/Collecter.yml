@@ -81,12 +81,12 @@ jobs:
             echo "ERROR: dataproc_clusters.json not found"; exit 1
           fi
 
-          if [ -f buckets_iam_policies.json ]; then
-            mv -f buckets_iam_policies.json engine/test-configs/buckets_iam_policies.json
-          elif [ -f engine/engine/buckets_iam_policies.json ]; then
-            mv -f engine/engine/buckets_iam_policies.json engine/test-configs/buckets_iam_policies.json
+          if [ -f bucket_iam_policies.json ]; then
+            mv -f bucket_iam_policies.json engine/test-configs/bucket_iam_policies.json
+          elif [ -f engine/engine/bucket_iam_policies.json ]; then
+            mv -f engine/engine/bucket_iam_policies.json engine/test-configs/bucket_iam_policies.json
           else
-            echo "ERROR: buckets_iam_policies.json not found"; exit 1
+            echo "ERROR: bucket_iam_policies.json not found"; exit 1
           fi
 
       - name: Commit and push IAM policy & networks config
@@ -101,7 +101,7 @@ jobs:
           git add engine/test-configs/sql_instances.json
           git add engine/test-configs/bigquery_datasets_full.json
           git add engine/test-configs/dataproc_clusters.json
-          git add engine/test-configs/buckets_iam_policies.json
+          git add engine/test-configs/bucket_iam_policies.json
 
           echo "Staged changes:"
           git diff --cached --name-only
