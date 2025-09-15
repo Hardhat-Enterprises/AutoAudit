@@ -1,5 +1,6 @@
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from google.auth import default
 import json 
 import os
@@ -87,18 +88,35 @@ while req is not None:
 
     req = bq.datasets().list_next(previous_request=req, previous_response=resp)
 
+regions = [
+            "us-central1","us-east1","us-east4","us-west1","us-west2",
+            "northamerica-northeast1",
+            "europe-north1","europe-west1","europe-west2","europe-west3","europe-west4",
+            "europe-west6",
+            "asia-east1","asia-east2","asia-northeast1","asia-northeast2","asia-northeast3",
+            "asia-south1","asia-south2","asia-southeast1","asia-southeast2",
+            "australia-southeast1","australia-southeast2",
+            "southamerica-east1"
+        ]
 dataproc_clusters = []
-req = Dataproc.projects().regions().clusters().list(
-    projectId=project_id,
-    region="-"
-)
-while req is not None:
-    resp = req.execute()
-    dataproc_clusters.extend(resp.get("clusters", []))
-    req = Dataproc.projects().regions().clusters().list_next(
-        previous_request=req,
-        previous_response=resp
-    )
+errors = []
+for region in regions:
+    try:
+        req = Dataproc.projects().regions().clusters().list(
+            projectId=project_id,
+            region= region
+        )
+        while req is not None:
+            resp = req.execute()
+            dataproc_clusters.extend(resp.get("clusters", []))
+            req = Dataproc.projects().regions().clusters().list_next(
+                previous_request=req,
+                previous_response=resp
+            )
+    except HttpError as e:
+        if getattr(e, "resp", None) and e.resp.status in (403, 404):
+            continue
+        errors.append({"region": region, "api": "regions", "status": getattr(e.resp, "status", None), "reason": str(e)})
 
 
 with open("iam_policy.json", "w") as f:
@@ -120,7 +138,7 @@ with open("bigquery_datasets_full.json", "w") as f:
     json.dump(full_datasets, f, indent=2)
 
 with open("dataproc_clusters.json", "w") as f:
-    json.dump(dataproc_clusters, f, indent=2)
+    json.dump({"project": project_id, "clusters": dataproc_clusters, "errors": errors}, f, indent=2)
     
 with open("buckets.json", "w") as f:
     json.dump(buckets, f, indent=2)
