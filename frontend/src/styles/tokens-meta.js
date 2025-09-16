@@ -21,7 +21,7 @@ export const TOKEN_META = {
     light: { name: "Dusty White", rgb: "226 232 240", hex: "#e2e8f0" }
   },
   "text-strong": {
-    name: "Greyish White",
+    name: "Dusty White",
     rgb: "226 232 240",
     hex: "#e2e8f0",
     light: { name: "Rich Black", rgb: "11 18 32", hex: "#0b1220" }
