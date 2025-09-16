@@ -11,7 +11,7 @@ deny := { v |
   r := b.settings.databaseFlags[_]
   q := r.value
   s := r.name
-  s == "cloudsql.enable_pgaudit"
+  s == "cloudsql.enable_pgaudit
   q != blocked_value
   v := sprintf("Ensure that pgaudit is enabled for centralised logging and the cloudsql.pgaudit is set to the value: %q for PostgreSQL Instances", [blocked_value])
 }
