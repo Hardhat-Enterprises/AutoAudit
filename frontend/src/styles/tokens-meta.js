@@ -32,6 +32,18 @@ export const TOKEN_META = {
     hex: "#94a3b8",
     light: { name: "Payne's Grey", rgb: "71 85 105", hex: "#475569" }
   },
+  "accent-teal": {
+    name: "Teal",
+    rgb: "100 223 223",
+    hex: "#64dfdf",
+    light: { name: "Teal", rgb: "100 223 223", hex: "#64dfdf" }
+  },
+  "accent-navy": {
+    name: "Navy Blue",
+    rgb: "0 18 66",
+    hex: "#001242",
+    light: { name: "Navy Blue", rgb: "0 18 66", hex: "#001242" }
+  },
   "accent-good": {
     name: "Green",
     rgb: "16 185 129",
