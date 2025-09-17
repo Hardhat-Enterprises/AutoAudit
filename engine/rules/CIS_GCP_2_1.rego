@@ -17,4 +17,5 @@ deny[v] {
   v := sprintf("Project %q: Data Access WRITE logs disabled", [input.project_id])
 }
 
-report := H.report(id, title, policy_group, deny)
+report := H.build_report(deny, id, title, policy_group)
+
