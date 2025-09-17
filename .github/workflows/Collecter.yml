@@ -2,7 +2,7 @@ name: Run Collector
 
 on:
   push:
-    branches: [Compliance-Engine]
+    branches: [engine-development]
     
 jobs:
   run-collector:
@@ -26,16 +26,99 @@ jobs:
         env: 
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
-          python3 engine/GCPAccess.py
-          mv iam_policy.json test-configs/iam_policy.json
-          mv networks.json test-configs/networks.json
+          set -euo pipefail
+          python3 engine/engine/GCPAccess.py
+          if [ -f iam_policy.json ]; then
+            mv -f iam_policy.json engine/test-configs/iam_policy.json
+          elif [ -f engine/engine/iam_policy.json ]; then
+            mv -f engine/engine/iam_policy.json engine/test-configs/iam_policy.json
+          else
+            echo "ERROR: iam_policy.json not found"; exit 1
+          fi
+          if [ -f networks.json ]; then
+            mv -f networks.json engine/test-configs/networks.json
+          elif [ -f engine/engine/networks.json ]; then
+            mv -f engine/engine/networks.json engine/test-configs/networks.json
+          else
+            echo "ERROR: networks.json not found"; exit 1
+          fi
+          if [ -f firewalls.json ]; then
+            mv -f firewalls.json engine/test-configs/firewalls.json
+          elif [ -f engine/engine/firewalls.json ]; then
+            mv -f engine/engine/firewalls.json engine/test-configs/firewalls.json
+          else
+            echo "ERROR: firewalls.json not found"; exit 1
+          fi
+          if [ -f ComputeInstances.json ]; then
+            mv -f ComputeInstances.json engine/test-configs/ComputeInstances.json
+          elif [ -f engine/engine/ComputeInstances.json ]; then
+            mv -f engine/engine/ComputeInstances.json engine/test-configs/ComputeInstances.json
+          else
+            echo "ERROR: ComputeInstances.json not found"; exit 1
+          fi
+
+          if [ -f bigquery_datasets_full.json ]; then
+            mv -f bigquery_datasets_full.json engine/test-configs/bigquery_datasets_full.json
+          elif [ -f engine/engine/bigquery_datasets_full.json ]; then
+            mv -f engine/engine/bigquery_datasets_full.json engine/test-configs/bigquery_datasets_full.json
+          else
+            echo "ERROR: bigquery_datasets_full.json not found"; exit 1
+          fi
+
+          if [ -f sql_instances.json ]; then
+            mv -f sql_instances.json engine/test-configs/sql_instances.json
+          elif [ -f engine/engine/sql_instances.json ]; then
+            mv -f engine/engine/sql_instances.json engine/test-configs/sql_instances.json
+          else
+            echo "ERROR: sql_instances.json not found"; exit 1
+          fi
+
+          if [ -f dataproc_clusters.json ]; then
+            mv -f dataproc_clusters.json engine/test-configs/dataproc_clusters.json
+          elif [ -f engine/engine/dataproc_clusters.json ]; then
+            mv -f engine/engine/dataproc_clusters.json engine/test-configs/dataproc_clusters.json
+          else
+            echo "ERROR: dataproc_clusters.json not found"; exit 1
+          fi
+
+          if [ -f bucket_iam_policies.json ]; then
+            mv -f bucket_iam_policies.json engine/test-configs/bucket_iam_policies.json
+          elif [ -f engine/engine/bucket_iam_policies.json ]; then
+            mv -f engine/engine/bucket_iam_policies.json engine/test-configs/bucket_iam_policies.json
+          else
+            echo "ERROR: bucket_iam_policies.json not found"; exit 1
+          fi
+
+          if [ -f dns_zones.json ]; then
+            mv -f dns_zones.json engine/test-configs/dns_zones.json
+          elif [ -f engine/engine/dns_zones.json ]; then
+            mv -f engine/engine/dns_zones.json engine/test-configs/dns_zones.json
+          else
+            echo "ERROR: dns_zones.json not found"; exit 1
+          fi
 
       - name: Commit and push IAM policy & networks config
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add test-configs/iam_policy.json
-          git add test-configs/networks.json
-          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Update iam_policy.json & networks.json"
-          git push origin Compliance-Engine
+          git add engine/test-configs/iam_policy.json
+          git add engine/test-configs/networks.json
+          git add engine/test-configs/firewalls.json
+          git add engine/test-configs/ComputeInstances.json
+          git add engine/test-configs/sql_instances.json
+          git add engine/test-configs/bigquery_datasets_full.json
+          git add engine/test-configs/dataproc_clusters.json
+          git add engine/test-configs/bucket_iam_policies.json
+          git add engine/test-configs/dns_zones.json
+
+          echo "Staged changes:"
+          git diff --cached --name-only
+          if git diff --cached --quiet; then
+            echo "No changes to commit (either identical content or nothing staged)."
+          else
+            git commit -m "Update iam_policy.json & networks.json & firewalls.json & ComputeInstances.json && sql_instances.json && buckets_iam_policies.json && dataproc_clusters.json && bigquery_datasets_full.json"
+            git push origin engine-development
+          fi
+          
         
