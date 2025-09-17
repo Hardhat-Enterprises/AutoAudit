@@ -1,121 +1,150 @@
 //This component establishes a vertical navigation section along the left side of the screen which will be able to be toggled between condensed and expanded sizes
-//Last updated 27 August 2025
-//To do: 
-// -collapsibility 
-// -scale width based on screen
-// -update styling once styling guide finalised
+//Last updated 17 September 2025
+
 
 import React, { useState } from "react";
+import './Sidebar.css';
 
-//Main content
-const Sidebar = () => {
-    return (
-      <nav style={{...sidebarStyle, width: '250px' }}>
-        <div style={sidebarContentStyle}>
+//Button component that we use throughout the sidebar
+//Parameters:
+//href - link reference
+//name - text to display in expanded view
+//icon - text to display in collapsed view
 
-            {/* Logo and title */}
-          <div style={logoStyle}>
-            <h2>AutoAudit</h2>
-            {/* Logo image to go here once finalised */}
-          </div>
-          
-            {/* Placeholder navigation options, exact options to be updated as we progress */}
-          <ul style={navLinksStyle}>
-            <li style={navItemStyle}>
-              <a 
-                href="/" 
-                style={linkStyle}
-              >
-                Home
-              </a>
-            </li>
+const NavButton = ({ href, name, icon, isExpanded, isActive = false, onClick }) => {
+  const handleClick = (clickEvent) => {
+    if (onClick) {
+      clickEvent.preventDefault();
+      onClick(clickEvent);
+    }
+  };
 
-            <li style={navItemStyle}>
-              <a 
-                href="/complianceview" 
-                style={linkStyle}
-              >
-                Compliance Overview
-              </a>
-            </li>
+  return (
+    <li className="nav-item">
+      <a
+        className={`nav-link ${isExpanded ? 'expanded' : ''} ${isActive ? 'active' : ''}`}
+        href={href}
+        onClick={handleClick}
+      >
+        <span className="nav-icon">{icon}</span>
+        {isExpanded && <span className="nav-text">{name}</span>}
+      </a>
+    </li>
+  );
+};
 
-            <li style={navItemStyle}>
-              <a 
-                href="/settings" 
-                style={linkStyle}
-              >
-                Settings
-              </a>
-            </li>
+// Main sidebar component 
+const Sidebar = ({ onWidthChange }) => {
+  const [isExpanded, setIsExpanded] = useState(true); //Track whether sidebar is expanded
+  const [activeItem, setActiveItem] = useState('home'); // Track active navigation item
+  const [searchValue, setSearchValue] = useState(''); // Track search input value
 
-            <li style={navItemStyle}>
-              <a 
-                href="/userAccount" 
-                style={linkStyle}
-              >
-                User Profile
-              </a>
-            </li>
+  //Event to toggle collapsed state and notify parents that the width has changed
+  const toggleSidebar = () => {
+    const newExpanded = !isExpanded;
+    setIsExpanded(newExpanded);
+    onWidthChange(newExpanded ? 220 : 80);
+  };
 
-          </ul>
+  //Set active item to the key of whichever nav button was clicked
+  const handleNavClick = (itemKey) => {
+    setActiveItem(itemKey);
+  };
+
+  //Once search is functional, this search value should be used as the search parameter. Just a placeholder for now, though. 
+  const handleSearchChange = (typed) => {
+    setSearchValue(typed.target.value);
+  };
+
+  return (          
+
+    <nav className="sidebar" style={{'--sidebar-width': isExpanded ? '220px' : '80px'}}>
+      <div className="sidebar-content">       
+        <div className="search-container">
+          {/* only display when the navbar is expanded! */}
+          {isExpanded ? (
+            <div className="search-bar">
+              <button className="search-toggle-button" onClick={toggleSidebar}>
+                {/* arrow when open, hamburger when closed: */}
+                ←
+              </button>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchValue}
+                onChange={handleSearchChange}
+                className="search-input"
+              />
+              <span className="search-icon">🔍</span>
+            </div>
+          ) : (
+            <button className="toggle-button" onClick={toggleSidebar}>
+              ☰
+            </button>
+          )}
         </div>
-      </nav>
-    );
+
+
+        {/* Main navigation area */}
+        <ul className="nav-links">
+          <NavButton 
+            href={'/'} 
+            name={'Home'} 
+            icon={'🏠︎'} 
+            isExpanded={isExpanded}
+            isActive={activeItem === 'home'}
+            onClick={() => handleNavClick('home')}
+          />
+          <NavButton 
+            href={'/score'} 
+            name={'Score'} 
+            icon={'★'} 
+            isExpanded={isExpanded}
+            isActive={activeItem === 'score'}
+            onClick={() => handleNavClick('score')}
+          />
+          <NavButton 
+            href={'/recommendations'} 
+            name={'Tasks'} 
+            icon={'✓'} 
+            isExpanded={isExpanded}
+            isActive={activeItem === 'tasks'}
+            onClick={() => handleNavClick('tasks')}
+          />
+          {/* Plain unicode or an image icon would be better. No suitable unicode exists. Replace with icon image eventually, will need to sort licensing etc.*/}
+          <NavButton 
+            href={'/reports'} 
+            name={'Reports'} 
+            icon={'📄'} 
+            isExpanded={isExpanded}
+            isActive={activeItem === 'reports'}
+            onClick={() => handleNavClick('reports')}
+          />
+        </ul>
+        
+        {/* Settings section at bottom */}
+        <ul className="nav-settings">
+          <NavButton 
+            href={'/settings'} 
+            name={'Settings'} 
+            icon={'⛭'} 
+            isExpanded={isExpanded}
+            isActive={activeItem === 'settings'}
+            onClick={() => handleNavClick('settings')}
+          />
+          {/* Need a better symbol for this one too!*/}
+          <NavButton 
+            href={'/account'} 
+            name={'Account'} 
+            icon={'👤'} 
+            isExpanded={isExpanded}
+            isActive={activeItem === 'account'}
+            onClick={() => handleNavClick('account')}
+          />
+        </ul>
+      </div>
+    </nav>
+  );
 };
-
-//Styles
-//These are placeholders only and will be replaced with references to a unified styleset once available
-
-//style for sidebar background element
-const sidebarStyle = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  height: '100vh',
-  backgroundColor: '#485a8c',
-  overflowX: 'hidden',
-  zIndex: 1000, 
-  boxShadow: '4px 0 10px rgba(0,0,0,0.1)'
-};
-
-//styles for content within the sidebar frame
-const sidebarContentStyle = {
-  padding: '60px 20px 20px 20px',
-  width: '80%',
-  textAlign: 'center',
-};
-
-const logoStyle = {
-  color: 'white',
-  textAlign: 'center',
-  marginBottom: '30px',
-  borderBottom: '1px solid #34495e',
-  paddingBottom: '20px'
-};
-
-const navLinksStyle = {
-  listStyle: 'none',
-  margin: 0,
-  padding: 0,
-  textAlign: 'center'
-};
-
-const navItemStyle = {
-  marginBottom: '5px',
-  borderRadius: '2%',
-  backgroundColor: '#374f91',
-};
-
-const linkStyle = {
-  display: 'block',
-  color: 'white',
-  textDecoration: 'none',
-  padding: '15px 20px',
-  fontSize: '16px',
-  //borderRadius: '4px',
-  margin: '5px 0',
-  textAlign: 'center'
-};
-
 
 export default Sidebar;

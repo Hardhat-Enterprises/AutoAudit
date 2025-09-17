@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Dashboard.css';
 
-export default function Dashboard() {
+export default function Dashboard({ sidebarWidth = 220 }) {
   const stats = [
     { label: 'Compliance Score', value: '85%', className: 'emerald', subtitle: 'Overall security posture' },
     { label: 'Failed Checks', value: '12', className: 'orange', subtitle: 'Requiring immediate attention' },
@@ -15,8 +15,21 @@ export default function Dashboard() {
     { label: 'Scan Status', status: 'Complete', className: 'emerald', desc: 'Ready for next scan' }
   ];
 
+  //Options for chart type selection. For now only doughnut and pie chart are available. 
+    const chartTypeOptions = [
+    { value: 'doughnut', label: 'Doughnut Chart' },
+    { value: 'pie', label: 'Pie Chart' },
+  ];
+
+  const [selectedChartType, setSelectedChartType] = useState('doughnut'); //Default to a doughnut chart. 
+
+  //The inline styling below adjusts the dashboard area to fit the width that is the difference between the total screen space and the current width of the navbar, this allows it to move when the navbar is collapsed or expanded.
   return (
-    <div className="dashboard">
+  <div className="dashboard" style={{ 
+    marginLeft: `${sidebarWidth}px`, 
+    width: `calc(100vw - ${sidebarWidth}px)`,
+    transition: 'margin-left 0.4s ease, width 0.4s ease'
+  }}>
       <div className="dashboard-container">
         <div className="dashboard-header">
               <div className="header-content">
