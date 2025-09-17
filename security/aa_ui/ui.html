@@ -26,11 +26,19 @@
     .bad { color:#b00020; font-weight:600; }
     .tag { display:inline-block; padding:2px 8px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:var(--muted); }
     .error { color:#b00020; margin-top:8px; }
+    .nav { margin:10px 0 16px; }
+    a.btn { display:inline-block; padding:10px 16px; border:1px solid var(--border);
+        border-radius:8px; text-decoration:none; font-weight:600; color:var(--brand); }
+    a.btn:hover { background:#f5f5f5; }
+
   </style>
 </head>
 <body>
   <h1>AutoAudit – Evidence Scanner</h1>
   <p class="sub">Pick a strategy, then upload a file. Images, PDF, DOCX, TXT, logs, registry exports are supported.</p>
+  <div class="nav">
+  <a class="btn" href="/scan-mem" title="View the in-memory recent scans table">Recent Scans</a>
+</div>
 
   <div class="card">
     <div class="row">

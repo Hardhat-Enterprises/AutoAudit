@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Optional
 import io
+from collections import deque
+from datetime import datetime
 
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
@@ -21,6 +23,16 @@ try:
 except Exception:
     DocxDocument = None
 
+#------------memory store+helper ---------
+SCAN_MEM = deque(maxlen=50)
+
+def _push_mem_log(user: str, strategy: str, status: str) -> None:
+    SCAN_MEM.appendleft({
+        "ts": datetime.now().astimezone().isoformat(),
+        "user": user,
+        "strategy": strategy,
+        "status": status,  # 'success' | 'error'
+    })
 
 # -------- extraction helpers --------
 def _ocr_image_bytes(data: bytes) -> str:
@@ -120,6 +132,37 @@ def api_strategies():
             desc = ""
         out.append({"name": s.name, "description": desc})
     return out
+
+@app.post("/api/scan-mem-log")
+def api_post_scan_mem_log(payload: dict):
+    _push_mem_log(
+        user=str(payload.get("user") or payload.get("user_id") or "user"),
+        strategy=str(payload.get("strategy") or payload.get("strategy_name") or ""),
+        status=str(payload.get("status") or "success"),
+    )
+    return {"ok": True}
+
+@app.get("/api/scan-mem-log")
+def api_get_scan_mem_log():
+    return JSONResponse(list(SCAN_MEM))
+
+@app.get("/scan-mem", response_class=HTMLResponse)
+def scan_mem_page():
+    rows = "".join(
+        f"<tr><td>{r.get('ts','')}</td>"
+        f"<td>{r.get('user','')}</td>"
+        f"<td>{r.get('strategy','')}</td>"
+        f"<td>{r.get('status','')}</td></tr>"
+        for r in SCAN_MEM
+    ) or "<tr><td colspan='4'>No runs yet</td></tr>"
+    return HTMLResponse(f"""<!doctype html><meta charset="utf-8">
+<h1>Recent Scans — in memory</h1>
+<p><a href="/">← Home</a></p>
+<table border="1" cellpadding="6">
+  <tr><th>Time</th><th>User</th><th>Strategy</th><th>Status</th></tr>
+  {rows}
+</table>""")
+
 
 
 @app.post("/scan")
