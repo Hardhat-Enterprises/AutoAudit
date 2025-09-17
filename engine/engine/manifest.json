@@ -4,21 +4,14 @@
     {
       "id": "1",
       "name": "IAM",
-      "policies": [
-        "../engine/rules/CIS_GCP_1_5.rego",
-        "../engine/rules/CIS_GCP_1_8.rego",
-        "../engine/rules/CIS_GCP_1_6.rego"
-      ],
-      "config": "../engine/test-configs/iam_policy.json"
+      "policies": ["CIS_GCP_1_5.rego", "CIS_GCP_1_6.rego", "CIS_GCP_1_8.rego"],
+      "config": "iam_policy.json"
     },
     {
       "id": "2",
       "name": "Networks",
-      "policies": [
-        "../engine/rules/CIS_GCP_3_1.rego",
-        "../engine/rules/CIS_GCP_3_2.rego"
-      ],
-      "config": "../engine/test-configs/networks.json"
+      "policies": ["CIS_GCP_3_1.rego", "CIS_GCP_3_2.rego"],
+      "config": "networks.json"
     }
   ]
 }

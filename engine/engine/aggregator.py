@@ -1,76 +1,129 @@
-import json, re, requests
+import json, subprocess, re, sys
 from pathlib import Path
 
-BASE = Path(__file__).resolve().parent
-PARENT = BASE.parent
-OPA = "http://127.0.0.1:8181"
+THIS = Path(__file__).resolve()
+
+ROOT = next(p for p in [THIS.parent, *THIS.parents] if (p / "rules").exists() and (p / "test-configs").exists())
+
+RULES = ROOT / "rules"
+CONFIGS = ROOT / "test-configs"
+OUTFILE = ROOT / "autoaudit_reports.json"
+
+EXTRA_DATA_DIRS: list[str] = []
+
 PKG_RE = re.compile(r'^\s*package\s+([A-Za-z0-9_.]+)\s*$', re.MULTILINE)
 
 def pkg_from_file(path: Path) -> str:
     m = PKG_RE.search(path.read_text(encoding="utf-8", errors="ignore"))
     if not m:
-        raise ValueError(f"No 'package' line in {path}")
+        raise ValueError(f"No 'package' in {path}")
     return m.group(1)
 
-requests.get(f"{OPA}/health", timeout=3).raise_for_status()
+def opa_eval(rego_path: Path, input_path: Path, query: str) -> dict:
+    """Run `opa eval -f json -d RULES [-d EXTRA...] -i input query` and return parsed JSON."""
+    cmd = ["opa", "eval", "-f", "json", "-d", str(RULES)]
+    for d in EXTRA_DATA_DIRS:
+        cmd += ["-d", d]
+    cmd += ["-i", str(input_path), query]
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.strip() or f"opa eval failed for {rego_path}")
+    try:
+        return json.loads(proc.stdout)
+    except Exception as e:
+        raise RuntimeError(f"Invalid JSON from opa eval: {e}")
 
-manifest = json.loads((BASE / "manifest.json").read_text())
+def extract_value_from_eval(eval_json: dict):
+    """Return the expression value (or None)."""
+    res = eval_json.get("result") or []
+    if not res:
+        return None
+    exprs = res[0].get("expressions") or []
+    if not exprs:
+        return None
+    return exprs[0].get("value")
 
-reports, summary = [], {}
+def main():
+    manifest_path = THIS.parent / "manifest.json"
+    if not manifest_path.exists():
+        print(f"Manifest not found at {manifest_path}", file=sys.stderr)
+        sys.exit(2)
 
-for group in manifest["groups"]:
-    gid = group.get("id") or group.get("name", "unknown")
-    cfg_path = (PARENT / group["config"]).resolve()
-    input_data = json.loads(cfg_path.read_text())
-    rego_paths = [(PARENT / p).resolve() for p in group["policies"]]
+    manifest = json.loads(manifest_path.read_text())
+    groups = manifest.get("groups")
+    if not isinstance(groups, list):
+        print("manifest.json must contain an array field 'groups'", file=sys.stderr)
+        sys.exit(2)
 
-    gsum = summary.setdefault(gid, {"evaluated": 0, "errors": 0, "compliant": 0, "noncompliant": 0})
+    reports = []
+    summary = {}
 
-    for rego_path in rego_paths:
-        pkg = pkg_from_file(rego_path)
-        gsum["evaluated"] += 1
-
-        try:
-            r = requests.post(f"{OPA}/v1/data/{pkg}/report", json={"input": input_data}, timeout=10)
-            r.raise_for_status()
-            report = r.json().get("result")
-        except Exception as e:
-            gsum["errors"] += 1
-            reports.append({
-                "group": gid,
-                "rego_file": str(rego_path),
-                "package": pkg,
-                "config": str(cfg_path),
-                "error": str(e),
-            })
+    for group in groups:
+        gid = group.get("id") or group.get("name", "unknown")
+        policies = group.get("policies") or []
+        config_name = group.get("config")
+        if not policies or not config_name:
+            print(f"Skipping group {gid}: missing 'policies' or 'config'", file=sys.stderr)
             continue
 
-        if not isinstance(report, dict):
-            gsum["errors"] += 1
+        input_path = (CONFIGS / config_name).resolve()
+        gsum = summary.setdefault(gid, {"evaluated": 0, "errors": 0, "compliant": 0, "noncompliant": 0})
+
+        for pol in policies:
+            rego_path = (RULES / pol).resolve()
+            if not rego_path.exists():
+                gsum["errors"] += 1
+                reports.append({
+                    "group": gid, "rego_file": str(rego_path), "config": str(input_path),
+                    "error": "rego file not found"
+                })
+                continue
+
+            pkg = pkg_from_file(rego_path)
+            query = f"data.{pkg}.report"
+            gsum["evaluated"] += 1
+
+            try:
+                ej = opa_eval(rego_path, input_path, query)
+                value = extract_value_from_eval(ej)
+            except Exception as e:
+                gsum["errors"] += 1
+                reports.append({
+                    "group": gid, "rego_file": str(rego_path), "package": pkg,
+                    "config": str(input_path), "error": str(e)
+                })
+                continue
+
+            if not isinstance(value, dict):
+                # Helpful: dump available keys at the package root to debug
+                try:
+                    ej2 = opa_eval(rego_path, input_path, f"data.{pkg}")
+                    pkg_root = extract_value_from_eval(ej2)
+                    available_keys = list(pkg_root.keys()) if isinstance(pkg_root, dict) else None
+                except Exception:
+                    available_keys = None
+
+                gsum["errors"] += 1
+                reports.append({
+                    "group": gid, "rego_file": str(rego_path), "package": pkg,
+                    "config": str(input_path), "error": "report returned null or non-object",
+                    "available_keys": available_keys
+                })
+                continue
+
+            status = value.get("status")
+            if status == "Compliant":
+                gsum["compliant"] += 1
+            elif status == "NonCompliant":
+                gsum["noncompliant"] += 1
+
             reports.append({
-                "group": gid,
-                "rego_file": str(rego_path),
-                "package": pkg,
-                "config": str(cfg_path),
-                "error": "report did not return an object",
-                "raw": report,
+                "group": gid, "rego_file": str(rego_path), "package": pkg,
+                "config": str(input_path), "report": value
             })
-            continue
 
-        status = report.get("status")
-        if status == "Compliant":
-            gsum["compliant"] += 1
-        elif status == "NonCompliant":
-            gsum["noncompliant"] += 1
+    OUTFILE.write_text(json.dumps({"summary_by_group": summary, "reports": reports}, indent=2))
+    print(f"Wrote {OUTFILE}")
 
-        reports.append({
-            "group": gid,
-            "rego_file": str(rego_path),
-            "package": pkg,
-            "config": str(cfg_path),
-            "report": report,
-        })
-
-out = PARENT / "autoaudit_reports.json"
-out.write_text(json.dumps({"summary_by_group": summary, "reports": reports}, indent=2))
-print(f"Wrote {out}")
+if __name__ == "__main__":
+    main()
