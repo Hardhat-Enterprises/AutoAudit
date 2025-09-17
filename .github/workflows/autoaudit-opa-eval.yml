@@ -3,7 +3,7 @@ name: AutoAudit — OPA eval (CLI only)
 
 on:
   push:
-    branches: [ main ]
+    branches: [engine-development]
   pull_request:
 
 jobs:
