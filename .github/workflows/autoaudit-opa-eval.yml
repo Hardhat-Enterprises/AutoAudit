@@ -1,0 +1,68 @@
+name: AutoAudit — OPA eval (no server)
+
+on:
+  push:
+    branches: [engine-development]
+  pull_request:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pyyaml
+
+      - name: Install OPA CLI
+        run: |
+          curl -L -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static
+          chmod +x opa
+          sudo mv opa /usr/local/bin/opa
+          opa version
+
+      - name: Run aggregator (CLI mode)
+        run: |
+          python engine/engine/aggregator.py
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: autoaudit-reports
+          path: engine/autoaudit_reports.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Gate on compliance
+        if: always()
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          FILE=engine/autoaudit_reports.json
+          NONC=$(jq '[.summary_by_group[] | .noncompliant] | add // 0' "$FILE")
+          ERR=$(jq '[.summary_by_group[] | .errors] | add // 0' "$FILE")
+          echo "NonCompliant: $NONC  |  Errors: $ERR"
+          if [ "$ERR" -gt 0 ] || [ "$NONC" -gt 0 ]; then
+            echo "::error::NonCompliant=$NONC, Errors=$ERR"; exit 1
+          fi
+
+      - name: Job Summary
+        if: always()
+        run: |
+          echo "## AutoAudit Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Group | Evaluated | Compliant | NonCompliant | Errors |" >> $GITHUB_STEP_SUMMARY
+          echo "|------:|----------:|----------:|-------------:|-------:|" >> $GITHUB_STEP_SUMMARY
+          jq -r '
+            .summary_by_group
+            | to_entries
+            | sort_by(.key|tonumber? // .key)
+            | .[]
+            | "| \(.key) | \(.value.evaluated // 0) | \(.value.compliant // 0) | \(.value.noncompliant // 0) | \(.value.errors // 0) |"
+          ' engine/autoaudit_reports.json >> $GITHUB_STEP_SUMMARY

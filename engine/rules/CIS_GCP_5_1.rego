@@ -10,7 +10,7 @@ deny := { v |
   b := input.bindings[_]
   r := b.members[_]
   r in blocked_value
-  v := sprintf("Ensure that Bucket IAM Policy does not allow %q as a role, [r])
+  v := sprintf("Ensure that Bucket IAM Policy does not allow %q as a role", [r])
 }
 
 

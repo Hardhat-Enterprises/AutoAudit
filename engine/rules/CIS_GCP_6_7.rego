@@ -4,7 +4,7 @@ import data.AutoAudit_tester.engine.Helpers as H
 id    := "CIS_GCP_6_7"
 title := "Ensure Cloud SQL automated backups are enabled"
 policy_group := "Cloud SQL"
-blocked_value := True
+blocked_value := "True"
 
 deny := { v |  
   b := input[_]

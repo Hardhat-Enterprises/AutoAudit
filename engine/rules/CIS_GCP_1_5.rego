@@ -1,5 +1,6 @@
 package AutoAudit_tester.rules.CIS_GCP_1_5
 import data.AutoAudit_tester.engine.Helpers as H
+import future.keywords.in
 
 id    := "CIS_GCP_1_5"
 title := "Service accounts must not have Owner/Editor"

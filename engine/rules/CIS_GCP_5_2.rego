@@ -10,7 +10,7 @@ deny := { v |
   b := input[_]
   r := b.iamConfiguration.bucketPolicyOnly.enabled
   r == blocked_value
-  v := sprintf("Ensure that Bucket IAM Configuration allows Uniform Bucket Level Access")
+  v := sprintf("Ensure that Bucket IAM Configuration allows Uniform Bucket Level Access", [r])
 }
 
 

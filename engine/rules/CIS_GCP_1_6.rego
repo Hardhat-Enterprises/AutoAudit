@@ -1,5 +1,6 @@
 package AutoAudit_tester.rules.CIS_GCP_1_6
 import data.AutoAudit_tester.engine.Helpers as H
+import future.keywords.in
 
 id    := "CIS_GCP_1_6"
 title := "Ensure That IAM Users Are Not Assigned the Service Account User or Service Account Token Creator Roles at Project"

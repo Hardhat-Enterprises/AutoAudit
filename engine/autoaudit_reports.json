@@ -1,0 +1,58 @@
+{
+  "summary_by_group": {
+    "1": {
+      "evaluated": 3,
+      "errors": 3,
+      "compliant": 0,
+      "noncompliant": 0
+    },
+    "2": {
+      "evaluated": 2,
+      "errors": 2,
+      "compliant": 0,
+      "noncompliant": 0
+    }
+  },
+  "reports": [
+    {
+      "group": "1",
+      "rego_file": "/Users/adi/Desktop/MonoRepo/AutoAudit_AH/engine/rules/CIS_GCP_1_5.rego",
+      "package": "AutoAudit_tester.rules.CIS_GCP_1_5",
+      "config": "/Users/adi/Desktop/MonoRepo/AutoAudit_AH/engine/test-configs/iam_policy.json",
+      "error": "report did not return an object",
+      "raw": null
+    },
+    {
+      "group": "1",
+      "rego_file": "/Users/adi/Desktop/MonoRepo/AutoAudit_AH/engine/rules/CIS_GCP_1_8.rego",
+      "package": "AutoAudit_tester.rules.CIS_GCP_1_8",
+      "config": "/Users/adi/Desktop/MonoRepo/AutoAudit_AH/engine/test-configs/iam_policy.json",
+      "error": "report did not return an object",
+      "raw": null
+    },
+    {
+      "group": "1",
+      "rego_file": "/Users/adi/Desktop/MonoRepo/AutoAudit_AH/engine/rules/CIS_GCP_1_6.rego",
+      "package": "AutoAudit_tester.rules.CIS_GCP_1_6",
+      "config": "/Users/adi/Desktop/MonoRepo/AutoAudit_AH/engine/test-configs/iam_policy.json",
+      "error": "report did not return an object",
+      "raw": null
+    },
+    {
+      "group": "2",
+      "rego_file": "/Users/adi/Desktop/MonoRepo/AutoAudit_AH/engine/rules/CIS_GCP_3_1.rego",
+      "package": "AutoAudit_tester.rules.CIS_GCP_3_1",
+      "config": "/Users/adi/Desktop/MonoRepo/AutoAudit_AH/engine/test-configs/networks.json",
+      "error": "report did not return an object",
+      "raw": null
+    },
+    {
+      "group": "2",
+      "rego_file": "/Users/adi/Desktop/MonoRepo/AutoAudit_AH/engine/rules/CIS_GCP_3_2.rego",
+      "package": "AutoAudit_tester.rules.CIS_GCP_3_2",
+      "config": "/Users/adi/Desktop/MonoRepo/AutoAudit_AH/engine/test-configs/networks.json",
+      "error": "report did not return an object",
+      "raw": null
+    }
+  ]
+}
