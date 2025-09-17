@@ -1,0 +1,101 @@
+/* Styling for a dropdown option box, based on styling for the main dashboard.
+NB 14 September 2025 - Currently in use for chart type selection but this has been made general-purpose and can be used for anything.  */
+
+.chart-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.chart-dropdown-trigger {
+  background: transparent;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  color: #94a3b8;
+  padding: 8px 12px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.chart-dropdown-trigger:hover {
+  background: rgba(148, 163, 184, 0.1);
+  border-color: #64748b;
+  color: #e2e8f0;
+}
+
+/* glow background around the dropdown when current focus item (such as if clicked or tabbed to */
+.chart-dropdown-trigger:focus {
+  outline: none;
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+}
+
+.chart-dropdown-text {
+  flex: 1;
+  text-align: left;
+}
+
+/* transition effect here enables smooth animations for the arrow to flip upside down */
+.chart-dropdown-arrow {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+  color: #64748b;
+}
+
+/* Rotate the arrow upside down when the dropdown is open*/
+.chart-dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* background of the options list */
+.chart-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  margin-top: 4px;
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* default styling of each option in the list */
+.chart-dropdown-option {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 12px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #334155;
+}
+
+/* for hovering over an option that is not the currently selected item */
+.chart-dropdown-option:hover {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+/* for currently selected option */
+.chart-dropdown-option.selected {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* if user hovers over already selected option */
+.chart-dropdown-option.selected:hover {
+  background: rgba(148, 163, 184, 0.2);
+}

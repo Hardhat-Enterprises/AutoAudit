@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import './Dashboard.css';
+import ComplianceChart from './components/ComplianceChart';
+import Dropdown from './components/Dropdown';
+
 
 export default function Dashboard({ sidebarWidth = 220 }) {
   const stats = [
@@ -24,6 +27,7 @@ export default function Dashboard({ sidebarWidth = 220 }) {
   const [selectedChartType, setSelectedChartType] = useState('doughnut'); //Default to a doughnut chart. 
 
   //The inline styling below adjusts the dashboard area to fit the width that is the difference between the total screen space and the current width of the navbar, this allows it to move when the navbar is collapsed or expanded.
+
   return (
   <div className="dashboard" style={{ 
     marginLeft: `${sidebarWidth}px`, 
@@ -37,6 +41,7 @@ export default function Dashboard({ sidebarWidth = 220 }) {
                 <div className="header-text">
                   <h1>AutoAudit</h1>
                   <p>Microsoft 365 Compliance Platform</p>
+                  
                 </div>
           </div>
         </div>
@@ -48,7 +53,7 @@ export default function Dashboard({ sidebarWidth = 220 }) {
                   <div className="stat-info">
                     <div className="stat-icon">
                         {stat.className === 'emerald' && <span>✓</span>}
-                            {stat.className === 'orange' && <span>⚠</span>}
+                        {stat.className === 'orange' && <span>⚠</span>}
                         {stat.className === 'gray' && <span>🕐</span>}
                       </div>
 
@@ -64,18 +69,22 @@ export default function Dashboard({ sidebarWidth = 220 }) {
           ))}
         </div>
 
-
-
-
-
         <div className="main-grid">
+          <div className="compliance-graph-card">
+            <div className="issue-header">
+              <div className="issue-title">
+                    <span className="issue-icon">◷</span>
+                    <h4>Scan Results</h4>
+              </div>
+              <Dropdown
+                value={selectedChartType}
+                onChange={setSelectedChartType}
+                options={chartTypeOptions}
+              />
+            </div>
+            <ComplianceChart chartType={selectedChartType} dataInput = {[3, 9, 85]}></ComplianceChart>
 
-
-          
-          <div className="compliance-section">
-            
           </div>
-
               <div className="issues-section">
                 <div className="issue-card red">
                   <div className="issue-header">
@@ -87,10 +96,6 @@ export default function Dashboard({ sidebarWidth = 220 }) {
                   </div>
                   <p className="issue-desc">Critical security gaps</p>
           </div>
-
-
-
-
       
       <div className="issue-card orange">
         <div className="issue-header">
@@ -103,29 +108,19 @@ export default function Dashboard({ sidebarWidth = 220 }) {
         <p className="issue-desc">Important improvements needed</p>
       </div>
       
-
-
-
-
-
-
-
-
-
-
-            <div className="issue-card emerald">
-              <div className="issue-header">
-                <div className="issue-title">
-                  <span className="issue-icon">✓</span>
-                  <h4>Scan Status</h4>
-                </div>
-                <span className="issue-status">Complete</span>
-              </div>
-              <p className="issue-desc">Ready for next scan</p>
-            </div>
+      <div className="issue-card emerald">
+        <div className="issue-header">
+          <div className="issue-title">
+            <span className="issue-icon">✓</span>
+            <h4>Scan Status</h4>
           </div>
+          <span className="issue-status">Complete</span>
         </div>
+        <p className="issue-desc">Ready for next scan</p>
       </div>
+    </div>
+  </div>
+</div>
 
 
 
