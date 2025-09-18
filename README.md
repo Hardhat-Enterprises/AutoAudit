@@ -1,48 +1,48 @@
-# AutoAudit Monorepo
+# AutoAudit Monorepo - Staging Branch
 
-## Project Overview
-AutoAudit is a M365 compliance automation platform built by several specialist teams. This monorepo centralizes all codebases—including backend services, APIs, compliance scanners, and frontends—enabling unified CI/CD, streamlined development, and rapid automated deployments to the cloud.
+## Staging Environment Overview
+The staging branch serves as the pre-production environment where integrated and tested code from dev is thoroughly validated. This branch is used for final QA, security checks, and end-to-end testing before production deployment.
 
-## Repository Structure
-The repo is organized into dedicated top-level folders for each team/service. This ensures clear code ownership, auditability, and minimizes merge conflicts.
+## Staging Branch Structure
+The repo maintains the same top-level folder structure by team:
 
-# API and Backend Team
-/backend-api
+- /backend-api
+- /security
+- /frontend
+- /engine
+- /.github/workflows (for CI/CD)
 
-# Security Team
-/security
+Commit history and code provenance are preserved from original forks and merges.
 
-# Frontend and User EXP
-/frontend
-
-# Engine Team
-/engine 
-
-# DevOps Team
-/.github/workflows
-
-Each folder was imported from individual repos, preserving full commit history and enabling future traceability.
-
-## Branching Strategy
-- main: Production-ready, stable releases only
-- dev: Active integration and development from all teams
-- staging: Pre-release, final QA before production
-- feature/<team>-<desc>: Team-specific branches for new features or fixes
-
-All changes are integrated through Pull Requests (PRs), with branch protections and CI checks enforced.
-
-## Contribution Guidelines
-- Work within your designated team folder, keeping code modular and isolated.
-- Follow project code style guides (enforced via automated linting/CI).
-- All PRs must target the correct integration branch and include a clear description and relevant issue/PR references.
-- Tag your team and relevant reviewers for all non-trivial work.
+## Branching Strategu
+- PRs are merged into staging only after review and approval from team leads on dev.
+- No direct commits to staging are allowed to ensure controlled releases.
+- Approved staging code is promoted to main for production deployment.
 
 ## CI/CD Pipeline Overview
-- Automated with GitHub Actions and Google Cloud Build
-- On PR or code push, path filters selectively trigger builds & tests only for affected services.
-- On successful checks, images are built and pushed to Google Artifact Registry.
+- Runs full test suites including integration and end-to-end tests.
+- Performs Docker image builds tagged with the staging environment.
+- Conducts security scans (CodeQL, Grype) on built images.
+- Automates deployment to GCP staging clusters for real-world validation.
+
+Production deployment is triggered only after successful staging deployments.
+
+## Contribution Guidelines
+- Changes come only via PR merges from dev; no direct pushes allowed.
+- Follow strict code review and quality assurance protocols.
+- All PRs must include thorough testing and reference related issues.
+- Tag relevant team leads and reviewers for approval.
+
+## Docker Builds
+Docker images built here are pushed with the staging tag to Docker Hub and GCP Artifact Registry.
+- Teams can inspect and test staging images before promotion.
+- Docker Hub: https://hub.docker.com/u/autoauditservices
+- Engine Repo: https://hub.docker.com/r/autoauditservices/engine
+- Backend-API Repo: https://hub.docker.com/r/autoauditservices/backend-api
+- Frontend Repo: https://hub.docker.com/r/autoauditservices/frontend (unconfigged)
+- Security Repo: https://hub.docker.com/r/autoauditservices/security (unconfigged)
 
 ## Contact & Support
 For support or questions, please:
-- Contact your DevOps team lead directly
-- Open an issue in this repository (use proper tags for devops, security, api, etc.)
+- Contact your DevOps or QA lead.
+- Open issues in this repository with appropriate environment tags.
