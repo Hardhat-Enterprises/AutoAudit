@@ -1,0 +1,112 @@
+[
+  {
+    "kind": "compute#firewall",
+    "id": "828978396839913072",
+    "creationTimestamp": "2025-08-28T01:51:43.224-07:00",
+    "name": "default-allow-icmp",
+    "description": "Allow ICMP from anywhere",
+    "network": "https://www.googleapis.com/compute/v1/projects/coastal-stone-470308-a0/global/networks/default",
+    "priority": 65534,
+    "sourceRanges": [
+      "0.0.0.0/0"
+    ],
+    "allowed": [
+      {
+        "IPProtocol": "icmp"
+      }
+    ],
+    "direction": "INGRESS",
+    "logConfig": {
+      "enable": false
+    },
+    "disabled": false,
+    "selfLink": "https://www.googleapis.com/compute/v1/projects/coastal-stone-470308-a0/global/firewalls/default-allow-icmp"
+  },
+  {
+    "kind": "compute#firewall",
+    "id": "8857968102246033008",
+    "creationTimestamp": "2025-08-28T01:51:43.210-07:00",
+    "name": "default-allow-internal",
+    "description": "Allow internal traffic on the default network",
+    "network": "https://www.googleapis.com/compute/v1/projects/coastal-stone-470308-a0/global/networks/default",
+    "priority": 65534,
+    "sourceRanges": [
+      "10.128.0.0/9"
+    ],
+    "allowed": [
+      {
+        "IPProtocol": "tcp",
+        "ports": [
+          "0-65535"
+        ]
+      },
+      {
+        "IPProtocol": "udp",
+        "ports": [
+          "0-65535"
+        ]
+      },
+      {
+        "IPProtocol": "icmp"
+      }
+    ],
+    "direction": "INGRESS",
+    "logConfig": {
+      "enable": false
+    },
+    "disabled": false,
+    "selfLink": "https://www.googleapis.com/compute/v1/projects/coastal-stone-470308-a0/global/firewalls/default-allow-internal"
+  },
+  {
+    "kind": "compute#firewall",
+    "id": "2733887501757163120",
+    "creationTimestamp": "2025-08-28T01:51:43.219-07:00",
+    "name": "default-allow-rdp",
+    "description": "Allow RDP from anywhere",
+    "network": "https://www.googleapis.com/compute/v1/projects/coastal-stone-470308-a0/global/networks/default",
+    "priority": 65534,
+    "sourceRanges": [
+      "0.0.0.0/0"
+    ],
+    "allowed": [
+      {
+        "IPProtocol": "tcp",
+        "ports": [
+          "3389"
+        ]
+      }
+    ],
+    "direction": "INGRESS",
+    "logConfig": {
+      "enable": false
+    },
+    "disabled": false,
+    "selfLink": "https://www.googleapis.com/compute/v1/projects/coastal-stone-470308-a0/global/firewalls/default-allow-rdp"
+  },
+  {
+    "kind": "compute#firewall",
+    "id": "4537268596318774896",
+    "creationTimestamp": "2025-08-28T01:51:43.214-07:00",
+    "name": "default-allow-ssh",
+    "description": "Allow SSH from anywhere",
+    "network": "https://www.googleapis.com/compute/v1/projects/coastal-stone-470308-a0/global/networks/default",
+    "priority": 65534,
+    "sourceRanges": [
+      "0.0.0.0/0"
+    ],
+    "allowed": [
+      {
+        "IPProtocol": "tcp",
+        "ports": [
+          "22"
+        ]
+      }
+    ],
+    "direction": "INGRESS",
+    "logConfig": {
+      "enable": false
+    },
+    "disabled": false,
+    "selfLink": "https://www.googleapis.com/compute/v1/projects/coastal-stone-470308-a0/global/firewalls/default-allow-ssh"
+  }
+]
