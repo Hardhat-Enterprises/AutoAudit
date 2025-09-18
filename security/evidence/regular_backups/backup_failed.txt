@@ -1,0 +1,2 @@
+Backup Failed: No recent backup found in the last 7 days.
+Status: Failure
