@@ -1,0 +1,77 @@
+#AutoAudit CI/CD Pipeline Alerts - Prometheus Alerting Rules
+#File: cicd_pipeline.yaml
+#Location: /infrastructure/monitoring/alerts/
+#Description: Defines high and medium severity CI/CD pipeline failure alerts.
+#Author: Senior Lead, AutoAudit DevSecOps Team
+#Last Updated: 2025-09-17
+
+groups:
+- name: cicd.rules
+  interval: 1m
+  
+  rules:
+  - alert: BuildFailures
+    
+    expr: |
+      increase(ci_build_failures_total[15m]) > 0
+    
+    for: 5m
+    
+    labels:
+      severity: high
+      team: devops
+      service: ci-pipeline
+      environment: production
+    
+    annotations:
+      
+      summary: "High: CI build failures detected"
+      
+      description: |
+        One or more build failures have occurred in the last 15 minutes.
+        Review build logs and fix errors to maintain pipeline health.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#cicdbuildfailures"
+
+  - alert: DeploymentRollback
+    
+    expr: |
+      increase(deployment_rollbacks_total[10m]) > 0
+    
+    for: 5m
+    
+    labels:
+      severity: medium
+      team: devops
+      service: ci-pipeline
+      environment: production
+    
+    annotations:
+      
+      summary: "Medium: Deployment rollback detected"
+      
+      description: |
+        One or more deployment rollbacks have occurred in the last 10 minutes.
+        Investigate the causes of rollbacks and stabilise the deployment process.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#cicddeploymentrollback"
+
+  - alert: SecurityScanFailures
+    
+    expr: |
+      increase(ci_security_scan_failures_total[15m]) > 0
+    
+    for: 5m
+    
+    labels:
+      severity: high
+      team: devops
+      service: ci-pipeline
+      environment: production
+    
+    annotations:
+      
+      summary: "High: Security scan failures in CI pipeline"
+      
+      description: |
+        Security scans have failed in the last 15 minutes.
+        Review scan logs and address vulnerabilities or configuration issues.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#cicdsecurityscanfailures"
