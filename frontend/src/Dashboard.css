@@ -412,20 +412,20 @@ input:checked + .slider:before {
 }
 
 .fit {
-  width: 73%;
+  width: 100%;
   margin: 0 auto;
 }
 
 @media (max-width: 1024px) {
-  .main-grid { 
-    grid-template-columns: 1fr; 
+  .main-grid {
+    grid-template-columns: 1fr;
   }
-  .issues-section { 
-    grid-column: 1 / -1; 
-    grid-row: auto; 
+  .issues-section {
+    grid-column: 1 / -1;
+    grid-row: auto;
   }
-  .below-grid, .bottom-grid { 
-    grid-column: 1 / -1; 
+  .below-grid, .bottom-grid {
+    grid-column: 1 / -1;
   }
   .fit {
     width: 70%;
@@ -434,16 +434,22 @@ input:checked + .slider:before {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-
-@media (max-width: 1440px) {
+ 
+@media (max-width: 1600px) {
   .fit {
-    width: 100% !important;
+    width: 82.1%;
   }
 }
-
+ 
+@media (max-width: 1440px) {
+  .fit {
+    width: 100%;
+  }
+}
+ 
 @media (max-width: 640px) {
-  .main-grid { 
-    grid-template-columns: 1fr; 
+  .main-grid {
+    grid-template-columns: 1fr;
   }
   .stats-grid {
     grid-template-columns: 1fr;
@@ -457,3 +463,4 @@ input:checked + .slider:before {
     align-self: flex-end;
   }
 }
+
