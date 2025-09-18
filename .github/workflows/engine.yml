@@ -102,27 +102,30 @@ jobs:
           else
             echo "ENV_NAME=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           fi
+          
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Build and tag Docker image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }} \
             --build-arg ENV=${{ steps.set-env.outputs.ENV_NAME }} \
             -f engine/docker/engine.Dockerfile .
+
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }}
+
       - name: Scan Docker image with Grype
         uses: anchore/scan-action@v6
         with:
           image: ${{ secrets.DOCKER_USERNAME }}/engine:${{ steps.set-env.outputs.ENV_NAME }}
           fail-build: false
-          output-format: sarif
-          output-file: grype-report.sarif
+
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: grype-report.sarif
+          sarif_file: ${{ steps.scan.outputs.sarif }}
