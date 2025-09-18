@@ -2,8 +2,6 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY ./ ./
+COPY backend-api/ ./backend-api
 
-WORKDIR /app/backend
-
-CMD ["python", "backend/main.py"]
+CMD ["python", "backend-api/app/main.py"]
