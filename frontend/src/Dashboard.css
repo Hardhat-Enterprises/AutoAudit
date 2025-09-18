@@ -282,6 +282,26 @@ input:checked + .slider:before {
   transition: all 0.3s ease;
 }
 
+.compliance-graph-card {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #334155;
+  border-left: 4px solid;
+  border-left-color: #94a3b8;
+  min-height: 0;
+  max-height: 100% !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.compliance-graph-card .issue-icon {
+  color: #94a3b8;
+  background: rgba(100, 116, 139, 0.2);
+  border-radius: 6px;
+}
+
 .compliance-section {
   background: var(--bg-secondary);
   border-radius: 12px;
