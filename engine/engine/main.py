@@ -1,7 +1,7 @@
 import json
 import os
 
-def load_mock_config(path="engine/test-configs/compliant.json"):
+def load_mock_config(path="engine/test-configs/iam_policy.json"):
     with open(path) as f:
         return json.load(f)
     
