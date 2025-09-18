@@ -123,6 +123,6 @@ jobs:
           output-format: sarif
           output-file: grype-report.sarif
       - name: Upload SARIF to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: anchore/scan-action/upload-sarif@v3
         with:
           sarif_file: grype-report.sarif
