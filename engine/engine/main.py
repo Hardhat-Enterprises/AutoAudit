@@ -61,7 +61,7 @@ def main():
         passed += result
         failed += not result
 
-    print(f"\nSummary: {passed} rules passed, {failed} rules failed")
+    print(f"\nSummary: {passed} rules passed {failed} rules failed")
     
 if __name__ == "__main__":
     main()
