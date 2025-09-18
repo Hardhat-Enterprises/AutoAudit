@@ -134,5 +134,3 @@ jobs:
         with:
           sarif_file: grype-report.sarif
       
-      - name: debug sarif content checker
-        run: cat grype-report.sarif
