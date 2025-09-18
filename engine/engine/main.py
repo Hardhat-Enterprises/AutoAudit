@@ -46,7 +46,7 @@ def main():
 
         if not result:
             print("")
-            print("  ---- Cause of Failure --- ")
+            print("  --- Cause of Failure --- ")
             print(f"  Description : {rule['description']}")
             print(f"  Reason      : {reason}")
             print(f"  Remediation : {rule['remediation']}")
