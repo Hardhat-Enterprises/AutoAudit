@@ -30,6 +30,15 @@ Full commit history and traceability from forks have been preserved.
 - Docker Builds: Images are built and tagged with environment branch names here and pushed but not deployed.
 - No production deploys occur from this branch.
 
+## Docker Builds
+- Teams with Docker Builds can access their updated images after a PR at our Docker Hub.
+- Builds pushed are respective per enviornment, e.g; this dev branch will push to the :dev tag in the docker hub repo after the team name.
+-- Docker Hub: https://hub.docker.com/u/autoauditservices
+-- Engine Repo: https://hub.docker.com/r/autoauditservices/engine
+-- Backend-API Repo: https://hub.docker.com/r/autoauditservices/backend-api
+-- Frontend Repo: https://hub.docker.com/r/autoauditservices/frontend (not configured)
+-- Security Repo: https://hub.docker.com/r/autoauditservices/security (not configured)
+
 ## Contribution Guidelines
 - Work within your designated team folder, keeping code modular and isolated.
 - Follow project code style guides (enforced via automated linting/CI).
