@@ -27,7 +27,7 @@ def evaluate_rule(rule, config):
         reason = f"{rule['tags']} = {value}, expected {expected} | Severity: {severity}"
         return False, reason, severity
 
-def load_mock_config(path="engine/test-configs/compliant.json"):
+def load_mock_config(path="engine/test-configs/iam_policy.json"):
     with open(path) as f:
         return json.load(f)
     
@@ -64,7 +64,7 @@ def main():
 
         if not result:
             print("")
-            print("  --- Cause of Failure ---")
+            print("  --- Cause of Failure --- ")
             print(f"  Description : {rule['description']}")
             print(f"  Reason      : {reason}")
             print(f"  Remediation : {rule['remediation']}")

@@ -1,48 +1,42 @@
-# AutoAudit Monorepo
+# AutoAudit Monorepo - Main/Deployment Branch
 
 ## Project Overview
 AutoAudit is a M365 compliance automation platform built by several specialist teams. This monorepo centralizes all codebases—including backend services, APIs, compliance scanners, and frontends—enabling unified CI/CD, streamlined development, and rapid automated deployments to the cloud.
 
 ## Repository Structure
-The repo is organized into dedicated top-level folders for each team/service. This ensures clear code ownership, auditability, and minimizes merge conflicts.
+The repo follows the established modular structure:  
+- `/backend-api`  
+- `/security`  
+- `/frontend`  
+- `/engine`  
+- `/.github/workflows`
 
-# API and Backend Team
-/backend-api
+Full commit history and traceability from team forks are preserved.
 
-# Security Team
-/security
+## Branching Strategy  
+- Only trusted, verified releases from `staging` are merged into `main`.
+- Direct commits are prohibited via branch protection rules.
+- Changes in `main` trigger the production deployment workflows.
 
-# Frontend and User EXP
-/frontend
+## CI/CD Pipeline Overview  
+- Code scanning (CodeQL, Grype) and security validations run on every push or PR.
+- Docker images are built and tagged for the `prod` environment here.
+- **Production deployments to Google Cloud Platform (GCP) will be triggered from this branch once configured.**
+- Currently, GCP deployment automation is being set up;  
+  once complete, a GCP Cloud Build trigger will automatically build and deploy the `main` branch code and push images into the GCP Artifact Registry.
 
-# Engine Team
-/engine 
+## Docker Builds  
+- Production Docker images from the `main` branch are tagged appropriately and pushed to:  
+  - [Docker Hub - AutoAudit Services](https://hub.docker.com/u/autoauditservices)  
+  - GCP Artifact Registry (once integration is complete)  
+- Individual service repos like Engine, Backend-API, Frontend, and Security have mirrored deployment artifacts.
 
-# DevOps Team
-/.github/workflows
+## Contribution Guidelines  
+- Only merges from `staging` occur into `main`, following stringent review and testing.  
+- Emergency fixes require expedited team approval and follow strict policies.  
+- All merges are subject to passing full CI/CD and security gating.
 
-Each folder was imported from individual repos, preserving full commit history and enabling future traceability.
-
-## Branching Strategy
-- main: Production-ready, stable releases only
-- dev: Active integration and development from all teams
-- staging: Pre-release, final QA before production
-- feature/<team>-<desc>: Team-specific branches for new features or fixes
-
-All changes are integrated through Pull Requests (PRs), with branch protections and CI checks enforced.
-
-## Contribution Guidelines
-- Work within your designated team folder, keeping code modular and isolated.
-- Follow project code style guides (enforced via automated linting/CI).
-- All PRs must target the correct integration branch and include a clear description and relevant issue/PR references.
-- Tag your team and relevant reviewers for all non-trivial work.
-
-## CI/CD Pipeline Overview
-- Automated with GitHub Actions and Google Cloud Build
-- On PR or code push, path filters selectively trigger builds & tests only for affected services.
-- On successful checks, images are built and pushed to Google Artifact Registry.
-
-## Contact & Support
-For support or questions, please:
-- Contact your DevOps team lead directly
-- Open an issue in this repository (use proper tags for devops, security, api, etc.)
+## Contact & Support  
+For production deployment queries:  
+- Contact the DevOps lead managing GCP integration.  
+- Report critical issues with `main` branch deployments on GitHub with relevant tags.
