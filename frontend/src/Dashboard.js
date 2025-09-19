@@ -40,13 +40,37 @@ export default function Dashboard({ sidebarWidth = 220 }) {
     { label: 'Scan Status', status: 'Complete', className: 'emerald', desc: 'Ready for next scan' }
   ];
 
+  //Example options for demonstration, 
+  const benchmarkOptions = [
+    { value: 'cis-google-cloud', label: 'CIS Google Cloud Platform Foundation' },
+    { value: 'cis-microsoft-365', label: 'CIS Microsoft 365 Foundation' },
+    { value: 'nist-cybersecurity', label: 'NIST Cybersecurity Framework' },
+    { value: 'iso-27001', label: 'ISO 27001' },
+  ];
+
   //Options for chart type selection. For now only doughnut and pie chart are available. 
     const chartTypeOptions = [
     { value: 'doughnut', label: 'Doughnut Chart' },
     { value: 'pie', label: 'Pie Chart' },
   ];
-
+    
   const [selectedChartType, setSelectedChartType] = useState('doughnut'); //Default to a doughnut chart. 
+
+
+  //Benchmark selector
+  const [selectedBenchmark, setSelectedBenchmark] = useState('cis-google-cloud');
+
+  const handleExportReport = () => {
+    // Report export functionality to go here. Just placeholder for now.
+    console.log('Exporting report...');
+  };
+
+  const handleRunNewScan = () => {
+    // Functionality for running scans to go here. Just placeholder for now. 
+    console.log('Running scan...');
+  };
+
+
 
   return (
   
@@ -79,6 +103,27 @@ export default function Dashboard({ sidebarWidth = 220 }) {
               <span className="slider"></span>
             </label>
             <span className="theme-label">🌙</span>
+          </div>
+        </div>
+
+        {/* Toolbar with benchmark selector, export and scan buttons */}
+        <div className="top-toolbar">
+          <div className="toolbar-left">
+            <span className="toolbar-label">Benchmark</span>
+            <Dropdown
+              value={selectedBenchmark}
+              onChange={setSelectedBenchmark}
+              options={benchmarkOptions}
+            />
+          </div>
+          
+          <div className="toolbar-right">
+            <button className="toolbar-button secondary" onClick={handleExportReport}>
+              Export Report
+            </button>
+            <button className="toolbar-button primary" onClick={handleRunNewScan}>
+              Run New Scan
+            </button>
           </div>
         </div>
 
@@ -116,7 +161,7 @@ export default function Dashboard({ sidebarWidth = 220 }) {
                 options={chartTypeOptions}
               />
             </div>
-            <ComplianceChart chartType={selectedChartType} dataInput = {[3, 9, 85]}></ComplianceChart>
+            <ComplianceChart chartType={selectedChartType} dataInput = {[3, 9, 85]} isDarkMode={isDarkMode}></ComplianceChart>
           </div>
 
           <div className="issues-section">
