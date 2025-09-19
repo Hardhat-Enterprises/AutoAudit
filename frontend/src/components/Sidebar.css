@@ -1,19 +1,35 @@
-/* Sidebar Styles */
+/* Sidebar Styles - Fixed with Proper CSS Specificity */
 
-/* Sidebar background element */
+/* Sidebar background element with theme support */
 .sidebar {
   position: fixed;
-  transition: width 0.4s ease;
+  transition: width 0.4s ease, background-color 0.3s ease;
   top: 0;
   left: 0;
   height: 100vh;
   width: var(--sidebar-width, 0px);
-  background-color: #1E293B; 
   overflow-x: hidden;
   overflow-y: hidden; 
   z-index: 1000;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2);
+  outline: 1px solid #3F3F3F;
+  
+  /* Dark theme (default) */
+  background-color: #1E293B;
+}
+
+/* Dark theme explicit */
+.sidebar.dark {
+  background-color: #1E293B;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2);
+  outline: 1px solid #3F3F3F;
+}
+
+/* Light theme explicit */
+.sidebar.light {
+  background-color: #ffffff;
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
-  outline:1px solid #3F3F3F;
+  outline: 1px solid #e2e8f0;
 }
 
 /* Sidebar content container */
@@ -26,23 +42,14 @@
   align-items: center;
 }
 
-/* Logo styling (not currently in use) */
-.logo {
-  color: white;
-  text-align: center;
-  margin-bottom: 30px;
-  border-bottom: 1px solid #34495e;
-  padding-bottom: 20px;
-}
-
-/* Collapse toggle button styling */
+/* Toggle button styling - Dark theme (default) */
 .toggle-button {
   width: 50px;
   height: 50px;
   border-radius: 12px;
   background-color: #334155;
   border: none;
-  color: white;
+  color: #ffffff;
   font-size: 20px;
   cursor: pointer;
   display: flex;
@@ -52,10 +59,21 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.sidebar.light .toggle-button {
+  background-color: #f1f5f9;
+  color: #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .toggle-button:hover {
   background-color: #475569;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar.light .toggle-button:hover {
+  background-color: #e2e8f0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 /* Navigation links section container */
@@ -84,6 +102,11 @@
   border-top: 1px solid #334155;
   padding-top: 30px;
   gap: 15px;
+  transition: border-color 0.3s ease;
+}
+
+.sidebar.light .nav-settings {
+  border-top: 1px solid #e2e8f0;
 }
 
 /* Individual navigation buttons styling */
@@ -95,12 +118,12 @@
   padding: 0;
 }
 
-/* Nav option list styling */
+/* Nav option list styling - Dark theme (default) */
 .nav-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #ffffff;
   text-decoration: none;
   transition: all 0.3s ease;
   font-size: 16px;
@@ -114,6 +137,12 @@
   position: relative;
 }
 
+/* Light theme nav links */
+.sidebar.light .nav-link {
+  background-color: #f1f5f9;
+  color: #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
 /* Expanded state styling */
 .nav-link.expanded {
@@ -131,11 +160,18 @@
   color: #0F172A;
   box-shadow: 0 4px 20px rgba(34, 211, 238, 0.4);
 }
-/* Hover effects on navigation items */
+
+/* Hover effects on navigation items - Dark theme */
 .nav-link:hover {
   background-color: #475569;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Light theme hover effects */
+.sidebar.light .nav-link:hover {
+  background-color: #e2e8f0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 /* Hover effect when the navigation item is also the currently selected item */
@@ -161,7 +197,7 @@
   font-weight: 500;
 }
 
-/*Container to position and layout the search bar */
+/* Search container */
 .search-container {
   width: 100%;
   margin-bottom: 40px;
@@ -169,7 +205,7 @@
   justify-content: center;
 }
 
-/* Search bar styling (only visible when navbar is expanded) */
+/* Search bar styling - Dark theme (default) */
 .search-bar {
   display: flex;
   align-items: center;
@@ -182,20 +218,31 @@
   transition: all 0.3s ease;
 }
 
+/* Light theme search bar */
+.sidebar.light .search-bar {
+  background-color: #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .search-bar:hover {
   background-color: #475569;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
-/* Toggle button styling within search bar when expanded */
+.sidebar.light .search-bar:hover {
+  background-color: #e2e8f0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Search toggle button - Dark theme (default) */
 .search-toggle-button {
   width: 34px;
   height: 34px;
   border-radius: 50%;
   background-color: #475569;
   border: none;
-  color: white;
+  color: #ffffff;
   font-size: 16px;
   cursor: pointer;
   display: flex;
@@ -205,27 +252,62 @@
   flex-shrink: 0;
 }
 
+/* Light theme search toggle button */
+.sidebar.light .search-toggle-button {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
 .search-toggle-button:hover {
   background-color: #64748B;
 }
 
-/* Search input field styling */
+.sidebar.light .search-toggle-button:hover {
+  background-color: #cbd5e1;
+}
+
+/* Search input field - Dark theme (default) */
 .search-input {
   flex: 1;
   border: none;
   background: transparent;
-  color: white;
+  color: #ffffff;
   padding: 8px 12px;
   font-size: 14px;
   outline: none;
+  transition: color 0.3s ease;
 }
 
-/* Styling for placeholder default text in searchbar before user has typed */
+/* Light theme search input */
+.sidebar.light .search-input {
+  color: #1e293b;
+}
+
+/* Search input placeholder - Dark theme (default) */
 .search-input::placeholder {
   color: #94A3B8;
+  transition: color 0.3s ease;
 }
 
-/* Adjustments for smaller screens (more work needed here for mobile) */
+/* Light theme search input placeholder */
+.sidebar.light .search-input::placeholder {
+  color: #64748b;
+}
+
+/* Search icon - Dark theme (default) */
+.search-icon {
+  color: #94A3B8;
+  font-size: 16px;
+  padding-right: 8px;
+  transition: color 0.3s ease;
+}
+
+/* Light theme search icon */
+.sidebar.light .search-icon {
+  color: #64748b;
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
   .sidebar {
     width: var(--sidebar-width, 0px) !important;
@@ -239,5 +321,4 @@
   .search-bar {
     max-width: 150px;
   }
-
 }

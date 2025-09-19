@@ -1,32 +1,9 @@
-import React, { useState, useEffect } from 'react';
-
+import React, { useState } from 'react';
 import './Dashboard.css';
 import ComplianceChart from './components/ComplianceChart';
 import Dropdown from './components/Dropdown';
 
-
-export default function Dashboard({ sidebarWidth = 220 }) {
-  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode
-
-  // Load theme preference from localStorage on component mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      setIsDarkMode(savedTheme === 'dark');
-    }
-  }, []);
-
-  // Save theme preference to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-    // Add theme class to document body for global styling
-    document.body.className = isDarkMode ? 'dark-theme' : 'light-theme';
-  }, [isDarkMode]);
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
+export default function Dashboard({ sidebarWidth = 220, onNavigate, isDarkMode, onThemeToggle }) {
   const stats = [
     { label: 'Compliance Score', value: '85%', className: 'emerald', subtitle: 'Overall security posture' },
     { label: 'Failed Checks', value: '12', className: 'orange', subtitle: 'Requiring immediate attention' },
@@ -34,13 +11,6 @@ export default function Dashboard({ sidebarWidth = 220 }) {
     { label: 'Total Controls', value: '97', className: 'gray', subtitle: 'CIS Rules Benchmark' }
   ];
 
-  const issues = [
-    { label: 'High Priority Issues', count: '3', className: 'red', desc: 'Critical security gaps' },
-    { label: 'Medium Priority Issues', count: '9', className: 'orange', desc: 'Important improvements needed' },
-    { label: 'Scan Status', status: 'Complete', className: 'emerald', desc: 'Ready for next scan' }
-  ];
-
-  //Example options for demonstration, 
   const benchmarkOptions = [
     { value: 'cis-google-cloud', label: 'CIS Google Cloud Platform Foundation' },
     { value: 'cis-microsoft-365', label: 'CIS Microsoft 365 Foundation' },
@@ -48,56 +18,55 @@ export default function Dashboard({ sidebarWidth = 220 }) {
     { value: 'iso-27001', label: 'ISO 27001' },
   ];
 
-  //Options for chart type selection. For now only doughnut and pie chart are available. 
-    const chartTypeOptions = [
+  const chartTypeOptions = [
     { value: 'doughnut', label: 'Doughnut Chart' },
     { value: 'pie', label: 'Pie Chart' },
   ];
     
-  const [selectedChartType, setSelectedChartType] = useState('doughnut'); //Default to a doughnut chart. 
-
-
-  //Benchmark selector
+  const [selectedChartType, setSelectedChartType] = useState('doughnut');
   const [selectedBenchmark, setSelectedBenchmark] = useState('cis-google-cloud');
 
   const handleExportReport = () => {
-    // Report export functionality to go here. Just placeholder for now.
     console.log('Exporting report...');
   };
 
   const handleRunNewScan = () => {
-    // Functionality for running scans to go here. Just placeholder for now. 
     console.log('Running scan...');
   };
 
-
+  const handleEvidenceScanner = () => {
+    onNavigate('evidence-scanner');
+  };
 
   return (
-  
-  //The inline styling below adjusts the dashboard area to fit the width that is the difference between the total screen space and the current width of the navbar, this allows it to move when the navbar is collapsed or expanded.
-  <div className={`dashboard ${isDarkMode ? 'dark' : 'light'}`} style={{ 
-    marginLeft: `${sidebarWidth}px`, 
-    width: `calc(100vw - ${sidebarWidth}px)`,
-    transition: 'margin-left 0.4s ease, width 0.4s ease'
-  }}>
+    <div className={`dashboard ${isDarkMode ? 'dark' : 'light'}`} style={{ 
+      marginLeft: `${sidebarWidth}px`, 
+      width: `calc(100vw - ${sidebarWidth}px)`,
+      transition: 'margin-left 0.4s ease, width 0.4s ease'
+    }}>
       <div className="dashboard-container">
         <div className="dashboard-header">
           <div className="header-content">
-            <div className="logo-small">AA</div>
+            <div className="logo-container">
+              <img 
+                src="/AutoAudit.png" 
+                alt="AutoAudit Logo" 
+                className="logo-image"
+              />
+            </div>
             <div className="header-text">
               <h1>AutoAudit</h1>
               <p>Microsoft 365 Compliance Platform</p>
             </div>
           </div>
           
-          {/* Theme Toggle Switch */}
           <div className="theme-toggle">
             <span className="theme-label">🌞</span>
             <label className="toggle-switch">
               <input 
                 type="checkbox" 
                 checked={isDarkMode} 
-                onChange={toggleTheme}
+                onChange={onThemeToggle}
                 aria-label="Toggle theme"
               />
               <span className="slider"></span>
@@ -106,7 +75,6 @@ export default function Dashboard({ sidebarWidth = 220 }) {
           </div>
         </div>
 
-        {/* Toolbar with benchmark selector, export and scan buttons */}
         <div className="top-toolbar">
           <div className="toolbar-left">
             <span className="toolbar-label">Benchmark</span>
@@ -114,12 +82,16 @@ export default function Dashboard({ sidebarWidth = 220 }) {
               value={selectedBenchmark}
               onChange={setSelectedBenchmark}
               options={benchmarkOptions}
+              isDarkMode={isDarkMode}
             />
           </div>
           
           <div className="toolbar-right">
             <button className="toolbar-button secondary" onClick={handleExportReport}>
               Export Report
+            </button>
+            <button className="toolbar-button secondary" onClick={handleEvidenceScanner}>
+              Evidence Scanner
             </button>
             <button className="toolbar-button primary" onClick={handleRunNewScan}>
               Run New Scan
@@ -152,7 +124,7 @@ export default function Dashboard({ sidebarWidth = 220 }) {
           <div className="compliance-graph-card">
             <div className="issue-header">
               <div className="issue-title">
-                <span className="issue-icon">◷</span>
+                <span className="issue-icon">▷</span>
                 <h4>Scan Results</h4>
               </div>
               <Dropdown
@@ -161,7 +133,7 @@ export default function Dashboard({ sidebarWidth = 220 }) {
                 options={chartTypeOptions}
               />
             </div>
-            <ComplianceChart chartType={selectedChartType} dataInput = {[3, 9, 85]} isDarkMode={isDarkMode}></ComplianceChart>
+            <ComplianceChart chartType={selectedChartType} dataInput={[3, 9, 85]} isDarkMode={isDarkMode} />
           </div>
 
           <div className="issues-section">
@@ -179,7 +151,7 @@ export default function Dashboard({ sidebarWidth = 220 }) {
             <div className="issue-card orange">
               <div className="issue-header">
                 <div className="issue-title">
-                  <span className="issue-icon">◐</span>
+                  <span className="issue-icon">⚬</span>
                   <h4>Medium Priority Issues</h4>
                 </div>
                 <span className="issue-count">9</span>
@@ -203,16 +175,12 @@ export default function Dashboard({ sidebarWidth = 220 }) {
         <div className='fit'>
           <section className="below-grid">
             <h3 className="section-title"></h3>
-            <div className="content">
-              
-            </div>
+            <div className="content"></div>
           </section>
 
           <section className="bottom-grid">
             <h3 className="section-title"></h3>
-            <div className="content">
-              
-            </div>
+            <div className="content"></div>
           </section>
         </div>
       </div>

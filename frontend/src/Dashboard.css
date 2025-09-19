@@ -9,11 +9,12 @@
   --text-tertiary: #64748b;
   --border-color: #334155;
   
-  /* Accent colors remain the same */
+  /* Accent colors */
   --emerald: #10b981;
   --orange: #f97316;
   --red: #ef4444;
   --gray: #64748b;
+  --teal: #64DFDF; /* AutoAudit teal */
 }
 
 /* Light theme variables */
@@ -52,6 +53,25 @@
   gap: 16px;
 }
 
+/* Updated logo styling */
+.logo-container {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: transparent;
+}
+
+.logo-image {
+  width: 260px;
+  height: 260px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Fallback for old logo-small class */
 .logo-small {
   width: 40px;
   height: 40px;
@@ -129,19 +149,19 @@
   transform: translateY(-1px);
 }
 
+/* Updated primary button to use teal */
 .toolbar-button.primary {
-  background: var(--orange);
-  color: white;
-  border: 1px solid var(--orange);
+  background: var(--teal);
+  color: #0f172a;
+  border: 1px solid var(--teal);
+  font-weight: 600;
 }
 
 .toolbar-button.primary:hover {
-  background: #ea580c;
-  border-color: #ea580c;
+  background: #22D3EE;
+  border-color: #22D3EE;
   transform: translateY(-1px);
 }
-
-
 
 .button-icon {
   font-size: 14px;
@@ -557,4 +577,3 @@ input:checked + .slider:before {
     justify-content: center;
   }
 }
-

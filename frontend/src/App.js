@@ -1,19 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Dashboard from './Dashboard';
 import Sidebar from './components/Sidebar';
+import Evidence from './components/EvidenceScanner/Evidence';
 
 function App() {
-
-  //We establish sidebar width at this parent level so it is visible to subpages and can exist on top of everything else.
   const [sidebarWidth, setSidebarWidth] = useState(220);
+  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
-  //The navbar is placed at this higher level (instead of the dashboard.js) so that we can implement page switching at this level, replacing the Dashboard component with our current page, and the navbar will remain. 
-  //We pass the sidebar width to the dashboard component. A better solution would be to have a page container element, that contains the dashboard within, and we pass the width to that instead. Not yet implemented. 
+  // Load theme preference from localStorage on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setIsDarkMode(savedTheme === 'dark');
+    }
+  }, []);
+
+  // Save theme preference to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    document.body.className = isDarkMode ? 'dark-theme' : 'light-theme';
+  }, [isDarkMode]);
+
+  const handleNavigation = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleThemeToggle = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const renderCurrentPage = () => {
+    switch(currentPage) {
+      case 'dashboard':
+        return <Dashboard 
+          sidebarWidth={sidebarWidth} 
+          onNavigate={handleNavigation} 
+          isDarkMode={isDarkMode}
+          onThemeToggle={handleThemeToggle}
+        />;
+      case 'evidence-scanner':
+        return <Evidence 
+          sidebarWidth={sidebarWidth} 
+          onNavigate={handleNavigation}
+          isDarkMode={isDarkMode}
+        />;
+      default:
+        return <Dashboard 
+          sidebarWidth={sidebarWidth} 
+          onNavigate={handleNavigation}
+          isDarkMode={isDarkMode}
+          onThemeToggle={handleThemeToggle}
+        />;
+    }
+  };
+
   return (
     <div className="App">
-      <Sidebar onWidthChange={setSidebarWidth}/>
-      <Dashboard sidebarWidth={sidebarWidth}/>
-    </div>
-  );
+      <Sidebar onWidthChange={setSidebarWidth} isDarkMode={isDarkMode}/>
+      {renderCurrentPage()}
+    </div>
+  );
 }
+
 export default App;
