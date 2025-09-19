@@ -1,9 +1,10 @@
 //This component establishes a vertical navigation section along the left side of the screen which will be able to be toggled between condensed and expanded sizes
 //Last updated 17 September 2025
-
+//Added theme support
 
 import React, { useState } from "react";
 import './Sidebar.css';
+
 
 //Button component that we use throughout the sidebar
 //Parameters:
@@ -34,11 +35,13 @@ const NavButton = ({ href, name, icon, isExpanded, isActive = false, onClick }) 
 };
 
 // Main sidebar component 
-const Sidebar = ({ onWidthChange }) => {
+const Sidebar = ({ onWidthChange, isDarkMode = true }) => {
   const [isExpanded, setIsExpanded] = useState(true); //Track whether sidebar is expanded
   const [activeItem, setActiveItem] = useState('home'); // Track active navigation item
   const [searchValue, setSearchValue] = useState(''); // Track search input value
 
+  // Add this line right after the component declaration for debugging
+console.log('Sidebar isDarkMode:', isDarkMode);
   //Event to toggle collapsed state and notify parents that the width has changed
   const toggleSidebar = () => {
     const newExpanded = !isExpanded;
@@ -57,8 +60,7 @@ const Sidebar = ({ onWidthChange }) => {
   };
 
   return (          
-
-    <nav className="sidebar" style={{'--sidebar-width': isExpanded ? '220px' : '80px'}}>
+    <nav className={`sidebar ${isDarkMode ? 'dark' : 'light'}`} style={{'--sidebar-width': isExpanded ? '220px' : '80px'}}>
       <div className="sidebar-content">       
         <div className="search-container">
           {/* only display when the navbar is expanded! */}
@@ -84,13 +86,12 @@ const Sidebar = ({ onWidthChange }) => {
           )}
         </div>
 
-
         {/* Main navigation area */}
         <ul className="nav-links">
           <NavButton 
             href={'/'} 
             name={'Home'} 
-            icon={'🏠︎'} 
+            icon={'🏠'} 
             isExpanded={isExpanded}
             isActive={activeItem === 'home'}
             onClick={() => handleNavClick('home')}
@@ -98,7 +99,7 @@ const Sidebar = ({ onWidthChange }) => {
           <NavButton 
             href={'/score'} 
             name={'Score'} 
-            icon={'★'} 
+            icon={'⭐'} 
             isExpanded={isExpanded}
             isActive={activeItem === 'score'}
             onClick={() => handleNavClick('score')}
@@ -111,7 +112,6 @@ const Sidebar = ({ onWidthChange }) => {
             isActive={activeItem === 'tasks'}
             onClick={() => handleNavClick('tasks')}
           />
-          {/* Plain unicode or an image icon would be better. No suitable unicode exists. Replace with icon image eventually, will need to sort licensing etc.*/}
           <NavButton 
             href={'/reports'} 
             name={'Reports'} 
@@ -127,12 +127,11 @@ const Sidebar = ({ onWidthChange }) => {
           <NavButton 
             href={'/settings'} 
             name={'Settings'} 
-            icon={'⛭'} 
+            icon={'⚙'} 
             isExpanded={isExpanded}
             isActive={activeItem === 'settings'}
             onClick={() => handleNavClick('settings')}
           />
-          {/* Need a better symbol for this one too!*/}
           <NavButton 
             href={'/account'} 
             name={'Account'} 

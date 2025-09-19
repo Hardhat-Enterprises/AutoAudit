@@ -82,6 +82,7 @@ export default function Dashboard({ sidebarWidth = 220, onNavigate, isDarkMode, 
               value={selectedBenchmark}
               onChange={setSelectedBenchmark}
               options={benchmarkOptions}
+              isDarkMode={isDarkMode}
             />
           </div>
           

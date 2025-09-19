@@ -57,7 +57,7 @@ function App() {
 
   return (
     <div className="App">
-      <Sidebar onWidthChange={setSidebarWidth}/>
+      <Sidebar onWidthChange={setSidebarWidth} isDarkMode={isDarkMode}/>
       {renderCurrentPage()}
     </div>
   );
