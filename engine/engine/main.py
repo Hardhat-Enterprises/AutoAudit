@@ -1,5 +1,31 @@
 import json
 import os
+from rule_helpers import match_value, match_in_list, match_regex, match_range
+from risk_rating import calculate_impact_level, calculate_risk_level
+
+def evaluate_rule(rule, config):
+    value = get_value_from_path(config, rule.get("evaluation_path"))
+    expected = rule.get("expected_value")
+    match_type = rule.get("match_type", "value")
+
+    if match_type == "value":
+        result = match_value(value, expected)
+    elif match_type == "in_list":
+        result = match_in_list(value, expected)
+    elif match_type == "regex":
+        result = match_regex(value, expected)
+    elif match_type == "range":
+        result = match_range(value, tuple(expected))
+    else:
+        result = False
+
+    if result:
+        return True, "Pass", "Low"
+    else:
+        impact = calculate_impact_level(rule["impact"])
+        severity = calculate_risk_level(impact, rule["likelihood"])
+        reason = f"{rule['tags']} = {value}, expected {expected} | Severity: {severity}"
+        return False, reason, severity
 
 def load_mock_config(path="engine/test-configs/compliant.json"):
     with open(path) as f:
@@ -24,14 +50,6 @@ def get_value_from_path(config, path):
             return None
     return placeholder_value
  
-
-def evaluate_rule(rule, config):
-    expected = rule.get("expected_value")
-    value = get_value_from_path(config, rule.get("evaluation_path"))
-
-    if value == expected:
-        return True, "Pass"
-    return False, f"{rule['tags']} = {value}, expected {expected}"
 
 def main():
     config = load_mock_config() 
