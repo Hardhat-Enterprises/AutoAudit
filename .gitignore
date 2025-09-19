@@ -1,0 +1,6 @@
+results/
+security/previews/
+evidence_commits.txt
+.venv/
+__pycache__/
+*.pyc
