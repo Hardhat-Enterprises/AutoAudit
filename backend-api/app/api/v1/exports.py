@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from app.models.exports import ExportRequest, ExportStatusResponse, ExportResponse
 from app.services.job_store import create_export_job, get_job_status
+from app.core.errors import NotFound 
 
 router = APIRouter(prefix="/exports", tags=["Exports"])
 
@@ -13,5 +14,5 @@ def create_report_export(request: ExportRequest):
 def get_export_status(job_id: str):
     job = get_job_status(job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+        raise NotFound(f"Export job {job_id}")
     return job
