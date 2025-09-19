@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import Sidebar from './components/Sidebar';
 import Evidence from './components/EvidenceScanner/Evidence';
+import StyleGuide from './components/StyleGuide';
 
 function App() {
   const [sidebarWidth, setSidebarWidth] = useState(220);
-  const [currentPage, setCurrentPage] = useState('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const location = useLocation();
 
   // Load theme preference from localStorage on component mount
   useEffect(() => {
@@ -22,43 +24,37 @@ function App() {
     document.body.className = isDarkMode ? 'dark-theme' : 'light-theme';
   }, [isDarkMode]);
 
-  const handleNavigation = (page) => {
-    setCurrentPage(page);
-  };
-
   const handleThemeToggle = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  const renderCurrentPage = () => {
-    switch(currentPage) {
-      case 'dashboard':
-        return <Dashboard 
-          sidebarWidth={sidebarWidth} 
-          onNavigate={handleNavigation} 
-          isDarkMode={isDarkMode}
-          onThemeToggle={handleThemeToggle}
-        />;
-      case 'evidence-scanner':
-        return <Evidence 
-          sidebarWidth={sidebarWidth} 
-          onNavigate={handleNavigation}
-          isDarkMode={isDarkMode}
-        />;
-      default:
-        return <Dashboard 
-          sidebarWidth={sidebarWidth} 
-          onNavigate={handleNavigation}
-          isDarkMode={isDarkMode}
-          onThemeToggle={handleThemeToggle}
-        />;
-    }
-  };
-
   return (
     <div className="App">
-      <Sidebar onWidthChange={setSidebarWidth} isDarkMode={isDarkMode}/>
-      {renderCurrentPage()}
+      {location.pathname !== "/styleguide" && (
+        <Sidebar onWidthChange={setSidebarWidth} isDarkMode={isDarkMode} />
+      )}
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Dashboard
+              sidebarWidth={sidebarWidth}
+              isDarkMode={isDarkMode}
+              onThemeToggle={handleThemeToggle}
+            />
+          }
+        />
+        <Route
+          path="/evidence-scanner"
+          element={
+            <Evidence
+              sidebarWidth={sidebarWidth}
+              isDarkMode={isDarkMode}
+            />
+          }
+        />
+        <Route path="/styleguide" element={<StyleGuide />} />
+      </Routes>
     </div>
   );
 }

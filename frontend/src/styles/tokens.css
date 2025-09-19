@@ -1,0 +1,40 @@
+/* token.css Set Dark asdefault theme */
+:root {
+  /* Base palette in RGB for alpha support */
+  --surface-1: 15 23 42;    /* #0f172a Oxford Blue */
+  --surface-2: 30 41 59;    /* #1e293b Prussian Blue (Muted) */
+  --border-subtle: 51 65 85;/* #334155 Charcoal (Grey) */
+
+  --text-strong: 226 232 240; /* #e2e8f0 Dusty White*/
+  --text-muted: 148 163 184;  /* #94a3b8 Cadet grey */
+
+  --accent-teal: 100 223 223;   /* #64dfdf Teal */
+  --accent-navy: 0 18 66;       /* #001242 Navy Blue */
+
+  --accent-good: 16 185 129;  /* #10b981 Green */
+  --accent-warn: 249 115 22;  /* #f97316 Pumpkin Orange */
+  --accent-bad: 239 68 68;    /* #ef4444 Imperial Red */
+
+  --radius-1: 8px;
+  --radius-2: 12px;
+  --radius-3: 16px;
+
+  --shadow-1: 0 4px 12px rgba(0,0,0,.2);
+  --shadow-2: 0 10px 25px rgba(0,0,0,.3);
+
+  /* Breakpoints (to mirror Tailwind sm/md/lg) */
+  --bp-sm: 600px;
+  --bp-md: 900px;
+  --bp-lg: 1200px;
+}
+
+/* Optional light theme */
+.light {
+  --surface-1: 248 250 252;  /* #f8fafc Seasalt White */
+  --surface-2: 255 255 255;  /* #ffffff White */
+  --border-subtle: 226 232 240; /* #e2e8f0 Grey White */
+
+  --text-strong: 11 18 32;   /* #0b1220 Rich Black */
+  --text-muted: 71 85 105;   /* #475569 Payne's Grey*/
+  
+}
