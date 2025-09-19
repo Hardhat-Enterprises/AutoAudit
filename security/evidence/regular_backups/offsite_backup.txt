@@ -1,2 +1,0 @@
-Daily backup copied to immutable cloud storage (offsite).
-Retention Policy: 30 days

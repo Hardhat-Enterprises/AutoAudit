@@ -6,6 +6,29 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1])) 
 from strategies import load_strategies  
+# ---- minimal UI mem-log helper (no new deps) ----
+import json as _json
+import urllib.request as _urlreq
+from datetime import datetime as _dt
+
+def _memlog(user: str, strategy: str, status: str,
+            url: str = "http://127.0.0.1:8000/api/scan-mem-log") -> None:
+    """Best-effort POST to the UI; silently ignores failures."""
+    try:
+        data = _json.dumps({
+            "ts": _dt.now().astimezone().isoformat(),
+            "user": user,
+            "strategy": strategy,
+            "status": status,   # 'success' | 'error' | 'cancelled'
+        }).encode("utf-8")
+        req = _urlreq.Request(url, data=data,
+                              headers={"Content-Type": "application/json"},
+                              method="POST")
+        _urlreq.urlopen(req, timeout=1.5).read()
+    except Exception:
+        pass
+# -------------------------------------------------
+
 
 #------------------------ Import core_ocr.py----------------
 from backend.core_ocr import extract_text_and_preview, SUPPORTED_ALL_EXTS
@@ -185,12 +208,26 @@ def main():
             writer = csv.writer(f)
             writer.writerows(report_rows)
         print(f"\n ✅ Report has been saved as: {CSV_PATH}")
+        # post each chosen strategy as a completed run
+        try:
+            for s in chosen_strategies:
+                _memlog(user_id, s.name, "success")
+        except Exception:
+            pass
+       
     except PermissionError:
         temp_name = "scan_report_temp.csv"
         with open(temp_name, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerows(report_rows)
         print(f"\n  'scan_report.csv' was locked. Saved as: {temp_name}")
+                # still count as completed runs
+        try:
+            for s in chosen_strategies:
+                _memlog(user_id, s.name, "success")
+        except Exception:
+            pass
+            
 
 if __name__ == "__main__":
     main()

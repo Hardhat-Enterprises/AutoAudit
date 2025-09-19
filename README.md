@@ -1,43 +1,35 @@
-# AutoAudit Monorepo - Dev Branch
+# AutoAudit Monorepo
 
 ## Project Overview
-The dev branch is the active development and integration branch where all team members collaborate and contribute new features. Code here undergoes continuous testing, linting, and security analysis to ensure quality before promotion.
+AutoAudit is a M365 compliance automation platform built by several specialist teams. This monorepo centralizes all codebases—including backend services, APIs, compliance scanners, and frontends—enabling unified CI/CD, streamlined development, and rapid automated deployments to the cloud.
 
 ## Repository Structure
-The repo remains organized into top-level folders by team:
+The repo is organized into dedicated top-level folders for each team/service. This ensures clear code ownership, auditability, and minimizes merge conflicts.
 
+# API and Backend Team
 /backend-api
 
+# Security Team
 /security
 
+# Frontend and User EXP
 /frontend
 
-/engine
+# Engine Team
+/engine 
 
-/.github/workflows (for CI/CD)
+# DevOps Team
+/.github/workflows
 
-Full commit history and traceability from forks have been preserved.
+Each folder was imported from individual repos, preserving full commit history and enabling future traceability.
 
 ## Branching Strategy
-- dev is the main integration branch.
-- Feature branches are created off dev for individual teams.
-- Pull requests targeting dev must pass all checks before merging.
-- All changes are integrated through Pull Requests (PRs), with branch protections and CI checks enforced.
+- main: Production-ready, stable releases only
+- dev: Active integration and development from all teams
+- staging: Pre-release, final QA before production
+- feature/<team>-<desc>: Team-specific branches for new features or fixes
 
-## CI/CD Pipeline Overview
-- Linting & Code Quality: Runs on every PR using a path filter.
-- Security Scanning (CodeQL, Grype): Integrated to catch vulnerabilities early.
-- Docker Builds: Images are built and tagged with environment branch names here and pushed but not deployed.
-- No production deploys occur from this branch.
-
-## Docker Builds
-- Teams with Docker Builds can access their updated images after a PR at our Docker Hub.
-- Builds pushed are respective per enviornment, e.g; this dev branch will push to the :dev tag in the docker hub repo after the team name.
-- Docker Hub: https://hub.docker.com/u/autoauditservices
-- Engine Repo: https://hub.docker.com/r/autoauditservices/engine
-- Backend-API Repo: https://hub.docker.com/r/autoauditservices/backend-api
-- Frontend Repo: https://hub.docker.com/r/autoauditservices/frontend (not configured)
-- Security Repo: https://hub.docker.com/r/autoauditservices/security (not configured)
+All changes are integrated through Pull Requests (PRs), with branch protections and CI checks enforced.
 
 ## Contribution Guidelines
 - Work within your designated team folder, keeping code modular and isolated.
@@ -45,7 +37,12 @@ Full commit history and traceability from forks have been preserved.
 - All PRs must target the correct integration branch and include a clear description and relevant issue/PR references.
 - Tag your team and relevant reviewers for all non-trivial work.
 
+## CI/CD Pipeline Overview
+- Automated with GitHub Actions and Google Cloud Build
+- On PR or code push, path filters selectively trigger builds & tests only for affected services.
+- On successful checks, images are built and pushed to Google Artifact Registry.
+
 ## Contact & Support
 For support or questions, please:
-- Reach out to the DevOps lead for pipeline or environment questions.
-- Open issues with appropriate tags for tracking.
+- Contact your DevOps team lead directly
+- Open an issue in this repository (use proper tags for devops, security, api, etc.)

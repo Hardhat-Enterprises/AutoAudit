@@ -1,8 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './Dashboard.css';
-import ComplianceChart from './components/ComplianceChart';
-import Dropdown from './components/Dropdown';
-
 
 export default function Dashboard() {
   const stats = [
@@ -18,15 +15,6 @@ export default function Dashboard() {
     { label: 'Scan Status', status: 'Complete', className: 'emerald', desc: 'Ready for next scan' }
   ];
 
-  //Options for chart type selection. For now only doughnut and pie chart are available. 
-    const chartTypeOptions = [
-    { value: 'doughnut', label: 'Doughnut Chart' },
-    { value: 'pie', label: 'Pie Chart' },
-  ];
-
-  const [selectedChartType, setSelectedChartType] = useState('doughnut'); //Default to a doughnut chart. 
-
-
   return (
     <div className="dashboard">
       <div className="dashboard-container">
@@ -36,7 +24,6 @@ export default function Dashboard() {
                 <div className="header-text">
                   <h1>AutoAudit</h1>
                   <p>Microsoft 365 Compliance Platform</p>
-                  
                 </div>
           </div>
         </div>
@@ -48,7 +35,7 @@ export default function Dashboard() {
                   <div className="stat-info">
                     <div className="stat-icon">
                         {stat.className === 'emerald' && <span>✓</span>}
-                        {stat.className === 'orange' && <span>⚠</span>}
+                            {stat.className === 'orange' && <span>⚠</span>}
                         {stat.className === 'gray' && <span>🕐</span>}
                       </div>
 
@@ -64,22 +51,18 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="main-grid">
-          <div className="compliance-graph-card">
-            <div className="issue-header">
-              <div className="issue-title">
-                    <span className="issue-icon">◷</span>
-                    <h4>Scan Results</h4>
-              </div>
-              <Dropdown
-                value={selectedChartType}
-                onChange={setSelectedChartType}
-                options={chartTypeOptions}
-              />
-            </div>
-            <ComplianceChart chartType={selectedChartType} dataInput = {[3, 9, 85]}></ComplianceChart>
 
+
+
+
+        <div className="main-grid">
+
+
+          
+          <div className="compliance-section">
+            
           </div>
+
               <div className="issues-section">
                 <div className="issue-card red">
                   <div className="issue-header">
@@ -91,6 +74,10 @@ export default function Dashboard() {
                   </div>
                   <p className="issue-desc">Critical security gaps</p>
           </div>
+
+
+
+
       
       <div className="issue-card orange">
         <div className="issue-header">
@@ -103,19 +90,29 @@ export default function Dashboard() {
         <p className="issue-desc">Important improvements needed</p>
       </div>
       
-      <div className="issue-card emerald">
-        <div className="issue-header">
-          <div className="issue-title">
-            <span className="issue-icon">✓</span>
-            <h4>Scan Status</h4>
+
+
+
+
+
+
+
+
+
+
+            <div className="issue-card emerald">
+              <div className="issue-header">
+                <div className="issue-title">
+                  <span className="issue-icon">✓</span>
+                  <h4>Scan Status</h4>
+                </div>
+                <span className="issue-status">Complete</span>
+              </div>
+              <p className="issue-desc">Ready for next scan</p>
+            </div>
           </div>
-          <span className="issue-status">Complete</span>
         </div>
-        <p className="issue-desc">Ready for next scan</p>
       </div>
-    </div>
-  </div>
-</div>
 
 
 
