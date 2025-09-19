@@ -11,7 +11,24 @@
     "jest": "^29.0.0"
   },
   "dependencies": {
-    "@octokit/rest": "^20.0.0"
-  }
-
+    "@octokit/rest": "^20.0.0",
+    "express": "^5.1.0",
+    "sqlite3": "^5.1.7"
+  },
+  "description": "## Project Overview AutoAudit is a M365 compliance automation platform built by several specialist teams. This monorepo centralizes all codebases—including backend services, APIs, compliance scanners, and frontends—enabling unified CI/CD, streamlined development, and rapid automated deployments to the cloud.",
+  "main": "add.js",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nvirdi21/AutoAuditN.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nvirdi21/AutoAuditN/issues"
+  },
+  "homepage": "https://github.com/nvirdi21/AutoAuditN#readme"
 }
