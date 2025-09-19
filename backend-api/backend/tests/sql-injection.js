@@ -34,3 +34,5 @@ router.get('/user', (req, res) => {
 });
 
 module.exports = router;
+
+// test trigger for CodeQL

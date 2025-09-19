@@ -15,3 +15,5 @@ router.get('/tstMe', (req, res) => {
 });
 
 module.exports = router;
+
+// test trigger for CodeQL
