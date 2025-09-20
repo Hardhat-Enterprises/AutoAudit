@@ -102,7 +102,7 @@ jobs:
 
   build-and-deploy:
     name: Build and Deploy Backend/API
-    needs: [changes]
+    needs: [changes, analyze]
     environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
     runs-on: ubuntu-latest
 
