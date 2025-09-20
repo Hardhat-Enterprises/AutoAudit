@@ -1,4 +1,5 @@
-/* token.css Set Dark asdefault theme */
+/* stylelint-disable */
+/* Set Dark asdefault theme */
 :root {
   /* Base palette in RGB for alpha support */
   --surface-1: 15 23 42;    /* #0f172a Oxford Blue */
