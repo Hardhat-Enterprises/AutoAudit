@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import './SignUpPage.css';
-import logo from './logo.png';
-import bg from './bg.jpg';
+
 
 export default function SignUpPage({ onSignUp, onBackToLogin }) {
   const [formData, setFormData] = useState({
@@ -46,14 +45,14 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
         </div>
       </nav>
       <div className="signup-right">
-        <img src={bg} alt="Signup bg" className="bg-img" />
+        <img src="/bg.jpg" alt="Signup bg" className="bg-img" />
         <div className="image-overlay"></div>
       </div>
 
       <div className="signup-left">
         <div className="signup-content">
           <div className="logo-section">
-            <img src={logo} alt="AutoAudit Logo" className="logo-img" />
+            <img src="/logo.png" alt="AutoAudit Logo" className="logo-img" />
             <h1>AutoAudit</h1>
             <p className="subtitle">Microsoft 365 Compliance Platform</p>
           </div>

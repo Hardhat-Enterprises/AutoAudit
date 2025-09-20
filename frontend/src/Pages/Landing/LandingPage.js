@@ -1,6 +1,5 @@
 import React from "react";
 import "./LandingPage.css";
-import logo from "./logo.png";
 
 const FeatureCard = ({ icon, title, desc }) => (
   <article className="feature-card" tabIndex="0">
@@ -17,7 +16,7 @@ const LandingPage = ({ onSignInClick, onAboutClick }) => {
         <header className="nav">
           <div className="brand">
             <div className="logo">
-              <img src={logo} alt="AutoAudit Logo" className="logo-img" />
+              <img src="/logo.png" alt="AutoAudit Logo" className="logo-img" />
             </div>
           </div>
           <nav className="navlinks">

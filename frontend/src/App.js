@@ -1,19 +1,89 @@
-import React, { useState } from 'react';
-import Dashboard from './Dashboard';
-import Sidebar from './components/Sidebar';
+import React, { useState } from "react";
+import LoginPage from "./Pages/Auth/LoginPage";
+import LandingPage from "./Pages/Landing/LandingPage";
+import AboutUs from "./Pages/Landing/AboutUs";
+import SignUpPage from "./Pages/Auth/SignUpPage";
 
-function App() {
+const App = () => {
+  const [currentPage, setCurrentPage] = useState("landing"); 
 
-  //We establish sidebar width at this parent level so it is visible to subpages and can exist on top of everything else.
-  const [sidebarWidth, setSidebarWidth] = useState(220);
+  const handleUserLogin = () => {
+    setCurrentPage("home");
+  };
 
-  //The navbar is placed at this higher level (instead of the dashboard.js) so that we can implement page switching at this level, replacing the Dashboard component with our current page, and the navbar will remain. 
-  //We pass the sidebar width to the dashboard component. A better solution would be to have a page container element, that contains the dashboard within, and we pass the width to that instead. Not yet implemented. 
+  const handleSignUp = (signUpData) => {
+    console.log("Sign up data:", signUpData);
+    setCurrentPage("login");
+  };
+
+  const renderCurrentPage = () => {
+    switch(currentPage) {
+      case "landing":
+        return (
+          <LandingPage 
+            onSignInClick={() => setCurrentPage("login")}
+            onAboutClick={() => setCurrentPage("about")}
+          />
+        );
+      
+      case "about":
+        return (
+          <AboutUs onBack={() => setCurrentPage("landing")} />
+        );
+      
+      case "login":
+        return (
+          <LoginPage 
+            onLogin={handleUserLogin}
+            onSignUpClick={() => setCurrentPage("signup")}
+          />
+        );
+      
+      case "signup":
+        return (
+          <SignUpPage 
+            onSignUp={handleSignUp}
+            onBackToLogin={() => setCurrentPage("login")}
+          />
+        );
+      
+      case "home":
+        return (
+          <div style={{ padding: "40px", textAlign: "center", color: "white", background: "#0f172a", minHeight: "100vh" }}>
+            <h1>Welcome! You are logged in.</h1>
+            <button 
+              onClick={() => setCurrentPage("landing")}
+              style={{
+                marginTop: "20px",
+                padding: "12px 24px",
+                background: "#36dad6",
+                color: "black",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600"
+              }}
+            >
+              Back to Home
+            </button>
+          </div>
+        );
+      
+      default:
+        return (
+          <LandingPage 
+            onSignInClick={() => setCurrentPage("login")}
+            onAboutClick={() => setCurrentPage("about")}
+          />
+        );
+    }
+  };
+
   return (
     <div className="App">
-      <Sidebar onWidthChange={setSidebarWidth}/>
-      <Dashboard sidebarWidth={sidebarWidth}/>
-    </div>
-  );
-}
+      {renderCurrentPage()}
+    </div>
+  );
+};
+
 export default App;
