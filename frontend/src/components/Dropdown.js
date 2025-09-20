@@ -7,7 +7,8 @@ import './Dropdown.css';
 //This component takes the current value, the function that changes the current value, and the list of options (as an array) as parameters
 //List of options provided must at least include a "value" element for each option, and a "label" which is what will be displayed in the dropdown menu
 //See chart selection dropdown in Dashboard.js for usage example 
-const Dropdown = ({ value, onChange, options }) => {
+//Updated to support theme switching
+const Dropdown = ({ value, onChange, options, isDarkMode = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -32,7 +33,7 @@ const Dropdown = ({ value, onChange, options }) => {
   const selectedOption = options.find(opt => opt.value === value) || options[0];
 
   return (
-    <div className="chart-dropdown" ref={dropdownRef}> {/* we use this ref to detect if we've clicked outside of the dropdown (to close it)*/}
+    <div className={`chart-dropdown ${isDarkMode ? 'dark' : 'light'}`} ref={dropdownRef}> {/* we use this ref to detect if we've clicked outside of the dropdown (to close it)*/}
       <button 
         type="button"
         onClick={() => setIsOpen(!isOpen)} 

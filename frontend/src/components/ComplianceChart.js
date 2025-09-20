@@ -1,5 +1,5 @@
 //This component establishes a chart to display the number of scan items which returned as passed, requiring attention, or failed
-//Last updated 14 September 2025
+//Last updated 18 September 2025
 //Recomended next changes:
 //  -add a switch case for more chart types besides just pie and doughnot. Some of the chart types have slightly different syntax to each other so a little more work is needed on this. 
 // - the legend is functional but the text doesn't look amazing. Played around with font settings and layout but can't get it to look quite right. Worth reviewing!
@@ -34,21 +34,27 @@ ChartJS.register(
 );
 
 //Accepts chartType and dataInput as parameters. ChartType currently supports doughnut and pie chart, more to be added later.
+//Also needs to be provided with isDarkMode to copy theming from parent.
 //dataInput should be an array of 3 numbers, being, in order, number of High Priority Items, Medium Priority Items, and Passed Items.
 //This should be made more robust in future. For now, since the graph is only used for one very consistent thing, this is functional. 
 //Fallback to 1,1,1 as array if error in data.
-const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1, 1] }) => {
+const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1, 1] , isDarkMode = true}) => {
   const chartRef = useRef(null);
   const chartInstanceRef = useRef(null);
 
+ const getTextColor = (darkMode) => {
+    return darkMode ? '#ffffff' : '#1e293b';
+  };
+
   useEffect(() => {
     const ctx = chartRef.current.getContext('2d');
+    const textColor = getTextColor(isDarkMode);
    
     if (chartInstanceRef.current) {
       chartInstanceRef.current.destroy();
     }
 
-    // Dummy data, to be replaced with data ingest function. Style can remain. 
+    // Data styling 
     const data = {
       labels: ['High Priority Issues', 'Medium Priority Issues', 'Pass'],
       datasets: [{
@@ -108,12 +114,12 @@ const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1, 1] }) => {
           },
           */
 
-          //Legend configuration 
+          //Legend configuration
           legend: {
             position: 'bottom',
             labels: {
               padding: 45,
-              color: 'white',
+              color: textColor,
               usePointStyle: true,
               font: {
                 size: 16,

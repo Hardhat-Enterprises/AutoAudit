@@ -1,0 +1,35 @@
+/* src/styles/global.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* order matters: tokens first, then component helpers */
+@import "./tokens.css";
+@import "./components.css";
+
+/* Global base defaults (not going to be visible just yet but setting defaults) */
+@layer base {
+  :root { color-scheme: dark; } /* dark-first tokens */
+
+  html, body, #root { height: 100%; }
+
+  body {
+    background: rgb(var(--surface-1));
+    color: rgb(var(--text-strong));
+    font-family: ui-sans-serif, system-ui, "Segoe UI", Inter, Arial;
+    line-height: 1.5;
+  }
+
+  /* Visible keyboard focus (a11y) */
+  :focus-visible { outline: 2px solid rgb(var(--accent-teal)); outline-offset: 2px; }
+
+  /* Respect users who prefer less motion */
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
+}
+
+/* Light theme override using .light tokens block */
+:root.light {
+  /* nothing here; tokens.css already overrides under .light */
+}
