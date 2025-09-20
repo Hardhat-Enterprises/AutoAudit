@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from PIL import Image, UnidentifiedImageError
 from pytesseract import TesseractNotFoundError
+from fastapi.staticfiles import StaticFiles
 
 try:
     import fitz  # PyMuPDF for PDFs
@@ -22,6 +23,8 @@ try:
     from docx import Document as DocxDocument  # python-docx
 except Exception:
     DocxDocument = None
+
+# -------------------- Import modules --------------------
 
 from reports.report_service import generate_pdf
 from strategies import load_strategies
@@ -134,13 +137,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve files in frontend 
+FRONTEND_DIR = Path(__file__).resolve().parent
+app.mount("/frontend", StaticFiles(directory=FRONTEND_DIR), name="frontend")
+
 # Paths relative to security/
 ROOT = Path(__file__).resolve().parents[1]   # .../security
 RESULTS = ROOT / "results"                   # security/results/...
 TEMPLATES = RESULTS                          # report_template.docx lives here
 OUT_DIR = RESULTS / "reports"                # PDF (or DOCX/TXT) outputs
 PREVIEWS = RESULTS / "previews"              # preview images for evidence
-INDEX_HTML = ROOT / "aa_ui" / "ui.html"      # serve the UI from aa_ui/ui.html
+INDEX_HTML = ROOT / "frontend" / "ui.html"      # serve the UI from frontend/ui.html
 
 
 @app.get("/", response_class=HTMLResponse)

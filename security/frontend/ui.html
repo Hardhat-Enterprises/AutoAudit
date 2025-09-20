@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>AutoAudit – Evidence Scanner</title>
+  <title>AutoAudit: Evidence Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Brand fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,14 +10,14 @@
   <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      /* Brand palette (from your guide) */
+      /* Brand palette */
       --royal:#072576;      /* primary royal blue */
       --teal:#64DFDF;       /* secondary teal */
-      --ink:#000000;        /* black text */
+      --ink:#fff;        /* white text */
       --bg:#f9fafb;         /* light surface */
-      --muted:#6b7280;
+      --muted:#fff;
       --border:#e5e7eb;
-      --cta:#0d6efd;        /* action button */
+      --cta:#64DFDF;        /* action button */
     }
 
     *{ box-sizing:border-box; }
@@ -25,7 +25,7 @@
     body{
       font-family: "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       color:var(--ink);
-      background:#fff;
+      background:#0a0f1c; /* dark mode */
       max-width: 1060px;
       margin: 28px auto 80px;
       padding: 0 18px;
@@ -57,12 +57,13 @@
       border:1px solid var(--border);
       border-radius:16px;
       padding:18px;
-      background:#fff;
+      background:#1e293b; /* dark mode */
       box-shadow: 0 1px 0 rgba(0,0,0,.03);
       margin-top:14px;
     }
-    label{ display:block; margin:10px 0 6px; font-weight:600; color:#111; }
+    label{ display:block; margin:10px 0 6px; font-weight:600; color:#fff; }
     select, input[type=text], input[type=file]{
+      color:#111; 
       width:100%;
       padding:12px 12px;
       border:1px solid var(--border);
@@ -90,7 +91,7 @@
 
     table{ width:100%; border-collapse:collapse; margin-top:12px; }
     th, td{ border:1px solid var(--border); padding:10px; font-size:14px; vertical-align:top; }
-    th{ background:var(--bg); text-align:left; font-weight:700; }
+    th{ background:#1e293b; text-align:left; font-weight:700; }
     .ok{ color:#047857; font-weight:700; }
     .bad{ color:#b00020; font-weight:700; }
     .tag{
@@ -108,13 +109,10 @@
 <body>
   <div class="brand-wrap">
     <h1 class="brand" aria-label="AUTO AUDIT">
-      <span class="royal">AU<span class="teal">TO</span>
-      <div></div>
-      <span class="teal">AU<span class="royal">DIT</span>
-      <small>Evidence Scanner</small>
+    <img src="/frontend/AutoAudit.png" alt="AutoAudit Logo" style="height:130px; width:auto;" /> 
     </h1>
   </div>
-  <p class="sub">Pick a strategy, then upload a file. Images, PDF, DOCX, TXT, logs, registry exports are supported.</p>
+  <p class="sub">Your Evidence Assistant: Pick a strategy and upload your file. Images, PDF, DOCX, TXT, logs, registry exports are supported.</p>
 
   <div class="card">
     <div class="row">
@@ -133,6 +131,7 @@
       <label for="file">Evidence file</label>
       <input id="file" type="file" disabled
              accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.txt,.docx,.csv,.log,.reg,.ini,.json,.xml,.htm,.html" />
+      <div class="help" id="fileName">Choose an evidence file.</div>
       <div class="help">Enabled after you choose a strategy.</div>
     </div>
 
