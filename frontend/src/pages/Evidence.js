@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import './Evidence.css';
+import { useNavigate } from 'react-router-dom';
 
-const Evidence = ({ sidebarWidth = 220, onNavigate, isDarkMode = true }) => {
+const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const [selectedStrategy, setSelectedStrategy] = useState('');
   const [userId, setUserId] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
   const [results, setResults] = useState(null);
+
+  const navigate = useNavigate();
 
   // Mock strategies data
   const strategies = [
@@ -130,7 +133,7 @@ const Evidence = ({ sidebarWidth = 220, onNavigate, isDarkMode = true }) => {
       <div className="evidence-container">
         {/* Back Button */}
         <div className="nav-breadcrumb">
-          <span className="nav-link" onClick={() => onNavigate('dashboard')}>
+          <span className="nav-link" onClick={() => navigate("/")}>
             ← Back
           </span>
         </div>

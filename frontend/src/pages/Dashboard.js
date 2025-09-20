@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import './Dashboard.css';
-import ComplianceChart from './components/ComplianceChart';
-import Dropdown from './components/Dropdown';
+import ComplianceChart from '../components/ComplianceChart';
+import Dropdown from '../components/Dropdown';
+import { useNavigate } from "react-router-dom";
 
-export default function Dashboard({ sidebarWidth = 220, onNavigate, isDarkMode, onThemeToggle }) {
+
+export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggle }) {
+  const navigate = useNavigate();
+  
   const stats = [
     { label: 'Compliance Score', value: '85%', className: 'emerald', subtitle: 'Overall security posture' },
     { label: 'Failed Checks', value: '12', className: 'orange', subtitle: 'Requiring immediate attention' },
@@ -35,7 +39,7 @@ export default function Dashboard({ sidebarWidth = 220, onNavigate, isDarkMode, 
   };
 
   const handleEvidenceScanner = () => {
-    onNavigate('evidence-scanner');
+    navigate("/evidence-scanner");
   };
 
   return (

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import Dashboard from './Dashboard';
 import Sidebar from './components/Sidebar';
-import Evidence from './components/EvidenceScanner/Evidence';
-import StyleGuide from './components/StyleGuide';
+import Dashboard from './pages/Dashboard';
+import Evidence from './pages/Evidence';
+import StyleGuide from './pages/StyleGuide';
 
 function App() {
   const [sidebarWidth, setSidebarWidth] = useState(220);
