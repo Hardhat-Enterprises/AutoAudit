@@ -2,8 +2,9 @@ name: "Backend + API CI/CD"
 
 on:
   push:
+    branches: ['main', 'staging', 'dev']
   pull_request:
-    branches: ['main', 'dev', 'staging']
+    branches: ['main', 'staging', 'dev']
   schedule:
     - cron: '32 23 * * 6'
 
