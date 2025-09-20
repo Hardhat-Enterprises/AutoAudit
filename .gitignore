@@ -1,5 +1,14 @@
+# Ignore everything by default
+*
+
+# Don’t ignore this .gitignore file itself
+!.gitignore
+
+# Don’t ignore the Documentation folder
+!Documentation/
+
+# (Optional) still ignore common junk files globally
 node_modules/
 .env
 .DS_Store
 coverage/
- 
