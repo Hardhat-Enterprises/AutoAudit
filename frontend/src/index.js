@@ -1,9 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './styles/tokens.css';
+
+// Tailwind + tokens + base (includes tokens.css & components.css)
+import './styles/global.css';
+
+// Legacy app styles (keeps current look intact rn)
 import './index.css';
+
 import App from './App';
 import { BrowserRouter as Router } from 'react-router-dom';
+
 
 //To run: cd into /frontend/
 //command: npm start
