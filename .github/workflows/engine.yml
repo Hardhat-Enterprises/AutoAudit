@@ -84,7 +84,7 @@ jobs:
 
   build-and-deploy:
     name: Build and Deploy Engine
-    needs: [changes, analyze, run-lint]
+    needs: [changes, analyze]
     environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
     runs-on: ubuntu-latest
     permissions:
