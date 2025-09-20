@@ -31,7 +31,7 @@ jobs:
     name: Security Analysis on (${{ matrix.language }})
     needs: changes
     # Depend on changes job
-    if: github.event_name != 'push' || needs.changes.outputs.backend == 'true'  
+    if: github.event_name != 'push' || needs.changes.outputs.backend-api == 'true'  
     # Run always for non-push events, or if engine changed on push
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
