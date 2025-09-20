@@ -1,6 +1,5 @@
 import React from 'react';
 import './AboutUs.css';
-import logo from './logo.png';
 
 const AboutUs = ({ onBack }) => {
   return (
@@ -11,7 +10,7 @@ const AboutUs = ({ onBack }) => {
 
       <div className="about-content">
         <div className="about-hero">
-          <img src={logo} alt="AutoAudit Logo" className="about-logo" />
+          <img src="/logo.png" alt="AutoAudit Logo" className="about-logo" />
           <h1>About AutoAudit</h1>
           <p className="about-subtitle">Revolutionizing Cloud Compliance for Modern Enterprises</p>
         </div>

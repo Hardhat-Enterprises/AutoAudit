@@ -19,12 +19,12 @@
 }
 
 .logo-img {
-  width: 180px;
+  width: 250px;
   height: auto;
-  margin-bottom: 16px;
+  margin-bottom: 16px; 
   border-radius: 15px;
-  margin-left: 5px;
-  box-shadow: 1px 2px 20px 2px #0ff;
+  margin-left: 70px;
+  box-shadow: 1px 2px 20px 2px #36dad6;
 }
 
 .logo-section {
