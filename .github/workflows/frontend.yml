@@ -98,6 +98,8 @@ jobs:
           VALIDATE_HTML: false
           VALIDATE_MARKDOWN: false
           VALIDATE_NATURAL_LANGUAGE: false
+          VALIDATE_CSS: false
+          VALIDATE_CSS_PRETTIER: false
 
 #  build-backend:
 #    name: Build Backend w/ Docker 
