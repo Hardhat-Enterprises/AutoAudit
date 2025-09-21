@@ -1,16 +1,55 @@
 /* Styling for a dropdown option box, based on styling for the main dashboard.
-NB 14 September 2025 - Currently in use for chart type selection but this has been made general-purpose and can be used for anything.  */
+NB 14 September 2025 - Currently in use for chart type selection but this has been made general-purpose and can be used for anything.  
+Updated with theme support while preserving original design */
+
+/* Dark theme (default) - preserving original colors */
+.chart-dropdown {
+  --dropdown-bg-primary: #1e293b;
+  --dropdown-bg-secondary: #334155;
+  --dropdown-text-primary: #94a3b8;
+  --dropdown-text-secondary: #64748b;
+  --dropdown-text-hover: #e2e8f0;
+  --dropdown-border-color: #475569;
+  --dropdown-border-hover: #64748b;
+  --dropdown-border-focus: #94a3b8;
+  --dropdown-selected-bg: rgba(148, 163, 184, 0.15);
+  --dropdown-selected-hover: rgba(148, 163, 184, 0.2);
+  --dropdown-hover-bg: rgba(148, 163, 184, 0.1);
+  --dropdown-option-hover: #334155;
+  --dropdown-shadow: rgba(0, 0, 0, 0.3);
+  --dropdown-focus-shadow: rgba(148, 163, 184, 0.2);
+}
+
+/* Light theme overrides */
+.chart-dropdown.light {
+  --dropdown-bg-primary: #ffffff;
+  --dropdown-bg-secondary: #f1f5f9;
+  --dropdown-text-primary: #1e293b;
+  --dropdown-text-secondary: #64748b;
+  --dropdown-text-hover: #0f172a;
+  --dropdown-border-color: #e2e8f0;
+  --dropdown-border-hover: #cbd5e1;
+  --dropdown-border-focus: #64748b;
+  --dropdown-selected-bg: rgba(34, 211, 238, 0.15);
+  --dropdown-selected-hover: rgba(34, 211, 238, 0.25);
+  --dropdown-hover-bg: rgba(100, 116, 139, 0.1);
+  --dropdown-option-hover: #f8fafc;
+  --dropdown-shadow: rgba(0, 0, 0, 0.15);
+  --dropdown-focus-shadow: rgba(100, 116, 139, 0.2);
+}
 
 .chart-dropdown {
   position: relative;
   display: inline-block;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .chart-dropdown-trigger {
   background: transparent;
-  border: 1px solid #475569;
+  border: 1px solid var(--dropdown-border-color);
   border-radius: 8px;
-  color: #94a3b8;
+  color: var(--dropdown-text-primary);
   padding: 8px 12px;
   font-size: 18px;
   font-weight: bold;
@@ -18,34 +57,42 @@ NB 14 September 2025 - Currently in use for chart type selection but this has be
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 140px;
+  min-width: 40px;
+  max-width: 100%;
+  box-sizing: border-box;
   justify-content: space-between;
   transition: all 0.2s ease;
 }
 
 .chart-dropdown-trigger:hover {
-  background: rgba(148, 163, 184, 0.1);
-  border-color: #64748b;
-  color: #e2e8f0;
+  background: var(--dropdown-hover-bg);
+  border-color: var(--dropdown-border-hover);
+  color: var(--dropdown-text-hover);
 }
 
 /* glow background around the dropdown when current focus item (such as if clicked or tabbed to */
 .chart-dropdown-trigger:focus {
   outline: none;
-  border-color: #94a3b8;
-  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+  border-color: var(--dropdown-border-focus);
+  box-shadow: 0 0 0 2px var(--dropdown-focus-shadow);
 }
 
 .chart-dropdown-text {
   flex: 1;
   text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+  transition: color 0.3s ease;
 }
 
 /* transition effect here enables smooth animations for the arrow to flip upside down */
 .chart-dropdown-arrow {
   font-size: 12px;
-  transition: transform 0.2s ease;
-  color: #64748b;
+  transition: transform 0.2s ease, color 0.3s ease;
+  color: var(--dropdown-text-secondary);
+  flex-shrink: 0;
 }
 
 /* Rotate the arrow upside down when the dropdown is open*/
@@ -60,12 +107,13 @@ NB 14 September 2025 - Currently in use for chart type selection but this has be
   right: 0;
   left: 0;
   margin-top: 4px;
-  background: #1e293b;
-  border: 1px solid #475569;
+  background: var(--dropdown-bg-primary);
+  border: 1px solid var(--dropdown-border-color);
   border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 25px var(--dropdown-shadow);
   z-index: 1000;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 /* default styling of each option in the list */
@@ -73,29 +121,29 @@ NB 14 September 2025 - Currently in use for chart type selection but this has be
   width: 100%;
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--dropdown-text-primary);
   padding: 12px 16px;
   font-size: 14px;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s ease;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--dropdown-border-color);
 }
 
 /* for hovering over an option that is not the currently selected item */
 .chart-dropdown-option:hover {
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--dropdown-option-hover);
+  color: var(--dropdown-text-hover);
 }
 
 /* for currently selected option */
 .chart-dropdown-option.selected {
-  background: rgba(148, 163, 184, 0.15);
-  color: #94a3b8;
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-text-primary);
   font-weight: 500;
 }
 
 /* if user hovers over already selected option */
 .chart-dropdown-option.selected:hover {
-  background: rgba(148, 163, 184, 0.2);
+  background: var(--dropdown-selected-hover);
 }
