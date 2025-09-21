@@ -3,6 +3,7 @@ from pathlib import Path
 from reportlab.lib.pagesizes import LETTER
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+from xml.sax.saxutils import escape
 
 # Locate current directory (same as aggregator.py)
 HERE = Path(__file__).resolve().parent
@@ -34,8 +35,20 @@ def main():
             elements.append(Paragraph(f"Title: {details.get('title','')}", styles['Normal']))
             elements.append(Paragraph(f"Status: {details.get('status','')}", styles['Normal']))
             elements.append(Paragraph(f"Group: {details.get('input_kind','')}", styles['Normal']))
-            elements.append(Paragraph(f"Verification: {details.get('verification','')}", styles['Normal']))
-            elements.append(Paragraph(f"Remediation: {details.get('remediation','')}", styles['Normal']))
+            if details.get("verification"):
+                elements.append(Paragraph("Verification:", styles['Italic']))
+                for line in str(details["verification"]).splitlines():
+                    if line.strip():
+                        elements.append(Paragraph(escape(line), styles['Normal']))
+                    else:
+                        elements.append(Spacer(1, 6))
+            if details.get("remediation"):
+                elements.append(Paragraph("Remediation:", styles['Italic']))
+                for line in str(details["remediation"]).splitlines():
+                    if line.strip():
+                        elements.append(Paragraph(escape(line), styles['Normal']))
+                    else:
+                        elements.append(Spacer(1, 6))
 
             if details.get("violations"):
                 elements.append(Paragraph("Violations:", styles['Italic']))
