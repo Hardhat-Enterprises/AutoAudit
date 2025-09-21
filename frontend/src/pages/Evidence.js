@@ -131,9 +131,9 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
       }}
     >
       <div className="evidence-container">
-        {/* Back Button */}
+        {/* Back Button - Fixed to go to Dashboard */}
         <div className="nav-breadcrumb">
-          <span className="nav-link" onClick={() => navigate("/")}>
+          <span className="nav-link" onClick={() => navigate("/dashboard")}>
             ← Back
           </span>
         </div>
