@@ -5,6 +5,33 @@ id           := "CIS_GCP_2_9"
 title        := "Ensure Log Metric Filter and Alerts Exist for VPC Network Changes"
 policy_group := "Logging and Monitoring"
 
+<<<<<<< HEAD
+=======
+verification := `1. List the log metrics:
+gcloud logging metrics list --format json
+2. Ensure that the output contains at least one metric with filter set to:
+resource.type="gce_network"
+AND protoPayload.methodName="beta.compute.networks.insert"
+OR protoPayload.methodName="beta.compute.networks.patch"
+OR protoPayload.methodName="v1.compute.networks.delete"
+OR protoPayload.methodName="v1.compute.networks.removePeering"
+OR protoPayload.methodName="v1.compute.networks.addPeering"
+3. Note the value of the property metricDescriptor.type for the identified metric,
+in the format logging.googleapis.com/user/<Log Metric Name>.
+Ensure the prescribed alerting policy is present:
+4. List the alerting policies:
+gcloud alpha monitoring policies list --format json
+5. Ensure that the output contains at least one alert policy where:
+• conditions.conditionThreshold.filter is set to
+metric.type=\"logging.googleapis.com/user/<Log Metric Name>\"
+• AND enabled is set to true`
+
+remediation := `Create the prescribed Log Metric:
+• Use the command: gcloud logging metrics create
+Create the prescribed alert policy:
+• Use the command: gcloud alpha monitoring policies create`
+
+>>>>>>> 99b403da (finished final group 2 policy tagging with verification and remediaton)
 deny := { v |
   not vpc_network_metric_exists
   v := sprintf("Project %q: Missing logs-based metric for VPC network create/update/delete", [input.project_id])
@@ -27,4 +54,8 @@ alert_policy_referencing_user_metric_enabled {
   contains(c.conditionThreshold.filter, "logging.googleapis.com/user/")
 }
 
+<<<<<<< HEAD
 report := H.build_report(deny, id, title, policy_group)
+=======
+report := H.build_report(deny, id, title, policy_group, verification, remediation)
+>>>>>>> 99b403da (finished final group 2 policy tagging with verification and remediaton)
