@@ -1,0 +1,44 @@
+name: Database API Secrets
+
+on:
+  push:
+    branches: [main, dev, staging]
+  pull_request:
+    branches: [main, dev, staging]
+  schedule:
+    - cron: '32 23 * * 6'
+
+jobs:
+    
+  changes:
+    name: Allocating Push Filter
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    permissions:
+      pull-requests: read
+    outputs:
+      engine: ${{ steps.filter.outputs.database }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            database:
+              - 'database/**'
+          base: ${{ github.ref }}
+
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      XRAPID_API_KEY: ${{ secrets.XRAPID_API_KEY }}
+      XRAPID_API_HOST: ${{ secrets.XRAPID_API_HOST }}
+      VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Python script
+        run: python /database/tprm_scanner/main.py
