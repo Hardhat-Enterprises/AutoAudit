@@ -6,6 +6,16 @@ title := "PostgreSQL: 'cloudsql.enable_pgaudit' = on"
 policy_group := "Cloud SQL"
 blocked_value := "on"
 
+verification := `Run the command by providing <INSTANCE_NAME>. Ensure the value of the flag is on.
+gcloud sql instances describe <INSTANCE_NAME> --format="json" | jq
+'.settings|.|.databaseFlags[]|select(.name=="cloudsql.enable_pgaudit")|.value`
+
+remediation := `Run the below command by providing <INSTANCE_NAME> to enable
+cloudsql.enable_pgaudit flag.
+gcloud sql instances patch <INSTANCE_NAME> --database-flags
+cloudsql.enable_pgaudit=on
+Note: RESTART is required to get this configuration in effect.`
+
 deny := { v |  
   b := input[_]
   r := b.settings.databaseFlags[_]
@@ -17,4 +27,4 @@ deny := { v |
 }
 
 
-report := H.build_report(deny, id, title, policy_group)
+report := H.build_report(deny, id, title, policy_group, verification, remediation)
