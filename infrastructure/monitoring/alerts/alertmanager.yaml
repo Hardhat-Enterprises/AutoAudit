@@ -3,204 +3,32 @@
 #Location: /infrastructure/monitoring/alerts/
 #Description: Alertmanager routing, inhibition, silencing, and receiver configuration.
 #Author: Senior Lead, AutoAudit DevSecOps Team
-#Last Updated: 2025-09-17
+#Last Updated: 2025-09-21
 
 global:
   resolve_timeout: 5m
-  
-  http_config:
-    tls_config:
-      insecure_skip_verify: false
 
 route:
-  group_by: ['alertname', 'service', 'team', 'severity', 'environment']
-  
+  group_by: ['alertname', 'team']
   group_wait: 30s
   group_interval: 5m
- 
-  repeat_interval: 1h
-  receiver: 'default-receiver'
-  
+  repeat_interval: 3h
+  receiver: 'email-infra'
   routes:
-  - match:
-      severity: critical
-      team: security
-    receiver: 'teams-security'
-    continue: true
-
-  - match:
-      severity: high
-      team: security
-    receiver: 'slack-security'
-
-  - match:
-      severity: critical
-      team: devops
-    receiver: 'teams-devops'
-
-  - match:
-      severity: warning
-      team: devops
-    receiver: 'slack-devops'
-
-  - match:
-      severity: high
-      team: backend
-    receiver: 'slack-backend'
-
-  - match:
-      severity: medium
-      team: backend
-    receiver: 'email-backend'
-
-  - match:
-      severity: high
-      team: compliance
-    receiver: 'slack-compliance'
-
-  - match:
-      severity: medium
-      team: compliance
-    receiver: 'email-compliance'
-
-  - match:
-      severity: warning
-      team: infra
-    receiver: 'slack-infra'
-
-  - match:
-      severity: warning
-      team: infra
-    receiver: 'email-infra'
-
-#Please note that the webhook URLs and APIs are placeholders and need to be replaced.
+    - match:
+        team: infra
+      receiver: 'email-infra'
 
 receivers:
-- name: 'teams-security'
-  webhook_configs:
-  
-  - url: '{{ .TeamsSecurityWebhookUrl }}'
-    send_resolved: true
-    
-    http_config:
-      tls_config:
-        insecure_skip_verify: false
+  - name: 'email-infra'
+    email_configs:
+      - to: 'infra-team@example.com'
+        from: 'alertmanager@example.com'
+        smarthost: 'smtp.example.com:587'
+        auth_username: 'alertmanager@example.com'
+        auth_identity: 'alertmanager@example.com'
+        auth_password: 'REPLACE_WITH_REAL_PASSWORD'
 
-- name: 'teams-devops'
-  webhook_configs:
-  
-  - url: '{{ .TeamsDevOpsWebhookUrl }}'
-    send_resolved: true
-    
-    http_config:
-      tls_config:
-        insecure_skip_verify: false
-
-- name: 'slack-security'
-  slack_configs:
-  
-  - api_url: '{{ .SlackApiUrl }}'
-    channel: '#security'
-    
-    send_resolved: true
-    title: '{{ .CommonAnnotations.summary }}'
-    text: '{{ .CommonAnnotations.description }}'
-
-- name: 'slack-devops'
-  slack_configs:
-  
-  - api_url: '{{ .SlackApiUrl }}'
-    channel: '#devops'
-    send_resolved: true
-
-- name: 'slack-backend'
-  slack_configs:
-  
-  - api_url: '{{ .SlackApiUrl }}'
-    channel: '#backend'
-    send_resolved: true
-
-- name: 'slack-compliance'
-  slack_configs:
-  
-  - api_url: '{{ .SlackApiUrl }}'
-    channel: '#compliance'
-    send_resolved: true
-
-- name: 'slack-infra'
-  slack_configs:
-  
-  - api_url: '{{ .SlackApiUrl }}'
-    channel: '#infra'
-    send_resolved: true
-
-#Please note that the hardcoded email addresses and their respective credentials are placeholders and need to be replaced.
-
-- name: 'email-backend'
-  email_configs:
-  
-  - to: 'backend-team@hardhat.com'
-    send_resolved: true
-    
-    from: 'alerts@hardhat.com'
-    smarthost: 'smtp.hardhat.com:587'
-    
-    auth_username: 'alerts@hardhat.com'
-    auth_identity: 'alerts@hardhat.com'
-    auth_password: '{{ .EmailPassword }}'
-
-- name: 'email-compliance'
-  email_configs:
-  
-  - to: 'compliance-team@hardhat.com'
-    send_resolved: true
-    
-    from: 'alerts@hardhat.com'
-    smarthost: 'smtp.hardhat.com:587'
-    
-    auth_username: 'alerts@hardhat.com'
-    auth_identity: 'alerts@hardhat.com'
-    auth_password: '{{ .EmailPassword }}'
-
-- name: 'email-infra'
-  email_configs:
-  
-  - to: 'infra-team@hardhat.com'
-    send_resolved: true
-  
-    from: 'alerts@hardhat.com'
-    smarthost: 'smtp.hardhat.com:587'
-  
-    auth_username: 'alerts@hardhat.com'
-    auth_identity: 'alerts@hardhat.com'
-    auth_password: '{{ .EmailPassword }}'
-
-- name: 'default-receiver'
-  slack_configs:
-  
-  - api_url: '{{ .SlackApiUrl }}'
-    channel: '#general'
-    send_resolved: true
-
-inhibit_rules:
-
-- source_match:
-    severity: critical
-
-  target_match:
-    severity: warning
-  equal: ['service', 'team', 'environment']
-
-- source_match:
-    severity: high
-  
-  target_match:
-    severity: medium
-  equal: ['service', 'team', 'environment']
-
-- source_match:
-    severity: critical
-  
-  target_match:
-    severity: high
-  equal: ['service', 'team', 'environment']
+#Note: Webhook URLs and APIs have been removed as no Slack or Azure Sentinel integrations are used.
+#VERY IMPORTANT: THE EMAIL ADDRESSES AND THEIR ADJACENT DETAILS ARE PLACEHOLDERS. TO BE MODIFIED BEFORE DEPLOYING.
+#Please configure email settings appropriately before deployment.
