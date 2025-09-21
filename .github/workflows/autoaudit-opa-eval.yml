@@ -38,24 +38,16 @@ jobs:
       - name: Convert JSON to PDF
         run: python engine/engine/json_to_pdf.py
 
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: autoaudit-report
+          path: engine/engine/autoaudit_report.pdf
+          if-no-files-found: error
+
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
           name: autoaudit-reports
           path: engine/engine/autoaudit_reports.json
           if-no-files-found: error
-
-      - name: Commit report back to repo
-        if: github.event_name == 'push'
-        run: |
-          REPORT=engine/engine/autoaudit_reports.json
-          if [ -f "$REPORT" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add "$REPORT"
-            git commit -m "ci: update autoaudit_reports.json" || echo "No changes to commit"
-            git push
-          else
-            echo "Report not found at $REPORT" >&2
-            exit 1
-          fi
