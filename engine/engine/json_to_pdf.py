@@ -5,20 +5,16 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from xml.sax.saxutils import escape
 
-# Locate current directory (same as aggregator.py)
 HERE = Path(__file__).resolve().parent
 JSON_FILE = HERE / "autoaudit_reports.json"
 PDF_FILE = HERE / "autoaudit_report.pdf"
 
 def main():
-    # Load JSON report
     if not JSON_FILE.exists():
         print(f"JSON report not found at {JSON_FILE}")
         return
-
     data = json.loads(JSON_FILE.read_text())
 
-    # PDF setup
     doc = SimpleDocTemplate(str(PDF_FILE), pagesize=LETTER)
     styles = getSampleStyleSheet()
     elements = []
@@ -58,7 +54,6 @@ def main():
         elements.append(Spacer(1, 12))
 
     doc.build(elements)
-    print(f"✅ PDF written to {PDF_FILE}")
 
 if __name__ == "__main__":
     main()
