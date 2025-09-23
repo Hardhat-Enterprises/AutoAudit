@@ -6,6 +6,16 @@ title := "SQL Server: 'user connections' = 0 (non-limiting)"
 policy_group := "Cloud SQL"
 blocked_value := "0"
 
+verification := `1. Ensure the below command returns a value of 0, for every Cloud SQL SQL
+Server database instance.
+gcloud sql instances describe <INSTANCE_NAME> --format=json | jq
+'.settings.databaseFlags[] | select(.name=="user connections")|.value'`
+
+remediation := `1. Configure the user connections database flag for every Cloud SQL SQL
+Server database instance using the below command.
+gcloud sql instances patch <INSTANCE_NAME> --database-flags "user
+connections=[0-32,767]"`
+
 deny := { v |  
   b := input[_]
   r := b.settings.databaseFlags[_]
@@ -17,4 +27,4 @@ deny := { v |
 }
 
 
-report := H.build_report(deny, id, title, policy_group)
+report := H.build_report(deny, id, title, policy_group, verification, remediation)

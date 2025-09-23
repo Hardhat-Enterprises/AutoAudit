@@ -6,6 +6,19 @@ title := "SQL Server: 'external scripts enabled' = off"
 policy_group := "Cloud SQL"
 blocked_value := "off"
 
+verification := `1. Ensure the below command returns off for every Cloud SQL SQL Server
+database instance
+gcloud sql instances describe <INSTANCE_NAME> --format=json | jq
+'.settings.databaseFlags[] | select(.name=="external scripts
+enabled")|.value' 
+In the output, database flags are listed under the settings as the collection
+databaseFlags.`
+
+remediation := `1. Configure the external scripts enabled database flag for every Cloud SQL
+SQL Server database instance using the below command.
+gcloud sql instances patch <INSTANCE_NAME> --database-flags "external scripts
+enabled"=off`
+
 deny := { v |  
   b := input[_]
   r := b.settings.databaseFlags[_]
@@ -17,4 +30,4 @@ deny := { v |
 }
 
 
-report := H.build_report(deny, id, title, policy_group)
+report := H.build_report(deny, id, title, policy_group, verification, remediation)
