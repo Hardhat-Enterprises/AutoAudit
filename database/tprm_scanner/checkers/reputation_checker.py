@@ -1,5 +1,5 @@
-# /checkers/reputation_checker.py
 import requests
+import os
 
 class ReputationChecker:
     def __init__(self, domain):
@@ -13,11 +13,12 @@ class ReputationChecker:
         url = "https://website-security-audit.p.rapidapi.com/siteaudit/siteaudit/premium"
 
         headers = {
-            "x-rapidapi-key": "2081db2694msh830cbbc2ce20b4bp134cf5jsn766057dd5b2f",
-            "x-rapidapi-host": "website-security-audit.p.rapidapi.com"
+            "x-rapidapi-key": os.environ["XRAPID_API_KEY"],
+            "x-rapidapi-host": os.environ["XRAPID_API_HOST"]
         }
 
         params = {"url": f"https://{self.domain.strip()}"}
+
 
         try:
             response = requests.get(url, headers=headers, params=params)

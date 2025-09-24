@@ -1,8 +1,9 @@
 import requests
 import base64
+import os
 
-VIRUSTOTAL_API_KEY = "7bc6f85f92953450aaef82ead81f81ea991501ede03d531ec7fa71744f6bb8b7"
 VIRUSTOTAL_API_URL = "https://www.virustotal.com/api/v3/urls"
+VIRUSTOTAL_API_KEY = os.environ["VIRUSTOTAL_API_KEY"]
 
 def get_virustotal_url_report(domain):
     try:
