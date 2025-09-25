@@ -6,6 +6,18 @@ title := "SQL Server: 'contained database authentication' = off"
 policy_group := "Cloud SQL"
 blocked_value := "off"
 
+verification := `1. Ensure the below command returns off for any Cloud SQL for SQL Server
+database instance.
+gcloud sql instances describe <INSTANCE_NAME> --format=json | jq
+'.settings.databaseFlags[] | select(.name=="contained database
+authentication")|.value'`
+
+remediation := `1. If any Cloud SQL for SQL Server instance has the database flag contained
+database authentication set to 'on', then change it to 'off' using the below
+command:
+gcloud sql instances patch <INSTANCE_NAME> --database-flags "contained
+database authentication=off"`
+
 deny := { v |  
   b := input[_]
   r := b.settings.databaseFlags[_]
@@ -17,4 +29,4 @@ deny := { v |
 }
 
 
-report := H.build_report(deny, id, title, policy_group)
+report := H.build_report(deny, id, title, policy_group, verification, remediation)

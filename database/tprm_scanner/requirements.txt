@@ -1,0 +1,22 @@
+# security-checker/requirements.txt
+
+requests==2.26.0
+dnspython==2.3.0
+pyopenssl==23.2.0
+sslyze>=5.0.3
+rich==10.12.0
+flask==2.3.3
+werkzeug==2.3.7
+sqlalchemy==1.4.23
+python-dateutil==2.8.2
+jinja2>=3.1.2
+openai==0.27.0
+pandas>=1.4.0
+numpy>=1.21.0
+plotly==5.5.0
+weasyprint==60.1
+python-docx==0.8.11
+python-nmap==0.7.1
+flask-sqlalchemy==2.5.1
+flask-socketio==5.3.6
+gevent-websocket==0.10.1

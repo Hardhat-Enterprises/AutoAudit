@@ -63,7 +63,7 @@ python security/evidenceassistant.py
 python -m venv .venv && source .venv/bin/activate # macOS/Linux
 python -m venv .venv && .venv\Scripts\activate # Windows
 pip install -r security/requirements.txt
-python -m uvicorn aa_ui:app --reload
+python -m uvicorn --app-dir Security frontend.ui:app --reload
 ```
 ---
 
@@ -89,8 +89,6 @@ AutoAudit/Security/
 
 ---
 
-## Next Steps
+## Documentations and Next Steps
 
-**Recommendations**
-1. Improve reportgenerator.py so that one screenshot = one consolidated report (with all test IDs inside) >> "Screenshot1 AC-01 03 04" can be used for testing 
-2. Refactor the UI code to directly adopt scanner.py and reportgenerator.py from backend/, instead of duplicating logic, to reduce maintenance overhead and avoid inconsistencies
+Refer to https://deakin365.sharepoint.com/:x:/r/sites/HardhatEnterprises2/_layouts/15/Doc2.aspx?action=edit&sourcedoc=%7B1279e491-285a-4135-acef-7c28cf2da379%7D&wdOrigin=TEAMS-MAGLEV.teamsSdk_ns.rwc&wdExp=TEAMS-TREATMENT&wdhostclicktime=1758141979506&web=1 for the full documentation of the Evidence Assistant 
