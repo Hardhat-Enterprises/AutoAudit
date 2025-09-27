@@ -1,0 +1,477 @@
+{
+  "CIS_GCP_1_1": {
+    "error": ""
+  },
+  "CIS_GCP_1_5": {
+    "counts": {
+      "violations": 3
+    },
+    "id": "CIS_GCP_1_5",
+    "input_kind": "Identity and Access Management",
+    "remediation": "From Google Cloud CLI\n1. Export current IAM policy:\n   gcloud projects get-iam-policy PROJECT_ID --format=json > iam.json\n2. Edit iam.json: remove roles/owner and roles/editor from any serviceAccount:<email> bindings.\n3. Apply the updated policy:\n   gcloud projects set-iam-policy PROJECT_ID iam.json",
+    "status": "NonCompliant",
+    "title": "Service accounts must not have Owner/Editor",
+    "verification": " From Google Cloud CLI\n1. Get the policy that you want to modify, and write it to a JSON file:\nPage 27\ngcloud projects get-iam-policy PROJECT_ID --format json > iam.json\n2. The contents of the JSON file will look similar to the following. Note that role of\nmembers group associated with each serviceaccount does not contain *Admin\nor *admin or does not match roles/editor or does not match roles/owner.\nThis recommendation is only applicable to User-Managed user-created service\naccounts. These accounts have the nomenclature:\nSERVICE_ACCOUNT_NAME@PROJECT_ID.iam.gserviceaccount.com. Note that some\nGoogle-managed, Google-created service accounts have the same naming format, and\nshould be excluded (e.g., appsdev-apps-dev-script-\nauth@system.gserviceaccount.com which needs the Owner role).",
+    "violations": [
+      "Service account \"serviceAccount:162922847862-compute@developer.gserviceaccount.com\" must not have role \"roles/editor\"",
+      "Service account \"serviceAccount:162922847862@cloudservices.gserviceaccount.com\" must not have role \"roles/editor\"",
+      "Service account \"serviceAccount:sa-noperms@coastal-stone-470308-a0.iam.gserviceaccount.com\" must not have role \"roles/editor\""
+    ]
+  },
+  "CIS_GCP_1_6": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_1_6",
+    "input_kind": "Identity and Access Management",
+    "remediation": " 1. Using a text editor, remove the bindings with the\nroles/iam.serviceAccountUser or\nroles/iam.serviceAccountTokenCreator.\n\n2. Update the project's IAM policy:\ngcloud projects set-iam-policy PROJECT_ID iam.json ",
+    "status": "Compliant",
+    "title": "Ensure That IAM Users Are Not Assigned the Service Account User or Service Account Token Creator Roles at Project",
+    "verification": " To ensure IAM users are not assigned Service Account User role at the project level:\ngcloud projects get-iam-policy PROJECT_ID --format json | jq\n'.bindings[].role' | grep \"roles/iam.serviceAccountUser\"\ngcloud projects get-iam-policy PROJECT_ID --format json | jq\n'.bindings[].role' | grep \"roles/iam.serviceAccountTokenCreator\"\nThese commands should not return any output. ",
+    "violations": []
+  },
+  "CIS_GCP_1_8": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_1_8",
+    "input_kind": "Identity and Access Management",
+    "remediation": "1. Go to IAM & Admin/IAM using https://console.cloud.google.com/iam-\nadmin/iam.\n2. For any member having both Service Account Admin and Service account\nUser roles granted/assigned, click the Delete Bin icon to remove either role\nfrom the member.\nRemoval of a role should be done based on the business requirements. ",
+    "status": "Compliant",
+    "title": "Ensure That Separation of Duties Is Enforced While Assigning Service Account Related Roles to Users",
+    "verification": " 1. List all users and role assignments:\n2. All common users listed under Service_Account_Admin_and_User are\nassigned both the roles/iam.serviceAccountAdmin and\nroles/iam.serviceAccountUser roles. ",
+    "violations": []
+  },
+  "CIS_GCP_2_1": {
+    "error": ""
+  },
+  "CIS_GCP_3_1": {
+    "error": ""
+  },
+  "CIS_GCP_3_2": {
+    "counts": {
+      "violations": 1
+    },
+    "id": "CIS_GCP_3_2",
+    "input_kind": "Networking",
+    "remediation": " For each Google Cloud Platform project,\n1. Follow the documentation and create a non-legacy network suitable for the\norganization's requirements.\n2. Follow the documentation and delete the networks in the legacy mode. ",
+    "status": "NonCompliant",
+    "title": "Ensure Legacy Networks Do Not Exist for Older Projects",
+    "verification": " For each Google Cloud Platform project,\n1. Set the project name in the Google Cloud Shell:\ngcloud config set project <Project-ID>\n2. List the networks configured in that project:\ngcloud compute networks list\nNone of the listed networks should be in the legacy mode. ",
+    "violations": [
+      "Project network config should not contain \"LEGACY\" Networks"
+    ]
+  },
+  "CIS_GCP_3_3": {
+    "error": ""
+  },
+  "CIS_GCP_3_6": {
+    "counts": {
+      "violations": 1
+    },
+    "id": "CIS_GCP_3_6",
+    "input_kind": "Networking",
+    "remediation": "1.Update the Firewall rule with the new SOURCE_RANGE from the below command:\ngcloud compute firewall-rules update FirewallName --allow=[PROTOCOL[:PORT[-\nPORT]],...] --source-ranges=[CIDR_RANGE,...]",
+    "status": "NonCompliant",
+    "title": "Ensure That SSH Access Is Restricted From the Internet",
+    "verification": " gcloud compute firewall-rules list --\nformat=table'(name,direction,sourceRanges,allowed)'\nEnsure that there is no rule matching the below criteria:\n\u2022 SOURCE_RANGES is 0.0.0.0/0\n\u2022 AND DIRECTION is INGRESS\n\u2022 AND IPProtocol is tcp or ALL\n\u2022 AND PORTS is set to 22 or range containing 22 or Null (not set)\nNote:\n\u2022 When ALL TCP ports are allowed in a rule, PORT does not have any value set\n(NULL)\n\u2022 When ALL Protocols are allowed in a rule, PORT does not have any value set\n(NULL) ",
+    "violations": [
+      "generic connections on port/s \"[\\\"22\\\", \\\"Null\\\"]\" from IP ranges \"[\\\"0.0.0.0/0\\\"]\" coming in the \"[\\\"tcp\\\", \\\"ALL\\\"]\" direction using protocol \"INGRESS\" should be avoided"
+    ]
+  },
+  "CIS_GCP_3_7": {
+    "counts": {
+      "violations": 1
+    },
+    "id": "CIS_GCP_3_7",
+    "input_kind": "Networking",
+    "remediation": "1.Update RDP Firewall rule with new SOURCE_RANGE from the below command:\ngcloud compute firewall-rules update FirewallName --allow=[PROTOCOL[:PORT[-\nPORT]],...] --source-ranges=[CIDR_RANGE,...] ",
+    "status": "NonCompliant",
+    "title": "Ensure That RDP Access Is Restricted From the Internet",
+    "verification": "gcloud compute firewall-rules list --\nformat=table'(name,direction,sourceRanges,allowed)'\nEnsure that there is no rule matching the below criteria:\n\u2022 SOURCE_RANGES is 0.0.0.0/0\n\u2022 AND DIRECTION is INGRESS\n\u2022 AND IPProtocol is TCP or ALL\n\u2022 AND PORTS is set to 3389 or range containing 3389 or Null (not set)\nNote:\n\u2022 When ALL TCP ports are allowed in a rule, PORT does not have any value set\n(NULL)\n\u2022 When ALL Protocols are allowed in a rule, PORT does not have any value set\n(NULL) ",
+    "violations": [
+      "generic connections on port/s \"[\\\"3389\\\", \\\"Null\\\"]\" from IP ranges \"[\\\"0.0.0.0/0\\\"]\" coming in the \"[\\\"tcp\\\", \\\"ALL\\\"]\" direction using protocol \"INGRESS\" should be avoided"
+    ]
+  },
+  "CIS_GCP_4_1": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_4_1",
+    "input_kind": "Compute",
+    "remediation": "1. Stop the instance:\ngcloud compute instances stop <INSTANCE_NAME>\n2. Update the instance:\ngcloud compute instances set-service-account <INSTANCE_NAME> --service-\naccount=<SERVICE_ACCOUNT>\n3. Restart the instance:\ngcloud compute instances start <INSTANCE_NAME",
+    "status": "Compliant",
+    "title": "Ensure That Instances Are Not Configured To Use the Default Service Account",
+    "verification": "1. List the instances in your project and get details on each instance:\ngcloud compute instances list --format=json | jq -r . | \"SA:\n\\(.[].serviceAccounts[].email) Name: \\(.[].name)\"\n2. Ensure that the service account section has an email that does not match the\npattern [PROJECT_NUMBER]-compute@developer.gserviceaccount.com. ",
+    "violations": []
+  },
+  "CIS_GCP_4_2": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_4_2",
+    "input_kind": "Compute",
+    "remediation": "1. Stop the instance:\ngcloud compute instances stop <INSTANCE_NAME>\n2. Update the instance:\ngcloud compute instances set-service-account <INSTANCE_NAME> --service-\naccount=<SERVICE_ACCOUNT> --scopes [SCOPE1, SCOPE2...]\n3. Restart the instance:\ngcloud compute instances start <INSTANCE_NAME> ",
+    "status": "Compliant",
+    "title": "Ensure That Instances Are Not Configured To Use the Default Service Account With Full Access to All Cloud APIs",
+    "verification": "1. List the instances in your project and get details on each instance:\ngcloud compute instances list --format=json | jq -r . | \"SA Scopes:\n\\(.[].serviceAccounts[].scopes) Name: \\(.[].name) Email:\n\\(.[].serviceAccounts[].email)\"\n2. Ensure that the service account section has an email that does not match the\npattern [PROJECT_NUMBER]-compute@developer.gserviceaccount.com. ",
+    "violations": []
+  },
+  "CIS_GCP_4_3": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_4_3",
+    "input_kind": "Compute",
+    "remediation": " To block project-wide public SSH keys, set the metadata value to TRUE:\ngcloud compute instances add-metadata <INSTANCE_NAME> --metadata block-\nproject-ssh-keys=TRUE ",
+    "status": "Compliant",
+    "title": "Ensure \u201cBlock Project-Wide SSH Keys\u201d Is Enabled for VM Instances",
+    "verification": "1. List the instances in your project and get details on each instance:\ngcloud compute instances list --format=json\n2. Ensure key: block-project-ssh-keys is set to value: 'true'.",
+    "violations": []
+  },
+  "CIS_GCP_4_4": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_4_4",
+    "input_kind": "Compute",
+    "remediation": "1. Configure oslogin on the project:\ngcloud compute project-info add-metadata --metadata enable-oslogin=TRUE\n2. Remove instance metadata that overrides the project setting.\ngcloud compute instances remove-metadata <INSTANCE_NAME> --keys=enable-\noslogin\nOptionally, you can enable two factor authentication for OS login. For more information,\nsee: https://cloud.google.com/compute/docs/oslogin/setup-two-factor-authentication.",
+    "status": "Compliant",
+    "title": "Ensure Oslogin Is Enabled for a Project",
+    "verification": "1. List the instances in your project and get details on each instance:\ngcloud compute instances list --format=json\n2. Verify that the section commonInstanceMetadata has a key enable-oslogin\nset to value TRUE.\nException:\nVMs created by GKE should be excluded. These VMs have names that start with\ngke- and are labeled goog-gke-node",
+    "violations": []
+  },
+  "CIS_GCP_4_5": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_4_5",
+    "input_kind": "Compute",
+    "remediation": "Use the below command to disable\ngcloud compute instances add-metadata <INSTANCE_NAME> --zone=<ZONE> --\nmetadata=serial-port-enable=false\nor\ngcloud compute instances add-metadata <INSTANCE_NAME> --zone=<ZONE> --\nmetadata=serial-port-enable=0",
+    "status": "Compliant",
+    "title": "Ensure \u2018Enable Connecting to Serial Ports\u2019 Is Not Enabled for VM Instance",
+    "verification": "Ensure the below command's output shows null:\ngcloud compute instances describe <vmName> --zone=<region> --\nformat=\"json(metadata.items[].key,metadata.items[].value)\"\nor key and value properties from below command's json response are equal to\nserial-port-enable and 0 or false respectively.",
+    "violations": []
+  },
+  "CIS_GCP_4_6": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_4_6",
+    "input_kind": "Compute",
+    "remediation": "1. Use the instances export command to export the existing instance properties:\ngcloud compute instances export <INSTANCE_NAME> \\\n--project <PROJECT_ID> \\\n--zone <ZONE> \\\n--destination=<FILE_PATH>\nNoteReplace the following:\nINSTANCE_NAME the name for the instance that you want to export.\nPROJECT_ID: the project ID for this request.\nZONE: the zone for this instance.\nFILE_PATH: the output path where you want to save the instance configuration file on\nyour local workstation.\n2. Use a text editor to modify this file\nReplace\ncanIpForward: true\nwith\ncanIpForward: false\n3. Run this command to import the file you just modified\ngcloud compute instances update-from-file INSTANCE_NAME \\\n--project PROJECT_ID \\\n--zone ZONE \\\n--source=FILE_PATH \\\n--most-disruptive-allowed-action=REFRESH\nIf the update request is valid and the required resources are available, the instance\nupdate process begins. You can monitor the status of this operation by viewing the audit\nlogs.\nThis update requires only a REFRESH not a full restart.",
+    "status": "Compliant",
+    "title": "Ensure That IP Forwarding Is Not Enabled on Instances",
+    "verification": "1. List all instances:\ngcloud compute instances list --format='table(name,canIpForward)'\n2. Ensure that CAN_IP_FORWARD column in the output of above command does not\ncontain True for any VM instance.",
+    "violations": []
+  },
+  "CIS_GCP_4_8": {
+    "error": ""
+  },
+  "CIS_GCP_4_9": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_4_9",
+    "input_kind": "Compute",
+    "remediation": "1. Describe the instance properties:\ngcloud compute instances describe <INSTANCE_NAME> --zone=<ZONE>\n2. Identify the access config name that contains the external IP address. This\naccess config appears in the following format:\nnetworkInterfaces:\n- accessConfigs:\n- kind: compute#accessConfig\nname: External NAT\nnatIP: 130.211.181.55\ntype: ONE_TO_ONE_NAT\n3. Delete the access config.\ngcloud compute instances delete-access-config <INSTANCE_NAME> --zone=<ZONE> -\n-access-config-name <ACCESS_CONFIG_NAME>\nIn the above example, the ACCESS_CONFIG_NAME is External NAT. The name of your\naccess config might be different ",
+    "status": "Compliant",
+    "title": "Ensure That Compute Instances Do Not Have Public IPAddresses",
+    "verification": "gcloud compute instances list --format=json\n1. The output should not contain an accessConfigs section under\nnetworkInterfaces. Note that the natIP value is present only for instances that\nare running or for instances that are stopped but have a static IP address. For\ninstances that are stopped and are configured to have an ephemeral public IP\naddress, the natIP field will not be present. Example output:\nnetworkInterfaces:\n- accessConfigs:\n- kind: compute#accessConfig\nname: External NAT\nnetworkTier: STANDARD\ntype: ONE_TO_ONE_NAT",
+    "violations": []
+  },
+  "CIS_GCP_4_11": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_4_11",
+    "input_kind": "Compute",
+    "remediation": "Create a new instance with Confidential Compute enabled.\ngcloud compute instances create <INSTANCE_NAME> --zone <ZONE> --\nconfidential-compute --maintenance-policy=TERMINATE",
+    "status": "Compliant",
+    "title": "Ensure That Compute Instances Have Confidential Computing Enabled",
+    "verification": "1. List the instances in your project and get details on each instance:\ngcloud compute instances list --format=json\n2. Ensure that enableConfidentialCompute is set to true for all instances with\nmachine type starting with \"n2d-\".\nconfidentialInstanceConfig:\nenableConfidentialCompute: true",
+    "violations": []
+  },
+  "CIS_GCP_5_1": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_5_1",
+    "input_kind": "Storage",
+    "remediation": "Remove allUsers and allAuthenticatedUsers access.\ngsutil iam ch -d allUsers gs://BUCKET_NAME\ngsutil iam ch -d allAuthenticatedUsers gs://BUCKET_NAME ",
+    "status": "Compliant",
+    "title": "Ensure That Cloud Storage Bucket Is Not Anonymously or Publicly Accessible",
+    "verification": " 1. List all buckets in a project\ngsutil ls\n2. Check the IAM Policy for each bucket:\ngsutil iam get gs://BUCKET_NAME\nNo role should contain allUsers and/or allAuthenticatedUsers as a member.",
+    "violations": []
+  },
+  "CIS_GCP_6_1_2": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_1_2",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. List all Cloud SQL database Instances\ngcloud sql instances list\n2. Configure the skip_show_database database flag for every Cloud SQL Mysql\ndatabase instance using the below command.\ngcloud sql instances patch <INSTANCE_NAME> --database-flags\nskip_show_database=on",
+    "status": "Compliant",
+    "title": "MySQL: Ensure 'skip_show_database' flag is ON",
+    "verification": "1. List all Cloud SQL database Instances\ngcloud sql instances list\n2. Ensure the below command returns on for every Cloud SQL Mysql database\ninstance \ngcloud sql instances describe <INSTANCE_NAME> --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"skip_show_database\")|.value' ",
+    "violations": []
+  },
+  "CIS_GCP_6_1_3": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_1_3",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. List all Cloud SQL database instances using the following command:\ngcloud sql instances list\n2. Configure the local_infile database flag for every Cloud SQL Mysql database\ninstance using the below command:\ngcloud sql instances patch <INSTANCE_NAME> --database-flags local_infile=off",
+    "status": "Compliant",
+    "title": "MySQL: Ensure 'local_infile' flag is OFF",
+    "verification": "1. List all Cloud SQL database instances:\ngcloud sql instances list\n2. Ensure the below command returns off for every Cloud SQL MySQL database\ninstance.\ngcloud sql instances describe <INSTANCE_NAME> --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"local_infile\")|.value' ",
+    "violations": []
+  },
+  "CIS_GCP_6_2_1": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_2_1",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. Configure the log_error_verbosity database flag for every Cloud SQL PosgreSQL\ndatabase instance using the below command.\ngcloud sql instances patch INSTANCE_NAME --database-flags\nlog_error_verbosity=<TERSE|DEFAULT|VERBOSE>",
+    "status": "Compliant",
+    "title": "PostgreSQL: 'log_error_verbosity' DEFAULT or stricter",
+    "verification": "1. Use the below command for every Cloud SQL PostgreSQL database instance to\nverify the value of log_error_verbosity\ngcloud sql instances describe [INSTANCE_NAME] --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"log_error_verbosity\")|.value'\nIn the output, database flags are listed under the settings as the collection\ndatabaseFlags.",
+    "violations": []
+  },
+  "CIS_GCP_6_2_2": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_2_2",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. Configure the log_connections database flag for every Cloud SQL PosgreSQL\ndatabase instance using the below command.\ngcloud sql instances patch <INSTANCE_NAME> --database-flags\n\"log_connections\"=on",
+    "status": "Compliant",
+    "title": "PostgreSQL: 'log_connections' = on",
+    "verification": "1. Ensure the below command returns on for every Cloud SQL PostgreSQL\ndatabase instance:\ngcloud sql instances describe [INSTANCE_NAME] --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"log_connections\")|.value'\nIn the output, database flags are listed under the settings as the collection\ndatabaseFlags.",
+    "violations": []
+  },
+  "CIS_GCP_6_2_3": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_2_3",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. Configure the log_disconnections database flag for every Cloud SQL\nPosgreSQL database instance using the below command:\ngcloud sql instances patch <INSTANCE_NAME> --database-flags\nlog_disconnections=on",
+    "status": "Compliant",
+    "title": "PostgreSQL: 'log_disconnections' = on",
+    "verification": "1. Ensure the below command returns on for every Cloud SQL PostgreSQL\ndatabase instance:\ngcloud sql instances list --format=json | jq '.[].settings.databaseFlags[] |\nselect(.name==\"log_disconnections\")|.value",
+    "violations": []
+  },
+  "CIS_GCP_6_2_4": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_2_4",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. Configure the log_statement database flag for every Cloud SQL PosgreSQL\ndatabase instance using the below command.\ngcloud sql instances patch <INSTANCE_NAME> --database-flags\nlog_statement=<ddl|mod|all|none>",
+    "status": "Compliant",
+    "title": "PostgreSQL: 'log_statement' set appropriately (ddl)",
+    "verification": "1. Use the below command for every Cloud SQL PostgreSQL database instance to\nverify the value of log_statement\ngcloud sql instances list --format=json | jq '.[].settings.databaseFlags[] |\nselect(.name==\"log_statement\")|.value'",
+    "violations": []
+  },
+  "CIS_GCP_6_2_5": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_2_5",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. Configure the log_min_messages database flag for every Cloud SQL\nPosgreSQL database instance using the below command.\ngcloud sql instances patch <INSTANCE_NAME> --database-flags\nlog_min_messages=<DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|INFO|NOTICE|WARNING|ERRO\nR|LOG|FATAL|PANIC>",
+    "status": "Compliant",
+    "title": "PostgreSQL: 'log_min_messages' >= WARNING",
+    "verification": "1. Use the below command for every Cloud SQL PostgreSQL database instance to\nverify that the value of log_min_messages is set to warning or higher .\ngcloud sql instances describe [INSTANCE_NAME] --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"log_min_messages\")|.value'",
+    "violations": []
+  },
+  "CIS_GCP_6_2_6": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_2_6",
+    "input_kind": "Cloud SQL",
+    "remediation": "from Google Cloud CLI\n1. Configure the log_min_error_statement database flag for every Cloud SQL\nPosgreSQL database instance using the below command.\ngcloud sql instances patch <INSTANCE_NAME> --database-flags\nlog_min_error_statement=<DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|INFO|NOTICE|WARNI\nNG|ERROR>",
+    "status": "Compliant",
+    "title": "PostgreSQL: 'log_min_error_statement' >= ERROR",
+    "verification": "1. Use the below command for every Cloud SQL PostgreSQL database instance to\nverify the value of log_min_error_statement is set to ERROR or stricter.\ngcloud sql instances describe <INSTANCE_NAME> --format=json | jq\n'.[].settings.databaseFlags[] |\nselect(.name==\"log_min_error_statement\")|.value'\nIn the output, database flags are listed under the settings as the collection\ndatabaseFlags.",
+    "violations": []
+  },
+  "CIS_GCP_6_2_7": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_2_7",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. List all Cloud SQL database instances using the following command:\ngcloud sql instances list\n2. Configure the log_min_duration_statement flag for every Cloud SQL\nPosgreSQL database instance using the below command:\ngcloud sql instances patch <INSTANCE_NAME> --database-flags\nlog_min_duration_statement=-1",
+    "status": "Compliant",
+    "title": "PostgreSQL: 'log_min_duration_statement' = -1 (disabled)",
+    "verification": "1. Use the below command for every Cloud SQL PostgreSQL database instance to\nverify the value of log_min_duration_statement is set to -1.\ngcloud sql instances describe <INSTANCE_NAME> --format=json| jq\n'.settings.databaseFlags[] |\nselect(.name==\"log_min_duration_statement\")|.value'\nIn the output, database flags are listed under the settings as the collection\ndatabaseFlags.",
+    "violations": []
+  },
+  "CIS_GCP_6_2_8": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_2_8",
+    "input_kind": "Cloud SQL",
+    "remediation": "Run the below command by providing <INSTANCE_NAME> to enable\ncloudsql.enable_pgaudit flag.\ngcloud sql instances patch <INSTANCE_NAME> --database-flags\ncloudsql.enable_pgaudit=on\nNote: RESTART is required to get this configuration in effect.",
+    "status": "Compliant",
+    "title": "PostgreSQL: 'cloudsql.enable_pgaudit' = on",
+    "verification": "Run the command by providing <INSTANCE_NAME>. Ensure the value of the flag is on.\ngcloud sql instances describe <INSTANCE_NAME> --format=\"json\" | jq\n'.settings|.|.databaseFlags[]|select(.name==\"cloudsql.enable_pgaudit\")|.value",
+    "violations": []
+  },
+  "CIS_GCP_6_3_1": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_3_1",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. Configure the external scripts enabled database flag for every Cloud SQL\nSQL Server database instance using the below command.\ngcloud sql instances patch <INSTANCE_NAME> --database-flags \"external scripts\nenabled\"=off",
+    "status": "Compliant",
+    "title": "SQL Server: 'external scripts enabled' = off",
+    "verification": "1. Ensure the below command returns off for every Cloud SQL SQL Server\ndatabase instance\ngcloud sql instances describe <INSTANCE_NAME> --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"external scripts\nenabled\")|.value' \nIn the output, database flags are listed under the settings as the collection\ndatabaseFlags.",
+    "violations": []
+  },
+  "CIS_GCP_6_3_2": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_3_2",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. Configure the cross db ownership chaining database flag for every Cloud\nSQL SQL Server database instance using the below command:\ngcloud sql instances patch <INSTANCE_NAME> --database-flags \"cross db\nownership chaining\"=off",
+    "status": "Compliant",
+    "title": "SQL Server: 'cross db ownership chaining' = off",
+    "verification": "1. Ensure the below command returns off for every Cloud SQL SQL Server\ndatabase instance:\ngcloud sql instances describe <INSTANCE_NAME> --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"cross db ownership\nchaining\")|.value'\nIn the output, database flags are listed under the settings as the collection\ndatabaseFlags.",
+    "violations": []
+  },
+  "CIS_GCP_6_3_3": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_3_3",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. Configure the user connections database flag for every Cloud SQL SQL\nServer database instance using the below command.\ngcloud sql instances patch <INSTANCE_NAME> --database-flags \"user\nconnections=[0-32,767]\"",
+    "status": "Compliant",
+    "title": "SQL Server: 'user connections' = 0 (non-limiting)",
+    "verification": "1. Ensure the below command returns a value of 0, for every Cloud SQL SQL\nServer database instance.\ngcloud sql instances describe <INSTANCE_NAME> --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"user connections\")|.value'",
+    "violations": []
+  },
+  "CIS_GCP_6_3_4": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_3_4",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. List all Cloud SQL database Instances\ngcloud sql instances list\n2. Clear the user options database flag for every Cloud SQL SQL Server\ndatabase instance using either of the below commands.\nClearing all flags to their default value\ngcloud sql instances patch <INSTANCE_NAME> --clear-database-flags",
+    "status": "Compliant",
+    "title": "SQL Server: 'user options' not configured",
+    "verification": "1. Ensure the below command returns empty result for every Cloud SQL SQL\nServer database instance\ngcloud sql instances describe <INSTANCE_NAME> --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"user options\")|.value'\nIn the output, database flags are listed under the settings as the collection\ndatabaseFlags.",
+    "violations": []
+  },
+  "CIS_GCP_6_3_5": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_3_5",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. Configure the remote access database flag for every Cloud SQL SQL Server\ndatabase instance using the below command\ngcloud sql instances patch <INSTANCE_NAME> --database-flags \"remote\naccess\"=off",
+    "status": "Compliant",
+    "title": "SQL Server: 'remote access' = off",
+    "verification": "1. Ensure the below command returns off for every Cloud SQL SQL Server\ndatabase instance\ngcloud sql instances describe <INSTANCE_NAME> --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"remote access\")|.value'\nIn the output, database flags are listed under the settings as the collection\ndatabaseFlags.",
+    "violations": []
+  },
+  "CIS_GCP_6_3_6": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_3_6",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. Configure the 3625 database flag for every Cloud SQL SQL Server database\ninstance using the below command.\ngcloud sql instances patch <INSTANCE_NAME> --database-flags \"3625=on\"",
+    "status": "Compliant",
+    "title": "SQL Server: '3625' trace flag = on",
+    "verification": "1. Ensure the below command returns on for every Cloud SQL SQL Server\ndatabase instance\ngcloud sql instances describe <INSTANCE_NAME> --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"3625\")|.value'",
+    "violations": []
+  },
+  "CIS_GCP_6_3_7": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_3_7",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. If any Cloud SQL for SQL Server instance has the database flag contained\ndatabase authentication set to 'on', then change it to 'off' using the below\ncommand:\ngcloud sql instances patch <INSTANCE_NAME> --database-flags \"contained\ndatabase authentication=off\"",
+    "status": "Compliant",
+    "title": "SQL Server: 'contained database authentication' = off",
+    "verification": "1. Ensure the below command returns off for any Cloud SQL for SQL Server\ndatabase instance.\ngcloud sql instances describe <INSTANCE_NAME> --format=json | jq\n'.settings.databaseFlags[] | select(.name==\"contained database\nauthentication\")|.value'",
+    "violations": []
+  },
+  "CIS_GCP_6_4": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_4",
+    "input_kind": "Cloud SQL",
+    "remediation": "To enforce SSL encryption for an instance run the command:\ngcloud sql instances patch INSTANCE_NAME --ssl-mode= ENCRYPTED_ONLY\nNote:\nRESTART is required for type MySQL Generation 1 Instances (backendType:\nFIRST_GEN) to get this configuration in effect",
+    "status": "Compliant",
+    "title": "Ensure Cloud SQL requires SSL for all incoming connections",
+    "verification": "1. Get the detailed configuration for every SQL database instance using the\nfollowing command:\ngcloud sql instances list --format=json\nEnsure that section settings: ipConfiguration has the parameter sslMode set to\nENCRYPTED_ONLY",
+    "violations": []
+  },
+  "CIS_GCP_6_5": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_5",
+    "input_kind": "Cloud SQL",
+    "remediation": "Update the authorized network list by dropping off any addresses.\ngcloud sql instances patch <INSTANCE_NAME> --authorized-\nnetworks=IP_ADDR1,IP_ADDR2...",
+    "status": "Compliant",
+    "title": "Ensure Cloud SQL does not implicitly whitelist all public IPs",
+    "verification": "1. Get detailed configuration for every Cloud SQL database instance.\nThe Cloud SQL database instance would not be available to public IP addresses.\ngcloud sql instances list --format=json\nEnsure that the section settings: ipConfiguration : authorizedNetworks does\nnot have any parameter value containing 0.0.0.0/0.",
+    "violations": []
+  },
+  "CIS_GCP_6_6": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_6",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. For every instance remove its public IP and assign a private IP instead:\ngcloud sql instances patch <INSTANCE_NAME> --network=<VPC_NETWORK_NAME> --no-\nassign-ip\n2. Confirm the changes using the following command::\ngcloud sql instances describe <INSTANCE_NAME>",
+    "status": "Compliant",
+    "title": "Ensure Cloud SQL instances do not have public IPs",
+    "verification": "1. List all Cloud SQL database instances using the following command:\ngcloud sql instances list\n2. For every instance of type instanceType: CLOUD_SQL_INSTANCE with\nbackendType: SECOND_GEN, get detailed configuration. Ignore instances of type\nREAD_REPLICA_INSTANCE because these instances inherit their settings from the\nprimary instance. Also, note that first generation instances cannot be configured\nto have a private IP address.\ngcloud sql instances describe <INSTANCE_NAME>\n3. Ensure that the setting ipAddresses has an IP address configured of type:\nPRIVATE and has no IP address of type: PRIMARY. PRIMARY IP addresses are\npublic addresses. An instance can have both a private and public address at the\nsame time. Note also that you cannot use private IP with First Generation\ninstances.",
+    "violations": []
+  },
+  "CIS_GCP_6_7": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_6_7",
+    "input_kind": "Cloud SQL",
+    "remediation": "1. List all Cloud SQL database instances using the following command:\ngcloud sql instances list --format=json | jq '. | map(select(.instanceType !=\n\"READ_REPLICA_INSTANCE\")) | .[].name'\n2. Enable Automated backups for every Cloud SQL database instance using the\nbelow command:\ngcloud sql instances patch <INSTANCE_NAME> --backup-start-time <[HH:MM]>\nThe backup-start-time parameter is specified in 24-hour time, in the UTC\u00b100 time\nzone, and specifies the start of a 4-hour backup window. Backups can start any time\nduring the backup window.",
+    "status": "Compliant",
+    "title": "Ensure Cloud SQL automated backups are enabled",
+    "verification": "1. List all Cloud SQL database instances using the following command:\ngcloud sql instances list --format=json | jq '. | map(select(.instanceType !=\n\"READ_REPLICA_INSTANCE\")) | .[].name'\n2. Ensure that the below command returns True for every Cloud SQL database\ninstance.\ngcloud sql instances describe <INSTANCE_NAME> --\nformat=\"value('Enabled':settings.backupConfiguration.enabled)\"",
+    "violations": []
+  },
+  "CIS_GCP_7_1": {
+    "error": "No result in OPA output"
+  },
+  "CIS_GCP_7_3": {
+    "counts": {
+      "violations": 0
+    },
+    "id": "CIS_GCP_7_3",
+    "input_kind": "BigQuery",
+    "remediation": "The default CMEK for existing data sets can be updated by specifying the default key in\nthe EncryptionConfiguration.kmsKeyName field when calling the datasets.insert\nor datasets.patch methods",
+    "status": "Compliant",
+    "title": "Ensure a default CMEK is specified for all BigQuery datasets",
+    "verification": "List all dataset names\nbq ls\nUse the following command to view each dataset details.\nbq show <data_set_object>\nVerify the kmsKeyName is present.",
+    "violations": []
+  },
+  "CIS_GCP_8_1": {
+    "error": "No result in OPA output"
+  }
+}

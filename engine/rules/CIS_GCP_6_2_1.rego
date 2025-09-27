@@ -6,6 +6,18 @@ title := "PostgreSQL: 'log_error_verbosity' DEFAULT or stricter"
 policy_group := "Cloud SQL"
 blocked_value := ["TERSE", "DEFAULT"]
 
+verification := `1. Use the below command for every Cloud SQL PostgreSQL database instance to
+verify the value of log_error_verbosity
+gcloud sql instances describe [INSTANCE_NAME] --format=json | jq
+'.settings.databaseFlags[] | select(.name=="log_error_verbosity")|.value'
+In the output, database flags are listed under the settings as the collection
+databaseFlags.`
+
+remediation := `1. Configure the log_error_verbosity database flag for every Cloud SQL PosgreSQL
+database instance using the below command.
+gcloud sql instances patch INSTANCE_NAME --database-flags
+log_error_verbosity=<TERSE|DEFAULT|VERBOSE>`
+
 deny := { v |  
   b := input[_]
   r := b.settings.databaseFlags[_]
@@ -17,4 +29,4 @@ deny := { v |
 }
 
 
-report := H.build_report(deny, id, title, policy_group)
+report := H.build_report(deny, id, title, policy_group, verification, remediation)

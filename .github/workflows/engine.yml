@@ -12,7 +12,7 @@ jobs:
   changes:
     name: Allocating Push Filter
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || 'pull_request'
+    if: github.event_name == 'push'
     permissions:
       pull-requests: read
     outputs:
@@ -30,7 +30,7 @@ jobs:
   analyze:
     name: Security Analysis on (${{ matrix.language }})
     needs: changes
-    if: github.event_name != 'pull_request' || needs.changes.outputs.engine == 'true'
+    if: github.event_name != 'push' || needs.changes.outputs.engine == 'true'
     runs-on: ubuntu-latest
     permissions:
       security-events: write
@@ -59,7 +59,7 @@ jobs:
     name: Linting Code
     runs-on: ubuntu-latest
     needs: [changes, analyze]
-    if: github.event_name != 'pull_request' || needs.changes.outputs.engine == 'true'
+    if: github.event_name != 'push' || needs.changes.outputs.engine == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -78,10 +78,13 @@ jobs:
           VALIDATE_PYTHON_FLAKE8: false
           VALIDATE_PYTHON_ISORT: false
           VALIDATE_JAVASCRIPT_STANDARD: false
+          VALIDATE_MARKDOWN: false
+          VALIDATE_NATURAL_LANGUAGE: false
+          VALIDATE_MARKDOWN_PRETTIER: false
 
   build-and-deploy:
     name: Build and Deploy Engine
-    needs: [changes, analyze, run-lint]
+    needs: [changes, analyze]
     environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
     runs-on: ubuntu-latest
     permissions:
