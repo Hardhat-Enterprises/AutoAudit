@@ -5,6 +5,24 @@ import future.keywords.in
 id    := "CIS_GCP_3_6"
 title := "Ensure That SSH Access Is Restricted From the Internet"
 policy_group := "Networking"
+
+verification := ` gcloud compute firewall-rules list --
+format=table'(name,direction,sourceRanges,allowed)'
+Ensure that there is no rule matching the below criteria:
+• SOURCE_RANGES is 0.0.0.0/0
+• AND DIRECTION is INGRESS
+• AND IPProtocol is tcp or ALL
+• AND PORTS is set to 22 or range containing 22 or Null (not set)
+Note:
+• When ALL TCP ports are allowed in a rule, PORT does not have any value set
+(NULL)
+• When ALL Protocols are allowed in a rule, PORT does not have any value set
+(NULL) `
+
+remediation := `1.Update the Firewall rule with the new SOURCE_RANGE from the below command:
+gcloud compute firewall-rules update FirewallName --allow=[PROTOCOL[:PORT[-
+PORT]],...] --source-ranges=[CIDR_RANGE,...]`
+
 blocked_value1 := ["0.0.0.0/0"]
 blocked_value2 := "INGRESS"
 blocked_value3 := ["tcp", "ALL"]
@@ -27,4 +45,4 @@ deny := { v |
 }
 
 
-report := H.build_report(deny, id, title, policy_group)
+report := H.build_report(deny, id, title, policy_group, verification, remediation)

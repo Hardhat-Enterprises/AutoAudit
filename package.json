@@ -1,0 +1,17 @@
+{
+  "name": "autoaudit",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "cleanup:dry": "node DevOps/cleanup-workflows.js --dryRun=true",
+    "cleanup": "node DevOps/cleanup-workflows.js"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.0"
+  }
+
+}

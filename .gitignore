@@ -1,0 +1,8 @@
+# Ignore virtual environment in AutoAudit
+.venv/
+venv/
+env/
+**/.venv/
+**/venv/
+**/env/
+README.md
