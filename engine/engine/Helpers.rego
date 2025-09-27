@@ -9,7 +9,7 @@ to_array(xs) = arr if {
 status(pass) := "Compliant"   if  { pass }
 status(pass) := "NonCompliant" if { not pass }
 
-build_report(deny_items, id, title, input_kind) = report if {
+build_report(deny_items, id, title, input_kind, verification, remediation) = report if {
   ds := to_array(deny_items)
   report := {
     "id":         id,
@@ -17,6 +17,8 @@ build_report(deny_items, id, title, input_kind) = report if {
     "input_kind": input_kind,
     "status":     status(count(ds) == 0),
     "counts":     {"violations": count(ds)},
-    "violations": ds
+    "violations": ds,
+    "verification": verification,
+    "remediation": remediation
   }
 }

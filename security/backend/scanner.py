@@ -10,6 +10,25 @@ from strategies import load_strategies
 #------------------------ Import core_ocr.py----------------
 from backend.core_ocr import extract_text_and_preview, SUPPORTED_ALL_EXTS
 
+# ------------------------ recent-scan logger (add-on) ----------------
+import json
+from urllib import request
+
+def _post_recent_scan(user: str, strategy: str, status: str, base_url: str = None) -> None:
+    """Best-effort ping to the UI logger; never raises."""
+    try:
+        base = (base_url or os.environ.get("AUTOAUDIT_UI_URL") or "http://127.0.0.1:8000").rstrip("/")
+        url = f"{base}/api/scan-mem-log"
+        data = json.dumps({"user": user or "user", "strategy": strategy or "", "status": status or "success"}).encode("utf-8")
+        req = request.Request(url, data=data, headers={"Content-Type": "application/json"}, method="POST")
+        request.urlopen(req, timeout=2)
+    except Exception:
+        pass
+
+# track context for error ping
+_LAST_RUN = {"user": "user", "strategy": ""}
+# --------------------------------------------------------------------
+
 #------------------------ Same result and username environment ----------------
 RESULTS_DIR = Path(os.environ.get("AUTOAUDIT_RESULTS", "results"))
 PREVIEWS    = Path(os.environ.get("AUTOAUDIT_PREVIEWS", RESULTS_DIR / "previews"))
@@ -91,6 +110,10 @@ def main():
     if not chosen_strategies:
         print("Not a valid selection. Exiting the application.")
         return
+
+    # record context for pings (first chosen strategy is a good summary)
+    global _LAST_RUN
+    _LAST_RUN = {"user": user_id, "strategy": (chosen_strategies[0].name if chosen_strategies else "")}
 
     print("\n📋 Scanning using strategies:", ", ".join(s.name for s in chosen_strategies), "\n")
 
@@ -192,5 +215,16 @@ def main():
             writer.writerows(report_rows)
         print(f"\n  'scan_report.csv' was locked. Saved as: {temp_name}")
 
+    # success ping (non-blocking)
+    _post_recent_scan(_LAST_RUN["user"], _LAST_RUN["strategy"], "success")
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        # error ping (non-blocking), then re-raise
+        try:
+            _post_recent_scan(_LAST_RUN.get("user", "user"), _LAST_RUN.get("strategy", ""), "error")
+        except Exception:
+            pass
+        raise
