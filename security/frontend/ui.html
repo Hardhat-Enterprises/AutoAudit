@@ -137,6 +137,8 @@
 
     <div class="actions">
       <button id="scanBtn" disabled>Scan Evidence</button>
+      <!-- ✨ Added: Recent Scans button (non-breaking) -->
+      <button id="logBtn" type="button">Recent Scans</button>
       <span id="busy" class="help hidden">Scanning…</span>
       <span id="err" class="error"></span>
     </div>
@@ -172,6 +174,8 @@ const els = {
   user: document.getElementById('user'),
   file: document.getElementById('file'),
   scanBtn: document.getElementById('scanBtn'),
+  // ✨ Added:
+  logBtn: document.getElementById('logBtn'),
   busy: document.getElementById('busy'),
   err: document.getElementById('err'),
   results: document.getElementById('results'),
@@ -291,6 +295,12 @@ function renderResults(strategy, filename, data) {
 
 els.strategy.addEventListener('change', onStrategyChange);
 els.scanBtn.addEventListener('click', scan);
+
+/* Added: Recent Scans opener */
+els.logBtn.addEventListener('click', () => {
+  window.open(`${API_BASE}/scan-mem`, '_blank', 'noopener');
+});
+
 loadStrategies();
 </script>
 </body>
