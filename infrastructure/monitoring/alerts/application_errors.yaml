@@ -1,0 +1,77 @@
+#AutoAudit Application Error Alerts - Prometheus Alerting Rules
+#File: application_errors.yaml
+#Location: /infrastructure/monitoring/alerts/
+#Description: Defines high and medium severity application error alerts.
+#Author: Senior Lead, AutoAudit DevSecOps Team
+#Last Updated: 2025-09-17
+
+groups:
+- name: application.rules
+  interval: 30s
+  
+  rules:
+  - alert: APIErrorRateHigh
+    
+    expr: |
+      increase(api_errors_total[5m]) > 20
+    
+    for: 5m
+    
+    labels:
+      severity: high
+      team: backend
+      service: api-gateway
+      environment: production
+    
+    annotations:
+      
+      summary: "High: Elevated API error rate"
+      
+      description: |
+        More than 20 API errors detected in the last 5 minutes on service {{ $labels.service }}.
+        Investigate error logs and service health to identify the root cause.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#applicationapierrorratehigh"
+
+  - alert: ScanEngineFailure
+    
+    expr: |
+      rate(scan_engine_errors_total[1m]) > 0
+    
+    for: 2m
+    
+    labels:
+      severity: medium
+      team: backend
+      service: scan-engine
+      environment: production
+    
+    annotations:
+      
+      summary: "Medium: Scan engine error detected"
+      
+      description: |
+        Scan engine errors were detected in the last minute.
+        This may impact scanning accuracy; review scan engine logs.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#applicationscanenginefailure"
+
+  - alert: JobFailureRateHigh
+    
+    expr: |
+      increase(batch_job_failures_total[10m]) > 5
+    
+    for: 10m
+    
+    labels:
+      severity: high
+      team: backend
+      service: batch-processor
+      environment: production
+    
+    annotations:
+      
+      summary: "High: Elevated batch job failure rate"
+      
+      description: |
+        More than 5 batch job failures were detected in the last 10 minutes.
+        Investigate job logs and resource availability.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#applicationjobfailureratehigh"

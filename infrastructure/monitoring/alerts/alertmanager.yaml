@@ -1,0 +1,34 @@
+#AutoAudit Alertmanager Configuration
+#File: alertmanager.yaml
+#Location: /infrastructure/monitoring/alerts/
+#Description: Alertmanager routing, inhibition, silencing, and receiver configuration.
+#Author: Senior Lead, AutoAudit DevSecOps Team
+#Last Updated: 2025-09-21
+
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'team']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 3h
+  receiver: 'email-infra'
+  routes:
+    - match:
+        team: infra
+      receiver: 'email-infra'
+
+receivers:
+  - name: 'email-infra'
+    email_configs:
+      - to: 'infra-team@example.com'
+        from: 'alertmanager@example.com'
+        smarthost: 'smtp.example.com:587'
+        auth_username: 'alertmanager@example.com'
+        auth_identity: 'alertmanager@example.com'
+        auth_password: 'REPLACE_WITH_REAL_PASSWORD'
+
+#Note: Webhook URLs and APIs have been removed as no Slack or Azure Sentinel integrations are used.
+#VERY IMPORTANT: THE EMAIL ADDRESSES AND THEIR ADJACENT DETAILS ARE PLACEHOLDERS. TO BE MODIFIED BEFORE DEPLOYING.
+#Please configure email settings appropriately before deployment.
