@@ -21,4 +21,5 @@ jobs:
 
       - name: Validate Prometheus alerting rules
         run: |
-          promtool check rules infrastructure/monitoring/alerts/*.yaml
+          chmod +x infrastructure/monitoring/alerts/tests/promtool_validation.sh
+          ./infrastructure/monitoring/alerts/tests/promtool_validation.sh
