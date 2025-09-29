@@ -3,7 +3,7 @@ import './Dashboard.css';
 import ComplianceChart from '../components/ComplianceChart';
 import Dropdown from '../components/Dropdown';
 import { useNavigate } from "react-router-dom";
-import { Card } from "../ui"; // from src/pages → src/ui
+import { Card, Button } from "../ui"; // from src/pages → src/ui // add CTA Button
 
 
 
@@ -24,7 +24,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
   t === "bad"  ? "text-accent-bad"  :
                  "text-text-muted";
 
-  const toneIcon = (t) => (t === "good" ? "✓" : t === "warn" ? "⚠" : t === "bad" ? "!" : "🕐");
+  const toneIcon = (t) => (t === "good" ? "✓" : t === "warn" ? "⚠" : t === "bad" ? "!" : "◉");
 
 
   const benchmarkOptions = [
@@ -132,7 +132,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
                 <div className="flex items-start gap-3">
                   <div className={`text-lg ${toneToText(s.tone)}`}>{toneIcon(s.tone)}</div>
                   <div>
-                    <p className="stat-label font-body">{s.label}</p>
+                    <p className="stat-label font-body text-text-strong text-lg ">{s.label}</p>
                     <p className={`stat-value font-header ${toneToText(s.tone)}`}>{s.value}</p>
                     <p className="stat-subtitle font-body">{s.subtitle}</p>
                   </div>
@@ -142,65 +142,74 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
           </div>
         </section>
 
-        <div className="main-grid">
-          <div className="compliance-graph-card">
-            <div className="issue-header">
-              <div className="issue-title">
-                <span className="issue-icon">▷</span>
-                <h4>Scan Results</h4>
-              </div>
-              <Dropdown
-                value={selectedChartType}
-                onChange={setSelectedChartType}
-                options={chartTypeOptions}
-              />
-            </div>
-            <ComplianceChart chartType={selectedChartType} dataInput={[3, 9, 85]} isDarkMode={isDarkMode} />
-          </div>
-
-          <div className="issues-section">
-            <div className="issue-card red">
-              <div className="issue-header">
-                <div className="issue-title">
-                  <span className="issue-icon">!</span>
-                  <h4>High Priority Issues</h4>
-                </div>
-                <span className="issue-count">3</span>
-              </div>
-              <p className="issue-desc">Critical security gaps</p>
-            </div>
-
-            <div className="issue-card orange">
-              <div className="issue-header">
-                <div className="issue-title">
-                  <span className="issue-icon">⚬</span>
-                  <h4>Medium Priority Issues</h4>
-                </div>
-                <span className="issue-count">9</span>
-              </div>
-              <p className="issue-desc">Important improvements needed</p>
-            </div>
-
-            <div className="issue-card emerald">
-              <div className="issue-header">
-                <div className="issue-title">
-                  <span className="issue-icon">✓</span>
-                  <h4>Scan Status</h4>
-                </div>
-                <span className="issue-status">Complete</span>
-              </div>
-              <p className="issue-desc">Ready for next scan</p>
-            </div>
-          </div>
+        {/* === PR4: Chart + Issues migrated to Tailwind tokens === */}
+<section className="container-max mt-8">
+  <div className="grid gap-6 lg:grid-cols-[2fr_0.9fr] items-stretch"> {/*2fr for chart, 0.9fr for issues*/}
+    {/* Chart card (fills height) */}
+    <div className="card flex flex-col">
+      <div className="issue-header">
+        <div className="issue-title">
+          <span className="text-text-muted">◷</span>
+          <h4 className="font-header">Scan Results</h4>
         </div>
+        <Dropdown
+          value={selectedChartType}
+          onChange={setSelectedChartType}
+          options={chartTypeOptions}
+        />
+      </div>
+      <div className="flex-1">
+        <div className="w-full h-full min-h-[420px]"> {/*increased min height for better appearance*/}
+          <ComplianceChart
+            chartType={selectedChartType}
+            dataInput={[3, 9, 85]}
+            isDarkMode={isDarkMode}
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Issues column stacked vertically, make equal height using flex-1 */}
+      <div className="issue-col">
+        <Card tone="bad" className="flex-1">
+          <div className="issue-header">
+            <div className="issue-title">
+              <span className="text-accent-bad">!</span>
+              <h4 className="font-header text-xl">High Priority Issues</h4>
+            </div>
+            <span className="font-header text-accent-bad text-3xl">3</span>
+          </div>
+          <p className="issue-desc">Critical security gaps</p>
+        </Card>
+
+        <Card tone="warn" className="flex-1">
+          <div className="issue-header">
+            <div className="issue-title">
+              <span className="text-accent-warn">⚬</span>
+              <h4 className="font-header text-xl">Medium Priority Issues</h4>
+            </div>
+            <span className="font-header text-accent-warn text-3xl">9</span>
+          </div>
+          <p className="issue-desc">Important improvements needed</p>
+        </Card>
+
+        <Card tone="good" className="flex-1">
+          <div className="issue-header">
+            <div className="issue-title">
+              <span className="text-accent-good">✓</span>
+              <h4 className="font-header text-xl">Scan Status</h4>
+            </div>
+            <span className="font-header text-accent-good text-3xl">Complete</span>
+          </div>
+          <p className="issue-desc">Ready for next scan</p>
+        </Card>
+      </div>
+    </div>
+  </section>
+
 
         <div className='fit'>
           <section className="below-grid">
-            <h3 className="section-title"></h3>
-            <div className="content"></div>
-          </section>
-
-          <section className="bottom-grid">
             <h3 className="section-title"></h3>
             <div className="content"></div>
           </section>
