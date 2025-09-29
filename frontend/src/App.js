@@ -41,7 +41,9 @@ const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle }) 
 
 function App() {
   // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(
+  process.env.NODE_ENV === 'development' ? true : false
+  );
   
   // Dashboard state
   const [sidebarWidth, setSidebarWidth] = useState(220);

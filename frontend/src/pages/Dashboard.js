@@ -3,17 +3,29 @@ import './Dashboard.css';
 import ComplianceChart from '../components/ComplianceChart';
 import Dropdown from '../components/Dropdown';
 import { useNavigate } from "react-router-dom";
+import { Card } from "../ui"; // from src/pages → src/ui
+
 
 
 export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggle }) {
   const navigate = useNavigate();
   
   const stats = [
-    { label: 'Compliance Score', value: '85%', className: 'emerald', subtitle: 'Overall security posture' },
-    { label: 'Failed Checks', value: '12', className: 'orange', subtitle: 'Requiring immediate attention' },
-    { label: 'Last Scan', value: '2h ago', className: 'gray', subtitle: 'Monday, August 14, 2025' },
-    { label: 'Total Controls', value: '97', className: 'gray', subtitle: 'CIS Rules Benchmark' }
+    { label: 'Compliance Score', value: '85%', tone: 'good', subtitle: 'Overall security posture' },
+    { label: 'Failed Checks', value: '12', tone: 'bad', subtitle: 'Requiring immediate attention' },
+    { label: 'Last Scan', value: '2h ago', tone: 'muted', subtitle: 'Monday, August 14, 2025' },
+    { label: 'Total Controls', value: '97', tone: 'muted', subtitle: 'CIS Rules Benchmark' }
   ];
+  
+  //helpers for tone-based text and icons
+  const toneToText = (t) =>
+  t === "good" ? "text-accent-good" :
+  t === "warn" ? "text-accent-warn" :
+  t === "bad"  ? "text-accent-bad"  :
+                 "text-text-muted";
+
+  const toneIcon = (t) => (t === "good" ? "✓" : t === "warn" ? "⚠" : t === "bad" ? "!" : "🕐");
+
 
   const benchmarkOptions = [
     { value: 'cis-google-cloud', label: 'CIS Google Cloud Platform Foundation' },
@@ -49,21 +61,21 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
       transition: 'margin-left 0.4s ease, width 0.4s ease'
     }}>
       <div className="dashboard-container">
-        <div className="dashboard-header">
-          <div className="header-content">
-            <div className="logo-container">
-              <img 
-                src="/AutoAudit.png" 
-                alt="AutoAudit Logo" 
-                className="logo-image"
-              />
+        <header className="border-b border-border-subtle">
+          <div className="container-max flex items-center justify-between gap-4 py-4">
+            {/* Left: Logo + Title */}
+            <div className="flex items-center gap-3">
+              {/* Swap this for <img src="/AutoAudit.png" className="h-9 w-9 rounded-md" alt="AutoAudit Logo" /> later */}
+              <div className="h-9 w-9 rounded-md bg-surface-2/80 flex items-center justify-center font-header text-sm">
+                AA
+              </div>
+              <div>
+                <h1 className="text-xl font-header leading-tight">AutoAudit</h1>
+                <p className="text-text-muted text-sm font-body">Microsoft 365 Compliance Platform</p>
+              </div>
             </div>
-            <div className="header-text">
-              <h1>AutoAudit</h1>
-              <p>Microsoft 365 Compliance Platform</p>
-            </div>
-          </div>
           
+          {/* Keep toggle for now, reusing existing css classes */}
           <div className="theme-toggle">
             <span className="theme-label">🌞</span>
             <label className="toggle-switch">
@@ -78,6 +90,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
             <span className="theme-label">🌙</span>
           </div>
         </div>
+         </header>
 
         <div className="top-toolbar">
           <div className="toolbar-left">
@@ -103,26 +116,24 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
           </div>
         </div>
 
-        <div className="stats-grid">
-          {stats.map((stat, index) => (
-            <div key={index} className={`stat-card ${stat.className}`}>
-              <div className="stat-content">
-                <div className="stat-info">
-                  <div className="stat-icon">
-                    {stat.className === 'emerald' && <span>✓</span>}
-                    {stat.className === 'orange' && <span>⚠</span>}
-                    {stat.className === 'gray' && <span>🕐</span>}
-                  </div>
-                  <div className="stat-text">
-                    <p className="stat-label">{stat.label}</p>
-                    <p className="stat-value">{stat.value}</p>
-                    <p className="stat-subtitle">{stat.subtitle}</p>
+
+        {/* Stats section now changed to use Tailwind grid & Card */}
+        <section className="container-max mt-6">
+          <div className="tw-stats-grid">{/* uses Tailwind helper to avoid .stats-grid conflict */}
+            {stats.map((s, i) => (
+              <Card key={i} tone={s.tone}>
+                <div className="flex items-start gap-3">
+                  <div className={`text-lg ${toneToText(s.tone)}`}>{toneIcon(s.tone)}</div>
+                  <div>
+                    <p className="stat-label font-body">{s.label}</p>
+                    <p className={`stat-value font-header ${toneToText(s.tone)}`}>{s.value}</p>
+                    <p className="stat-subtitle font-body">{s.subtitle}</p>
                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        </section>
 
         <div className="main-grid">
           <div className="compliance-graph-card">
