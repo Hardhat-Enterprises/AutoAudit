@@ -117,9 +117,10 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
             <button className="toolbar-button secondary" onClick={handleEvidenceScanner}>
               Evidence Scanner
             </button>
-            <button className="toolbar-button primary" onClick={handleRunNewScan}>
+            {/* Trial new shared UI Button for primary CTA */}
+            <Button variant="primary" size="md" onClick={handleRunNewScan}>
               Run New Scan
-            </button>
+            </Button>
           </div>
         </div>
 
