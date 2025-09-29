@@ -28,10 +28,17 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
 
 
   const benchmarkOptions = [
+    { value: 'apra-cps-234', label: 'APRA CPS 234 Information Security' },
+    { value: 'essential-eight', label: 'Australian Cyber Security Centre Essential Eight' },
     { value: 'cis-google-cloud', label: 'CIS Google Cloud Platform Foundation' },
     { value: 'cis-microsoft-365', label: 'CIS Microsoft 365 Foundation' },
-    { value: 'nist-cybersecurity', label: 'NIST Cybersecurity Framework' },
+    { value: 'cobit', label: 'COBIT Control Objectives for Information and Related Technologies' },
+    { value: 'gdpr', label: 'GDPR General Data Protection Regulation' },
+    { value: 'hipaa', label: 'HIPAA Health Insurance Portability and Accountability Act' },
     { value: 'iso-27001', label: 'ISO 27001' },
+    { value: 'nist-cybersecurity', label: 'NIST Cybersecurity Framework' },
+    { value: 'pci-dss', label: 'PCI DSS (Payment Card Industry Data Security Standard)' },
+    { value: 'soc-2', label: 'SOC 2 (Trust Services Criteria)' }, 
   ];
 
   const chartTypeOptions = [
