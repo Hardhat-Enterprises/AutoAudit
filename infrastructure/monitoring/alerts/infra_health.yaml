@@ -1,0 +1,77 @@
+#AutoAudit Infrastructure Health Alerts - Prometheus Alerting Rules
+#File: infra_health.yaml
+#Location: /infrastructure/monitoring/alerts/
+#Description: Defines critical and warning severity infrastructure health alerts.
+#Author: Senior Lead, AutoAudit DevSecOps Team
+#Last Updated: 2025-09-17
+
+groups:
+- name: infrastructure.rules
+  interval: 30s
+  
+  rules:
+  - alert: NodeCPUSaturation
+    
+    expr: |
+      100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+    
+    for: 5m
+    
+    labels:
+      severity: critical
+      team: devops
+      service: node-exporter
+      environment: production
+    
+    annotations:
+      
+      summary: "Critical: Node CPU saturation above 90%"
+      
+      description: |
+        CPU idle time below 10% sustained for more than 5 minutes on node instance {{ $labels.instance }}.
+        This indicates potential CPU resource exhaustion, which may affect node performance.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#infrastructurenodecpusaturation"
+
+  - alert: PodRestartsHigh
+    
+    expr: |
+      increase(kube_pod_container_status_restarts_total[10m]) > 3
+    
+    for: 10m
+    
+    labels:
+      severity: warning
+      team: devops
+      service: kubelet
+      environment: production
+    
+    annotations:
+      
+      summary: "Warning: High pod container restarts"
+      
+      description: |
+        More than three container restarts detected in the last 10 minutes for pod {{ $labels.pod }}.
+        Frequent restarts may indicate application instability or resource constraints.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#infrastructurepodrestartshigh"
+
+  - alert: DiskSpaceLow
+    
+    expr: |
+      (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+    
+    for: 15m
+    
+    labels:
+      severity: critical
+      team: devops
+      service: node-exporter
+      environment: production
+    
+    annotations:
+      
+      summary: "Critical: Disk space below 15% on root filesystem"
+      
+      description: |
+        Available disk space on root filesystem is below 15% for more than 15 minutes on node {{ $labels.instance }}.
+        Immediate cleanup or capacity expansion is required to prevent service disruption.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#infrastructurediskspacelow"
