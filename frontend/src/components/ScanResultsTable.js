@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// --- helpers ----------------------------------------------------
+// Helpers
 function SevIcon({ sev }) {
   const s = typeof sev === "string" ? sev.toLowerCase() : "";
   if (s === "high") {
@@ -26,7 +26,7 @@ function SevIcon({ sev }) {
   return <CheckCircle className="h-4 w-4" style={{ color: "rgb(var(--accent-good))" }} />;
 }
 
-// Use a plain span instead of <Badge> because badge properties could override and turn it all mute
+// Use a plain span instead of <Badge> because badge properties would override and turn it all mute, also can reconsider if redundant with SevIcon
 function SevBadge({ sev = "Medium" }) {
   const s = typeof sev === "string" ? sev.toLowerCase() : "";
   const pretty = s.charAt(0).toUpperCase() + s.slice(1);
@@ -74,7 +74,7 @@ function CopyButton({ text }) {
   );
 }
 
-// --- component --------------------------------------------------
+// Component
 export default function ScanResultsTable() {
   const [checks, setChecks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -131,7 +131,7 @@ export default function ScanResultsTable() {
       </div>
 
       <div className="p-5 space-y-4">
-        {/* Filter buttons */}
+        {/* Filter buttons*/}
         <div className="flex flex-wrap gap-2 mb-2">
           {[
             { key: "all", label: "All" },
@@ -190,7 +190,8 @@ export default function ScanResultsTable() {
                         >
                           {check.controlId}: {check.title}
                         </h3>
-                        <SevBadge sev={check.severity} /> {/* ⭐⭐⭐ fixed color */}
+                        <SevBadge sev={check.severity} />
+                        {/* Can consider removing SevBadge if feels redundant since SevIcon already indicate status, this is just clearer */}
                       </div>
 
                       <div
