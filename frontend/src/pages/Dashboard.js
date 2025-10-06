@@ -4,7 +4,7 @@ import ComplianceChart from '../components/ComplianceChart';
 import Dropdown from '../components/Dropdown';
 import { useNavigate } from "react-router-dom";
 import { Card, Button } from "../ui"; // from src/pages → src/ui // add CTA Button
-
+import ScanResultsTable from "../components/ScanResultsTable";
 
 
 export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggle }) {
@@ -210,9 +210,8 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
 
 
         <div className='fit'>
-          <section className="below-grid">
-            <h3 className="section-title"></h3>
-            <div className="content"></div>
+          <section className="container-max mt-8">
+            <ScanResultsTable />
           </section>
         </div>
       </div>

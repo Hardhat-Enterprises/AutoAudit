@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Toaster } from "sonner";
 
 // Dashboard Components
 import Sidebar from './components/Sidebar';
@@ -180,7 +181,9 @@ function App() {
           } 
         />
       </Routes>
+      <Toaster theme="dark" position="top-right" richColors toastOptions={{ duration: 2000 }} />
     </div>
+    
   );
 }
 

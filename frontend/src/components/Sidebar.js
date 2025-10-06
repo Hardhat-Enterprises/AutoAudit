@@ -4,7 +4,7 @@
 
 import React, { useState } from "react";
 import './Sidebar.css';
-
+import { LayoutDashboard, ShieldCheck, ListChecks, FileChartColumn, UserCircle2 } from "lucide-react";
 
 //Button component that we use throughout the sidebar
 //Parameters:

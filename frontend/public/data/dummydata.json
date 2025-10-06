@@ -1,0 +1,387 @@
+[
+  {
+    "id": "gcp-iam-001",
+    "controlId": "CIS-GCP-1.4",
+    "title": "IAM Users Should Not Have Administrative Privileges",
+    "category": "Identity & Access Management",
+    "severity": "High",
+    "status": "Failed",
+    "lastChecked": "2 hours ago",
+    "affectedResources": 8,
+    "resourcesScanned": 100,
+    "compliance": 92,
+    "overview": {
+      "affectedBreakdown": [
+        { "label": "Users with Owner Role", "count": 3, "percentage": 3, "status": "high" },
+        { "label": "Users with Editor Role", "count": 5, "percentage": 5, "status": "high" }
+      ],
+      "categoryStats": {
+        "category": "Identity & Access Management",
+        "percentage": 92,
+        "trend": "down",
+        "details": [
+          { "label": "Total Users", "value": 100, "status": "good" },
+          { "label": "Users with Admin Roles", "value": 8, "status": "high" }
+        ]
+      }
+    },
+    "verification": {
+      "commands": [
+        {
+          "code": "gcloud projects get-iam-policy PROJECT_ID --flatten='bindings[].members' --format='table(bindings.role,bindings.members)' --filter='bindings.role:(roles/owner roles/editor roles/resourcemanager.projectIamAdmin roles/iam.securityAdmin)'",
+          "explanation": "Lists bindings for high-risk administrative roles (Owner, Editor, IAM Admin, Security Admin) and expands each to the exact principals, making it easy to spot over-privileged users or service accounts.",
+          "purpose": "Identify users granted administrative privileges."
+        },
+        {
+          "code": "gcloud iam roles list --filter='stage:GA' --format='table(name,title,description)' | grep -Ei 'owner|editor|admin'",
+          "explanation": "Surfaces predefined roles containing admin capabilities so you can reconcile risky assignments against least-privilege expectations.",
+          "purpose": "Identify predefined admin-style roles."
+        }
+      ],
+      "apiEndpoints": [
+        {
+          "code": "GET https://cloudresourcemanager.googleapis.com/v1/projects/PROJECT_ID:getIamPolicy",
+          "explanation": "Retrieves the project IAM policy as JSON so automation can parse and flag administrative bindings reliably.",
+          "purpose": "Programmatic audit of admin assignments."
+        }
+      ],
+      "auditLogs": [
+        {
+          "code": "resource.type=\"project\" AND protoPayload.serviceName=\"cloudresourcemanager.googleapis.com\" AND protoPayload.methodName=\"SetIamPolicy\"",
+          "explanation": "Shows policy-change activity for the project so you can trace who granted or removed administrative access and when.",
+          "purpose": "Trace who/when admin access was granted."
+        }
+      ]
+    },
+    "remediation": {
+      "steps": [
+        "Replace Owner/Editor with least-privilege custom roles.",
+        "Restrict IAM Admin usage to break-glass flows with approvals.",
+        "Enforce periodic access reviews for elevated roles.",
+        "Alert on SetIamPolicy events that grant admin roles."
+      ],
+      "code": {
+        "verificationCommands": [
+          {
+            "title": "Export Admin Bindings (CSV)",
+            "description": "Dumps principals bound to admin roles for review and sign-off.",
+            "code": "PROJECT_ID=\"your-project-id\"; gcloud projects get-iam-policy \"$PROJECT_ID\" --format=json | jq -r '.bindings[] | select(.role|test(\"roles/(owner|editor|resourcemanager.projectIamAdmin|iam.securityAdmin)\")) as $b | $b.members[] | [ $b.role, . ] | @csv'"
+          }
+        ],
+        "scripts": [
+          {
+            "title": "Admin Access Summary",
+            "description": "Summarizes counts by admin role for snapshot reporting.",
+            "code": "PROJECT_ID=\"your-project-id\"; TMP=$(mktemp); gcloud projects get-iam-policy \"$PROJECT_ID\" --format=json > \"$TMP\"; echo \"Role,Count\"; jq -r '.bindings[] | select(.role|test(\"roles/(owner|editor|resourcemanager.projectIamAdmin|iam.securityAdmin)\")) | [.role, (.members|length)] | @csv' \"$TMP\""
+          }
+        ],
+        "api": [
+          {
+            "title": "Replace Admin Binding via API",
+            "description": "Example of removing Editor and granting Viewer to a specific user.",
+            "code": "POST https://cloudresourcemanager.googleapis.com/v1/projects/PROJECT_ID:setIamPolicy\nAuthorization: Bearer ACCESS_TOKEN\nContent-Type: application/json\n\n{\n  \"policy\": {\n    \"bindings\": [\n      {\n        \"role\": \"roles/viewer\",\n        \"members\": [\"user:user@example.com\"]\n      }\n    ]\n  }\n}"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "gcp-storage-001",
+    "controlId": "CIS-GCP-5.1",
+    "title": "Cloud Storage Bucket Public Access Prevention",
+    "category": "Cloud Storage Security",
+    "severity": "High",
+    "status": "Failed",
+    "lastChecked": "2 hours ago",
+    "affectedResources": 5,
+    "resourcesScanned": 60,
+    "compliance": 91,
+    "overview": {
+      "affectedBreakdown": [
+        { "label": "Publicly Accessible Buckets", "count": 5, "percentage": 8.3, "status": "high" }
+      ],
+      "categoryStats": {
+        "category": "Cloud Storage Security",
+        "percentage": 91,
+        "trend": "down",
+        "details": [
+          { "label": "Total Buckets", "value": 60, "status": "good" },
+          { "label": "Encrypted Buckets", "value": 55, "status": "good" }
+        ]
+      }
+    },
+    "verification": {
+      "commands": [
+        {
+          "code": "for B in $(gcloud storage buckets list --format='value(name)'); do echo \"== $B ==\"; gsutil iam get gs://$B | egrep -n 'allUsers|allAuthenticatedUsers' || echo 'No public principals'; done",
+          "explanation": "Iterates through each bucket and checks for the special principals that confer public access, producing a quick pass/fail readout per bucket.",
+          "purpose": "Detect publicly accessible buckets."
+        },
+        {
+          "code": "gcloud storage buckets list --format='table(name,uniform_bucket_level_access.enabled,versioning.enabled)'",
+          "explanation": "Reports uniform access and versioning, two features that reduce accidental exposure and support safer object lifecycle practices.",
+          "purpose": "Check uniform access and versioning."
+        }
+      ],
+      "apiEndpoints": [
+        {
+          "code": "GET https://storage.googleapis.com/storage/v1/b/BUCKET_NAME/iam",
+          "explanation": "Fetches the exact IAM policy for a bucket, useful for automated verification and CI checks after remediation.",
+          "purpose": "Fetch per-bucket IAM via API."
+        }
+      ],
+      "auditLogs": [
+        {
+          "code": "resource.type=\"gcs_bucket\" AND protoPayload.methodName=\"storage.setIamPermissions\"",
+          "explanation": "Shows who changed bucket IAM and when so you can validate that public access was removed and stays removed.",
+          "purpose": "Detect policy changes on buckets."
+        }
+      ]
+    },
+    "remediation": {
+      "steps": [
+        "Remove allUsers/allAuthenticatedUsers principals.",
+        "Enable uniform bucket-level access.",
+        "Constrain object access to least-privilege roles."
+      ],
+      "code": {
+        "verificationCommands": [
+          {
+            "title": "Confirm No Public Access",
+            "description": "Re-checks all buckets and flags any that still expose public principals.",
+            "code": "gcloud storage buckets list --format='value(name)' | while read B; do gsutil iam get gs://$B | egrep -q 'allUsers|allAuthenticatedUsers' && echo \"FAIL $B\" || echo \"OK   $B\"; done"
+          }
+        ],
+        "scripts": [
+          {
+            "title": "Enable Uniform Access Everywhere",
+            "description": "Patches all buckets to enforce uniform access.",
+            "code": "for B in $(gcloud storage buckets list --format='value(name)'); do echo \"Patching $B\"; gcloud storage buckets update gs://$B --uniform-bucket-level-access; done"
+          }
+        ],
+        "api": [
+          {
+            "title": "Patch Bucket (Uniform Access)",
+            "description": "Enforces uniform access via JSON API.",
+            "code": "PATCH https://storage.googleapis.com/storage/v1/b/BUCKET_NAME\nAuthorization: Bearer ACCESS_TOKEN\nContent-Type: application/json\n\n{ \"uniformBucketLevelAccess\": { \"enabled\": true } }"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "gcp-network-001",
+    "controlId": "CIS-GCP-3.6",
+    "title": "VPC Flow Logs Should Be Enabled",
+    "category": "Network Security",
+    "severity": "Medium",
+    "status": "Failed",
+    "lastChecked": "2 hours ago",
+    "affectedResources": 3,
+    "resourcesScanned": 50,
+    "compliance": 94,
+    "overview": {
+      "affectedBreakdown": [
+        { "label": "Subnets without Flow Logs", "count": 3, "percentage": 6, "status": "medium" }
+      ],
+      "categoryStats": {
+        "category": "Network Security",
+        "percentage": 94,
+        "trend": "stable",
+        "details": [
+          { "label": "Total Subnets", "value": 50, "status": "good" },
+          { "label": "Flow Logs Enabled", "value": 47, "status": "good" }
+        ]
+      }
+    },
+    "verification": {
+      "commands": [
+        {
+          "code": "gcloud compute networks subnets list --format='table(name,region,network,enableFlowLogs,logConfig.flowSampling,logConfig.metadata)'",
+          "explanation": "Shows each subnet’s flow-log switch and logging metadata so you can quickly spot gaps and confirm sampling/metadata meet monitoring needs.",
+          "purpose": "Find subnets missing logs."
+        }
+      ],
+      "apiEndpoints": [
+        {
+          "code": "GET https://compute.googleapis.com/compute/v1/projects/PROJECT_ID/regions/REGION/subnetworks",
+          "explanation": "Returns subnet config via API—including flow-log status—for automated nightly compliance checks.",
+          "purpose": "Enumerate subnetworks by region."
+        }
+      ],
+      "auditLogs": [
+        {
+          "code": "resource.type=\"gce_subnetwork\" AND protoPayload.methodName=\"compute.subnetworks.patch\"",
+          "explanation": "Shows who modified subnet logging and when, useful for enforcing and auditing flow-logs requirements.",
+          "purpose": "Track subnet config changes."
+        }
+      ]
+    },
+    "remediation": {
+      "steps": [
+        "Enable Flow Logs on all subnets.",
+        "Export logs to Storage/BigQuery and alert on ingestion failures."
+      ],
+      "code": {
+        "verificationCommands": [
+          {
+            "title": "CSV Audit of Flow Logs",
+            "description": "Produces a quick report of flow-log status per subnet.",
+            "code": "gcloud compute networks subnets list --format='csv(name,region,enableFlowLogs,logConfig.flowSampling)'"
+          }
+        ],
+        "scripts": [
+          {
+            "title": "Enable Flow Logs Loop",
+            "description": "Turns on flow logs and sets standard sampling/metadata everywhere.",
+            "code": "for R in $(gcloud compute regions list --format='value(name)'); do for S in $(gcloud compute networks subnets list --regions=$R --format='value(name)'); do gcloud compute networks subnets update $S --region=$R --enable-flow-logs --logging-flow-sampling=0.1 --logging-metadata=INCLUDE_ALL_METADATA --quiet; done; done"
+          }
+        ],
+        "api": [
+          {
+            "title": "Enable Flow Logs via API",
+            "description": "PATCHes subnet config to turn on flow logging.",
+            "code": "PATCH https://compute.googleapis.com/compute/v1/projects/PROJECT_ID/regions/REGION/subnetworks/SUBNET_NAME\nAuthorization: Bearer ACCESS_TOKEN\nContent-Type: application/json\n\n{ \"enableFlowLogs\": true, \"logConfig\": { \"enable\": true, \"flowSampling\": 0.1, \"metadata\": \"INCLUDE_ALL_METADATA\" } }"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "gcp-compute-001",
+    "controlId": "CIS-GCP-4.1",
+    "title": "Ensure Instances Are Not Configured To Use the Default Service Account",
+    "category": "Compute Engine",
+    "severity": "Low",
+    "status": "Passed",
+    "lastChecked": "2 hours ago",
+    "affectedResources": 0,
+    "resourcesScanned": 40,
+    "compliance": 100,
+    "overview": {
+      "affectedBreakdown": [
+        { "label": "Instances Using Default SA", "count": 0, "percentage": 0, "status": "good" }
+      ],
+      "categoryStats": {
+        "category": "Compute Engine",
+        "percentage": 100,
+        "trend": "up",
+        "details": [
+          { "label": "Total Instances Scanned", "value": 40, "status": "good" },
+          { "label": "Instances Using Custom SA", "value": 40, "status": "good" }
+        ]
+      }
+    },
+    "verification": {
+      "commands": [
+        {
+          "code": "gcloud compute instances list --format='table(name,zone,serviceAccounts[0].email,serviceAccounts[0].scopes[0:3])'",
+          "explanation": "Lists instances with the attached service account and top scopes so you can confirm default accounts are not in use and that scopes avoid overly broad access.",
+          "purpose": "Confirm instances use custom service accounts."
+        },
+        {
+          "code": "gcloud compute instances list --format='value(name,zone)' | while read N Z; do SA=$(gcloud compute instances describe \"$N\" --zone=\"$Z\" --format='value(serviceAccounts[0].email)'); echo \"$N,$Z,$SA\"; done | grep 'compute@developer.gserviceaccount.com' || echo 'No default SAs found'",
+          "explanation": "Performs a quick sweep specifically for the default compute service account to provide a definitive pass/fail signal.",
+          "purpose": "Spot-check for default service accounts."
+        }
+      ]
+    },
+    "remediation": {
+      "steps": [
+        "No remediation required — control is compliant.",
+        "Keep enforcing custom SAs in instance templates and CI/CD."
+      ],
+      "code": {
+        "verificationCommands": []
+      }
+    }
+  },
+  {
+    "id": "gcp-sql-001",
+    "controlId": "CIS-GCP-6.7",
+    "title": "Ensure Cloud SQL Automated Backups Are Enabled",
+    "category": "Cloud SQL",
+    "severity": "Low",
+    "status": "Passed",
+    "lastChecked": "2 hours ago",
+    "affectedResources": 0,
+    "resourcesScanned": 20,
+    "compliance": 100,
+    "overview": {
+      "affectedBreakdown": [
+        { "label": "Instances Missing Backups", "count": 0, "percentage": 0, "status": "good" }
+      ],
+      "categoryStats": {
+        "category": "Cloud SQL",
+        "percentage": 100,
+        "trend": "up",
+        "details": [
+          { "label": "Total DB Instances Scanned", "value": 20, "status": "good" },
+          { "label": "Automated Backups Enabled", "value": 20, "status": "good" }
+        ]
+      }
+    },
+    "verification": {
+      "commands": [
+        {
+          "code": "gcloud sql instances list --format='table(name,databaseVersion,settings.backupConfiguration.enabled)'",
+          "explanation": "Shows whether automated backups are enabled per instance so you can verify complete coverage across the fleet.",
+          "purpose": "Confirm backups are enabled for all Cloud SQL instances."
+        }
+      ]
+    },
+    "remediation": {
+      "steps": [
+        "No remediation required — control is compliant.",
+        "Monitor for newly created instances without backups."
+      ],
+      "code": {
+        "verificationCommands": []
+      }
+    }
+  },
+  {
+    "id": "gcp-bigquery-001",
+    "controlId": "CIS-GCP-7.3",
+    "title": "Ensure a Default CMEK is Specified for All BigQuery Datasets",
+    "category": "BigQuery",
+    "severity": "Low",
+    "status": "Passed",
+    "lastChecked": "2 hours ago",
+    "affectedResources": 0,
+    "resourcesScanned": 15,
+    "compliance": 100,
+    "overview": {
+      "affectedBreakdown": [
+        { "label": "Datasets Without Default CMEK", "count": 0, "percentage": 0, "status": "good" }
+      ],
+      "categoryStats": {
+        "category": "BigQuery",
+        "percentage": 100,
+        "trend": "up",
+        "details": [
+          { "label": "Total Datasets Scanned", "value": 15, "status": "good" },
+          { "label": "Datasets with Default CMEK", "value": 15, "status": "good" }
+        ]
+      }
+    },
+    "verification": {
+      "commands": [
+        {
+          "code": "bq ls --format=json | jq -r '.[].datasetReference.datasetId' | while read D; do bq --format=json show --dataset_id \"$D\" | jq -r '.defaultEncryptionConfiguration.kmsKeyName // \"NO_CMEK\"' | grep -q NO_CMEK && echo \"$D: NO_CMEK\" || echo \"$D: OK\"; done",
+          "explanation": "Enumerates datasets and checks for a default KMS key; any dataset without one is flagged so you can remediate CMEK coverage gaps.",
+          "purpose": "Verify default CMEK is set for each dataset."
+        }
+      ]
+    },
+    "remediation": {
+      "steps": [
+        "No remediation required — control is compliant.",
+        "Require CMEK in dataset creation policies."
+      ],
+      "code": {
+        "verificationCommands": []
+      }
+    }
+  }
+]
