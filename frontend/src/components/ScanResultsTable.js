@@ -18,12 +18,12 @@ import { toast } from "sonner";
 function SevIcon({ sev }) {
   const s = typeof sev === "string" ? sev.toLowerCase() : "";
   if (s === "high") {
-    return <XCircle className="h-4 w-4" style={{ color: "rgb(var(--accent-bad))" }} />;
+    return <XCircle size={16} style={{ color: "rgb(var(--accent-bad))" }} />;
   }
   if (s === "medium") {
-    return <AlertTriangle className="h-4 w-4" style={{ color: "rgb(var(--accent-warn))" }} />;
+    return <AlertTriangle size={16} style={{ color: "rgb(var(--accent-warn))" }} />;
   }
-  return <CheckCircle className="h-4 w-4" style={{ color: "rgb(var(--accent-good))" }} />;
+  return <CheckCircle size={16} style={{ color: "rgb(var(--accent-good))" }} />;
 }
 
 // Use a plain span instead of <Badge> because badge properties would override and turn it all mute, also can reconsider if redundant with SevIcon
@@ -125,7 +125,7 @@ export default function ScanResultsTable() {
           className="text-xl flex items-center gap-2"
           style={{ color: "rgb(var(--text-strong))", fontFamily: "var(--font-header)" }}
         >
-          <ShieldAlert className="h-5 w-5" style={{ color: "rgb(var(--accent-bad))" }} />
+          <ShieldAlert size={20} style={{ color: "rgb(var(--accent-bad))" }} />
           Scan Results
         </h2>
       </div>
@@ -199,15 +199,15 @@ export default function ScanResultsTable() {
                         style={{ color: "rgb(var(--text-muted))" }}
                       >
                         <span>
-                          <Globe className="h-3 w-3 inline mr-1" />
+                          <Globe size={9} className="inline mr-1" />
                           {check.category}
                         </span>
                         <span>
-                          <Database className="h-3 w-3 inline mr-1" />
+                          <Database size={9} className="inline mr-1" />
                           {check.affectedResources} affected resources
                         </span>
                         <span>
-                          <Clock className="h-3 w-3 inline mr-1" />
+                          <Clock size={9} className="inline mr-1" />
                           {check.lastChecked}
                         </span>
                       </div>
@@ -218,7 +218,7 @@ export default function ScanResultsTable() {
                       style={{ color: "rgb(var(--text-muted))" }}
                     >
                       <span>{check.compliance}% compliant</span>
-                      <ExternalLink className="h-4 w-4" style={{ color: "rgb(var(--accent-teal))" }} />
+                      <ExternalLink size={16} style={{ color: "rgb(var(--accent-teal))" }} />
                     </div>
                   </div>
                 </div>

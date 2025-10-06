@@ -4,7 +4,7 @@
 
 import React, { useState } from "react";
 import './Sidebar.css';
-import { LayoutDashboard, ShieldCheck, ListChecks, FileChartColumn, UserCircle2 } from "lucide-react";
+import { LayoutDashboard, ShieldCheck, Percent, Shield, ListChecks, Search, Settings, FileChartColumn, UserCircle2, ListCheck } from "lucide-react";
 
 //Button component that we use throughout the sidebar
 //Parameters:
@@ -77,7 +77,7 @@ console.log('Sidebar isDarkMode:', isDarkMode);
                 onChange={handleSearchChange}
                 className="search-input"
               />
-              <span className="search-icon">🔍</span>
+              <span className="search-icon"><Search size={16}/></span>
             </div>
           ) : (
             <button className="toggle-button" onClick={toggleSidebar}>
@@ -91,7 +91,7 @@ console.log('Sidebar isDarkMode:', isDarkMode);
           <NavButton 
             href={'/'} 
             name={'Home'} 
-            icon={'🏠'} 
+            icon={<ShieldCheck size={16} />} 
             isExpanded={isExpanded}
             isActive={activeItem === 'home'}
             onClick={() => handleNavClick('home')}
@@ -99,7 +99,7 @@ console.log('Sidebar isDarkMode:', isDarkMode);
           <NavButton 
             href={'/score'} 
             name={'Score'} 
-            icon={'⭐'} 
+            icon={<Percent size={16}/>} 
             isExpanded={isExpanded}
             isActive={activeItem === 'score'}
             onClick={() => handleNavClick('score')}
@@ -107,7 +107,7 @@ console.log('Sidebar isDarkMode:', isDarkMode);
           <NavButton 
             href={'/recommendations'} 
             name={'Tasks'} 
-            icon={'✓'} 
+            icon={<ListChecks size={16}/>} 
             isExpanded={isExpanded}
             isActive={activeItem === 'tasks'}
             onClick={() => handleNavClick('tasks')}
@@ -115,7 +115,7 @@ console.log('Sidebar isDarkMode:', isDarkMode);
           <NavButton 
             href={'/reports'} 
             name={'Reports'} 
-            icon={'📄'} 
+            icon={<FileChartColumn size={16}/>} 
             isExpanded={isExpanded}
             isActive={activeItem === 'reports'}
             onClick={() => handleNavClick('reports')}
@@ -127,7 +127,7 @@ console.log('Sidebar isDarkMode:', isDarkMode);
           <NavButton 
             href={'/settings'} 
             name={'Settings'} 
-            icon={'⚙'} 
+            icon={<Settings size={16}/>} 
             isExpanded={isExpanded}
             isActive={activeItem === 'settings'}
             onClick={() => handleNavClick('settings')}
@@ -135,7 +135,7 @@ console.log('Sidebar isDarkMode:', isDarkMode);
           <NavButton 
             href={'/account'} 
             name={'Account'} 
-            icon={'👤'} 
+            icon={<UserCircle2 size={16}/>} 
             isExpanded={isExpanded}
             isActive={activeItem === 'account'}
             onClick={() => handleNavClick('account')}

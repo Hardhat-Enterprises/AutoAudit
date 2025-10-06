@@ -28,7 +28,7 @@
 /* Light theme explicit */
 .sidebar.light {
   background-color: #ffffff;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 4px 0 10px rgba(100, 223, 223, 0.1);
   outline: 1px solid #e2e8f0;
 }
 

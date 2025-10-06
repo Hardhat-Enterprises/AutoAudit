@@ -1,24 +1,25 @@
-/* Theme Variables */
-:root {
+/* Dev notes: Dashboard has been migrated to TailwindCSS, this file can be deleted. */
+/* Theme Variables
+:root { */
   /* Dark theme (default) */
-  --bg-primary: #0f172a;
+  /* --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
   --text-primary: #ffffff;
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
-  --border-color: #334155;
+  --border-color: #334155; */
   
   /* Accent colors */
-  --emerald: #10b981;
+  /* --emerald: #10b981;
   --orange: #f97316;
   --red: #ef4444;
   --gray: #64748b;
   --teal: #64DFDF; /* AutoAudit teal */
-}
+/* } */
 
 /* Light theme variables */
-.dashboard.light {
+/* .dashboard.light {
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #e2e8f0;
@@ -38,7 +39,7 @@
 .dashboard-container {
   max-width: 1200px;
   margin: 0 auto;
-}
+} */
 
 /* .dashboard-header {
   display: flex;
@@ -86,7 +87,7 @@
 } */
 
 /* Styles for top toolbar */
-.top-toolbar {
+/* .top-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -150,7 +151,7 @@
 }
 
 /* Updated primary button to use teal */
-.toolbar-button.primary {
+/* .toolbar-button.primary {
   background: var(--teal);
   color: #0f172a;
   border: 1px solid var(--teal);
@@ -165,7 +166,7 @@
 
 .button-icon {
   font-size: 14px;
-}
+} */
 
 /* .header-text h1 {
   font-size: 24px;
@@ -183,7 +184,7 @@
 } */
 
 /* Theme Toggle Styles */
-.theme-toggle {
+/* .theme-toggle {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -236,7 +237,7 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(24px);
-}
+} */
 
 /* .stats-grid {
   display: grid;
@@ -360,7 +361,7 @@ input:checked + .slider:before {
   gap: 24px;
 } */
 
-.below-grid {
+/* .below-grid {
   margin-top: 24px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -382,7 +383,7 @@ input:checked + .slider:before {
   width: 100%;
   grid-column: 1 / 2;
   transition: all 0.3s ease;
-}
+} */
 
 /* .compliance-graph-card {
   background: var(--bg-secondary);
@@ -404,7 +405,7 @@ input:checked + .slider:before {
   border-radius: 6px;
 } */
 
-.compliance-section {
+/* .compliance-section {
   background: var(--bg-secondary);
   border-radius: 12px;
   padding: 24px;
@@ -413,7 +414,7 @@ input:checked + .slider:before {
   transition: all 0.3s ease;
 }
 
-/* .issues-section {
+.issues-section {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -506,14 +507,14 @@ input:checked + .slider:before {
   color: var(--emerald);
   font-size: 18px;
 } */
-
-/* .issue-desc {
+/*  
+.issue-desc {
   color: var(--text-secondary);
   font-size: 12px;
   margin: 0;
   line-height: 1.4;
   transition: color 0.3s ease;
-} */
+}
 
 .fit {
   width: 100%;
@@ -576,4 +577,4 @@ input:checked + .slider:before {
   .toolbar-button {
     justify-content: center;
   }
-}
+} */

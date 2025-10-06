@@ -3,17 +3,19 @@ import './Dashboard.css';
 import ComplianceChart from '../components/ComplianceChart';
 import Dropdown from '../components/Dropdown';
 import { useNavigate } from "react-router-dom";
-import { Card, Button } from "../ui"; // from src/pages → src/ui // add CTA Button
+import { Card, Button } from "../ui"; // from src/pages > src/ui // add CTA Button
 import ScanResultsTable from "../components/ScanResultsTable";
-
+import { Sun, Moon, AlertTriangle, CircleCheck, CircleDot, PieChart } from 'lucide-react';
+import logoDark from "../assets/logo-dark.png";
+import logoLight from "../assets/logo-light.png";
 
 export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggle }) {
   const navigate = useNavigate();
   
   const stats = [
     { label: 'Compliance Score', value: '85%', tone: 'good', subtitle: 'Overall security posture' },
-    { label: 'Failed Checks', value: '12', tone: 'bad', subtitle: 'Requiring immediate attention' },
-    { label: 'Last Scan', value: '2h ago', tone: 'muted', subtitle: 'Monday, August 14, 2025' },
+    { label: 'Failed Checks', value: '16', tone: 'bad', subtitle: 'Requiring immediate attention' },
+    { label: 'Last Scan', value: '2h ago', tone: 'muted', subtitle: 'Wednesday, 22 September, 2025' },
     { label: 'Total Controls', value: '97', tone: 'muted', subtitle: 'CIS Rules Benchmark' }
   ];
   
@@ -24,7 +26,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
   t === "bad"  ? "text-accent-bad"  :
                  "text-text-muted";
 
-  const toneIcon = (t) => (t === "good" ? "✓" : t === "warn" ? "⚠" : t === "bad" ? "!" : "◉");
+  const toneIcon = (t) => (t === "good" ? <CircleCheck size={16}/> : t === "warn" ? <AlertTriangle size={16}/> : t === "bad" ? <AlertTriangle size={16}/> : <CircleDot size={16}/>);
 
 
   const benchmarkOptions = [
@@ -73,56 +75,65 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
             {/* Left: Logo + Title */}
             <div className="flex items-center gap-3">
               {/* Swap this for <img src="/AutoAudit.png" className="h-9 w-9 rounded-md" alt="AutoAudit Logo" /> later */}
-              <div className="h-9 w-9 rounded-md bg-surface-2/80 flex items-center justify-center font-header text-sm">
-                AA
-              </div>
+              <img
+                src={isDarkMode ? logoLight : logoDark}
+                alt="AutoAudit Logo"
+                className="w-20 rounded-md object-contain"
+              />
               <div>
-                <h1 className="text-xl font-header leading-tight">AutoAudit</h1>
+                <h1 className="text-xl font-header leading-tight text-text-strong">AutoAudit</h1>
                 <p className="text-text-muted text-sm font-body">Microsoft 365 Compliance Platform</p>
               </div>
             </div>
           
-          {/* Keep toggle for now, reusing existing css classes */}
-          <div className="theme-toggle">
-            <span className="theme-label">🌞</span>
-            <label className="toggle-switch">
-              <input 
-                type="checkbox" 
-                checked={isDarkMode} 
-                onChange={onThemeToggle}
-                aria-label="Toggle theme"
-              />
-              <span className="slider"></span>
-            </label>
-            <span className="theme-label">🌙</span>
-          </div>
+          {/* Dark/light theme tokens applied with proper a11y support*/}
+          <button
+            type="button"
+            onClick={onThemeToggle}
+            aria-pressed={isDarkMode}
+            aria-label="Toggle dark mode"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-card border border-border-subtle bg-surface-2/80 text-text-strong hover:bg-surface-2 transition"
+          >
+            <span>{isDarkMode ? <Moon size={16}/> : <Sun size={16} />}</span>
+            <span className="text-sm font-body">{isDarkMode ? "Dark" : "Light"}</span>
+          </button>
+
         </div>
          </header>
 
-        <div className="top-toolbar">
-          <div className="toolbar-left">
-            <span className="toolbar-label">Benchmark</span>
-            <Dropdown
-              value={selectedBenchmark}
-              onChange={setSelectedBenchmark}
-              options={benchmarkOptions}
-              isDarkMode={isDarkMode}
-            />
+        {/* Toolbar now tokeniesd */}
+        <section className="container-max">
+          <div className="toolbar" role="region" aria-label="Dashboard actions">
+            <div className="toolbar-left">
+              <span
+                id="benchmark-label"
+                className="text-text-strong font-body text-sm shrink-0 whitespace-normal sm:whitespace-nowrap"
+              >
+                Benchmark
+              </span>
+              <Dropdown
+                aria-labelledby="benchmark-label"
+                value={selectedBenchmark}
+                onChange={setSelectedBenchmark}
+                options={benchmarkOptions}
+                isDarkMode={isDarkMode}
+                className="w-full sm:w-auto min-w-0"
+              />
+            </div>
+
+            <div className="toolbar-right">
+              <Button variant="secondary" size="md" type="button" onClick={handleExportReport}>
+                Export Report
+              </Button>
+              <Button variant="secondary" size="md" type="button" onClick={handleEvidenceScanner}>
+                Evidence Scanner
+              </Button>
+              <Button variant="primary"  size="md" type="button" onClick={handleRunNewScan}>
+                Run New Scan
+              </Button>
+            </div>
           </div>
-          
-          <div className="toolbar-right">
-            <button className="toolbar-button secondary" onClick={handleExportReport}>
-              Export Report
-            </button>
-            <button className="toolbar-button secondary" onClick={handleEvidenceScanner}>
-              Evidence Scanner
-            </button>
-            {/* Trial new shared UI Button for primary CTA */}
-            <Button variant="primary" size="md" onClick={handleRunNewScan}>
-              Run New Scan
-            </Button>
-          </div>
-        </div>
+        </section>
 
 
         {/* Stats section now changed to use Tailwind grid & Card */}
@@ -131,7 +142,11 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
             {stats.map((s, i) => (
               <Card key={i} tone={s.tone}>
                 <div className="flex items-start gap-3">
-                  <div className={`text-lg ${toneToText(s.tone)}`}>{toneIcon(s.tone)}</div>
+                  <div className={`text-lg ${toneToText(s.tone)} flex items-center`}>
+                    <span className="inline-flex">
+                      {toneIcon(s.tone, "h-4 w-4 align-middle relative top-px")}
+                    </span>
+                  </div>
                   <div>
                     <p className="stat-label font-body text-text-strong text-lg ">{s.label}</p>
                     <p className={`stat-value font-header ${toneToText(s.tone)}`}>{s.value}</p>
@@ -150,8 +165,8 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
     <div className="card flex flex-col">
       <div className="issue-header">
         <div className="issue-title">
-          <span className="text-text-muted">◷</span>
-          <h4 className="font-header">Scan Results</h4>
+          <span className="text-text-muted">< PieChart size={16}/></span>
+          <h4 className="font-header text-text-strong">Scan Results</h4>
         </div>
         <Dropdown
           value={selectedChartType}
@@ -163,7 +178,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
         <div className="w-full h-full min-h-[420px]"> {/*increased min height for better appearance*/}
           <ComplianceChart
             chartType={selectedChartType}
-            dataInput={[3, 9, 85]}
+            dataInput={[13, 3, 85]}
             isDarkMode={isDarkMode}
           />
         </div>
@@ -175,10 +190,10 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
         <Card tone="bad" className="flex-1">
           <div className="issue-header">
             <div className="issue-title">
-              <span className="text-accent-bad">!</span>
-              <h4 className="font-header text-xl">High Priority Issues</h4>
+              <span className="text-accent-bad"><AlertTriangle size={16}/></span>
+              <h4 className="font-header text-xl text-text-strong">High Priority Issues</h4>
             </div>
-            <span className="font-header text-accent-bad text-3xl">3</span>
+            <span className="font-header text-accent-bad text-3xl">13</span>
           </div>
           <p className="issue-desc">Critical security gaps</p>
         </Card>
@@ -186,10 +201,10 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
         <Card tone="warn" className="flex-1">
           <div className="issue-header">
             <div className="issue-title">
-              <span className="text-accent-warn">⚬</span>
-              <h4 className="font-header text-xl">Medium Priority Issues</h4>
+              <span className="text-accent-warn"><AlertTriangle size={16}/></span>
+              <h4 className="font-header text-xl text-text-strong">Medium Priority Issues</h4>
             </div>
-            <span className="font-header text-accent-warn text-3xl">9</span>
+            <span className="font-header text-accent-warn text-3xl">3</span>
           </div>
           <p className="issue-desc">Important improvements needed</p>
         </Card>
@@ -197,8 +212,8 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
         <Card tone="good" className="flex-1">
           <div className="issue-header">
             <div className="issue-title">
-              <span className="text-accent-good">✓</span>
-              <h4 className="font-header text-xl">Scan Status</h4>
+              <span className="text-accent-good"><CircleCheck size={16}/></span>
+              <h4 className="font-header text-xl text-text-strong">Scan Status</h4>
             </div>
             <span className="font-header text-accent-good text-3xl">Complete</span>
           </div>

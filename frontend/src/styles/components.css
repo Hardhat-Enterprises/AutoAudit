@@ -21,4 +21,24 @@
   .issue-title  { @apply flex items-center gap-2; }
   .issue-header { @apply flex items-center justify-between mb-3; }
   .issue-desc   { @apply text-text-muted text-sm; }
+
+  /* Toolbar now token-based (row on desktop, stacks on small) */
+  .toolbar       { @apply bg-surface-2/80 border border-border-subtle rounded-card px-5 py-4 flex items-center justify-between gap-4 flex-nowrap; }
+  .toolbar-left  { @apply flex items-center gap-3 min-w-0 flex-1; }
+  .toolbar-right { @apply flex items-center gap-3 shrink-0; }
+  .toolbar-label { @apply text-text-strong font-body text-sm; }
+
+  /* Stack toolbar on small screens */
+  @media (max-width: 750px) {
+    .toolbar       { @apply flex-col items-stretch gap-3; }
+    .toolbar-left  { @apply flex-col items-start gap-2 w-full; }
+    .toolbar-right { @apply w-full flex-col; }
+  }
+
+
+  /* Align text-based glyph icons (like these ones ✓ ⚠ ! ) with text */
+  .text-icon { @apply inline-flex items-center justify-center align-middle leading-none; }
+  /* Tiiiny downward nudge so circles/triangles look centered next to text */
+  .text-icon--nudge { top: px; position: relative; }
+
 }
