@@ -1,0 +1,111 @@
+                             AUTOAUDIT – IMPLEMENTED ARCHITECTURE (LANDSCAPE)
+                            ==================================================
+
+
+ USERS & RUNTIME FLOW
+ --------------------
+
+  [Security engineer / Analyst]
+                |
+                | SPA interactions
+                v
+  +---------------------------+        HTTPS (REST / JSON)        +---------------------------+
+  |        Frontend           | --------------------------------> |        Backend API        |
+  |  React SPA (/frontend)    | <-------------------------------- |  FastAPI (/backend-api)   |
+  |  Mock dashboard + UI      |        (API responses)            |  /api/v1/audit, /exports  |
+  |  (no live scan wiring)    |                                   |  Stub audit/export logic  |
+  +-------------+-------------+                                   +-------------+-------------+
+                |
+                | Evidence screen links out to dedicated service
+                v
+  +---------------------------+        HTTPS (REST / JSON)        +----------------------------+
+  |   Evidence Assistant UI   | --------------------------------> |   Evidence Assistant API   |
+  |  (security/frontend)      | <-------------------------------- |  FastAPI OCR service       |
+  |  Static HTML or React     |        (scan results)             |  (/security/frontend/ui.py)|
+  +-------------+-------------+                                   +-------------+--------------+
+                |                                                         |
+                | OCR, parsing, Docx/PDF generation                        |
+                v                                                         v
+        Evidence previews, JSON, DOCX, PDF saved under `security/results` and `security/reports`
+
+
+ ENGINE, OPA & LOCAL SCANNERS
+ ----------------------------
+
+  [Operator / CLI]
+                |
+                v
+  +---------------------------+         GCP config snapshots          +---------------------------+
+  |  Collectors & helpers     | ------------------------------------> |  Google Cloud APIs        |
+  |  engine/engine/GCPAccess  |                                      |  (IAM, Compute, SQL, BQ)   |
+  |  Service account creds    |                                      +----------------------------+
+  +-------------+-------------+
+                |
+                | Writes iam_policy.json, networks.json, etc.
+                v
+  +---------------------------+
+  |  OPA / Rego evaluator     |
+  |  engine/engine/aggregator |
+  |  Runs `opa eval` per rule |
+  +-------------+-------------+
+                |
+                v
+   engine/engine/autoaudit_reports.json (OPA reports)
+
+  +---------------------------+
+  |  TPRM Scanner CLI         |
+  |  database/tprm_scanner    |
+  |  DNS/HTTP/SSL checks via  |
+  |  checkers + Rich output   |
+  +---------------------------+
+
+
+ EXTERNAL SYSTEMS & DATA FLOW
+ ---------------------------
+
+  +---------------------------+    Config collection + policy inputs    +---------------------------+
+  |        GCP projects       | <---------------------------------------------------------------+   |
+  |   Google Cloud APIs       |                                                                 |   |
+  +---------------------------+                                                                 |   |
+                                                                                                |   |
+                                                                                                v   v
+                                                                          engine/engine/GCPAccess + OPA
+
+  +---------------------------+    DNS/HTTP/SSL lookups     +---------------------------+
+  |      Public Internet      | <-------------------------- |  TPRM scanner checkers    |
+  |  (WHOIS, endpoints, etc.) |                             |  (database/tprm_scanner)  |
+  +---------------------------+                             +---------------------------+
+
+  (No Microsoft 365 / Graph API calls are implemented yet.)
+
+
+ SOURCE TREE, CI/CD & DEPLOYMENT
+ -------------------------------
+
+  +----------------------------------------------------------------------------------------------+
+  |  /frontend      – React SPA with mocked dashboard + Evidence UI shell                        |
+  |  /backend-api   – FastAPI API (audit log + export stubs, logging middleware)                 |
+  |  /engine        – GCP collectors, OPA/Rego rules, JSON reporters                             |
+  |  /security      – Evidence Assistant FastAPI app, OCR helpers, strategies                    |
+  |  /database      – Third-party risk scanner CLI (DNS/SSL/HTTP checks), no SQL schemas         |
+  |  /DevOps        – Workflow helpers and cleanup scripts                                       |
+  |  /.github/workflows – GitHub Actions pipelines (frontend, backend-api, engine, security, etc)|
+  |  /examples      – Sample inputs/configs                                                      |
+  +----------------------------------------------------------------------------------------------+
+
+  +---------------------------+-------------------------------------------------------------------+
+  |                         CI/CD reality (GitHub Actions)                                        |
+  |  • All service workflows run CodeQL + Super-Linter (no unit tests today).                     |
+  |  • backend-api workflow builds & pushes a Docker image, then runs Grype and uploads SARIF.    |
+  |  • Other services do not build/publish container images yet.                                  |
+  |  • No automated deploy step for engine, security, or frontend artifacts.                      |
+  +---------------------------+-------------------------------------------------------------------+
+
+  +---------------------------+---------------------------+
+  |        Deployment         |   Current state           |
+  |---------------------------+---------------------------|
+  | Backend API image         | Docker Hub via CI         |
+  | Engine & Security apps    | Manual / local execution  |
+  | Frontend                  | `npm start` / manual host |
+  | Datastore                 | JSON/PDF artifacts on disk|
+  +---------------------------+---------------------------+

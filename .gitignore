@@ -5,4 +5,6 @@ env/
 **/.venv/
 **/venv/
 **/env/
+# Ignore macOS Finder metadata that keeps reappearing
+.DS_Store
 README.md
