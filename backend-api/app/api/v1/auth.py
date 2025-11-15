@@ -17,7 +17,7 @@ router.include_router(
 users_router = APIRouter(prefix="/users", tags=["Users"])
 
 # Get current user info
-@users_router.get("/me", response_model=UserRead)
+@users_router.get("/me", summary="Get my user information", response_model=UserRead)
 async def read_users_me(user: User = Depends(get_current_user)):
     """Get current authenticated user information."""
     return user

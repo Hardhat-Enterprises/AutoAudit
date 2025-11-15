@@ -6,7 +6,7 @@ from app.models.user import User, Role
 router = APIRouter(prefix="/test", tags=["Test"])
 
 
-@router.get("/public")
+@router.get("/public", summary="Test public endpoint")
 async def public_endpoint():
     """
     Public endpoint - no authentication required.
@@ -20,7 +20,7 @@ async def public_endpoint():
     }
 
 
-@router.get("/protected")
+@router.get("/protected", summary="Test endpoint that requires authentication only")
 async def protected_endpoint(current_user: User = Depends(get_current_user)):
     """
     Protected endpoint - requires authentication.
@@ -42,7 +42,7 @@ async def protected_endpoint(current_user: User = Depends(get_current_user)):
     }
 
 
-@router.get("/protected-admin")
+@router.get("/protected-admin", summary="Test endpoint that requires authentication AND authorization (admin role)")
 async def protected_admin_endpoint(current_user: User = Depends(require_admin)):
     """
     Admin-only endpoint - requires authentication AND admin role.
