@@ -25,11 +25,57 @@ Full commit history and traceability from team forks are preserved.
 - Currently, GCP deployment automation is being set up;  
   once complete, a GCP Cloud Build trigger will automatically build and deploy the `main` branch code and push images into the GCP Artifact Registry.
 
-## Docker Builds  
-- Production Docker images from the `main` branch are tagged appropriately and pushed to:  
-  - [Docker Hub - AutoAudit Services](https://hub.docker.com/u/autoauditservices)  
-  - GCP Artifact Registry (once integration is complete)  
+## Docker Builds
+- Production Docker images from the `main` branch are tagged appropriately and pushed to:
+  - [Docker Hub - AutoAudit Services](https://hub.docker.com/u/autoauditservices)
+  - GCP Artifact Registry (once integration is complete)
 - Individual service repos like Engine, Backend-API, Frontend, and Security have mirrored deployment artifacts.
+
+### Local Development Setup
+If you want to get the backend API running locally for development:
+
+**Prerequisites**:
+- **Python 3.10+**: Download from [python.org](https://www.python.org/downloads/)
+- **Docker Desktop**: Download from [docker.com](https://www.docker.com/products/docker-desktop/)
+- **uv** (Python package manager): Install using the command below
+
+1. **Install uv** (if you don't have it already):
+
+   On Windows (PowerShell):
+   ```powershell
+   iwr https://astral.sh/uv/install.ps1 | iex
+   ```
+
+   On macOS/Linux:
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. **Start the database** (PostgreSQL in Docker):
+   ```bash
+   docker compose -f docker-compose.dev.yml up -d
+   ```
+   This spins up a PostgreSQL instance on port 5432 with the dev credentials already configured.
+
+3. **Set up the backend environment**:
+   ```bash
+   cd backend-api
+   cp .env.example .env
+   ```
+   The default `.env` settings work out of the box with the Docker database.
+
+4. **Install dependencies and run the API**:
+   ```bash
+   uv sync
+   uv run uvicorn app.main:app --reload --port 8000
+   ```
+
+5. **Check it's working**:
+   - API docs: http://localhost:8000/docs
+   - Alternative docs: http://localhost:8000/redoc
+   - The API includes test endpoints at `/api/v1/test/*` that demonstrate authentication patterns
+
+**Note**: The backend uses FastAPI-users for authentication with JWT tokens. Check the interactive docs to try out the auth endpoints and see how to secure your own routes.
 
 ## Contribution Guidelines  
 - Only merges from `staging` occur into `main`, following stringent review and testing.  
