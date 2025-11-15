@@ -86,3 +86,6 @@ If you want to get the backend API running locally for development:
 For production deployment queries:  
 - Contact the DevOps lead managing GCP integration.  
 - Report critical issues with `main` branch deployments on GitHub with relevant tags.
+
+## Other handy tools
+For testing the backend API, [Postman](https://www.postman.com/) is well worth downloading. At its most basic level, it allows us to send requests to the API and view the response when it comes back. More advanced usage can include tests (like expected results testing) and much more - but it's worth getting if you're going to work on the backend or even interact with it from a frontend perspective.
