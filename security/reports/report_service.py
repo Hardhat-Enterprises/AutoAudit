@@ -7,8 +7,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Mapping, Any, Optional, Dict, Tuple
 
-from docx import Document
-from docx.shared import Inches
+try:
+    from docx import Document
+    from docx.shared import Inches
+except Exception:  # pragma: no cover - optional dependency
+    Document = None  # type: ignore
+    Inches = None  # type: ignore
 
 
 def generate_pdf(
@@ -34,6 +38,9 @@ def generate_pdf(
 
     Returns: Path to the generated PDF.
     """
+    if Document is None:
+        raise RuntimeError("python-docx is required to generate reports. Please install 'python-docx'.")
+
     mapping, embed_path, unique_id = _map_to_placeholders(data, Path(base_dir))
 
     if unique_id_override:

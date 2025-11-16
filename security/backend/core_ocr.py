@@ -2,8 +2,14 @@ from pathlib import Path
 from typing import Optional, Tuple
 from shutil import which
 import os
-import pytesseract
-from pytesseract import TesseractNotFoundError
+try:
+    import pytesseract
+    from pytesseract import TesseractNotFoundError
+except Exception:  # pragma: no cover - optional dependency
+    pytesseract = None
+    class TesseractNotFoundError(Exception):  # type: ignore
+        pass
+
 from PIL import Image, UnidentifiedImageError
 
 try:
@@ -29,6 +35,9 @@ SUPPORTED_DOC_EXTS   = {".docx", ".pdf"}
 SUPPORTED_ALL_EXTS   = SUPPORTED_IMAGE_EXTS | SUPPORTED_TEXT_EXTS | SUPPORTED_DOC_EXTS
 
 def configure_tesseract() -> None:
+    if not pytesseract:
+        print("[OCR] pytesseract not available. Install it to enable OCR.")
+        return
     cmd = os.environ.get("TESSERACT_CMD") or which("tesseract")
     if not cmd:
         print("[OCR] Tesseract not found. Install it or set TESSERACT_CMD.")
@@ -39,6 +48,8 @@ def configure_tesseract() -> None:
         print(f"[OCR] TESSDATA_PREFIX: {os.environ['TESSDATA_PREFIX']}")
 
 def _ocr_with_pillow(path: Path) -> str:
+    if not pytesseract:
+        return ""
     try:
         with Image.open(path) as img:
             return pytesseract.image_to_string(img, config="--psm 6")
@@ -46,7 +57,7 @@ def _ocr_with_pillow(path: Path) -> str:
         return ""
 
 def _ocr_with_cv2(path: Path) -> str:
-    if not _HAS_CV2:
+    if not _HAS_CV2 or not pytesseract:
         return _ocr_with_pillow(path)
     try:
         import cv2
@@ -67,6 +78,8 @@ def _ocr_with_cv2(path: Path) -> str:
         return _ocr_with_pillow(path)
 
 def ocr_image(path: Path) -> str:
+    if not pytesseract:
+        return ""
     txt = _ocr_with_cv2(path)
     return txt if txt.strip() else _ocr_with_pillow(path)
 

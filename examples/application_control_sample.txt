@@ -1,0 +1,14 @@
+Application control policy – Windows workstations
+
+We enforce rules to block executable files (.exe and .com) from running in
+standard user and temp folders. These executable files are explicitly blocked
+using AppLocker / Windows Defender Application Control, and the rules are
+currently enforced on all endpoints.
+
+Examples:
+ - blocked file: winword.exe in %USERPROFILE%\Downloads
+ - blocked file: setup.com in C:\Users\Public\Temp
+
+The application control rules are enforced and reviewed quarterly by the
+security team.
+

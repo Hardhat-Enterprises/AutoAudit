@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import './Evidence.css';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api/v1';
+
 const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
+  const [strategies, setStrategies] = useState([]);
+  const [isLoadingStrategies, setIsLoadingStrategies] = useState(true);
+  const [strategiesError, setStrategiesError] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState('');
   const [userId, setUserId] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
@@ -12,66 +17,27 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
 
   const navigate = useNavigate();
 
-  // Mock strategies data
-  const strategies = [
-    { name: 'CIS Microsoft 365 Audit', description: 'Comprehensive Microsoft 365 security assessment based on CIS benchmarks' },
-    { name: 'NIST Compliance Check', description: 'NIST Cybersecurity Framework compliance verification' },
-    { name: 'ISO 27001 Assessment', description: 'ISO 27001 information security management system audit' },
-    { name: 'SOC 2 Readiness', description: 'SOC 2 Type II compliance preparation and gap analysis' },
-    { name: 'GDPR Compliance Scan', description: 'General Data Protection Regulation compliance assessment' }
-  ];
-
-  // Mock results data
-  const mockResults = {
-    findings: [
-      {
-        test_id: 'CIS-001',
-        sub_strategy: 'Identity & Access',
-        detected_level: 'High',
-        pass_fail: 'FAIL',
-        priority: 'Critical',
-        recommendation: 'Enable multi-factor authentication for all admin accounts',
-        evidence: ['Admin account "admin@company.com" does not have MFA enabled', 'Found 3 admin accounts without MFA']
-      },
-      {
-        test_id: 'CIS-002',
-        sub_strategy: 'Data Protection',
-        detected_level: 'Medium',
-        pass_fail: 'FAIL',
-        priority: 'High',
-        recommendation: 'Implement data loss prevention policies',
-        evidence: ['No DLP policies found', 'Sensitive data sharing detected']
-      },
-      {
-        test_id: 'CIS-003',
-        sub_strategy: 'Access Management',
-        detected_level: 'Low',
-        pass_fail: 'PASS',
-        priority: 'Medium',
-        recommendation: 'Continue monitoring access patterns',
-        evidence: ['Access controls properly configured', 'Regular access reviews in place']
-      },
-      {
-        test_id: 'CIS-004',
-        sub_strategy: 'Audit Logging',
-        detected_level: 'Medium',
-        pass_fail: 'WARNING',
-        priority: 'Medium',
-        recommendation: 'Extend audit log retention period',
-        evidence: ['Audit logs retained for 90 days', 'Recommended retention: 1 year']
-      },
-      {
-        test_id: 'CIS-005',
-        sub_strategy: 'Email Security',
-        detected_level: 'High',
-        pass_fail: 'FAIL',
-        priority: 'Critical',
-        recommendation: 'Configure advanced threat protection',
-        evidence: ['ATP not enabled', 'Phishing protection insufficient']
+  useEffect(() => {
+    const fetchStrategies = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/evidence/strategies`);
+        if (!response.ok) {
+          throw new Error('Failed to load strategies');
+        }
+        const payload = await response.json();
+        const data = Array.isArray(payload) ? payload : [];
+        setStrategies(data);
+        setStrategiesError(data.length ? '' : 'No scanning strategies available yet.');
+      } catch (err) {
+        console.error('Unable to load strategies', err);
+        setStrategiesError('Unable to load strategies from the backend.');
+      } finally {
+        setIsLoadingStrategies(false);
       }
-    ],
-    reports: ['report-001.pdf', 'report-002.pdf', 'report-003.pdf', 'report-004.pdf', 'report-005.pdf']
-  };
+    };
+
+    fetchStrategies();
+  }, []);
 
   const handleStrategyChange = (e) => {
     setSelectedStrategy(e.target.value);
@@ -80,12 +46,13 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setSelectedFile(file);
+    setSelectedFile(file || null);
     setError('');
   };
 
   const handleScan = async () => {
     setError('');
+    setResults(null);
     
     if (!selectedStrategy) {
       setError('Please select a strategy.');
@@ -99,19 +66,48 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
 
     setIsScanning(true);
     
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
-      setResults(mockResults);
+      const formData = new FormData();
+      formData.append('strategy_name', selectedStrategy);
+      formData.append('user_id', userId || 'user');
+      formData.append('evidence', selectedFile);
+
+      const response = await fetch(`${API_BASE_URL}/evidence/scan`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        let message = 'Scan failed. Please try again.';
+        try {
+          const payload = await response.json();
+          if (payload?.detail) {
+            message = payload.detail;
+          }
+        } catch {
+          // ignore parse errors
+        }
+        throw new Error(message);
+      }
+
+      const payload = await response.json();
+      setResults({
+        strategy: payload?.strategy || selectedStrategy,
+        file: payload?.file || selectedFile.name,
+        findings: payload?.findings || [],
+        reports: payload?.reports || [],
+        note: payload?.note || ''
+      });
     } catch (err) {
-      setError('Scan failed. Please try again.');
+      console.error('Scan failed', err);
+      setError(err.message || 'Scan failed. Please try again.');
     } finally {
       setIsScanning(false);
     }
   };
 
   const getStatusClass = (status) => {
-    switch (status?.toUpperCase()) {
+    switch ((status || '').toUpperCase()) {
       case 'PASS': return 'status-pass';
       case 'FAIL': return 'status-fail';
       case 'WARNING': return 'status-warning';
@@ -120,6 +116,33 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
   };
 
   const selectedStrategyData = strategies.find(s => s.name === selectedStrategy);
+  const noStrategiesAvailable = !isLoadingStrategies && strategies.length === 0;
+
+  const resolveReportLink = (entry) => {
+    if (!entry) return null;
+
+    if (typeof entry === 'string') {
+      const href = entry.startsWith('http')
+        ? entry
+        : `${API_BASE_URL}/evidence/reports/${entry}`;
+      return { href, label: entry.toLowerCase().endsWith('.pdf') ? 'PDF' : 'Download' };
+    }
+
+    const filename = entry.filename || entry.name;
+    if (entry.url) {
+      const href = entry.url.startsWith('http')
+        ? entry.url
+        : `${API_BASE_URL}${entry.url}`;
+      return { href, label: filename?.toLowerCase().endsWith('.pdf') ? 'PDF' : (filename || 'Download') };
+    }
+
+    if (filename) {
+      const href = `${API_BASE_URL}/evidence/reports/${filename}`;
+      return { href, label: filename.toLowerCase().endsWith('.pdf') ? 'PDF' : 'Download' };
+    }
+
+    return null;
+  };
 
   return (
     <div 
@@ -164,16 +187,26 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                 className="form-select"
                 value={selectedStrategy}
                 onChange={handleStrategyChange}
+                disabled={isLoadingStrategies || noStrategiesAvailable || isScanning}
               >
-                <option value="">— select a strategy —</option>
-                {strategies.map((strategy, index) => (
-                  <option key={index} value={strategy.name}>
-                    {strategy.name}
-                  </option>
-                ))}
+                {isLoadingStrategies ? (
+                  <option value="">Loading strategies...</option>
+                ) : (
+                  <>
+                    <option value="">— select a strategy —</option>
+                    {strategies.map((strategy) => (
+                      <option key={strategy.name} value={strategy.name}>
+                        {strategy.name}
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
               {selectedStrategyData && (
                 <div className="form-help">{selectedStrategyData.description}</div>
+              )}
+              {strategiesError && (
+                <div className="status-error">{strategiesError}</div>
               )}
             </div>
             
@@ -196,7 +229,7 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
               id="file" 
               type="file" 
               className="form-file"
-              disabled={!selectedStrategy}
+              disabled={!selectedStrategy || isScanning || noStrategiesAvailable || isLoadingStrategies}
               accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.txt,.docx,.csv,.log,.reg,.ini,.json,.xml,.htm,.html"
               onChange={handleFileChange}
             />
@@ -233,21 +266,25 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
           <div className="results-card">
             <h3 className="results-header">Results</h3>
             
-            <div className="results-meta">
-              <div className="meta-tag">
-                <span>Strategy</span>
-                <span>{selectedStrategy}</span>
+              <div className="results-meta">
+                <div className="meta-tag">
+                  <span>Strategy</span>
+                  <span>{results.strategy || selectedStrategy}</span>
+                </div>
+                <div className="meta-tag">
+                  <span>File</span>
+                  <span>{results.file || selectedFile?.name}</span>
+                </div>
               </div>
-              <div className="meta-tag">
-                <span>File</span>
-                <span>{selectedFile?.name}</span>
-              </div>
-            </div>
 
-            {results.findings && results.findings.length > 0 ? (
-              <table className="results-table">
-                <thead>
-                  <tr>
+              {results.note && (
+                <div className="form-help">{results.note}</div>
+              )}
+
+              {results.findings && results.findings.length > 0 ? (
+                <table className="results-table">
+                  <thead>
+                    <tr>
                     <th>Test ID</th>
                     <th>Sub-Strategy</th>
                     <th>Level</th>
@@ -259,7 +296,9 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {results.findings.map((finding, index) => (
+                  {results.findings.map((finding, index) => {
+                    const reportLink = resolveReportLink(results.reports?.[index]);
+                    return (
                     <tr key={index}>
                       <td>{finding.test_id}</td>
                       <td>{finding.sub_strategy}</td>
@@ -278,19 +317,21 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                         }
                       </td>
                       <td>
-                        {results.reports[index] && (
+                        {reportLink ? (
                           <a 
-                            href={`#${results.reports[index]}`} 
+                            href={reportLink.href} 
                             className="evidence-link"
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            PDF
+                            {reportLink.label}
                           </a>
+                        ) : (
+                          '—'
                         )}
                       </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             ) : (
