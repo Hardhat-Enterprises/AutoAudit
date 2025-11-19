@@ -1,9 +1,12 @@
+import inspect
 import logging
 import sys
+import tempfile
 import time
 import uuid
+import zipfile
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 
 def _locate_security_dir() -> Path:
@@ -74,6 +77,90 @@ def _save_upload(filename: str, data: bytes) -> Path:
     return upload_path
 
 
+def _call_strategy_emit(
+    strategy: Any,
+    text: str,
+    *,
+    source_file: str,
+    full_path: str | None = None,
+    preview_path: str | None = None,
+) -> List[Dict[str, Any]] | None:
+    emit = getattr(strategy, "emit_hits", None)
+    if not emit:
+        return None
+
+    try:
+        sig = inspect.signature(emit)
+        params = sig.parameters
+        accepts_kwargs = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
+    except (TypeError, ValueError):
+        params = {}
+        accepts_kwargs = True
+
+    def _include(name: str) -> bool:
+        return accepts_kwargs or name in params
+
+    kwargs: Dict[str, Any] = {}
+    if _include("source_file"):
+        kwargs["source_file"] = source_file
+    if full_path and _include("full_path"):
+        kwargs["full_path"] = full_path
+    if preview_path and _include("preview_path"):
+        kwargs["preview_path"] = preview_path
+
+    return emit(text, **kwargs) or []
+
+
+def _evaluate_strategy_text(
+    strategy: Any,
+    text: str,
+    *,
+    evidence_name: str,
+    full_path: Path,
+    preview_path: Path | None,
+) -> List[Dict[str, Any]]:
+    preview_str = str(preview_path) if preview_path else ""
+    findings: List[Dict[str, Any]] = []
+
+    emitted = _call_strategy_emit(
+        strategy,
+        text,
+        source_file=evidence_name,
+        full_path=str(full_path),
+        preview_path=preview_str,
+    )
+
+    if emitted is not None:
+        for raw in emitted:
+            if not isinstance(raw, dict):
+                continue
+            row = dict(raw)
+            row.setdefault("evidence_file", evidence_name)
+            if preview_str and not row.get("preview_path"):
+                row["preview_path"] = preview_str
+            findings.append(row)
+        return findings
+
+    hits = strategy.match(text) or []
+    if not hits:
+        return []
+
+    row = {
+        "test_id": "",
+        "sub_strategy": "",
+        "detected_level": "",
+        "pass_fail": "",
+        "priority": "",
+        "recommendation": "",
+        "evidence": hits,
+        "evidence_file": evidence_name,
+    }
+    if preview_str:
+        row["preview_path"] = preview_str
+    findings.append(row)
+    return findings
+
+
 def _generate_report(payload: Dict[str, Any]) -> str | None:
     try:
         pdf_path = generate_pdf(
@@ -125,16 +212,54 @@ def scan_evidence(*, filename: str, data: bytes, strategy_name: str, user_id: st
         raise ValueError("Empty evidence upload")
 
     upload_path = _save_upload(filename, data)
+    zip_workspace: tempfile.TemporaryDirectory[str] | None = None
+    findings: List[Dict[str, Any]] = []
+    text_found = False
 
     try:
-        text, preview_path = extract_text_and_preview(upload_path, PREVIEWS_DIR)
+        entries: List[Tuple[Path, str]] = []
+        display_name = Path(filename or "evidence").name or "evidence"
+
+        if upload_path.suffix.lower() == ".zip":
+            zip_workspace = tempfile.TemporaryDirectory()
+            try:
+                with zipfile.ZipFile(upload_path) as archive:
+                    archive.extractall(zip_workspace.name)
+            except zipfile.BadZipFile as exc:
+                raise ValueError("Invalid ZIP archive uploaded") from exc
+
+            extracted_root = Path(zip_workspace.name)
+            for inner in sorted(p for p in extracted_root.rglob("*") if p.is_file()):
+                rel = inner.relative_to(extracted_root).as_posix()
+                rel_name = f"{display_name}:{rel}" if rel else display_name
+                entries.append((inner, rel_name))
+        else:
+            entries.append((upload_path, display_name))
+
+        for entry_path, entry_label in entries:
+            entry_text, preview_path = extract_text_and_preview(entry_path, PREVIEWS_DIR)
+            if not entry_text.strip():
+                continue
+            text_found = True
+            findings.extend(
+                _evaluate_strategy_text(
+                    strategy,
+                    entry_text,
+                    evidence_name=entry_label,
+                    full_path=entry_path,
+                    preview_path=preview_path,
+                )
+            )
+
     finally:
         try:
             upload_path.unlink(missing_ok=True)
         except Exception:
             pass
+        if zip_workspace:
+            zip_workspace.cleanup()
 
-    if not text.strip():
+    if not text_found:
         return {
             "strategy": strategy.name,
             "file": filename,
@@ -143,35 +268,17 @@ def scan_evidence(*, filename: str, data: bytes, strategy_name: str, user_id: st
             "note": "No readable text found in evidence.",
         }
 
-    if hasattr(strategy, "emit_hits"):
-        findings = strategy.emit_hits(text, source_file=filename) or []
-    else:
-        hits = strategy.match(text) or []
-        findings = (
-            [
-                {
-                    "test_id": "",
-                    "sub_strategy": "",
-                    "detected_level": "",
-                    "pass_fail": "",
-                    "priority": "",
-                    "recommendation": "",
-                    "evidence": hits,
-                }
-            ]
-            if hits
-            else []
-        )
-
     generated_reports: List[str] = []
     note = ""
     for idx, finding in enumerate(findings, start=1):
         report_id = _safe_uid(f"{user_id}-{strategy.name}-{Path(filename or 'evidence').stem}-{idx}-{uuid.uuid4().hex[:4]}")
+        evidence_name = finding.get("evidence_file", filename)
+        preview_hint = finding.get("preview_path", "")
         payload = {
             "UniqueID": report_id,
             "UserID": user_id,
-            "Evidence": filename,
-            "Evidence Preview": str(preview_path) if preview_path else "",
+            "Evidence": evidence_name,
+            "Evidence Preview": preview_hint,
             "Strategy": strategy.name,
             "TestID": finding.get("test_id", ""),
             "Sub-Strategy": finding.get("sub_strategy", ""),
