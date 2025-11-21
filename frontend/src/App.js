@@ -105,7 +105,11 @@ function App() {
         <Route 
           path="/about" 
           element={
-            <AboutUs onBack={() => navigate('/')} />
+            <AboutUs 
+              onBack={() => navigate('/')} 
+              onSignInClick={() => navigate('/login')}
+              onAboutClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            />
           } 
         />
         

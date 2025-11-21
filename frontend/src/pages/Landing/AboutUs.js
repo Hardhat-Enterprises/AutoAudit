@@ -1,21 +1,30 @@
-import React from 'react';
-import './AboutUs.css';
+import React from "react";
+import "./AboutUs.css";
+import "./LandingPage.css";
+import { landingFeatures } from "./featuresData";
+import LandingFooter from "./components/LandingFooter";
+import LandingHeader from "./components/LandingHeader";
 
-const AboutUs = ({ onBack }) => {
+const AboutUs = ({ onBack, onSignInClick, onAboutClick }) => {
   return (
     <div className="about-container">
-      <nav className="about-nav">
-        <button onClick={onBack} className="back-btn">← Back to Home</button>
-      </nav>
+      <LandingHeader
+        onSignInClick={onSignInClick}
+        onAboutClick={onAboutClick}
+        onHomeClick={onBack}
+        showSignIn={false}
+      />
 
       <div className="about-content">
         <div className="about-hero">
           <img src="/logo.png" alt="AutoAudit Logo" className="about-logo" />
-          <h1>About AutoAudit</h1>
-          <p className="about-subtitle">Revolutionizing Cloud Compliance for Modern Enterprises</p>
+          <h2>About AutoAudit</h2>
+          <p className="about-subtitle">
+            Revolutionizing Cloud Compliance for Modern Enterprises
+          </p>
         </div>
 
-        <section className="about-section">
+        <section className="about-section" id="mission">
           <h2>Our Mission</h2>
           <p>
             AutoAudit empowers organizations to maintain robust security postures in their Microsoft 365 environments 
@@ -24,42 +33,24 @@ const AboutUs = ({ onBack }) => {
           </p>
         </section>
 
-        <section className="about-section">
+        <section className="about-section" id="features">
           <h2>What We Do</h2>
-          <div className="features-overview">
-            <div className="feature-item">
-              <div className="feature-icon">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                  <path d="M12 2l7 4v6c0 5-3.5 9.5-7 10-3.5-.5-7-5-7-10V6l7-4z" />
-                </svg>
-              </div>
-              <h3>Automated Compliance Scanning</h3>
-              <p>Continuously monitor your Microsoft 365 environment against CIS benchmarks and industry standards</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                  <rect x="4" y="10" width="4" height="10" />
-                  <rect x="10" y="6" width="4" height="14" />
-                  <rect x="16" y="2" width="4" height="18" />
-                </svg>
-              </div>
-              <h3>Risk Assessment & Reporting</h3>
-              <p>Generate comprehensive reports with actionable insights and remediation recommendations</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                  <path d="M13 2L3 14h7v8l11-12h-7z" />
-                </svg>
-              </div>
-              <h3>Real-time Monitoring</h3>
-              <p>Stay ahead of security misconfigurations with continuous monitoring and instant alerts</p>
-            </div>
+          <div className="features-overview about-feature-grid">
+            {landingFeatures.map((feature) => (
+              <article key={feature.title} className="feature-item about-feature-item">
+                <div className="feature-icon" aria-hidden="true">
+                  {feature.icon}
+                </div>
+                <div>
+                  <h3>{feature.title}</h3>
+                  <p>{feature.description}</p>
+                </div>
+              </article>
+            ))}
           </div>
         </section>
 
-        <section className="about-section">
+        <section className="about-section about-why" id="benefits">
           <h2>Why AutoAudit?</h2>
           <p>
             In today&apos;s rapidly evolving threat landscape, manual compliance checks are no longer sufficient. 
@@ -73,7 +64,7 @@ const AboutUs = ({ onBack }) => {
           </p>
         </section>
 
-        <section className="about-section">
+        <section className="about-section" id="standards">
           <h2>Industry Standards We Support</h2>
           <div className="standards-grid">
             <div className="standard-item">
@@ -95,7 +86,7 @@ const AboutUs = ({ onBack }) => {
           </div>
         </section>
 
-        <section className="about-section">
+        <section className="about-section about-commitment" id="commitment">
           <h2>Our Commitment</h2>
           <p>
             We&apos;re committed to providing enterprise-grade security tools that are both powerful and accessible. 
@@ -117,6 +108,8 @@ const AboutUs = ({ onBack }) => {
           </button>
         </section>
       </div>
+
+      <LandingFooter />
     </div>
   );
 };
