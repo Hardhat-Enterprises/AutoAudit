@@ -2,6 +2,7 @@
   "name": "autoaudit-dashboard",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:3000",
   "dependencies": {
     "@fontsource/league-spartan": "^5.2.7",
     "@testing-library/dom": "^10.4.1",

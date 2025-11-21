@@ -17,7 +17,7 @@ def _default_note(notes: List[str]) -> str | None:
 def _build_report_name(strategy_name: str) -> str:
     return f"{_slugify(strategy_name)}-report.pdf"
 
-# scanning context from the input provided 
+
 def _extract_evidence_snippets(text: str) -> List[str]:
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     if not lines:

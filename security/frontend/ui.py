@@ -27,7 +27,7 @@ except Exception:
 # -------------------- Import modules --------------------
 
 from reports.report_service import generate_pdf
-from strategies import load_strategies
+from security.strategies import load_strategies
 
 # ✨ added
 from collections import deque

@@ -11,7 +11,7 @@ from fastapi import UploadFile
 
 MAX_TEXT_LENGTH = 200_000  # soft guardrail to avoid returning extremely large payloads
 
-#this is for extracting data out of the input document in diverse formats. 
+
 def _extract_pdf(content: bytes, notes: List[str]) -> str:
     try:
         from pypdf import PdfReader  # type: ignore

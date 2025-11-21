@@ -8,7 +8,7 @@ from app.core.middleware import RequestLoggingMiddleware
 from app.core.errors import not_found_handler, NotFound
 
 settings = get_settings()
-#builds the project using uvicorn and fastapi
+
 
 def create_app() -> FastAPI:
     setup_logging()
@@ -17,6 +17,8 @@ def create_app() -> FastAPI:
     # Allow the React dev server (localhost:3000/3001) and other frontends to call the API.
     # In production, set ALLOWED_ORIGINS via env to restrict as needed.
     allowed_origins = getattr(settings, "ALLOWED_ORIGINS", []) or [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
     ]
@@ -34,12 +36,6 @@ def create_app() -> FastAPI:
     )
 
     app.add_middleware(RequestLoggingMiddleware)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
     app.include_router(api_router, prefix=settings.API_PREFIX)
 
     # error handler

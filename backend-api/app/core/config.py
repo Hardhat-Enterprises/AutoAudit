@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     APP_ENV: str = "dev"
     API_PREFIX: str = "/api/v1"
+    ALLOWED_ORIGINS: list[str] = ["*"]
 
     class Config:
         env_file = ".env"
