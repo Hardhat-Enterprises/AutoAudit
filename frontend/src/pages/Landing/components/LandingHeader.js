@@ -4,6 +4,7 @@ const LandingHeader = ({
   onSignInClick,
   onAboutClick,
   onHomeClick,
+  onContactClick,
   showSignIn = true,
 }) => {
   return (
@@ -27,6 +28,15 @@ const LandingHeader = ({
         <button type="button" onClick={onAboutClick} className="link-button">
           About
         </button>
+        {onContactClick && (
+          <button
+            type="button"
+            onClick={onContactClick}
+            className="link-button"
+          >
+            Contact
+          </button>
+        )}
         {showSignIn && (
           <button
             type="button"

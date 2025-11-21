@@ -8,12 +8,13 @@ import BenefitsSection from "./components/BenefitsSection";
 import CTASection from "./components/CTASection";
 import LandingFooter from "./components/LandingFooter";
 
-const LandingPage = ({ onSignInClick, onAboutClick }) => {
+const LandingPage = ({ onSignInClick, onAboutClick, onContactClick }) => {
   return (
     <div className="landing-page">
       <LandingHeader
         onSignInClick={onSignInClick}
         onAboutClick={onAboutClick}
+        onContactClick={onContactClick}
       />
       <main>
         <HeroSection onSignInClick={onSignInClick} />

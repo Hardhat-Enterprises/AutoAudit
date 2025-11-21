@@ -10,6 +10,7 @@ import StyleGuide from './pages/StyleGuide';
 // Authentication & Landing Components
 import LandingPage from './pages/Landing/LandingPage';
 import AboutUs from './pages/Landing/AboutUs';
+import ContactPage from './pages/Contact/ContactPage';
 import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
 
@@ -98,6 +99,7 @@ function App() {
             <LandingPage 
               onSignInClick={() => navigate('/login')}
               onAboutClick={() => navigate('/about')}
+              onContactClick={() => navigate('/contact')}
             />
           } 
         />
@@ -109,8 +111,20 @@ function App() {
               onBack={() => navigate('/')} 
               onSignInClick={() => navigate('/login')}
               onAboutClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onContactClick={() => navigate('/contact')}
             />
           } 
+        />
+        
+        <Route
+          path="/contact"
+          element={
+            <ContactPage
+              onNavigateHome={() => navigate('/')}
+              onNavigateAbout={() => navigate('/about')}
+              onSignIn={() => navigate('/login')}
+            />
+          }
         />
         
         <Route 
@@ -178,6 +192,7 @@ function App() {
             <LandingPage 
               onSignInClick={() => navigate('/login')}
               onAboutClick={() => navigate('/about')}
+              onContactClick={() => navigate('/contact')}
             />
           } 
         />
