@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     APP_ENV: str = "dev"
-    API_PREFIX: str = "/api/v1"
+    API_PREFIX: str = "/v1"
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://autoaudit:autoaudit_dev_password@localhost:5432/autoaudit"
