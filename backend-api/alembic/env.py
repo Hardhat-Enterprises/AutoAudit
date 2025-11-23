@@ -10,6 +10,7 @@ from alembic import context
 # Import models for autogenerate support
 from app.db.base import Base
 from app.models.user import User  # noqa
+from app.models.compliance import Tenant, Rule, Scan, Issue  # noqa
 from app.core.config import get_settings
 
 # this is the Alembic Config object, which provides
