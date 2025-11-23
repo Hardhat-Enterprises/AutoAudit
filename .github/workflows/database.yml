@@ -30,6 +30,7 @@ jobs:
 
   build:
     needs: changes
+    if: needs.changes.outputs.engine == 'true'
     runs-on: ubuntu-latest
 
     env:
@@ -42,4 +43,4 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run Python script
-        run: python /database/tprm_scanner/main.py
+        run: python database/tprm_scanner/main.py
