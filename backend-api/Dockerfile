@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv for fast dependency management
+# Install uv
 RUN pip install uv
 
 # Copy dependency files
