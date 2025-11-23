@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # The below settings are defaults, and not duplicates of .env
+    # The contents of .env overrides what is defined here.
     APP_ENV: str = "dev"
     API_PREFIX: str = "/v1"
 
