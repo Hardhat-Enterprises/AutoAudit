@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Build
+build/
+
+# Development
+.env
+.env.local
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+coverage/
+
+# Git
+.git/
+.gitignore
