@@ -34,12 +34,12 @@ Automated GCP compliance assessment tool built with FastAPI. This API provides a
 4. **Run the development server**
 
    ```bash
-   uv run uvicorn app.main:app --reload --port 3000
+   uv run uvicorn app.main:app --reload --port 8000
    ```
 
 5. **Access the API**
-   - API Documentation: http://localhost:3000/docs | http://localhost:3000/redoc
-   - Root Endpoint: http://localhost:3000/
+   - API Documentation: http://localhost:8000/docs | http://localhost:8000/redoc
+   - Root Endpoint: http://localhost:8000/
 
 ## 📁 Project Structure
 
