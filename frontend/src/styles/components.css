@@ -1,7 +1,10 @@
-/* src/styles/components.css */
 @tailwind components;
 @layer components {
   .container-max { @apply max-w-[1200px] mx-auto p-6; }
+
+  /* Same as dashboard.css .stats-grid but renamed to avoid conflict during migration */
+  .tw-stats-grid { @apply grid gap-5 xl:grid-cols-4 lg:grid-cols-2 sm:grid-cols-1; }
+
 
   /* use built-in shadow for now; adding in token shadows later */
   .card { @apply bg-surface-2/70 border border-border-subtle rounded-card p-6 relative overflow-hidden shadow-lg; }
