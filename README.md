@@ -56,7 +56,7 @@ If you want to get the backend API running locally for development:
 5. **Check it's working**:
    - API docs: http://localhost:8000/docs
    - Alternative docs: http://localhost:8000/redoc
-   - The API includes test endpoints at `/api/v1/test/*` that demonstrate authentication patterns
+   - The API includes test endpoints at `/v1/test/*` that demonstrate authentication patterns
 
 **Note**: The backend uses FastAPI-users for authentication with JWT tokens. Check the interactive docs to try out the auth endpoints and see how to secure your own routes.
 
