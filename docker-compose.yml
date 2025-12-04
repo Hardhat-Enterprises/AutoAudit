@@ -53,8 +53,8 @@ services:
   backend-api:
     profiles: ["frontend-dev", "all"]
     build:
-      context: ./backend-api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend-api/Dockerfile
     container_name: autoaudit-backend-api
     environment:
       - APP_ENV=dev
@@ -78,6 +78,7 @@ services:
     container_name: autoaudit-frontend
     environment:
       - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_EVIDENCE_API_BASE=http://localhost:8000
     ports:
       - "3000:3000"
     restart: unless-stopped

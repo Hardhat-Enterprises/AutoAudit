@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import exports, audit, auth, test
+from app.api.v1 import exports, audit, auth, test, evidence
 
 api_router = APIRouter()
 
@@ -12,3 +12,4 @@ api_router.include_router(test.router)
 # Existing routes
 api_router.include_router(exports.router)
 api_router.include_router(audit.router)
+api_router.include_router(evidence.router)

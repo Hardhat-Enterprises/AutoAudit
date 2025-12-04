@@ -1,26 +1,14 @@
-import pkgutil, importlib, inspect
-from .overview import Strategy
+from .custom_benchmarks import get_strategy, STRATEGY_DEFS
+
+# Canonical set of strategies the UI should see (order preserved)
+ALLOWED_STRATEGIES = {entry["name"]: entry["description"] for entry in STRATEGY_DEFS}
+
 
 def load_strategies():
-    strategies = []
-    pkg = __name__
+    """Return the curated strategies with embedded rule logic."""
+    return list(get_strategy())
 
-    # iterate over all modules in strategies
-    for _, modname, ispkg in pkgutil.iter_modules(__path__):
-        if ispkg or modname == "overview":
-            continue
-        module = importlib.import_module(f"{pkg}.{modname}")
 
-        # prefer get_strategy() if present
-        if hasattr(module, "get_strategy"):
-            strategies.append(module.get_strategy())
-            continue
-
-        # otherwise find subclasses of Strategy
-        for _, obj in inspect.getmembers(module, inspect.isclass):
-            if issubclass(obj, Strategy) and obj is not Strategy:
-                strategies.append(obj())
-
-    # sort alphabetically
-    strategies.sort(key=lambda s: s.name.lower())
-    return strategies
+def get_checker(strategy_name: str):
+    """Return the strategy object by name (or None)."""
+    return next((s for s in load_strategies() if s.name == strategy_name), None)

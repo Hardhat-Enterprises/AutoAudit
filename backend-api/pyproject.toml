@@ -14,4 +14,13 @@ dependencies = [
     "sqlalchemy>=2.0.0",
     "asyncpg>=0.29.0",
     "alembic>=1.13.0",
+    # Evidence scanner dependencies (shared with security module)
+    "pytesseract",
+    "pillow",
+    "opencv-python",
+    "python-docx",
+    "docx2pdf",
+    "pymupdf",
+    "python-multipart",
+    "fpdf2",
 ]
