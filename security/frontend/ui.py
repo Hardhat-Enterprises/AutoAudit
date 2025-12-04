@@ -10,7 +10,7 @@ import pytesseract
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse  # ✨ added RedirectResponse
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError, ImageOps, ImageFilter, ImageStat
 from pytesseract import TesseractNotFoundError
 from fastapi.staticfiles import StaticFiles
 
@@ -25,9 +25,9 @@ except Exception:
     DocxDocument = None
 
 # -------------------- Import modules --------------------
-
-from reports.report_service import generate_pdf
-from strategies import load_strategies
+# Ensure package imports resolve when embedded under backend-api
+from security.reports.report_service import generate_pdf
+from security.strategies import load_strategies, ALLOWED_STRATEGIES, get_checker
 
 # ✨ added
 from collections import deque
@@ -40,6 +40,20 @@ try:
     _TESSERACT_VERSION = str(pytesseract.get_tesseract_version())
 except Exception:
     _HAS_TESSERACT = False
+
+
+# -------------------- error helpers --------------------
+def error_response(status_code: int, code: str, message: str, errors: Optional[list] = None):
+    errs = errors or [{"code": code, "message": message}]
+    payload = {
+        "ok": False,
+        "error": True,
+        "has_errors": len(errs) > 0,
+        "code": code,
+        "detail": message,
+        "errors": errs,
+    }
+    return JSONResponse(payload, status_code=status_code)
 
 
 # -------------------- utility --------------------
@@ -55,7 +69,14 @@ def _ocr_image_bytes(data: bytes) -> str:
     try:
         with Image.open(io.BytesIO(data)) as img:
             try:
-                return pytesseract.image_to_string(img)
+                # Normalize dark-theme screenshots for better OCR.
+                g = img.convert("L")
+                mean_luma = ImageStat.Stat(g).mean[0] if ImageStat else 128
+                if mean_luma < 80:
+                    g = ImageOps.invert(g)
+                g = ImageOps.autocontrast(g)
+                g = g.filter(ImageFilter.SHARPEN)
+                return pytesseract.image_to_string(g)
             except TesseractNotFoundError:
                 return ""  # no OCR available → behave gracefully
     except (UnidentifiedImageError, OSError):
@@ -65,6 +86,7 @@ def _ocr_image_bytes(data: bytes) -> str:
 def _extract_pdf_bytes(
     data: bytes, previews_dir: Path, stem: str
 ) -> tuple[str, Optional[Path]]:
+    print("[extract_pdf_bytes] start", {"bytes": len(data), "stem": stem})
     if not fitz:
         return "", None
     try:
@@ -77,14 +99,19 @@ def _extract_pdf_bytes(
             preview_path = previews_dir / f"{stem}_page1.png"
             pix.save(str(preview_path))
         doc.close()
+        print("[extract_pdf_bytes] done", {"chars": len(text), "preview": str(preview_path) if preview_path else None})
         return text, preview_path
     except Exception:
         return "", None
 
 
-def _extract_docx_bytes(data: bytes) -> str:
+def _extract_docx_bytes(data: bytes, previews_dir: Path) -> tuple[str, Optional[Path]]:
+    """
+    Extract text from DOCX, and OCR any embedded images as a fallback.
+    Returns (text, preview_path).
+    """
     if not DocxDocument:
-        return ""
+        return "", None
     try:
         doc = DocxDocument(io.BytesIO(data))
         parts: list[str] = []
@@ -96,9 +123,34 @@ def _extract_docx_bytes(data: bytes) -> str:
                 for cell in row.cells:
                     if cell.text:
                         parts.append(cell.text)
-        return "\n".join(parts)
+        ocr_parts: list[str] = []
+        preview_path: Optional[Path] = None
+        for rel in doc.part._rels.values():
+            # Only process image relationships
+            reltype = getattr(rel, "reltype", "") or ""
+            if "image" not in reltype:
+                continue
+            target = getattr(rel, "target_part", None)
+            blob = getattr(target, "blob", None)
+            if not blob:
+                continue
+            # OCR the embedded image
+            ocr_text = _ocr_image_bytes(blob)
+            if ocr_text.strip():
+                ocr_parts.append(ocr_text)
+            # Save first image as preview
+            if not preview_path:
+                previews_dir.mkdir(parents=True, exist_ok=True)
+                # rel.target_ref looks like 'media/image1.png'
+                fname = Path(getattr(target, "partname", "image"))
+                preview_path = previews_dir / _safe_uid(fname.name)
+                with open(preview_path, "wb") as f:
+                    f.write(blob)
+
+        full_text = "\n".join(t for t in ["\n".join(parts)] + ocr_parts if t)
+        return full_text, preview_path
     except Exception:
-        return ""
+        return "", None
 
 
 def extract_text_and_preview_bytes(
@@ -115,7 +167,7 @@ def extract_text_and_preview_bytes(
     if ext == ".pdf":
         return _extract_pdf_bytes(data, previews_dir, Path(_safe_uid(filename)).stem)
     if ext == ".docx":
-        return _extract_docx_bytes(data), None
+        return _extract_docx_bytes(data, previews_dir)
     if ext in {
         ".txt",
         ".log",
@@ -175,27 +227,43 @@ def index():
 
 @app.get("/strategies")
 def api_strategies():
-    out = []
-    for s in load_strategies():
-        try:
-            desc = s.description()
-        except Exception:
-            desc = ""
-        out.append({"name": s.name, "description": desc})
-    return out
+    """Return only the curated benchmark strategies expected by the UI."""
+    try:
+        # preserve canonical order from ALLOWED_STRATEGIES
+        return [
+            {"name": name, "description": desc}
+            for name, desc in ALLOWED_STRATEGIES.items()
+        ]
+    except Exception as exc:
+        return error_response(
+            status_code=500,
+            code="STRATEGY_LOAD_FAILED",
+            message="Unable to load strategies.",
+            errors=[{"code": "STRATEGY_LOAD_FAILED", "message": str(exc)}],
+        )
 
 
 @app.get("/health")
 def health():
     """Quick status to debug issues without crashing the UI."""
-    return {
-        "ok": True,
-        "has_tesseract": _HAS_TESSERACT,
-        "tesseract_version": _TESSERACT_VERSION,
-        "template_exists": (TEMPLATES / "report_template.docx").exists(),
-        "previews_dir": str(PREVIEWS),
-        "out_dir": str(OUT_DIR),
-    }
+    try:
+        return {
+            "ok": True,
+            "has_tesseract": _HAS_TESSERACT,
+            "tesseract_version": _TESSERACT_VERSION,
+            "template_exists": (TEMPLATES / "report_template.docx").exists(),
+            "previews_dir": str(PREVIEWS),
+            "out_dir": str(OUT_DIR),
+            "error": False,
+            "errors": [],
+        }
+    except Exception as exc:
+        return error_response(
+            status_code=500,
+            code="HEALTH_CHECK_FAILED",
+            message="Health check failed.",
+            errors=[{"code": "HEALTH_CHECK_FAILED", "message": str(exc)}],
+        )
 
 # ✨ Recent scan: APIs + page + aliases
 @app.post("/api/scan-mem-log")
@@ -253,33 +321,60 @@ def scan_log_redirect():
 @app.post("/scan")
 async def scan(
     evidence: UploadFile = File(...),
-    strategy_name: str = Form(...),
+    strategy_name: str = Form(...),  # preserved for frontend compatibility
+    strategy: str | None = Form(None),  # alternative field name
     user_id: str = Form("user"),
 ):
     try:
-        # find strategy
-        strategy = next((s for s in load_strategies() if s.name == strategy_name), None)
-        if not strategy:
-            raise HTTPException(status_code=400, detail=f"Unknown strategy: {strategy_name}")
+        strategy_label = strategy or strategy_name
+        strat_obj = get_checker(strategy_label) if 'get_checker' in globals() else None
+        if strat_obj is None:
+            # fallback to previous lookup
+            strat_obj = next((s for s in load_strategies() if s.name == strategy_label), None)
+
+        if not strat_obj:
+            _push_mem_log(user_id, strategy_label, "error")
+            return error_response(
+                status_code=400,
+                code="STRATEGY_NOT_FOUND",
+                message=f"Unknown strategy: {strategy_label}",
+            )
 
         # read upload
         content = await evidence.read()
         if not content:
-            raise HTTPException(status_code=400, detail="Empty upload")
+            _push_mem_log(user_id, strat_obj.name, "error")
+            return error_response(
+                status_code=400,
+                code="EMPTY_UPLOAD",
+                message="Evidence file is empty.",
+            )
 
         # extract text + preview
         text, preview_path = extract_text_and_preview_bytes(
             evidence.filename, content, PREVIEWS
         )
         if not text.strip():
-            _push_mem_log(user_id, strategy.name, "success")  # ✨ log a successful run even without readable text
+            _push_mem_log(user_id, strat_obj.name, "success")  # log a successful run even without readable text
             return JSONResponse(
-                {"ok": True, "findings": [], "reports": [], "note": "No readable text found in evidence."}
+                {
+                    "ok": True,
+                    "error": False,
+                    "has_errors": False,
+                    "errors": [],
+                    "findings": [],
+                    "reports": [],
+                    "note": "No readable text found in evidence."
+                }
             )
 
         # run rules
-        if hasattr(strategy, "emit_hits"):
-            findings = strategy.emit_hits(text, source_file=evidence.filename) or []
+        if hasattr(strat_obj, "emit_hits"):
+            try:
+                findings = strat_obj.emit_hits(text, source_file=evidence.filename, user_id=user_id) or []
+            except TypeError:
+                # fallback for strategies that don't accept extra kwargs
+                findings = strat_obj.emit_hits(text) or []
         else:
             hits = strategy.match(text) or []
             findings = (
@@ -295,13 +390,59 @@ async def scan(
                 if hits else []
             )
 
+        # Normalize findings to a common schema and ensure details are present
+        def _clip(s: str, n: int = 400) -> str:
+            if not s:
+                return ""
+            s = " ".join(str(s).split())
+            return s if len(s) <= n else s[: n - 3] + "..."
+
+        normalized = []
+        for f in findings:
+            f = dict(f)
+            f.setdefault("test_id", "")
+            f.setdefault("sub_strategy", "")
+            f.setdefault("detected_level", "")
+            f.setdefault("pass_fail", "UNKNOWN")
+            f.setdefault("priority", "")
+            f.setdefault("recommendation", "")
+            f.setdefault("evidence", [])
+
+            # coerce evidence to list[str]
+            ev = f.get("evidence")
+            if isinstance(ev, str):
+                ev_list = [ev]
+            elif isinstance(ev, list):
+                ev_list = [str(x) for x in ev]
+            else:
+                ev_list = []
+            f["evidence"] = ev_list
+
+            # details (observed/expected)
+            obs_full = ""
+            if ev_list:
+                obs_full = ev_list[0]
+            exp_full = f.get("recommendation") or f.get("description") or ""
+
+            det = f.get("details") or {}
+            det.setdefault("observed_full", obs_full)
+            det.setdefault("expected_full", exp_full)
+            det.setdefault("observed", _clip(det.get("observed_full", "")))
+            det.setdefault("expected", _clip(det.get("expected_full", "")))
+            f["details"] = det
+
+            normalized.append(f)
+
+        findings = normalized
+
         # generate reports (PDF preferred; fallback DOCX/TXT so we never 500)
         OUT_DIR.mkdir(parents=True, exist_ok=True)
         generated: list[str] = []
         note = ""
+        errors: list[dict] = []
 
         for r in findings:
-            base_uid = _safe_uid(f"{user_id}-{strategy.name}-{Path(evidence.filename).stem}")
+            base_uid = _safe_uid(f"{user_id}-{strat_obj.name}-{Path(evidence.filename).stem}")
             # make name unique to avoid 'Permission denied' if file is locked from previous run
             uid = f"{base_uid}-{int(time.time())}"
 
@@ -311,7 +452,7 @@ async def scan(
                 "UserID": user_id,
                 "Evidence": evidence.filename,
                 "Evidence Preview": str(preview_path) if preview_path else "",
-                "Strategy": strategy.name,
+                "Strategy": strat_obj.name,
                 "TestID": r.get("test_id", ""),
                 "Sub-Strategy": r.get("sub_strategy", ""),
                 "ML Level": r.get("detected_level", ""),
@@ -331,46 +472,36 @@ async def scan(
                     base_dir=str(ROOT),
                 )
                 generated.append(Path(pdf_path).name)
-            except Exception:
-                # Fallback: create a simple DOCX (or TXT) so the UI still returns a download
-                note = "PDF converter not available or file was locked; generated a DOCX/TXT fallback."
-                fallback_name = f"{uid}.docx" if DocxDocument else f"{uid}.txt"
-                fallback_path = OUT_DIR / fallback_name
+            except Exception as exc:
+                # If report generation fails even with fallbacks, capture the error
+                errors.append({"code": "REPORT_GENERATION_FAILED", "message": str(exc)})
 
-                try:
-                    if DocxDocument:
-                        doc = DocxDocument()
-                        doc.add_heading("AutoAudit – Finding", 0)
-                        doc.add_paragraph(f"Strategy: {strategy.name}")
-                        doc.add_paragraph(f"Test ID: {payload['TestID']}")
-                        doc.add_paragraph(f"Pass/Fail: {payload['Pass/Fail']}")
-                        if payload["Recommendation"]:
-                            doc.add_paragraph(f"Recommendation: {payload['Recommendation']}")
-                        if payload["Evidence Extract"]:
-                            doc.add_paragraph("Evidence:")
-                            doc.add_paragraph(payload["Evidence Extract"])
-                        doc.save(str(fallback_path))
-                    else:
-                        with open(fallback_path, "w", encoding="utf-8") as f:
-                            f.write(f"Strategy: {strategy.name}\n")
-                            f.write(f"Test ID: {payload['TestID']}\n")
-                            f.write(f"Pass/Fail: {payload['Pass/Fail']}\n")
-                            f.write(f"Recommendation: {payload['Recommendation']}\n")
-                            f.write(f"Evidence: {payload['Evidence Extract']}\n")
-                    generated.append(fallback_path.name)
-                except Exception:
-                    # If even the fallback fails, keep going without a report link
-                    pass
+        _push_mem_log(user_id, strat_obj.name, "success")  # ✨ log success
+        return {
+            "ok": True,
+            "error": False,
+            "has_errors": len(errors) > 0,
+            "errors": errors,
+            "findings": findings,
+            "reports": generated,
+            "note": note,
+        }
 
-        _push_mem_log(user_id, strategy.name, "success")  # ✨ log success
-        return {"ok": True, "findings": findings, "reports": generated, "note": note}
-
-    except HTTPException:
+    except HTTPException as exc:
         _push_mem_log(user_id if 'user_id' in locals() else "user", strategy_name, "error")  # ✨ log error
-        raise
-    except Exception:
+        return error_response(
+            status_code=exc.status_code,
+            code="VALIDATION_ERROR",
+            message=str(exc.detail),
+        )
+    except Exception as exc:
         _push_mem_log(user_id if 'user_id' in locals() else "user", strategy_name, "error")  # ✨ log error
-        raise
+        return error_response(
+            status_code=500,
+            code="SERVER_ERROR",
+            message="Unexpected error during scan.",
+            errors=[{"code": "SERVER_ERROR", "message": str(exc)}],
+        )
 
 
 @app.get("/reports/{filename}")

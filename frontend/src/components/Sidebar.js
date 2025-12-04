@@ -35,13 +35,11 @@ const NavButton = ({ href, name, icon, isExpanded, isActive = false, onClick }) 
 };
 
 // Main sidebar component 
-const Sidebar = ({ onWidthChange, isDarkMode = true }) => {
+const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
   const [isExpanded, setIsExpanded] = useState(true); //Track whether sidebar is expanded
   const [activeItem, setActiveItem] = useState('home'); // Track active navigation item
   const [searchValue, setSearchValue] = useState(''); // Track search input value
 
-  // Add this line right after the component declaration for debugging
-console.log('Sidebar isDarkMode:', isDarkMode);
   //Event to toggle collapsed state and notify parents that the width has changed
   const toggleSidebar = () => {
     const newExpanded = !isExpanded;
@@ -66,9 +64,8 @@ console.log('Sidebar isDarkMode:', isDarkMode);
           {/* only display when the navbar is expanded! */}
           {isExpanded ? (
             <div className="search-bar">
-              <button className="search-toggle-button" onClick={toggleSidebar}>
-                {/* arrow when open, hamburger when closed: */}
-                ←
+              <button className="search-toggle-button" onClick={toggleSidebar} aria-label="Collapse sidebar">
+                ×
               </button>
               <input
                 type="text"
@@ -80,7 +77,7 @@ console.log('Sidebar isDarkMode:', isDarkMode);
               <span className="search-icon">🔍</span>
             </div>
           ) : (
-            <button className="toggle-button" onClick={toggleSidebar}>
+            <button className="toggle-button" onClick={toggleSidebar} aria-label="Expand sidebar">
               ☰
             </button>
           )}

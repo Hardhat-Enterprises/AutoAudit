@@ -5,7 +5,7 @@ from typing import List
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1])) 
-from strategies import load_strategies  
+from security.strategies import load_strategies  
 
 #------------------------ Import core_ocr.py----------------
 from backend.core_ocr import extract_text_and_preview, SUPPORTED_ALL_EXTS
@@ -167,7 +167,10 @@ def main():
             rows_added = 0  # track whether any hits were written
 
             if hasattr(strat, "emit_hits"):
-                rows = strat.emit_hits(raw_text, source_file=fpath.name)
+                try:
+                    rows = strat.emit_hits(raw_text, source_file=fpath.name, user_id=user_id)
+                except TypeError:
+                    rows = strat.emit_hits(raw_text)
                 for r in rows:
                     report_rows.append((
                         user_id,

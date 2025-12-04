@@ -15,6 +15,20 @@ class MultiFactorAuthentication(Strategy):
         findings = []
         lowered = text.lower()
 
+        # Keep evidence excerpts short for UI readability
+        def _excerpt(t: str, max_chars: int = 400, max_lines: int = 6, keywords=None) -> str:
+            lines = t.splitlines()
+            if keywords:
+                kw_lines = [ln for ln in lines if any(k in ln for k in keywords)]
+                if kw_lines:
+                    lines = kw_lines
+            if len(lines) > max_lines:
+                lines = lines[:max_lines]
+            clip = "\n".join(lines)
+            if len(clip) > max_chars:
+                clip = clip[: max_chars - 3] + "..."
+            return clip
+
         # --- Indicators ---
         disabled = ["mfa disabled", "not configured", "disabled for all users"]
         admins_only = ["mfa required for admins", "privileged roles only"]
@@ -36,7 +50,7 @@ class MultiFactorAuthentication(Strategy):
                 "sub_strategy": "MFA status",
                 "severity": "high",
                 "description": "MFA appears disabled or legacy authentication is allowed.",
-                "evidence": f"[DEBUG OCR from {source_file}]\n{lowered}",
+                "evidence": _excerpt(f"[OCR from {source_file}]\n{lowered}", keywords=disabled + legacy_auth),
                 "detected_level": 0
             })
 
@@ -46,7 +60,7 @@ class MultiFactorAuthentication(Strategy):
                 "sub_strategy": "Scope",
                 "severity": "medium",
                 "description": "MFA is enforced for admins only.",
-                "evidence": f"[DEBUG OCR from {source_file}]\n{lowered}",
+                "evidence": _excerpt(f"[OCR from {source_file}]\n{lowered}", keywords=admins_only),
                 "detected_level": 1
             })
 
@@ -56,7 +70,7 @@ class MultiFactorAuthentication(Strategy):
                 "sub_strategy": "All users (weak)",
                 "severity": "low",
                 "description": "MFA is enforced for all users, but weak methods are allowed (SMS, app passwords).",
-                "evidence": f"[DEBUG OCR from {source_file}]\n{lowered}",
+                "evidence": _excerpt(f"[OCR from {source_file}]\n{lowered}", keywords=all_users + weak_methods),
                 "detected_level": 2
             })
 
@@ -66,7 +80,7 @@ class MultiFactorAuthentication(Strategy):
                 "sub_strategy": "Strong MFA",
                 "severity": "info",
                 "description": "MFA enforced for all users with strong methods and legacy auth blocked.",
-                "evidence": f"[DEBUG OCR from {source_file}]\n{lowered}",
+                "evidence": _excerpt(f"[OCR from {source_file}]\n{lowered}", keywords=all_users + strong_methods),
                 "detected_level": 3
             })
 

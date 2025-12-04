@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1])) 
 from reports.report_service import generate_pdf
-from strategies import load_strategies    
+from security.strategies import load_strategies
 
 #------------------------ Import core_ocr.py----------------
 from backend.core_ocr import (

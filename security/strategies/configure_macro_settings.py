@@ -188,4 +188,28 @@ class ConfigureMicrosoftOfficeMacroSettings(Strategy):
                 ev(t),
             ))
 
+        # If nothing matched, emit a concise fail so the UI shows a row instead of "no findings"
+        if not rows:
+            rows.append(self._row(
+                "ML1-OM-00",
+                "Macro evidence missing",
+                "ML1",
+                "FAIL",
+                "Medium",
+                "Provide a screenshot or text from Office Trust Center / GPO showing macro settings (e.g., 'Disable all macros without notification', blockcontentexecutionfromInternet=1).",
+                ev(t[:400] or "No readable text extracted"),
+            ))
+            rows[-1]["details"] = {
+                "observed": self._clip(t or "No macro-related content detected."),
+                "expected": "Evidence that macros are disabled/blocked via Trust Center or GPO (e.g., 'Disable all macros without notification', blockcontentexecutionfromInternet=1).",
+            }
+
+        # Add observed/expected for existing rows when helpful
+        for r in rows:
+            if "details" not in r:
+                r["details"] = {
+                    "observed": self._clip(" ".join(r.get("evidence", []))) if r.get("evidence") else self._clip(t),
+                    "expected": r.get("recommendation", ""),
+                }
+
         return rows
