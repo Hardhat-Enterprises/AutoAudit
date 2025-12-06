@@ -6,10 +6,18 @@ export default function LoginPage({ onLogin, onSignUpClick }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = () => {
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter both your email address and password to continue.');
+      return;
+    }
+
+    setError('');
     onLogin();
   };
+
 
   return (
     <div className="login-container">
@@ -37,10 +45,20 @@ export default function LoginPage({ onLogin, onSignUpClick }) {
           <div className="login-form">
             <div className="form-header">
               <h2>Sign In</h2>
-              <p>Access your compliance dashboard and security insights</p>
-            </div>
+              <p>Access your compliance dashboard and security insights.</p>
+              <p className="form-helper">
+                Use your AutoAudit account to continue assessments, review findings, and track compliance status.
+              </p>
+           </div>
+
+            {error && (
+              <div className="error-message" role="alert">
+                {error}
+              </div>
+            )}
 
             <div className="form-fields">
+              
               <div className="field-group">
                 <label>Email Address</label>
                 <input
@@ -48,6 +66,7 @@ export default function LoginPage({ onLogin, onSignUpClick }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your.email@company.com"
+                  required
                 />
               </div>
 
@@ -59,6 +78,7 @@ export default function LoginPage({ onLogin, onSignUpClick }) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
+                    required
                   />
                   <button
                     type="button"
