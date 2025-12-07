@@ -5,16 +5,10 @@ import { landingFeatures } from "./featuresData";
 import LandingFooter from "./components/LandingFooter";
 import LandingHeader from "./components/LandingHeader";
 
-const AboutUs = ({ onBack, onSignInClick, onAboutClick, onContactClick }) => {
+const AboutUs = ({ onSignInClick }) => {
   return (
     <div className="about-container">
-      <LandingHeader
-        onSignInClick={onSignInClick}
-        onAboutClick={onAboutClick}
-        onHomeClick={onBack}
-        onContactClick={onContactClick}
-        showSignIn={false}
-      />
+      <LandingHeader onSignInClick={onSignInClick} />
 
       <div className="about-content">
         <div className="about-hero">

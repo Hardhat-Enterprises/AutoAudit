@@ -98,8 +98,6 @@ function App() {
           element={
             <LandingPage 
               onSignInClick={() => navigate('/login')}
-              onAboutClick={() => navigate('/about')}
-              onContactClick={() => navigate('/contact')}
             />
           } 
         />
@@ -110,8 +108,6 @@ function App() {
             <AboutUs 
               onBack={() => navigate('/')} 
               onSignInClick={() => navigate('/login')}
-              onAboutClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              onContactClick={() => navigate('/contact')}
             />
           } 
         />
@@ -120,8 +116,6 @@ function App() {
           path="/contact"
           element={
             <ContactPage
-              onNavigateHome={() => navigate('/')}
-              onNavigateAbout={() => navigate('/about')}
               onSignIn={() => navigate('/login')}
             />
           }

@@ -20,7 +20,7 @@ const ContactHero = () => (
   </section>
 );
 
-const ContactPage = ({ onNavigateHome, onNavigateAbout, onSignIn }) => {
+const ContactPage = ({ onSignIn }) => {
   const [submitted, setSubmitted] = useState(false);
 
   const handleFormSuccess = () => {
@@ -30,11 +30,7 @@ const ContactPage = ({ onNavigateHome, onNavigateAbout, onSignIn }) => {
 
   return (
     <div className="contact-page">
-      <LandingHeader
-        onSignInClick={onSignIn}
-        onAboutClick={onNavigateAbout}
-        onHomeClick={onNavigateHome}
-      />
+      <LandingHeader onSignInClick={onSignIn} />
       <main>
         <ContactHero />
 

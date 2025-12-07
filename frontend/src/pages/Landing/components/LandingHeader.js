@@ -1,12 +1,14 @@
 import React from "react";
 
-const LandingHeader = ({
-  onSignInClick,
-  onAboutClick,
-  onHomeClick,
-  onContactClick,
-  showSignIn = true,
-}) => {
+const navLinks = [
+  { label: "Home", href: "/" },
+  { label: "Features", href: "/#features" },
+  { label: "Benefits", href: "/#benefits" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+];
+
+const LandingHeader = ({ onSignInClick, showSignIn = true }) => {
   return (
     <header className="landing-header">
       <a className="landing-logo" href="/" aria-label="AutoAudit home">
@@ -14,29 +16,11 @@ const LandingHeader = ({
       </a>
 
       <nav className="landing-nav" aria-label="Primary navigation">
-        {onHomeClick && (
-          <button
-            type="button"
-            onClick={onHomeClick}
-            className="link-button"
-          >
-            Home
-          </button>
-        )}
-        <a href="#features">Features</a>
-        <a href="#benefits">Benefits</a>
-        <button type="button" onClick={onAboutClick} className="link-button">
-          About
-        </button>
-        {onContactClick && (
-          <button
-            type="button"
-            onClick={onContactClick}
-            className="link-button"
-          >
-            Contact
-          </button>
-        )}
+        {navLinks.map((link) => (
+          <a key={link.label} href={link.href}>
+            {link.label}
+          </a>
+        ))}
         {showSignIn && (
           <button
             type="button"
