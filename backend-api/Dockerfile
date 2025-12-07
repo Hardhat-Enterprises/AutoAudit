@@ -3,25 +3,30 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (incl. Tesseract for evidence OCR)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    tesseract-ocr \
+    libtesseract-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
 RUN pip install uv
 
 # Copy dependency files
-COPY pyproject.toml uv.lock ./
+COPY backend-api/pyproject.toml backend-api/uv.lock ./
 
-# Install dependencies
-RUN uv sync --frozen --no-dev
+# Install dependencies (include evidence extra so OCR/reporting stack is present)
+RUN uv sync --frozen --no-dev --extra evidence
 
 # Copy application code
-COPY app ./app
-COPY alembic ./alembic
-COPY alembic.ini ./
-COPY entrypoint.sh ./
+COPY backend-api/app ./app
+COPY backend-api/alembic ./alembic
+COPY backend-api/alembic.ini ./
+COPY backend-api/entrypoint.sh ./
+
+# Copy evidence scanner assets/logic
+COPY security ./security
 
 # Make entrypoint executable
 RUN chmod +x entrypoint.sh

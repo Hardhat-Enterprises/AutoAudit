@@ -53,8 +53,8 @@ services:
   backend-api:
     profiles: ["frontend-dev", "all"]
     build:
-      context: ./backend-api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend-api/Dockerfile
     container_name: autoaudit-backend-api
     environment:
       - APP_ENV=dev
