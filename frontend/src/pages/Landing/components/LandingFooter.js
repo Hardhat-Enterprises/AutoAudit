@@ -3,19 +3,39 @@ import React from "react";
 const footerColumns = [
   {
     title: "Product",
-    links: ["Features", "Pricing", "Integrations", "Security"],
+    links: [
+      { label: "Features", href: "#features" },
+      { label: "Pricing", href: "#" },
+      { label: "Integrations", href: "#" },
+      { label: "Security", href: "#" },
+    ],
   },
   {
     title: "Resources",
-    links: ["Documentation", "API Reference", "Blog", "Case Studies"],
+    links: [
+      { label: "Documentation", href: "#" },
+      { label: "API Reference", href: "#" },
+      { label: "Blog", href: "#" },
+      { label: "Case Studies", href: "#" },
+    ],
   },
   {
     title: "Company",
-    links: ["About Us", "Careers", "Contact", "Partners"],
+    links: [
+      { label: "About Us", href: "/about" },
+      { label: "Careers", href: "#" },
+      { label: "Contact", href: "/contact" },
+      { label: "Partners", href: "#" },
+    ],
   },
   {
     title: "Legal",
-    links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "Compliance"],
+    links: [
+      { label: "Privacy Policy", href: "#" },
+      { label: "Terms of Service", href: "#" },
+      { label: "Cookie Policy", href: "#" },
+      { label: "Compliance", href: "#" },
+    ],
   },
 ];
 
@@ -28,8 +48,8 @@ const LandingFooter = () => {
             <h3>{column.title}</h3>
             <ul>
               {column.links.map((link) => (
-                <li key={link}>
-                  <a href="#">{link}</a>
+                <li key={link.label}>
+                  <a href={link.href}>{link.label}</a>
                 </li>
               ))}
             </ul>

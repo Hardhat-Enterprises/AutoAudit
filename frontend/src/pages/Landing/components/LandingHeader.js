@@ -1,6 +1,14 @@
 import React from "react";
 
-const LandingHeader = ({ onSignInClick, onAboutClick }) => {
+const navLinks = [
+  { label: "Home", href: "/" },
+  { label: "Features", href: "/#features" },
+  { label: "Benefits", href: "/#benefits" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+];
+
+const LandingHeader = ({ onSignInClick, hiddenLinks = [], showSignIn = true }) => {
   return (
     <header className="landing-header">
       <a className="landing-logo" href="/" aria-label="AutoAudit home">
@@ -8,14 +16,22 @@ const LandingHeader = ({ onSignInClick, onAboutClick }) => {
       </a>
 
       <nav className="landing-nav" aria-label="Primary navigation">
-        <a href="#features">Features</a>
-        <a href="#benefits">Benefits</a>
-        <button type="button" onClick={onAboutClick} className="link-button">
-          About
-        </button>
-        <button type="button" className="btn-primary" onClick={onSignInClick}>
-          Sign In
-        </button>
+        {navLinks
+          .filter((link) => !hiddenLinks.map((l) => l.toLowerCase()).includes(link.label.toLowerCase()))
+          .map((link) => (
+            <a key={link.label} href={link.href}>
+              {link.label}
+            </a>
+          ))}
+        {showSignIn && (
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onSignInClick}
+          >
+            Sign In
+          </button>
+        )}
       </nav>
     </header>
   );
