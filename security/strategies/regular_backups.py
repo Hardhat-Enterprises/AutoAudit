@@ -31,6 +31,18 @@ class RegularBackups(Strategy):
             "recommendation": rec,
             "evidence": ev,
         }
+    
+    @staticmethod
+    def _row_ml(level, tid, sub, pf, prio, rec, ev):
+        return {
+            "test_id": tid,
+            "sub_strategy": sub,
+            "detected_level": level,   # "ML1" or "ML2"
+            "pass_fail": pf,
+            "priority": prio,
+            "recommendation": rec,
+            "evidence": ev,
+        }
 
     @staticmethod
     def _has(text: str, *phrases: str) -> bool:
@@ -107,7 +119,59 @@ class RegularBackups(Strategy):
                 "Restrict backup system access to administrators only.",
                 ev(t),
             ))
+        # ---- ML2 tests ----
 
+        # ML2-RB-01: only backup-admins may access repositories
+        if self._has(t, "role=backup-admin") and self._has(t, "result=success"):
+            rows.append(self._row_ml(
+                "ML2", "ML2-RB-01", "Access limited to backup-admins",
+                "PASS", "High",
+                "Keep repository access limited to backup-admins and alert on non-member access.",
+                ev(t)
+            ))
+        elif (
+            self._has(t, "role=sysadmin")
+            and self._has(t, "is_backup_admin=false")
+            and self._has(t, "result=success")
+        ):
+            rows.append(self._row_ml(
+                "ML2", "ML2-RB-01", "Access limited to backup-admins",
+                "FAIL", "High",
+                "Remove non-backup-admin privileges from backup repositories.",
+                ev(t)
+            ))
+
+        # ML2-RB-02: restore to a common point in time is proven
+        if self._has(t, "restore test") and self._has(t, "status=success") and self._has(t, "common point"):
+            rows.append(self._row_ml(
+                "ML2", "ML2-RB-02", "Restore to common point proven",
+                "PASS", "Medium",
+                "Record periodic restore tests and keep reports.",
+                ev(t)
+            ))
+        elif self._has(t, "restore test") and self._has(t, "status=fail"):
+            rows.append(self._row_ml(
+                "ML2", "ML2-RB-02", "Restore to common point proven",
+                "FAIL", "High",
+                "Investigate the failure and repeat the test until successful.",
+                ev(t)
+            ))
+
+        # ML2-RB-03: retention and immutability are enforced
+        if self._has(t, "retention=") and self._has(t, "immutability=enabled"):
+            rows.append(self._row_ml(
+                "ML2", "ML2-RB-03", "Retention and immutability enforced",
+                "PASS", "High",
+                "Keep retention at or above policy and keep immutability enabled.",
+                ev(t)
+            ))
+        elif self._has(t, "immutability=disabled") or self._has(t, "retention=<policy"):
+            rows.append(self._row_ml(
+                "ML2", "ML2-RB-03", "Retention and immutability enforced",
+                "FAIL", "High",
+                "Enable object lock or vault immutability and raise retention to policy.",
+                ev(t)
+            ))
         return rows
 
 
