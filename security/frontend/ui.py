@@ -326,7 +326,8 @@ async def scan(
     user_id: str = Form("user"),
 ):
     try:
-        strategy_label = strategy or strategy_name
+        # Ensure we use the actual string value (avoid FormInfo objects when called directly)
+        strategy_label = strategy if isinstance(strategy, str) and strategy else strategy_name
         strat_obj = get_checker(strategy_label) if 'get_checker' in globals() else None
         if strat_obj is None:
             # fallback to previous lookup

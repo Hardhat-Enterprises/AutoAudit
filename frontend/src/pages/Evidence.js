@@ -199,7 +199,9 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
     setIsScanning(true);
 
     const formData = new FormData();
+    // Send strategy under both names to satisfy legacy and current API handlers
     formData.append('strategy_name', selectedStrategy);
+    formData.append('strategy', selectedStrategy);
     formData.append('user_id', userId || 'user');
     formData.append('evidence', selectedFile);
 

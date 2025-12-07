@@ -16,12 +16,8 @@ RUN pip install uv
 # Copy dependency files
 COPY backend-api/pyproject.toml backend-api/uv.lock ./
 
-# Install dependencies
-RUN uv sync --frozen --no-dev
-
-# Security (evidence) dependencies into the uv venv
-COPY security/requirements.txt ./security/requirements.txt
-RUN uv pip install --python .venv/bin/python -r security/requirements.txt
+# Install dependencies (include evidence extra so OCR/reporting stack is present)
+RUN uv sync --frozen --no-dev --extra evidence
 
 # Copy application code
 COPY backend-api/app ./app

@@ -78,7 +78,6 @@ services:
     container_name: autoaudit-frontend
     environment:
       - REACT_APP_API_URL=http://localhost:8000
-      - REACT_APP_EVIDENCE_API_BASE=http://localhost:8000
     ports:
       - "3000:3000"
     restart: unless-stopped

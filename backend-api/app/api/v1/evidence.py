@@ -59,7 +59,13 @@ async def scan(
     user_id: str = Form("user"),
 ):
     # delegate to existing implementation
-    return await evidence_ui.scan(evidence=evidence, strategy_name=strategy_name, user_id=user_id)
+    # Pass the strategy into both fields to avoid FormInfo default overriding it
+    return await evidence_ui.scan(
+        evidence=evidence,
+        strategy_name=strategy_name,
+        strategy=strategy_name,
+        user_id=user_id,
+    )
 
 
 @router.get("/reports/{filename}")
