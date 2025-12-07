@@ -78,24 +78,69 @@ class ApplicationControl(Strategy):
     # main detection logic 
     def emit_hits(self, raw_text: str, source_file: str = "", **kwargs):
         t = self.normalize(raw_text)
+        raw = raw_text or ""
+
+        def _clean(s: str) -> str:
+            return " ".join(s.split())
+
+        def _snippet_from_regex(patterns, text, context=120, max_len=400):
+            for pat in patterns:
+                m = re.search(pat, text, re.IGNORECASE | re.MULTILINE)
+                if m:
+                    start = max(0, m.start() - context)
+                    end = min(len(text), m.end() + context)
+                    snip = _clean(text[start:end].strip())
+                    if len(snip) > max_len:
+                        snip = snip[: max_len - 3] + "..."
+                    prefix = "..." if start > 0 else ""
+                    suffix = "..." if end < len(text) else ""
+                    return f"{prefix}{snip}{suffix}"
+            return None
+
+        def _snippet_from_phrase(phrases, text, context=120, max_len=400):
+            for phrase in phrases:
+                if not phrase:
+                    continue
+                m = re.search(re.escape(phrase), text, re.IGNORECASE)
+                if m:
+                    start = max(0, m.start() - context)
+                    end = min(len(text), m.end() + context)
+                    snip = _clean(text[start:end].strip())
+                    if len(snip) > max_len:
+                        snip = snip[: max_len - 3] + "..."
+                    prefix = "..." if start > 0 else ""
+                    suffix = "..." if end < len(text) else ""
+                    return f"{prefix}{snip}{suffix}"
+            return None
 
         # avoids false positives like blocklist, unblocked etc.
-        enforce_hit = self._any_regex(t, [r"\benforc(?:e|ed|ing)\b", r"\brules are enforced\b", r"\benforce rules\b"])
-        block_hit   = self._any_regex(t, [r"\bblock(?:ed|ing)?\b"]) or self._any_regex(t, self.BLOCK_REGEX)
+        enforce_snip = _snippet_from_regex([r"\benforc(?:e|ed|ing)\b", r"\brules are enforced\b", r"\benforce rules\b"], raw)
+        block_snip   = _snippet_from_regex([r"\bblock(?:ed|ing)?\b"], raw) or _snippet_from_regex(self.BLOCK_REGEX, raw)
 
         rows = []
 
         # detection criteria i.e. require (enforce|block) AND (label OR extension)
         for test_id, sub, priority, recommendation, label_key in self.RULES:
             label_hit = self._any_substr(t, self.LABELS[label_key])
-            ext_hit   = self._any_regex(t, self.EXT_PATTERNS_BY_LABEL[label_key])
+            label_snip = _snippet_from_phrase(self.LABELS[label_key], raw)
 
-            action_ok   = bool(enforce_hit or block_hit)
-            evidence_ok = bool(label_hit or ext_hit)
+            ext_hit   = self._any_regex(t, self.EXT_PATTERNS_BY_LABEL[label_key])
+            ext_snip  = _snippet_from_regex(self.EXT_PATTERNS_BY_LABEL[label_key], raw)
+
+            action_ok   = bool(enforce_snip or block_snip)
+            evidence_ok = bool(label_snip or ext_snip)
 
             # if both are detected = pass output
             if action_ok and evidence_ok:
-                evidence = [x for x in (label_hit, ext_hit, enforce_hit, block_hit) if x]
+                evidence = []
+                if label_snip:
+                    evidence.append(f"Rule mentions: {label_snip}")
+                if ext_snip:
+                    evidence.append(f"File types referenced: {ext_snip}")
+                if enforce_snip:
+                    evidence.append(f"Enforcement text: {enforce_snip}")
+                if block_snip:
+                    evidence.append(f"Blocking text: {block_snip}")
                 rows.append({
                     "test_id": test_id,
                     "sub_strategy": sub,
@@ -109,7 +154,7 @@ class ApplicationControl(Strategy):
         if rows:
             return rows
 
-        # generic fail output
+        # generic fail output with a concise reason
         return [{
             "test_id": "ML1-AC-01 to ML1-AC-07", # total of all test_ids
             "sub_strategy": "",
@@ -121,7 +166,7 @@ class ApplicationControl(Strategy):
                 "from running in user or temporary folders. "
                 "(2) Ensure rules are enforced on all workstations and reviewed periodically (ideally once per quarter)."
             ),
-            "evidence": []
+            "evidence": ["No blocking/enforcement text or file-type rules found in the evidence file."]
         }]
 
     # iterate each test_id
