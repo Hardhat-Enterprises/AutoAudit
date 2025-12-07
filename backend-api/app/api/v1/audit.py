@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query
 from app.schemas.audit import AuditLog
 from app.core.errors import NotFound  
 
-router = APIRouter(prefix="/audit", tags=["Audit"])
+router = APIRouter(prefix="/audit", tags=["Audit"]
 
 # Mock audit log store
 logs = [
