@@ -1,0 +1,8 @@
+# This file defines required reviewers for all PRs
+# Last updated: Dec 2025
+
+# Default reviewer for everything
+*    @khan-deakin @du-dhartley
+
+# You can add more specific rules later, e.g.:
+# /docs/    @docs-reviewer
