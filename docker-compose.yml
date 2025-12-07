@@ -1,0 +1,87 @@
+# AutoAudit Development Docker Compose
+#
+# Usage with profiles:
+#   docker compose up                           # Start only db and redis
+#   docker compose --profile frontend-dev up   # For frontend devs (starts backend-api, db, redis)
+#   docker compose --profile backend-dev up    # For backend devs (starts frontend, db, redis)
+#   docker compose --profile all up            # Start all services
+#
+# To run in detached mode, add -d flag:
+#   docker compose --profile frontend-dev up -d
+
+services:
+  # =============================================================================
+  # Infrastructure Services (always available)
+  # =============================================================================
+
+  db:
+    image: postgres:17
+    container_name: autoaudit-db
+    environment:
+      POSTGRES_USER: autoaudit
+      POSTGRES_PASSWORD: autoaudit_dev_password
+      POSTGRES_DB: autoaudit
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autoaudit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: autoaudit-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # =============================================================================
+  # Application Services (profile-controlled)
+  # =============================================================================
+
+  backend-api:
+    profiles: ["frontend-dev", "all"]
+    build:
+      context: .
+      dockerfile: backend-api/Dockerfile
+    container_name: autoaudit-backend-api
+    environment:
+      - APP_ENV=dev
+      - DATABASE_URL=postgresql+asyncpg://autoaudit:autoaudit_dev_password@db:5432/autoaudit
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    profiles: ["backend-dev", "all"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: autoaudit-frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

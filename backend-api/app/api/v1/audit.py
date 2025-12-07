@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from app.models.audit import AuditLog
+from app.schemas.audit import AuditLog
 from app.core.errors import NotFound  
 
 router = APIRouter(prefix="/audit", tags=["Audit"])

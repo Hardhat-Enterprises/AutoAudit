@@ -31,10 +31,10 @@ const ProtectedRoute = ({ children, isAuthenticated }) => {
 };
 
 // Dashboard Layout Component (with sidebar)
-const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle }) => {
+const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle, onSidebarWidthChange }) => {
   return (
     <>
-      <Sidebar onWidthChange={() => {}} isDarkMode={isDarkMode} />
+      <Sidebar onWidthChange={onSidebarWidthChange} isDarkMode={isDarkMode} />
       {React.cloneElement(children, { sidebarWidth, isDarkMode, onThemeToggle })}
     </>
   );
@@ -156,6 +156,7 @@ function App() {
                 sidebarWidth={sidebarWidth} 
                 isDarkMode={isDarkMode}
                 onThemeToggle={handleThemeToggle}
+                onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <Dashboard 
                   onThemeToggle={handleThemeToggle}
@@ -173,6 +174,7 @@ function App() {
                 sidebarWidth={sidebarWidth} 
                 isDarkMode={isDarkMode}
                 onThemeToggle={handleThemeToggle}
+                onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <Evidence />
               </DashboardLayout>

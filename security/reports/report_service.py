@@ -9,6 +9,7 @@ from typing import Mapping, Any, Optional, Dict, Tuple
 
 from docx import Document
 from docx.shared import Inches
+from fpdf import FPDF
 
 
 def generate_pdf(
@@ -277,10 +278,59 @@ def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
         expected = output_pdf.with_suffix(".pdf")
         if expected.exists() and expected != output_pdf:
             expected.replace(output_pdf)
-    except Exception as e:
-        raise RuntimeError(
-            "PDF conversion failed. Install Microsoft Word for docx2pdf or LibreOffice for fallback."
-        ) from e
+        return
+    except Exception:
+        pass
+
+    # Final fallback: generate a simple text PDF (no external binaries)
+    if _simple_pdf_from_docx(input_docx, output_pdf):
+        return
+
+    raise RuntimeError(
+        "PDF conversion failed. Install Microsoft Word for docx2pdf or LibreOffice, or ensure fpdf2 fallback works."
+    )
+
+
+def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
+    """
+    Pure-Python fallback using fpdf2 to ensure a downloadable PDF is always produced.
+    """
+    try:
+        doc = Document(str(input_docx))
+        pdf = FPDF()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.add_page()
+        pdf.set_font("Helvetica", size=12)
+
+        def _safe_text(text: str) -> str:
+            """fpdf core fonts are latin-1; strip/replace unsupported chars."""
+            if text is None:
+                return ""
+            try:
+                return text.encode("latin-1").decode("latin-1")
+            except Exception:
+                return text.encode("ascii", "replace").decode("ascii")
+
+        def _write_line(line: str):
+            line = _safe_text(line)
+            if not line:
+                return
+            pdf.multi_cell(0, 8, line)
+            pdf.ln(1)
+
+        for p in doc.paragraphs:
+            text = (p.text or "").strip()
+            _write_line(text)
+
+        for tbl in doc.tables:
+            for row in tbl.rows:
+                row_text = " | ".join((cell.text or "").strip() for cell in row.cells)
+                _write_line(row_text)
+
+        pdf.output(str(output_pdf))
+        return True
+    except Exception:
+        return False
         
 def _remove_markers_everywhere(doc, markers: list[str]) -> None:
     for p in _iter_paragraphs(doc):

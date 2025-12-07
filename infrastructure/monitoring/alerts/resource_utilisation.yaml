@@ -1,0 +1,100 @@
+#AutoAudit Resource Utilisation Alerts - Prometheus Alerting Rules
+#File: resource_utilisation.yaml
+#Location: /infrastructure/monitoring/alerts/
+#Description: Defines warning severity alerts for cluster resource utilisation thresholds.
+#Author: Senior Lead, AutoAudit DevSecOps Team
+#Last Updated: 2025-09-17
+
+groups:
+- name: resource.rules
+  interval: 1m
+  
+  rules:
+  - alert: ClusterStorageCapacityWarning
+    
+    expr: |
+      (kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes) * 100 < 15
+    
+    for: 10m
+    
+    labels:
+      severity: warning
+      team: infra
+      service: kubelet
+      environment: production
+    
+    annotations:
+      
+      summary: "Warning: Cluster storage capacity below 15%"
+      
+      description: |
+        The available storage capacity has been below 15% for more than 10 minutes.
+        Monitor storage usage and plan capacity expansion or cleanup.
+      
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#resourceutilisationclusterstoragecapacitywarning"
+
+  - alert: NetworkBandwidthThreshold
+    
+    expr: |
+      rate(container_network_receive_bytes_total[5m]) > 1000000000
+    
+    for: 5m
+    
+    labels:
+      severity: warning
+      team: infra
+      service: network
+      environment: production
+    
+    annotations:
+      
+      summary: "Warning: High network bandwidth usage"
+      
+      description: |
+        Network bandwidth usage exceeds 1Gbps for more than 5 minutes.
+        Investigate potential network congestion or abnormal traffic.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#resourceutilisationnetworkbandwidththreshold"
+
+  - alert: CPUUsageHigh
+    
+    expr: |
+      100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+    
+    for: 10m
+    
+    labels:
+      severity: warning
+      team: infra
+      service: node-exporter
+      environment: production
+    
+    annotations:
+      
+      summary: "Warning: High CPU usage above 85%"
+      
+      description: |
+        CPU usage has been above 85% for more than 10 minutes on node {{ $labels.instance }}.
+        Monitor workloads and consider scaling or optimisation.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#resourceutilisationcpuusagehigh"
+
+  - alert: MemoryUsageHigh
+    
+    expr: |
+      (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 < 15
+    
+    for: 10m
+    
+    labels:
+      severity: warning
+      team: infra
+      service: node-exporter
+      environment: production
+    
+    annotations:
+      
+      summary: "Warning: Low available memory below 15%"
+      
+      description: |
+        Available memory is below 15% for more than 10 minutes on node {{ $labels.instance }}.
+        Investigate memory leaks or increase capacity.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#resourceutilisationmemoryusagehigh"
