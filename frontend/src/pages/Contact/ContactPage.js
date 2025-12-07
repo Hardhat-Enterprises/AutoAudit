@@ -30,7 +30,7 @@ const ContactPage = ({ onSignIn }) => {
 
   return (
     <div className="contact-page">
-      <LandingHeader onSignInClick={onSignIn} />
+      <LandingHeader onSignInClick={onSignIn} hiddenLinks={["Contact"]} />
       <main>
         <ContactHero />
 

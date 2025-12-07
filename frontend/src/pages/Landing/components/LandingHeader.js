@@ -8,7 +8,7 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const LandingHeader = ({ onSignInClick, showSignIn = true }) => {
+const LandingHeader = ({ onSignInClick, hiddenLinks = [], showSignIn = true }) => {
   return (
     <header className="landing-header">
       <a className="landing-logo" href="/" aria-label="AutoAudit home">
@@ -16,11 +16,13 @@ const LandingHeader = ({ onSignInClick, showSignIn = true }) => {
       </a>
 
       <nav className="landing-nav" aria-label="Primary navigation">
-        {navLinks.map((link) => (
-          <a key={link.label} href={link.href}>
-            {link.label}
-          </a>
-        ))}
+        {navLinks
+          .filter((link) => !hiddenLinks.map((l) => l.toLowerCase()).includes(link.label.toLowerCase()))
+          .map((link) => (
+            <a key={link.label} href={link.href}>
+              {link.label}
+            </a>
+          ))}
         {showSignIn && (
           <button
             type="button"
