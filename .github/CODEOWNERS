@@ -1,0 +1,10 @@
+# This file defines required reviewers for all PRs
+# Last updated: Dec 2025
+
+# Default reviewer(s) for everything
+# For T3 2025 the list is primary du-dhartley, khan-deakin is listed here as a backup in case David is unavailable.
+# Additional contributors can be easily added here.
+*    @khan-deakin @du-dhartley
+
+# You can add more specific rules later, e.g.:
+# /docs/    @docs-reviewer
