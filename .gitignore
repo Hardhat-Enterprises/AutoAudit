@@ -1,3 +1,4 @@
+
 # Node / JS
 node_modules/
 dist/
@@ -14,3 +15,14 @@ coverage/
 .vscode/
 .DS_Store
 Thumbs.db
+=======
+# Ignore virtual environment in AutoAudit
+.venv/
+venv/
+env/
+**/.venv/
+**/venv/
+**/env/
+README.md
+.DS_Store
+
