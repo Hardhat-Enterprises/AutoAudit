@@ -1,0 +1,105 @@
+#AutoAudit Security Alerts - Prometheus Alerting Rules
+#File: security_alerts.yaml
+#Location: /infrastructure/monitoring/alerts/
+#Description: Defines critical and high-severity security-related alerts for the AutoAudit platform.
+#Author: Senior Lead, AutoAudit DevSecOps Team
+#Last Updated: 2025-09-17
+
+groups:
+- name: security.rules
+
+  #Evaluation interval for this group to balance responsiveness and load
+  interval: 30s  
+  
+  rules:
+  - alert: UnauthorisedAccessAttempt
+    
+    expr: |
+      sum by (instance) (rate(auditd_logins_failed_total[5m])) > 10
+    
+    for: 5m
+    
+    labels:
+      severity: critical
+      team: security
+      service: auditd
+      environment: production
+    
+    annotations:
+      
+      summary: "Critical: Multiple failed login attempts detected on instance {{ $labels.instance }}"
+      
+      description: |
+        More than 10 failed login attempts have been detected in the last 5 minutes on auditd service instance {{ $labels.instance }}.
+        This may indicate a brute force attack or a credential stuffing attempt.
+        Immediate investigation is required.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#securityunauthorisedaccessattempt"
+
+  - alert: ScanEngineFailure
+    
+    expr: |
+      rate(scan_engine_errors_total[1m]) > 0
+    
+    for: 2m
+    
+    labels:
+      severity: high
+      team: security
+      service: scan-engine
+      environment: production
+    
+    annotations:
+     
+      summary: "High: Scan engine error rate detected"
+      
+      description: |
+        Scan engine errors have been detected in the last minute.
+        This may impact the accuracy and coverage of compliance scanning.
+        Investigate scan engine logs and restart services if necessary.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#securityscanenginefailure"
+
+  - alert: SuspiciousPrivilegeEscalation
+    
+    expr: |
+      increase(privilege_escalation_events_total[10m]) > 0
+    
+    for: 10m
+    
+    labels:
+      severity: critical
+      team: security
+      service: privilege-monitor
+      environment: production
+    
+    annotations:
+      
+      summary: "Critical: Privilege escalation event detected"
+    
+      description: |
+        One or more privilege escalation events have been detected in the last 10 minutes.
+        This may indicate an active attack or insider threat.
+        Immediate containment and forensic analysis are required.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#securityprivilegeescalation"
+
+  - alert: VulnerabilityScanFailure
+    
+    expr: |
+      absent_over_time(vulnerability_scan_success[30m])
+    
+    for: 15m
+    
+    labels:
+      severity: high
+      team: security
+      service: vuln-scanner
+      environment: production
+    
+    annotations:
+    
+      summary: "High: Vulnerability scan failure detected"
+    
+      description: |
+        No successful vulnerability scans have been recorded in the last 30 minutes.
+        This may indicate scanner downtime or connectivity issues.
+        Verify scanner health and network connectivity.
+      runbook: "https://github.com/Hardhat-Enterprises/AutoAudit/blob/main/infrastructure/monitoring/alerts/runbooks/RUNBOOKS.md#securityvulnerabilityscanfailure"

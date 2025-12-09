@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.models.exports import ExportRequest, ExportStatusResponse, ExportResponse
+from app.schemas.exports import ExportRequest, ExportStatusResponse, ExportResponse
 from app.services.job_store import create_export_job, get_job_status
 from app.core.errors import NotFound 
 

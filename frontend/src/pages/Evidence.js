@@ -1,110 +1,240 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './Evidence.css';
 import { useNavigate } from 'react-router-dom';
+import { parseApiError, formatEvidenceList } from '../utils/api';
+
+const EvidenceDetails = ({ details, evidence }) => {
+  const toText = (value) => {
+    if (!value) return '';
+    if (Array.isArray(value)) {
+      return value
+        .filter(Boolean)
+        .map((item) => String(item).trim())
+        .join('\n');
+    }
+    if (typeof value === 'object') {
+      const stringifiable = value.observed || value.expected || value.recommendation;
+      if (!stringifiable) return '';
+      return String(stringifiable).trim();
+    }
+    return String(value).trim();
+  };
+
+  const observed = toText(
+    details?.observed_full ??
+    details?.observed ??
+    (Array.isArray(details?.evidence) ? details.evidence : details?.evidence)
+  );
+
+  const evidenceList = formatEvidenceList(evidence);
+  const merged = [observed, evidenceList.join('\n')].filter(Boolean).join('\n').trim();
+  const hasContent = merged.length > 0;
+
+  if (!hasContent) return <span>—</span>;
+
+  return (
+    <div className="evidence-cell">
+      <div className="evidence-block">
+        <pre className="evidence-block__body">
+          {merged}
+        </pre>
+      </div>
+    </div>
+  );
+};
 
 const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
+  const [observedSidebarWidth, setObservedSidebarWidth] = useState(sidebarWidth);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
+      setObservedSidebarWidth(sidebarWidth);
+      return;
+    }
+    const sidebarEl = document.querySelector('.sidebar');
+    if (!sidebarEl) {
+      setObservedSidebarWidth(sidebarWidth);
+      return;
+    }
+    const observer = new ResizeObserver((entries) => {
+      const width = entries?.[0]?.contentRect?.width;
+      if (width && Math.abs(width - observedSidebarWidth) > 1) {
+        setObservedSidebarWidth(width);
+      }
+    });
+    observer.observe(sidebarEl);
+    return () => observer.disconnect();
+  }, [sidebarWidth, observedSidebarWidth]);
+
+  const apiCandidates = useMemo(() => {
+    const roots = [
+      process.env.REACT_APP_EVIDENCE_API_BASE,
+      process.env.REACT_APP_EVIDENCE_API,
+      process.env.REACT_APP_API_URL,
+      typeof window !== 'undefined' ? window.location.origin : null,
+      'http://localhost:8000',
+    ]
+      .filter(Boolean)
+      .map((root) => root.replace(/\/+$/, ''));
+
+    const urls = roots.map((root) => `${root}/v1/evidence`);
+
+    return urls.filter((url, idx) => urls.indexOf(url) === idx);
+  }, []);
+
+  const [apiBase, setApiBase] = useState(() => apiCandidates[0] || '');
+  const [strategies, setStrategies] = useState([]);
+  const [strategiesLoading, setStrategiesLoading] = useState(false);
+  const [strategiesError, setStrategiesError] = useState('');
+  const [health, setHealth] = useState(null);
+
   const [selectedStrategy, setSelectedStrategy] = useState('');
   const [userId, setUserId] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
+  const [errorDetails, setErrorDetails] = useState([]);
+  const [note, setNote] = useState('');
   const [results, setResults] = useState(null);
 
   const navigate = useNavigate();
 
-  // Mock strategies data
-  const strategies = [
-    { name: 'CIS Microsoft 365 Audit', description: 'Comprehensive Microsoft 365 security assessment based on CIS benchmarks' },
-    { name: 'NIST Compliance Check', description: 'NIST Cybersecurity Framework compliance verification' },
-    { name: 'ISO 27001 Assessment', description: 'ISO 27001 information security management system audit' },
-    { name: 'SOC 2 Readiness', description: 'SOC 2 Type II compliance preparation and gap analysis' },
-    { name: 'GDPR Compliance Scan', description: 'General Data Protection Regulation compliance assessment' }
-  ];
+  useEffect(() => {
+    let isActive = true;
 
-  // Mock results data
-  const mockResults = {
-    findings: [
-      {
-        test_id: 'CIS-001',
-        sub_strategy: 'Identity & Access',
-        detected_level: 'High',
-        pass_fail: 'FAIL',
-        priority: 'Critical',
-        recommendation: 'Enable multi-factor authentication for all admin accounts',
-        evidence: ['Admin account "admin@company.com" does not have MFA enabled', 'Found 3 admin accounts without MFA']
-      },
-      {
-        test_id: 'CIS-002',
-        sub_strategy: 'Data Protection',
-        detected_level: 'Medium',
-        pass_fail: 'FAIL',
-        priority: 'High',
-        recommendation: 'Implement data loss prevention policies',
-        evidence: ['No DLP policies found', 'Sensitive data sharing detected']
-      },
-      {
-        test_id: 'CIS-003',
-        sub_strategy: 'Access Management',
-        detected_level: 'Low',
-        pass_fail: 'PASS',
-        priority: 'Medium',
-        recommendation: 'Continue monitoring access patterns',
-        evidence: ['Access controls properly configured', 'Regular access reviews in place']
-      },
-      {
-        test_id: 'CIS-004',
-        sub_strategy: 'Audit Logging',
-        detected_level: 'Medium',
-        pass_fail: 'WARNING',
-        priority: 'Medium',
-        recommendation: 'Extend audit log retention period',
-        evidence: ['Audit logs retained for 90 days', 'Recommended retention: 1 year']
-      },
-      {
-        test_id: 'CIS-005',
-        sub_strategy: 'Email Security',
-        detected_level: 'High',
-        pass_fail: 'FAIL',
-        priority: 'Critical',
-        recommendation: 'Configure advanced threat protection',
-        evidence: ['ATP not enabled', 'Phishing protection insufficient']
+    const fetchStrategies = async () => {
+      setStrategiesLoading(true);
+      setStrategiesError('');
+
+      for (const base of apiCandidates) {
+        try {
+          const res = await fetch(`${base}/strategies`);
+          if (!res.ok) {
+            const parsed = await parseApiError(res, `Failed to load strategies (${res.status})`);
+            throw new Error(parsed.message);
+          }
+          const data = await res.json();
+          if (!isActive) {
+            return;
+          }
+
+          setStrategies(Array.isArray(data) ? data : []);
+          setApiBase(base);
+          setStrategiesLoading(false);
+          return;
+        } catch (err) {
+          // try the next candidate
+        }
       }
-    ],
-    reports: ['report-001.pdf', 'report-002.pdf', 'report-003.pdf', 'report-004.pdf', 'report-005.pdf']
-  };
+
+      if (isActive) {
+        setStrategiesError('Unable to load strategies from the Evidence API.');
+        setStrategies([]);
+        setApiBase(apiCandidates[0] || '');
+        setStrategiesLoading(false);
+      }
+    };
+
+    fetchStrategies();
+    return () => { isActive = false; };
+  }, [apiCandidates]);
+
+  useEffect(() => {
+    if (!apiBase) {
+      return;
+    }
+    let isActive = true;
+
+    const fetchHealth = async () => {
+      try {
+        const res = await fetch(`${apiBase}/health`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isActive) setHealth(data);
+      } catch (err) {
+        // health is best-effort
+      }
+    };
+
+    fetchHealth();
+    return () => { isActive = false; };
+  }, [apiBase]);
 
   const handleStrategyChange = (e) => {
     setSelectedStrategy(e.target.value);
     setError('');
+    setErrorDetails([]);
+    setResults(null);
+    setNote('');
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setSelectedFile(file);
+    const file = e.target.files?.[0];
+    setSelectedFile(file || null);
     setError('');
+    setErrorDetails([]);
   };
 
   const handleScan = async () => {
     setError('');
-    
+    setErrorDetails([]);
+    setNote('');
+    const base = apiBase || apiCandidates[0];
+
+    if (!base) {
+      setError('Evidence API is not configured.');
+      return;
+    }
+
     if (!selectedStrategy) {
       setError('Please select a strategy.');
       return;
     }
-    
+
     if (!selectedFile) {
       setError('Please choose an evidence file.');
       return;
     }
 
     setIsScanning(true);
-    
-    // Simulate API call
+
+    const formData = new FormData();
+    // Send strategy under both names to satisfy legacy and current API handlers
+    formData.append('strategy_name', selectedStrategy);
+    formData.append('strategy', selectedStrategy);
+    formData.append('user_id', userId || 'user');
+    formData.append('evidence', selectedFile);
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
-      setResults(mockResults);
+      const res = await fetch(`${base}/scan`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const raw = await res.text();
+      let data = {};
+      try {
+        data = JSON.parse(raw);
+      } catch (err) {
+        throw new Error(raw?.slice(0, 160) || 'Scan failed.');
+      }
+
+      if (!res.ok || data.ok === false) {
+        const errs = Array.isArray(data?.errors) ? data.errors : [];
+        const errMsg =
+          errs[0]?.message ||
+          data?.detail ||
+          `Scan failed (${res.status})`;
+        setErrorDetails(errs);
+        throw new Error(errMsg);
+      }
+
+      setResults(data);
+      setNote(data?.note || '');
+      setErrorDetails(Array.isArray(data?.errors) ? data.errors : []);
     } catch (err) {
-      setError('Scan failed. Please try again.');
+      setError(err?.message || 'Scan failed. Please try again.');
+      setResults(null);
     } finally {
       setIsScanning(false);
     }
@@ -119,15 +249,30 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   };
 
-  const selectedStrategyData = strategies.find(s => s.name === selectedStrategy);
+  const selectedStrategyData = useMemo(
+    () => strategies.find((s) => s.name === selectedStrategy),
+    [strategies, selectedStrategy]
+  );
+
+  const openRecentScans = () => {
+    const base = apiBase || apiCandidates[0];
+    if (base) {
+      window.open(`${base}/scan-mem`, '_blank', 'noopener');
+    }
+  };
+
+  const buildReportLink = (filename) => {
+    const base = apiBase || apiCandidates[0] || '';
+    return base ? `${base}/reports/${encodeURIComponent(filename)}` : '#';
+  };
 
   return (
     <div 
       className={`evidence-scanner ${isDarkMode ? 'dark' : 'light'}`}
       style={{ 
-        marginLeft: `${sidebarWidth}px`, 
-        width: `calc(100vw - ${sidebarWidth}px)`,
-        transition: 'margin-left 0.4s ease, width 0.4s ease'
+        marginLeft: `${observedSidebarWidth}px`, 
+        width: `calc(100vw - ${observedSidebarWidth}px)`,
+        transition: 'none'
       }}
     >
       <div className="evidence-container">
@@ -149,10 +294,15 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
             <h1 className="brand-title">Evidence Scanner</h1>
           </div>
         </div>
-        
+
         <p className="evidence-subtitle">
           Your Evidence Assistant: Pick a strategy and upload your file. Images, PDF, DOCX, TXT, logs, registry exports are supported.
         </p>
+
+        <div className="pill-row">
+          {strategiesLoading && <span className="status-busy">Loading strategies…</span>}
+          {strategiesError && <span className="status-error">{strategiesError}</span>}
+        </div>
 
         {/* Main Form Card */}
         <div className="evidence-card">
@@ -164,16 +314,20 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                 className="form-select"
                 value={selectedStrategy}
                 onChange={handleStrategyChange}
+                disabled={strategiesLoading || !strategies.length}
               >
-                <option value="">— select a strategy —</option>
-                {strategies.map((strategy, index) => (
-                  <option key={index} value={strategy.name}>
+                <option value="">{strategiesLoading ? 'Loading…' : '— select a strategy —'}</option>
+                {strategies.map((strategy) => (
+                  <option key={strategy.name} value={strategy.name}>
                     {strategy.name}
                   </option>
                 ))}
               </select>
               {selectedStrategyData && (
                 <div className="form-help">{selectedStrategyData.description}</div>
+              )}
+              {!strategiesLoading && !strategies.length && !strategiesError && (
+                <div className="form-help">No strategies returned by the API.</div>
               )}
             </div>
             
@@ -196,7 +350,7 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
               id="file" 
               type="file" 
               className="form-file"
-              disabled={!selectedStrategy}
+              disabled={!selectedStrategy || strategiesLoading}
               accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.txt,.docx,.csv,.log,.reg,.ini,.json,.xml,.htm,.html"
               onChange={handleFileChange}
             />
@@ -223,10 +377,31 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                 'Scan Evidence'
               )}
             </button>
-            
+
+            <button 
+              className="btn btn-secondary"
+              type="button"
+              onClick={openRecentScans}
+            >
+              Recent Scans
+            </button>
+
             {error && <span className="status-error">{error}</span>}
+            {errorDetails.length > 0 && (
+              <ul className="error-list">
+                {errorDetails.map((err, idx) => (
+                  <li key={idx}>
+                    {err.code ? `[${err.code}] ` : ''}{err.message || JSON.stringify(err)}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
+
+        {note && (
+          <div className="note-banner" role="status">{note}</div>
+        )}
 
         {/* Results Section */}
         {results && (
@@ -254,7 +429,7 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                     <th>Status</th>
                     <th>Priority</th>
                     <th>Recommendation</th>
-                    <th>Evidence Extract</th>
+                    <th>Evidence / Evidence Extract</th>
                     <th>Report</th>
                   </tr>
                 </thead>
@@ -270,17 +445,15 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                       <td>{finding.priority}</td>
                       <td>{finding.recommendation}</td>
                       <td>
-                        {Array.isArray(finding.evidence) 
-                          ? finding.evidence.map((item, i) => (
-                              <div key={i}>{item}</div>
-                            ))
-                          : finding.evidence
-                        }
+                        <EvidenceDetails 
+                          details={finding.details} 
+                          evidence={finding.evidence} 
+                        />
                       </td>
                       <td>
-                        {results.reports[index] && (
+                        {results.reports?.[index] && (
                           <a 
-                            href={`#${results.reports[index]}`} 
+                            href={buildReportLink(results.reports[index])} 
                             className="evidence-link"
                             target="_blank"
                             rel="noopener noreferrer"

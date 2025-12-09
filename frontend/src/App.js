@@ -10,6 +10,7 @@ import StyleGuide from './pages/StyleGuide';
 // Authentication & Landing Components
 import LandingPage from './pages/Landing/LandingPage';
 import AboutUs from './pages/Landing/AboutUs';
+import ContactPage from './pages/Contact/ContactPage';
 import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
 
@@ -30,10 +31,10 @@ const ProtectedRoute = ({ children, isAuthenticated }) => {
 };
 
 // Dashboard Layout Component (with sidebar)
-const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle }) => {
+const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle, onSidebarWidthChange }) => {
   return (
     <>
-      <Sidebar onWidthChange={() => {}} isDarkMode={isDarkMode} />
+      <Sidebar onWidthChange={onSidebarWidthChange} isDarkMode={isDarkMode} />
       {React.cloneElement(children, { sidebarWidth, isDarkMode, onThemeToggle })}
     </>
   );
@@ -97,7 +98,6 @@ function App() {
           element={
             <LandingPage 
               onSignInClick={() => navigate('/login')}
-              onAboutClick={() => navigate('/about')}
             />
           } 
         />
@@ -105,8 +105,20 @@ function App() {
         <Route 
           path="/about" 
           element={
-            <AboutUs onBack={() => navigate('/')} />
+            <AboutUs 
+              onBack={() => navigate('/')} 
+              onSignInClick={() => navigate('/login')}
+            />
           } 
+        />
+        
+        <Route
+          path="/contact"
+          element={
+            <ContactPage
+              onSignIn={() => navigate('/login')}
+            />
+          }
         />
         
         <Route 
@@ -138,6 +150,7 @@ function App() {
                 sidebarWidth={sidebarWidth} 
                 isDarkMode={isDarkMode}
                 onThemeToggle={handleThemeToggle}
+                onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <Dashboard 
                   onThemeToggle={handleThemeToggle}
@@ -155,6 +168,7 @@ function App() {
                 sidebarWidth={sidebarWidth} 
                 isDarkMode={isDarkMode}
                 onThemeToggle={handleThemeToggle}
+                onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <Evidence />
               </DashboardLayout>
@@ -174,6 +188,7 @@ function App() {
             <LandingPage 
               onSignInClick={() => navigate('/login')}
               onAboutClick={() => navigate('/about')}
+              onContactClick={() => navigate('/contact')}
             />
           } 
         />

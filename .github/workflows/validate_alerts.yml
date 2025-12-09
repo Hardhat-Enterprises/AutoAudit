@@ -1,0 +1,25 @@
+name: Validate Prometheus Alerting Rules
+
+on:
+  push:
+    paths:
+      - 'infrastructure/monitoring/alerts/**'
+  pull_request:
+    paths:
+      - 'infrastructure/monitoring/alerts/**'
+
+jobs:
+  validate_alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Prometheus tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y prometheus
+
+      - name: Validate Prometheus alerting rules
+        run: |
+          chmod +x infrastructure/monitoring/alerts/tests/promtool_validation.sh
+          ./infrastructure/monitoring/alerts/tests/promtool_validation.sh

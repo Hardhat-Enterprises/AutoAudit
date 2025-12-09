@@ -1,0 +1,29 @@
+#AutoAudit CI/CD Pipeline Alerts - Prometheus Alerting Rules
+#File: ci_cd_alerts.yaml
+#Location: /infrastructure/monitoring/alerts/
+#Description: Defines high and medium severity CI/CD pipeline failure alerts.
+#Author: Senior Lead, AutoAudit DevSecOps Team
+#Last Updated: 2025-09-21
+
+groups:
+  - name: ci_cd_alerts
+    rules:
+      - alert: CICDPipelineFailed
+        expr: increase(cicd_pipeline_failures_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          team: infra
+        annotations:
+          summary: "CI/CD pipeline failure detected"
+          description: "One or more CI/CD pipeline jobs have failed in the last 5 minutes."
+
+      - alert: CICDPipelineDurationHigh
+        expr: histogram_quantile(0.95, sum(rate(cicd_pipeline_duration_seconds_bucket[5m])) by (le)) > 600
+        for: 10m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "CI/CD pipeline duration is high"
+          description: "The 95th percentile duration of CI/CD pipeline jobs exceeds 10 minutes."
