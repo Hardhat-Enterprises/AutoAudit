@@ -1,86 +1,142 @@
 # Evidence preparation guide – Regular Backups (ML1 + ML2)
-This guide explains how to prepare evidence files for the Regular Backups strategy so the Evidence Scanner can read them and map them to the maturity-level tests. Files should be simple text logs or policy extracts that contain clear key–value fields such as `status=success`, `role=backup-admin`, or `immutability=enabled`.
 
-## 1. General guidelines for evidence files
-- Files should be plain text (.txt) or CSV exports.
-- Each line should describe one event, policy entry, or result.
-- Include clear indicators that allow the scanner to match ML1 and ML2 conditions.
-- Extra descriptive text is fine. The scanner only checks for key phrases.
+This guide explains how to prepare evidence files for the Regular Backups strategy so the Evidence Scanner can read and map them to the correct maturity-level tests.  
+Files should contain clear text describing backup events, restore results, audit logs or policy settings.
 
-## 2. Evidence files for ML1 tests
+---
 
-### 2.1 Successful backups – `backup_success.txt`
-Example:
-2025-12-01T22:05Z job=nightly-backup status=success "Backup completed successfully"
+## 1. General guidelines for preparing evidence
+- Use plain text files (.txt) or log/CSV exports.
+- Each file should describe one backup event, restore test, policy entry or access audit.
+- The scanner detects specific keywords.  
+  Additional sentences will not cause issues.
+- Keep the important values visible, for example:  
+  `status=success`, `immutability=enabled`, `role=backup-admin`.
 
+---
 
-### 2.2 Failed or missing backups – `backup_failed.txt`
-Example:
-2025-12-01T22:05Z job=nightly-backup status=fail "Backup failed – network error"
+## 2. ML1 evidence preparation
 
+### 2.1 Successful backups — `backup_success.txt`
+**Exact content used in testing:**
+```
+backup completed successfully. last backup 2025-09-10 23:45 status success
+```
 
-### 2.3 Offsite or immutable backups – `offsite_backup.txt`
-Example:
-target=cloud-vault location=offsite immutability=enabled copy_type=immutable
+### 2.2 Failed backups — `backup_failed.txt`
+```
+no recent backup found in the last seven days. status failure
+```
 
+### 2.3 Offsite or immutable backups — `offsite_backup.txt`
+```
+daily backup completed to immutable cloud storage (offsite)
+```
 
-### 2.4 Successful restore test – `restore_test.txt`
-Example:
-restore test=full status=success "Test restore completed successfully"
+### 2.4 Restore test passed — `restore_test.txt`
+```
+restore test status=success common point
+```
 
+### 2.5 Restore test failed — `restore_failed.txt`
+```
+restore failed during test restore. status fail
+```
 
-### 2.5 Failed restore test – `Restore_failed.txt`
-Example:
-restore test=full status=fail "Restore failed – checksum error"
+### 2.6 Retention policy — `retention_policy.txt`
+```
+backup retention policy kept for 30 days. retained for 30 days
+```
 
+### 2.7 Encrypted backups — `encrypted_backup.txt`
+```
+encrypted backup file created. encryption algorithm AES-256
+```
 
-### 2.6 Encrypted backups – `Encrypted_backup.txt`
-Example:
-encryption=AES-256 key_type=KMS "backup encryption enabled"
+### 2.8 Restricted admin access — `access_admin_only.txt`
+```
+restricted access admin users only
+```
 
+---
 
-### 2.7 Restricted access – `access_admin_only.txt`
-Example:
-console_access_roles=backup-admin,security-admin mfa=enabled
+## 3. ML2 evidence preparation
 
-## 3. Evidence files for ML2 tests
+### 3.1 Backup verification via audit logs — PASS  
+`backup_verification_ml2_pass.txt`
+```
+backup job verified via audit log verification=success status=success
+```
 
-### 3.1 Repository access controlled – `repo_audit_pass.txt`
-Example:
-timestamp=2025-12-01T09:15Z role=backup-admin user=jane result=success repo=primary-backups
+### 3.2 Backup verification via audit logs — FAIL  
+`backup_verification_ml2_fail.txt`
+```
+backup job verification=fail audit log missing for backup
+```
 
+### 3.3 Offsite + immutability enforced by policy  
+`offsite_policy_enforced_ml2.txt`
+```
+immutability=enabled policy=enforced
+```
 
-### 3.2 Unauthorized access allowed – `repo_audit_fail.txt`
-Example:
-timestamp=2025-12-01T10:05Z role=sysadmin is_backup_admin=false result=success repo=primary-backups
+### 3.4 Restore to common point — PASS  
+`restore_report_ml2_pass.txt`
+```
+restore test=item-level status=success common point=2025-12-01T23:30Z
+```
 
+### 3.5 Restore to common point — FAIL  
+`restore_report_ml2_fail.txt`
+```
+restore test=item-level status=fail
+```
 
-### 3.3 Successful restore to a common point – `restore_report_ml2_pass.txt`
-Example:
-restore test=item-level status=success common point=2025-12-01T23:30Z scope=key-workloads
+### 3.6 Retention & immutability match policy — PASS  
+`policy_ml2_pass.txt`
+```
+retention=30days immutability=enabled policy match
+```
 
+### 3.7 Retention or immutability misaligned — FAIL  
+`policy_ml2_fail.txt`
+```
+retention<policy immutability=disabled
+```
 
-### 3.4 Failed restore test – `restore_report_ml2_fail.txt`
-Example:
-restore test=item-level status=fail "Unable to restore all items to common point"
+### 3.8 Encryption enforcement — PASS  
+`encryption_ml2_pass.txt`
+```
+encryption=aes-256 kms verified
+```
 
+### 3.9 Encryption enforcement — FAIL  
+`encryption_ml2_fail.txt`
+```
+encrypted backup kms=missing encryption=none
+```
 
-### 3.5 Policy alignment (retention + immutability) – `policy_ml2_pass.txt`
-Example:
-retention=30days immutability=enabled policy_name=backup-gold
+### 3.10 Access control enforcement — PASS  
+`access_admin_only_ml2.txt`
+```
+role=backup-admin access=allowed audit=success
+```
 
+### 3.11 Unauthorized access allowed — FAIL  
+`repo_audit_fail.txt`
+```
+role=sysadmin is_backup_admin=false access=allowed result=success
+```
 
-### 3.6 Policy misalignment – `policy_ml2_fail.txt`
-Example:
-retention=<policy immutability=disabled policy_name=legacy-backups
+---
 
-## 4. How to use the Evidence Scanner
-1. Prepare the evidence files using the examples above.
-2. Open the Evidence Assistant web interface.
-3. Select the Regular Backups strategy.
-4. Upload one of your evidence files.
-5. Review the results:
-   - Check the test ID and maturity level.
-   - Confirm PASS or FAIL behaves as expected.
+## 4. Using the Evidence Scanner
 
-If the tool does not detect the evidence, check that the key fields are present and spelled correctly.
+1. Open the Evidence Assistant web interface.
+2. Select **Regular Backups (RB)**.
+3. Upload any ML1 or ML2 evidence file.
+4. Review the detection results:
+   - Confirm the test ID (ML1-RB-01 … ML2-RB-06).
+   - Check PASS/FAIL behaviour based on your expected outcome.
+
+If the tool does not detect a file, verify that the file’s content includes the required key phrases listed above.
