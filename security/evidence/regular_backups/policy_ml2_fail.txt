@@ -1,1 +1,1 @@
-immutability=disabled
+retention<policy immutability=disabled

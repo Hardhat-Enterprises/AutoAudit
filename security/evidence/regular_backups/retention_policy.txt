@@ -1,0 +1,1 @@
+backup retention policy kept for 30 days retained for 30 days
