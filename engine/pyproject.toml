@@ -1,0 +1,23 @@
+[project]
+name = "autoaudit-worker"
+version = "0.1.0"
+description = "AutoAudit Celery worker for compliance scanning"
+requires-python = ">=3.10"
+dependencies = [
+    "celery[redis]>=5.3.0",
+    "httpx>=0.26.0",
+    "msal>=1.31.0",
+    "sqlalchemy>=2.0.0",
+    "psycopg2-binary>=2.9.9",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "cryptography>=42.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["worker", "collectors"]
+include = ["opa_client.py"]
