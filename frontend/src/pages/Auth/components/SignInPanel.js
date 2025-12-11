@@ -6,15 +6,21 @@ import {
   Lock,
   Mail,
   ShieldCheck,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
 
 const SignInPanel = ({ onLogin, onSignUpClick }) => {
+  const auth = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     remember: false,
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -22,12 +28,24 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    // Clear error when user starts typing
+    if (error) setError(null);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    if (onLogin) {
-      onLogin(formData);
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      await auth.login(formData.email, formData.password);
+      if (onLogin) {
+        onLogin(formData.email, formData.password);
+      }
+    } catch (err) {
+      setError(err.message || "Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -40,6 +58,23 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
+          {error && (
+            <div className="error-message" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '8px',
+              color: '#ef4444',
+              marginBottom: '16px'
+            }}>
+              <AlertCircle size={18} />
+              <span>{error}</span>
+            </div>
+          )}
+
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <div className="input-wrapper">
@@ -52,6 +87,7 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -68,12 +104,14 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
               />
               <button
                 type="button"
                 className="password-toggle"
                 onClick={() => setShowPassword((prev) => !prev)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
+                disabled={isLoading}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -95,9 +133,18 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
             </a>
           </div>
 
-          <button type="submit" className="btn-signin">
-            <span>Sign In</span>
-            <ArrowRight size={18} />
+          <button type="submit" className="btn-signin" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign In</span>
+                <ArrowRight size={18} />
+              </>
+            )}
           </button>
         </form>
 
