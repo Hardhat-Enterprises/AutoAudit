@@ -46,6 +46,21 @@ services:
       retries: 5
     restart: unless-stopped
 
+  opa:
+    image: openpolicyagent/opa:latest-debug
+    container_name: autoaudit-opa
+    command: ["run", "--server", "--addr=0.0.0.0:8181", "--log-level=info", "/policies"]
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./engine/policies:/policies:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8181/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # =============================================================================
   # Application Services (profile-controlled)
   # =============================================================================
@@ -57,16 +72,68 @@ services:
       dockerfile: backend-api/Dockerfile
     container_name: autoaudit-backend-api
     environment:
+      # Application environment
       - APP_ENV=dev
+
+      # Required: Database connection (PostgreSQL with asyncpg driver)
       - DATABASE_URL=postgresql+asyncpg://autoaudit:autoaudit_dev_password@db:5432/autoaudit
+
+      # Required: JWT signing key (CHANGE IN PRODUCTION)
       - SECRET_KEY=dev-secret-key-change-in-production
+
+      # Required: Redis URL for Celery task queue
       - REDIS_URL=redis://redis:6379
+
+      # Required: OPA server URL for policy evaluation
+      - OPA_URL=http://opa:8181
+
+      # Required: Fernet encryption key for M365 credentials at rest
+      # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      # This will be passed in with a secret provider in production. This is for local use only.
+      - ENCRYPTION_KEY=Ps-HiS3ww5QzQPc_Mdu5-JyA_jCNbdFHMdiwWSlAfgM=
+
+      # Optional: Path to policies directory (default: /app/policies)
+      - POLICIES_DIR=/app/policies
+    volumes:
+      # Mount policies directory for benchmark/control discovery API
+      - ./engine/policies:/app/policies:ro
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      opa:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./engine
+      dockerfile: Dockerfile
+    container_name: autoaudit-worker
+    environment:
+      # Required: Database connection (PostgreSQL - worker uses sync driver)
+      - DATABASE_URL=postgresql+asyncpg://autoaudit:autoaudit_dev_password@db:5432/autoaudit
+
+      # Required: Redis URL for Celery broker
+      - REDIS_URL=redis://redis:6379
+
+      # Required: OPA server URL for policy evaluation
+      - OPA_URL=http://opa:8181
+
+      # Required: Must match ENCRYPTION_KEY in backend-api for credential decryption
+      - ENCRYPTION_KEY=Ps-HiS3ww5QzQPc_Mdu5-JyA_jCNbdFHMdiwWSlAfgM=
+    volumes:
+      - ./engine:/app/engine:ro
+      - ./engine/policies:/app/policies:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opa:
         condition: service_healthy
     restart: unless-stopped
 
