@@ -10,7 +10,13 @@ from alembic import context
 # Import models for autogenerate support
 from app.db.base import Base
 from app.models.user import User  # noqa
-from app.models.compliance import Tenant, Rule, Scan, Issue  # noqa
+from app.models.m365_connection import M365Connection  # noqa
+from app.models.platform import Platform  # noqa
+from app.models.compliance import Scan  # noqa
+from app.models.scan_result import ScanResult  # noqa
+from app.models.azure_connection import AzureConnection  # noqa
+from app.models.gcp_connection import GCPConnection  # noqa
+from app.models.aws_connection import AWSConnection  # noqa
 from app.core.config import get_settings
 
 # this is the Alembic Config object, which provides
