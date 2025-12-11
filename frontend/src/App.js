@@ -6,6 +6,9 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Evidence from './pages/Evidence';
 import StyleGuide from './pages/StyleGuide';
+import ConnectionsPage from './pages/Connections/ConnectionsPage';
+import ScansPage from './pages/Scans/ScansPage';
+import ScanDetailPage from './pages/Scans/ScanDetailPage';
 
 // Authentication & Landing Components
 import LandingPage from './pages/Landing/LandingPage';
@@ -14,18 +17,26 @@ import ContactPage from './pages/Contact/ContactPage';
 import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
 
+// Auth Context
+import { useAuth } from './context/AuthContext';
+
 // Styles
 import './styles/global.css';
 
 // Protected Route Component
-const ProtectedRoute = ({ children, isAuthenticated }) => {
+const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
-  
+  const { isAuthenticated, isLoading } = useAuth();
+
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
+
+  if (isLoading) {
+    return <div className="loading">Loading...</div>;
+  }
 
   return isAuthenticated ? children : null;
 };
@@ -41,13 +52,12 @@ const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle, on
 };
 
 function App() {
-  // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+  const auth = useAuth();
+
   // Dashboard state
   const [sidebarWidth, setSidebarWidth] = useState(220);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -63,13 +73,13 @@ function App() {
   }, [isDarkMode]);
 
   // Authentication handlers
-  const handleUserLogin = () => {
-    setIsAuthenticated(true);
+  const handleUserLogin = async (email, password) => {
+    await auth.login(email, password);
     navigate('/dashboard');
   };
 
   const handleUserLogout = () => {
-    setIsAuthenticated(false);
+    auth.logout();
     navigate('/');
   };
 
@@ -87,7 +97,7 @@ function App() {
   };
 
   // Check if current route should show sidebar
-  const isDashboardRoute = ['/dashboard', '/evidence-scanner', '/styleguide'].includes(location.pathname);
+  const isDashboardRoute = ['/dashboard', '/evidence-scanner', '/styleguide', '/cloud-platforms', '/scans'].includes(location.pathname) || location.pathname.startsWith('/scans/');
 
   return (
     <div className="App">
@@ -142,30 +152,30 @@ function App() {
         />
 
         {/* Protected Dashboard Routes */}
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <DashboardLayout 
-                sidebarWidth={sidebarWidth} 
+            <ProtectedRoute>
+              <DashboardLayout
+                sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
                 onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
-                <Dashboard 
+                <Dashboard
                   onThemeToggle={handleThemeToggle}
                 />
               </DashboardLayout>
             </ProtectedRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/evidence-scanner" 
+
+        <Route
+          path="/evidence-scanner"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <DashboardLayout 
-                sidebarWidth={sidebarWidth} 
+            <ProtectedRoute>
+              <DashboardLayout
+                sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
                 onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
@@ -173,12 +183,60 @@ function App() {
                 <Evidence />
               </DashboardLayout>
             </ProtectedRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/styleguide" 
-          element={<StyleGuide />} 
+
+        <Route
+          path="/cloud-platforms"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout
+                sidebarWidth={sidebarWidth}
+                isDarkMode={isDarkMode}
+                onThemeToggle={handleThemeToggle}
+                onSidebarWidthChange={handleSidebarWidthChange}
+              >
+                <ConnectionsPage isDarkMode={isDarkMode} />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/scans"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout
+                sidebarWidth={sidebarWidth}
+                isDarkMode={isDarkMode}
+                onThemeToggle={handleThemeToggle}
+                onSidebarWidthChange={handleSidebarWidthChange}
+              >
+                <ScansPage isDarkMode={isDarkMode} />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/scans/:scanId"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout
+                sidebarWidth={sidebarWidth}
+                isDarkMode={isDarkMode}
+                onThemeToggle={handleThemeToggle}
+                onSidebarWidthChange={handleSidebarWidthChange}
+              >
+                <ScanDetailPage isDarkMode={isDarkMode} />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/styleguide"
+          element={<StyleGuide />}
         />
 
         {/* Fallback route */}

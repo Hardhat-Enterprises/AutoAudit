@@ -16,6 +16,10 @@ dependencies = [
     "alembic>=1.13.0",
     # Multipart upload support for evidence/file endpoints
     "python-multipart>=0.0.12",
+    # Encryption for credentials at rest
+    "cryptography>=42.0.0",
+    # Celery client for queueing tasks
+    "celery[redis]>=5.3.0",
 ]
 
 [project.optional-dependencies]

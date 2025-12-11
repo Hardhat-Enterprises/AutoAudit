@@ -16,8 +16,8 @@ def _find_security_dir() -> Path | None:
 
 
 SECURITY_DIR = _find_security_dir()
-if SECURITY_DIR and str(SECURITY_DIR) not in sys.path:
-    sys.path.append(str(SECURITY_DIR))
+if SECURITY_DIR and str(SECURITY_DIR.parent) not in sys.path:
+    sys.path.insert(0, str(SECURITY_DIR.parent))
 
 # Reuse existing evidence logic from security package
 from security.frontend import ui as evidence_ui

@@ -1,8 +1,15 @@
 from enum import Enum
+from typing import TYPE_CHECKING
+
 from fastapi_users.db import SQLAlchemyBaseUserTable
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.compliance import Scan
+    from app.models.m365_connection import M365Connection
 
 
 class Role(str, Enum):
@@ -32,3 +39,9 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     # - is_active: bool
     # - is_superuser: bool
     # - is_verified: bool
+
+    # Relationships
+    m365_connections: Mapped[list["M365Connection"]] = relationship(
+        back_populates="user"
+    )
+    scans: Mapped[list["Scan"]] = relationship(back_populates="user")

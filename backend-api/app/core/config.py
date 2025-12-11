@@ -15,6 +15,19 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # Redis (for Celery broker)
+    REDIS_URL: str = "redis://localhost:6379"
+
+    # OPA (Open Policy Agent)
+    OPA_URL: str = "http://localhost:8181"
+
+    # Encryption (for securing credentials at rest)
+    # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    ENCRYPTION_KEY: str = ""
+
+    # Policies directory (for benchmark/control metadata)
+    POLICIES_DIR: str = "/app/policies"
+
     class Config:
         env_file = ".env"
 
