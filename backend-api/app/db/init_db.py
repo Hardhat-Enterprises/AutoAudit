@@ -36,6 +36,15 @@ async def init_db():
             is_verified=True,
         )
 
+        test_user = User(
+            email="dev@example.com",
+            hashed_password=password_helper.hash("test"),
+            role=Role.USER.value,
+            is_active=True,
+            is_superuser=False,
+            is_verified=True,
+        )
+        session.add(test_user)
         session.add(admin_user)
         await session.commit()
 

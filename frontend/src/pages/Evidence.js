@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Info, X } from 'lucide-react';
 import './Evidence.css';
-import { useNavigate } from 'react-router-dom';
 import { parseApiError, formatEvidenceList } from '../utils/api';
+
+const RECENT_SCANS_INFO_MESSAGE =
+  'This table shows the 5 most recent scans recorded by the Evidence service. If you need additional history or assistance, please contact support@autoaudit.';
 
 const EvidenceDetails = ({ details, evidence }) => {
   const toText = (value) => {
@@ -89,15 +92,33 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const [health, setHealth] = useState(null);
 
   const [selectedStrategy, setSelectedStrategy] = useState('');
-  const [userId, setUserId] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
   const [errorDetails, setErrorDetails] = useState([]);
   const [note, setNote] = useState('');
   const [results, setResults] = useState(null);
+  const [recentScansOpen, setRecentScansOpen] = useState(false);
+  const [recentScans, setRecentScans] = useState([]);
+  const [recentScansLoading, setRecentScansLoading] = useState(false);
+  const [recentScansError, setRecentScansError] = useState('');
+  const recentScansDialogRef = useRef(null);
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    const dialog = recentScansDialogRef.current;
+    if (!dialog) return;
+
+    if (recentScansOpen) {
+      if (!dialog.open && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      }
+      return;
+    }
+
+    if (dialog.open) {
+      dialog.close();
+    }
+  }, [recentScansOpen]);
 
   useEffect(() => {
     let isActive = true;
@@ -202,7 +223,8 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
     // Send strategy under both names to satisfy legacy and current API handlers
     formData.append('strategy_name', selectedStrategy);
     formData.append('strategy', selectedStrategy);
-    formData.append('user_id', userId || 'user');
+    // User ID input removed for now; send a stable default.
+    formData.append('user_id', 'user');
     formData.append('evidence', selectedFile);
 
     try {
@@ -249,16 +271,55 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   };
 
+  const getRecentScanStatusClass = (status) => {
+    const normalized = String(status || '').toLowerCase();
+    if (normalized === 'success' || normalized === 'ok' || normalized === 'pass') {
+      return 'scan-status-success';
+    }
+    if (normalized === 'fail' || normalized === 'error' || normalized === 'bad') {
+      return 'scan-status-fail';
+    }
+    return 'scan-status-muted';
+  };
+
   const selectedStrategyData = useMemo(
     () => strategies.find((s) => s.name === selectedStrategy),
     [strategies, selectedStrategy]
   );
 
-  const openRecentScans = () => {
+  const fetchRecentScans = async () => {
     const base = apiBase || apiCandidates[0];
-    if (base) {
-      window.open(`${base}/scan-mem`, '_blank', 'noopener');
+    if (!base) {
+      setRecentScansError('Evidence API is not configured.');
+      return;
     }
+    setRecentScansLoading(true);
+    setRecentScansError('');
+    try {
+      const res = await fetch(`${base}/scan-mem-log`);
+      if (!res.ok) {
+        throw new Error(`Failed to load recent scans (${res.status})`);
+      }
+      const data = await res.json();
+      setRecentScans(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setRecentScansError(err?.message || 'Unable to load recent scans.');
+      setRecentScans([]);
+    } finally {
+      setRecentScansLoading(false);
+    }
+  };
+
+  const toggleRecentScans = () => {
+    const nextOpen = !recentScansOpen;
+    setRecentScansOpen(nextOpen);
+    if (nextOpen && recentScans.length === 0 && !recentScansLoading) {
+      fetchRecentScans();
+    }
+  };
+
+  const closeRecentScansDialog = () => {
+    setRecentScansOpen(false);
   };
 
   const buildReportLink = (filename) => {
@@ -266,23 +327,21 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
     return base ? `${base}/reports/${encodeURIComponent(filename)}` : '#';
   };
 
+  const recentScansTop = useMemo(() => {
+    if (!Array.isArray(recentScans)) return [];
+    return recentScans.slice(0, 5);
+  }, [recentScans]);
+
   return (
     <div 
       className={`evidence-scanner ${isDarkMode ? 'dark' : 'light'}`}
       style={{ 
         marginLeft: `${observedSidebarWidth}px`, 
-        width: `calc(100vw - ${observedSidebarWidth}px)`,
+        width: `calc(100% - ${observedSidebarWidth}px)`,
         transition: 'none'
       }}
     >
       <div className="evidence-container">
-        {/* Back Button - Fixed to go to Dashboard */}
-        <div className="nav-breadcrumb">
-          <span className="nav-link" onClick={() => navigate("/dashboard")}>
-            ← Back
-          </span>
-        </div>
-
         {/* Brand Header */}
         <div className="brand-wrap">
           <div className="brand-content">
@@ -330,18 +389,6 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                 <div className="form-help">No strategies returned by the API.</div>
               )}
             </div>
-            
-            <div className="form-group">
-              <label htmlFor="user" className="form-label">User ID (optional)</label>
-              <input 
-                id="user" 
-                type="text" 
-                className="form-input"
-                placeholder="e.g. bharadwaj"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-              />
-            </div>
           </div>
 
           <div className="file-group">
@@ -379,9 +426,10 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
             </button>
 
             <button 
-              className="btn btn-secondary"
+              className="btn btn-secondary recent-scans-trigger"
               type="button"
-              onClick={openRecentScans}
+              onClick={toggleRecentScans}
+              aria-expanded={recentScansOpen}
             >
               Recent Scans
             </button>
@@ -402,6 +450,84 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
         {note && (
           <div className="note-banner" role="status">{note}</div>
         )}
+
+        <dialog
+          className="recent-scans-dialog"
+          ref={recentScansDialogRef}
+          aria-labelledby="recent-scans-title"
+          onClose={() => setRecentScansOpen(false)}
+          onCancel={(e) => {
+            e.preventDefault();
+            closeRecentScansDialog();
+          }}
+        >
+          <div className="recent-scans-dialog__surface">
+            <div className="recent-scans-dialog__header">
+              <h3 className="results-header" id="recent-scans-title">Recent Scans</h3>
+            </div>
+
+            <div className="recent-scans-dialog__body">
+              <div className="recent-scans-info" role="note">
+                <Info size={18} aria-hidden="true" />
+                <p className="recent-scans-info__text">
+                  {RECENT_SCANS_INFO_MESSAGE}{' '}
+                  <a className="recent-scans-info__link" href="mailto:support@autoaudit">
+                    support@autoaudit
+                  </a>
+                  .
+                </p>
+              </div>
+
+              {recentScansLoading && (
+                <div className="status-busy">Loading recent scans…</div>
+              )}
+
+              {!recentScansLoading && recentScansError && (
+                <div className="status-error">{recentScansError}</div>
+              )}
+
+              {!recentScansLoading && !recentScansError && (
+                recentScansTop.length > 0 ? (
+                  <table className="recent-scans-table">
+                    <thead>
+                      <tr>
+                        <th>Timestamp</th>
+                        <th>User Name</th>
+                        <th>Strategy</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentScansTop.map((scan, idx) => (
+                        <tr key={idx}>
+                          <td>{scan.ts || scan.time || ''}</td>
+                          <td>{scan.user || scan.user_id || 'user'}</td>
+                          <td>{scan.strategy || scan.strategy_name || ''}</td>
+                          <td className={getRecentScanStatusClass(scan.status)}>
+                            {scan.status || ''}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="no-findings">No runs yet.</div>
+                )
+              )}
+            </div>
+
+            <div className="recent-scans-dialog__footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={closeRecentScansDialog}
+              >
+                <X size={18} />
+                Close
+              </button>
+            </div>
+          </div>
+        </dialog>
 
         {/* Results Section */}
         {results && (

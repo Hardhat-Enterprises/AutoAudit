@@ -12,7 +12,7 @@ const LoginHeader = () => {
   return (
     <header className="auth-header">
       <a className="auth-logo" href="/" aria-label="AutoAudit home">
-        <img src="/logo.png" alt="AutoAudit" />
+        <img src="/AutoAudit.png" alt="AutoAudit" />
       </a>
 
       <nav className="auth-nav" aria-label="Primary navigation">

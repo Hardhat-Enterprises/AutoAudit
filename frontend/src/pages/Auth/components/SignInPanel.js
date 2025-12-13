@@ -5,7 +5,6 @@ import {
   EyeOff,
   Lock,
   Mail,
-  ShieldCheck,
   AlertCircle,
   Loader2,
 } from "lucide-react";
@@ -165,16 +164,6 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
             Create one
           </button>
         </p>
-
-        <div className="security-info">
-          <div className="security-icon-box">
-            <ShieldCheck size={18} />
-          </div>
-          <div className="security-info-text">
-            <h4>Secure Enterprise Access</h4>
-            <p>Your connection is encrypted and monitored for compliance.</p>
-          </div>
-        </div>
       </div>
     </section>
   );

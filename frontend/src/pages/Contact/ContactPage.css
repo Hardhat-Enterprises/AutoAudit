@@ -108,7 +108,6 @@
 .info-card:hover {
   border-color: #40e0d0;
   background: rgba(255, 255, 255, 0.05);
-  transform: translateY(-5px);
 }
 
 .info-icon {
@@ -169,7 +168,6 @@
 .social-link:hover {
   background: linear-gradient(135deg, #40e0d0, #1e90ff);
   border-color: transparent;
-  transform: translateY(-3px);
 }
 
 .social-link svg {

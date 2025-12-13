@@ -42,6 +42,12 @@ async def scan_mem():
     return evidence_ui.scan_mem_page()
 
 
+@router.get("/scan-mem-log")
+async def scan_mem_log():
+    """Return recent scans as JSON for the frontend."""
+    return evidence_ui.api_get_scan_mem_log()
+
+
 @router.get("/recent-scans", include_in_schema=False)
 async def recent_scans_redirect():
     return RedirectResponse(url="/v1/evidence/scan-mem")

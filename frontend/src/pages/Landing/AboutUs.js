@@ -60,7 +60,10 @@ const AboutUs = ({ onSignInClick = () => {} }) => {
 
       <main>
         <section className="about-hero" id="home">
-          <img src="/logo.png" alt="AutoAudit" className="hero-logo" />
+          <picture>
+            <source srcSet="/AutoAudit.webp" type="image/webp" />
+            <img src="/AutoAudit.png" alt="AutoAudit" className="hero-logo" />
+          </picture>
           <h1>About AutoAudit</h1>
           <p>Revolutionizing Cloud Compliance for Modern Enterprises</p>
         </section>

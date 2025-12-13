@@ -71,7 +71,12 @@
 }
 
 .login-brand {
-  background: linear-gradient(135deg, #0a1628 0%, #162a4a 50%, #1e3a5f 100%);
+  background-image: none;
+  background-clip: unset;
+  -webkit-background-clip: unset;
+  color: rgba(255, 255, 255, 1);
+  background-color: unset;
+  background: unset;
   position: relative;
   padding: 2.5rem 3rem;
   display: flex;
@@ -195,17 +200,6 @@
   height: auto;
   margin: 0 auto 1rem;
   filter: drop-shadow(0 10px 25px rgba(64, 224, 208, 0.3));
-  animation: floatLogo 4s ease-in-out infinite;
-}
-
-@keyframes floatLogo {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-12px);
-  }
 }
 
 .brand-text h1 {
@@ -374,7 +368,12 @@
   padding: 1rem;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  background-color: rgba(255, 255, 255, 1);
+  background-image: linear-gradient(
+    135deg,
+    rgba(64, 224, 208, 1) 0%,
+    rgba(30, 144, 255, 1) 100%
+  );
   color: #ffffff;
   font-size: 1rem;
   font-weight: 600;
@@ -473,38 +472,6 @@
 
 .signup-text button:hover {
   color: #1e90ff;
-}
-
-.security-info {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(64, 224, 208, 0.2);
-  background: rgba(64, 224, 208, 0.05);
-  margin-top: 1.5rem;
-}
-
-.security-icon-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #40e0d0, #1e90ff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.security-info-text h4 {
-  margin: 0;
-  font-size: 0.95rem;
-}
-
-.security-info-text p {
-  margin: 0;
-  color: #b0c4de;
-  font-size: 0.85rem;
 }
 
 @media (max-width: 1024px) {
