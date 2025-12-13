@@ -13,6 +13,14 @@
 
   html, body, #root { height: 100%; }
 
+  #root {
+    border-radius: 999px;
+    border-top-left-radius: 999px;
+    border-top-right-radius: 999px;
+    border-bottom-right-radius: 999px;
+    border-bottom-left-radius: 999px;
+  }
+
   body {
     background: rgb(var(--surface-1));
     color: rgb(var(--text-strong));

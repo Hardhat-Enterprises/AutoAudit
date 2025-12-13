@@ -12,7 +12,10 @@ const LandingHeader = ({ onSignInClick, hiddenLinks = [], showSignIn = true }) =
   return (
     <header className="landing-header">
       <a className="landing-logo" href="/" aria-label="AutoAudit home">
-        <img src="/logo.png" alt="AutoAudit" />
+        <picture>
+          <source srcSet="/AutoAudit.webp" type="image/webp" />
+          <img src="/AutoAudit.png" alt="AutoAudit" loading="lazy" />
+        </picture>
       </a>
 
       <nav className="landing-nav" aria-label="Primary navigation">

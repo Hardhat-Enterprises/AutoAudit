@@ -4,7 +4,19 @@
 
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import './Sidebar.css';
+import {
+  LayoutDashboard,
+  Cloud,
+  FileSearch,
+  ShieldCheck,
+  FileText,
+  Settings2,
+  User,
+  Menu,
+  ArrowLeft,
+  Search,
+} from "lucide-react";
+import "./Sidebar.css";
 
 
 //Button component that we use throughout the sidebar
@@ -13,7 +25,7 @@ import './Sidebar.css';
 //name - text to display in expanded view
 //icon - text to display in collapsed view
 
-const NavButton = ({ href, name, icon, isExpanded, isActive = false, onClick }) => {
+const NavButton = ({ href, name, icon: Icon, isExpanded, isActive = false, onClick }) => {
   const handleClick = (clickEvent) => {
     if (onClick) {
       clickEvent.preventDefault();
@@ -28,7 +40,9 @@ const NavButton = ({ href, name, icon, isExpanded, isActive = false, onClick }) 
         href={href}
         onClick={handleClick}
       >
-        <span className="nav-icon">{icon}</span>
+        <span className="nav-icon" aria-hidden="true">
+          <Icon size={18} strokeWidth={2.2} />
+        </span>
         {isExpanded && <span className="nav-text">{name}</span>}
       </a>
     </li>
@@ -36,10 +50,21 @@ const NavButton = ({ href, name, icon, isExpanded, isActive = false, onClick }) 
 };
 
 // Main sidebar component
+const SIDEBAR_EXPANDED_KEY = "sidebarExpanded";
+
 const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isExpanded, setIsExpanded] = useState(true); //Track whether sidebar is expanded
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const stored = window.localStorage.getItem(SIDEBAR_EXPANDED_KEY);
+      if (stored === null) return true;
+      return stored === "true";
+    } catch {
+      return true;
+    }
+  }); // Track whether sidebar is expanded (persisted)
   const [searchValue, setSearchValue] = useState(''); // Track search input value
 
   // Determine active item based on current route
@@ -62,6 +87,13 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
     const newExpanded = !isExpanded;
     setIsExpanded(newExpanded);
     onWidthChange(newExpanded ? 220 : 80);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(SIDEBAR_EXPANDED_KEY, String(newExpanded));
+      } catch {
+        // ignore storage errors (private mode, blocked, etc.)
+      }
+    }
   };
 
   //Navigate to the specified route
@@ -82,7 +114,7 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
           {isExpanded ? (
             <div className="search-bar">
               <button className="search-toggle-button" onClick={toggleSidebar} aria-label="Collapse sidebar">
-                ×
+                <ArrowLeft size={18} />
               </button>
               <input
                 type="text"
@@ -91,11 +123,13 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
                 onChange={handleSearchChange}
                 className="search-input"
               />
-              <span className="search-icon">🔍</span>
+              <span className="search-icon">
+                <Search size={16} />
+              </span>
             </div>
           ) : (
             <button className="toggle-button" onClick={toggleSidebar} aria-label="Expand sidebar">
-              ☰
+              <Menu size={18} strokeWidth={2.2} />
             </button>
           )}
         </div>
@@ -103,64 +137,63 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
         {/* Main navigation area */}
         <ul className="nav-links">
           <NavButton
-            href={'/dashboard'}
-            name={'Dashboard'}
-            icon={'🏠'}
+            href={"/dashboard"}
+            name={"Dashboard"}
+            icon={LayoutDashboard}
             isExpanded={isExpanded}
-            isActive={activeItem === 'home'}
-            onClick={() => handleNavClick('home', '/dashboard')}
+            isActive={activeItem === "home"}
+            onClick={() => handleNavClick("home", "/dashboard")}
           />
           <NavButton
-            href={'/cloud-platforms'}
-            name={'Cloud Platforms'}
-            icon={'☁'}
+            href={"/cloud-platforms"}
+            name={"Cloud Platforms"}
+            icon={Cloud}
             isExpanded={isExpanded}
-            isActive={activeItem === 'cloud-platforms'}
-            onClick={() => handleNavClick('cloud-platforms', '/cloud-platforms')}
+            isActive={activeItem === "cloud-platforms"}
+            onClick={() => handleNavClick("cloud-platforms", "/cloud-platforms")}
           />
           <NavButton
-            href={'/scans'}
-            name={'Scans'}
-            icon={'🔍'}
+            href={"/scans"}
+            name={"Scans"}
+            icon={FileSearch}
             isExpanded={isExpanded}
-            isActive={activeItem === 'scans'}
-            onClick={() => handleNavClick('scans', '/scans')}
+            isActive={activeItem === "scans"}
+            onClick={() => handleNavClick("scans", "/scans")}
           />
           <NavButton
-            href={'/evidence-scanner'}
-            name={'Evidence'}
-            icon={'✓'}
+            href={"/evidence-scanner"}
+            name={"Evidence"}
+            icon={ShieldCheck}
             isExpanded={isExpanded}
-            isActive={activeItem === 'tasks'}
-            onClick={() => handleNavClick('tasks', '/evidence-scanner')}
+            isActive={activeItem === "tasks"}
+            onClick={() => handleNavClick("tasks", "/evidence-scanner")}
           />
-          <NavButton
-            href={'/reports'}
-            name={'Reports'}
-            icon={'📄'}
+          {/* <NavButton
+            href={"/reports"}
+            name={"Reports"}
+            icon={FileText}
             isExpanded={isExpanded}
-            isActive={activeItem === 'reports'}
-            onClick={() => handleNavClick('reports', '/reports')}
-          />
+            isActive={activeItem === "reports"}
+          /> */}
         </ul>
         
         {/* Settings section at bottom */}
         <ul className="nav-settings">
           <NavButton
-            href={'/settings'}
-            name={'Settings'}
-            icon={'⚙'}
+            href={"/settings"}
+            name={"Settings"}
+            icon={Settings2}
             isExpanded={isExpanded}
-            isActive={activeItem === 'settings'}
-            onClick={() => handleNavClick('settings', '/settings')}
+            isActive={activeItem === "settings"}
+            onClick={() => handleNavClick("settings", "/settings")}
           />
           <NavButton
-            href={'/account'}
-            name={'Account'}
-            icon={'👤'}
+            href={"/account"}
+            name={"Account"}
+            icon={User}
             isExpanded={isExpanded}
-            isActive={activeItem === 'account'}
-            onClick={() => handleNavClick('account', '/account')}
+            isActive={activeItem === "account"}
+            onClick={() => handleNavClick("account", "/account")}
           />
         </ul>
       </div>

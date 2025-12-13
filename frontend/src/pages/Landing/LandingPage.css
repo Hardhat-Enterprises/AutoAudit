@@ -122,6 +122,19 @@
   transform: translateY(-2px);
 }
 
+/* LandingHeader overrides */
+.landing-header .btn-primary {
+  flex-wrap: wrap;
+  white-space: normal;
+  border-radius: 100px;
+  border-top-left-radius: 100px;
+  border-top-right-radius: 100px;
+  border-bottom-right-radius: 100px;
+  border-bottom-left-radius: 100px;
+  background-color: rgba(48, 128, 141, 1);
+  background-image: none;
+}
+
 /* Hero */
 .landing-hero {
   background: var(--bg-gradient);
@@ -182,9 +195,15 @@
   font-size: clamp(2.5rem, 5vw, 3.5rem);
   margin-bottom: 1.5rem;
   line-height: 1.2;
-  background: linear-gradient(135deg, #ffffff, var(--accent));
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(64, 224, 208, 1) 100%
+  );
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .hero-text p {
@@ -194,10 +213,23 @@
   margin-bottom: 2rem;
 }
 
+.section-tag {
+  color: rgba(255, 255, 255, 1);
+}
+
 .hero-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.landing-hero .btn-primary {
+  background: linear-gradient(
+    135deg,
+    rgba(64, 224, 208, 1) 0%,
+    rgba(30, 144, 255, 1) 0%
+  );
+  justify-content: flex-start;
 }
 
 .hero-visual {
@@ -212,32 +244,17 @@
   border-radius: 20px;
   padding: 1.75rem;
   backdrop-filter: blur(10px);
-  animation: float 6s ease-in-out infinite;
-}
-
-.floating-card:nth-child(2) {
-  animation-delay: 0.8s;
-}
-
-.floating-card:nth-child(3) {
-  animation-delay: 1.6s;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-18px);
-  }
 }
 
 .card-icon {
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  background: linear-gradient(
+    135deg,
+    rgba(64, 224, 208, 1) 0%,
+    rgba(30, 144, 255, 1) 0%
+  );
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -259,6 +276,7 @@
 .landing-stats {
   background: linear-gradient(135deg, #0a1628, #1e3a5f);
   padding: 5rem 5%;
+  text-align: left;
 }
 
 .stats-grid {
@@ -270,7 +288,7 @@
 }
 
 .stat-card {
-  text-align: center;
+  text-align: left;
   padding: 2rem;
   border-radius: 20px;
   border: 1px solid var(--border);
@@ -289,12 +307,18 @@
   margin-bottom: 0.5rem;
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-align: left;
+  width: 167px;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .stat-label {
   color: var(--text-muted);
   font-size: 1.1rem;
+  text-align: left;
 }
 
 /* Features */

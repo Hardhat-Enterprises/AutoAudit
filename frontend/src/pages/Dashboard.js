@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
-import './Dashboard.css';
-import ComplianceChart from '../components/ComplianceChart';
-import Dropdown from '../components/Dropdown';
+import React, { useState } from "react";
+import "./Dashboard.css";
+import ComplianceChart from "../components/ComplianceChart";
+import Dropdown from "../components/Dropdown";
 import { useNavigate } from "react-router-dom";
+import {
+  CheckCircle2,
+  AlertTriangle,
+  Clock3,
+  Shield,
+  AlertOctagon,
+  Sun,
+  Moon,
+} from "lucide-react";
 
 
 export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggle }) {
   const navigate = useNavigate();
   
   const stats = [
-    { label: 'Compliance Score', value: '85%', className: 'emerald', subtitle: 'Overall security posture' },
-    { label: 'Failed Checks', value: '12', className: 'orange', subtitle: 'Requiring immediate attention' },
-    { label: 'Last Scan', value: '2h ago', className: 'gray', subtitle: 'Monday, August 14, 2025' },
-    { label: 'Total Controls', value: '97', className: 'gray', subtitle: 'CIS Rules Benchmark' }
+    { label: "Compliance Score", value: "85%", className: "emerald", subtitle: "Overall security posture", icon: CheckCircle2 },
+    { label: "Failed Checks", value: "12", className: "orange", subtitle: "Requiring immediate attention", icon: AlertTriangle },
+    { label: "Last Scan", value: "2h ago", className: "gray", subtitle: "Monday, August 14, 2025", icon: Clock3 },
+    { label: "Total Controls", value: "97", className: "gray", subtitle: "CIS Rules Benchmark", icon: Shield }
   ];
 
   const benchmarkOptions = [
@@ -45,18 +54,24 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
   return (
     <div className={`dashboard ${isDarkMode ? 'dark' : 'light'}`} style={{ 
       marginLeft: `${sidebarWidth}px`, 
-      width: `calc(100vw - ${sidebarWidth}px)`,
+      width: `calc(100% - ${sidebarWidth}px)`,
       transition: 'margin-left 0.4s ease, width 0.4s ease'
     }}>
       <div className="dashboard-container">
         <div className="dashboard-header">
           <div className="header-content">
             <div className="logo-container">
-              <img 
-                src="/AutoAudit.png" 
-                alt="AutoAudit Logo" 
-                className="logo-image"
-              />
+              <picture>
+                <source srcSet="/AutoAudit.webp" type="image/webp" />
+                <img 
+                  src="/AutoAudit.png" 
+                  alt="AutoAudit Logo" 
+                  className="logo-image"
+                  loading="lazy"
+                  width="140"
+                  height="140"
+                />
+              </picture>
             </div>
             <div className="header-text">
               <h1>AutoAudit</h1>
@@ -64,8 +79,8 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
             </div>
           </div>
           
-          <div className="theme-toggle">
-            <span className="theme-label">🌞</span>
+          <div className="theme-toggle" role="group" aria-label="Theme toggle">
+            <Sun size={18} className={`theme-label ${!isDarkMode ? 'active' : ''}`} />
             <label className="toggle-switch">
               <input 
                 type="checkbox" 
@@ -75,7 +90,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
               />
               <span className="slider"></span>
             </label>
-            <span className="theme-label">🌙</span>
+            <Moon size={18} className={`theme-label ${isDarkMode ? 'active' : ''}`} />
           </div>
         </div>
 
@@ -104,24 +119,25 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
         </div>
 
         <div className="stats-grid">
-          {stats.map((stat, index) => (
-            <div key={index} className={`stat-card ${stat.className}`}>
-              <div className="stat-content">
-                <div className="stat-info">
-                  <div className="stat-icon">
-                    {stat.className === 'emerald' && <span>✓</span>}
-                    {stat.className === 'orange' && <span>⚠</span>}
-                    {stat.className === 'gray' && <span>🕐</span>}
-                  </div>
-                  <div className="stat-text">
-                    <p className="stat-label">{stat.label}</p>
-                    <p className="stat-value">{stat.value}</p>
-                    <p className="stat-subtitle">{stat.subtitle}</p>
+          {stats.map((stat, index) => {
+            const Icon = stat.icon; // uppercase component so React renders the imported icon
+            return (
+              <div key={index} className={`stat-card ${stat.className}`}>
+                <div className="stat-content">
+                  <div className="stat-info">
+                    <div className="stat-icon" aria-hidden="true">
+                      <Icon size={18} strokeWidth={2.2} />
+                    </div>
+                    <div className="stat-text">
+                      <p className="stat-label">{stat.label}</p>
+                      <p className="stat-value">{stat.value}</p>
+                      <p className="stat-subtitle">{stat.subtitle}</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="main-grid">
@@ -144,7 +160,9 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
             <div className="issue-card red">
               <div className="issue-header">
                 <div className="issue-title">
-                  <span className="issue-icon">!</span>
+                  <span className="issue-icon" aria-hidden="true">
+                    <AlertOctagon size={16} strokeWidth={2.2} />
+                  </span>
                   <h4>High Priority Issues</h4>
                 </div>
                 <span className="issue-count">3</span>
@@ -155,7 +173,9 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
             <div className="issue-card orange">
               <div className="issue-header">
                 <div className="issue-title">
-                  <span className="issue-icon">⚬</span>
+                  <span className="issue-icon" aria-hidden="true">
+                    <AlertTriangle size={16} strokeWidth={2.2} />
+                  </span>
                   <h4>Medium Priority Issues</h4>
                 </div>
                 <span className="issue-count">9</span>
@@ -166,7 +186,9 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
             <div className="issue-card emerald">
               <div className="issue-header">
                 <div className="issue-title">
-                  <span className="issue-icon">✓</span>
+                  <span className="issue-icon" aria-hidden="true">
+                    <CheckCircle2 size={16} strokeWidth={2.2} />
+                  </span>
                   <h4>Scan Status</h4>
                 </div>
                 <span className="issue-status">Complete</span>

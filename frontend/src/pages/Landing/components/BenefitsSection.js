@@ -1,26 +1,27 @@
 import React from "react";
+import { Timer, Target, ShieldCheck, Lightbulb } from "lucide-react";
 
 const benefits = [
   {
-    icon: "⏱️",
+    icon: Timer,
     title: "Save Time & Resources",
     description:
       "Reduce manual compliance work by 80% so your team can focus on strategic initiatives.",
   },
   {
-    icon: "🎯",
+    icon: Target,
     title: "Stay Ahead of Threats",
     description:
       "Proactive monitoring identifies vulnerabilities before they are exploited.",
   },
   {
-    icon: "✅",
+    icon: ShieldCheck,
     title: "Ensure Compliance",
     description:
       "Stay aligned with CIS, NIST, ISO 27001, SOC 2, and other regulatory frameworks.",
   },
   {
-    icon: "💡",
+    icon: Lightbulb,
     title: "Expert Guidance",
     description:
       "Every finding includes prioritized remediation steps to improve security posture.",
@@ -48,7 +49,9 @@ const BenefitsSection = () => {
           <h2>Why Choose AutoAudit?</h2>
           {benefits.map((benefit) => (
             <article key={benefit.title} className="benefit-item">
-              <div className="benefit-icon">{benefit.icon}</div>
+              <div className="benefit-icon">
+                <benefit.icon size={18} strokeWidth={2.2} />
+              </div>
               <div className="benefit-text">
                 <h3>{benefit.title}</h3>
                 <p>{benefit.description}</p>

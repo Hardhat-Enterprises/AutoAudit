@@ -1,9 +1,10 @@
 import React from "react";
+import { Lock, Zap, BarChart3 } from "lucide-react";
 
 const brandFeatures = [
-  { icon: "🔒", text: "Enterprise-grade security & encryption" },
-  { icon: "⚡", text: "Real-time compliance monitoring" },
-  { icon: "📊", text: "Actionable reporting & insights" },
+  { icon: Lock, text: "Enterprise-grade security & encryption" },
+  { icon: Zap, text: "Real-time compliance monitoring" },
+  { icon: BarChart3, text: "Actionable reporting & insights" },
 ];
 
 const BrandPanel = () => {
@@ -17,7 +18,10 @@ const BrandPanel = () => {
       ))}
 
       <div className="brand-content">
-        <img src="/logo.png" alt="AutoAudit" className="brand-logo" />
+        <picture>
+          <source srcSet="/AutoAudit.webp" type="image/webp" />
+          <img src="/AutoAudit.png" alt="AutoAudit" className="brand-logo" loading="lazy" />
+        </picture>
 
         <div className="brand-text" id="brand-title">
           <h1>Access security insights anywhere</h1>
@@ -28,12 +32,17 @@ const BrandPanel = () => {
         </div>
 
         <div className="brand-features" aria-label="Platform highlights">
-          {brandFeatures.map((feature) => (
-            <div key={feature.text} className="brand-feature">
-              <span className="brand-feature-icon">{feature.icon}</span>
-              <span>{feature.text}</span>
-            </div>
-          ))}
+          {brandFeatures.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <div key={feature.text} className="brand-feature">
+                <span className="brand-feature-icon" aria-hidden="true">
+                  <Icon size={18} strokeWidth={2.2} />
+                </span>
+                <span>{feature.text}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

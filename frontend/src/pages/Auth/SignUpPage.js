@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import './SignUpPage.css';
 
 export default function SignUpPage({ onSignUp, onBackToLogin }) {
@@ -44,14 +45,20 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
         </div>
       </nav>
       <div className="signup-right">
-        <img src="/bg.jpg" alt="Signup bg" className="bg-img" />
+        <picture>
+          <source srcSet="/bg.webp" type="image/webp" />
+          <img src="/bg.jpg" alt="Signup bg" className="bg-img" loading="lazy" />
+        </picture>
         <div className="image-overlay"></div>
       </div>
 
       <div className="signup-left">
         <div className="signup-content">
           <div className="logo-section">
-            <img src="/logo.png" alt="AutoAudit Logo" className="logo-img" />
+            <picture>
+              <source srcSet="/AutoAudit.webp" type="image/webp" />
+              <img src="/AutoAudit.png" alt="AutoAudit Logo" className="logo-img" loading="lazy" />
+            </picture>
             <h1>AutoAudit</h1>
             <p className="subtitle">Microsoft 365 Compliance Platform</p>
           </div>
@@ -123,8 +130,9 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="password-toggle"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
@@ -143,8 +151,9 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="password-toggle"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                   >
-                    {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
@@ -161,7 +170,7 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
               </div>
 
               <button onClick={handleSubmit} className="signup-btn">
-                🚀 Create Account
+                Create Account
               </button>
 
               <div className="login-redirect">
@@ -174,7 +183,9 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
 
             <div className="security-notice">
               <div className="security-content">
-                <span className="security-icon">🛡️</span>
+                <span className="security-icon" aria-hidden="true">
+                  <ShieldCheck size={18} strokeWidth={2.2} />
+                </span>
                 <div>
                   <h3>Enterprise Security Standards</h3>
                   <p>Your data is protected with enterprise-grade encryption and follows strict compliance protocols</p>

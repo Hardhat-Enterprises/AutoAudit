@@ -55,7 +55,18 @@ function App() {
   const auth = useAuth();
 
   // Dashboard state
-  const [sidebarWidth, setSidebarWidth] = useState(220);
+  const getInitialSidebarWidth = () => {
+    if (typeof window === "undefined") return 220;
+    try {
+      const stored = window.localStorage.getItem("sidebarExpanded");
+      if (stored === null) return 220;
+      return stored === "true" ? 220 : 80;
+    } catch {
+      return 220;
+    }
+  };
+
+  const [sidebarWidth, setSidebarWidth] = useState(getInitialSidebarWidth);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
   const location = useLocation();

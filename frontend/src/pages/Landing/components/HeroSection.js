@@ -1,18 +1,19 @@
 import React from "react";
+import { Lock, Bolt, BarChart3 } from "lucide-react";
 
 const floatingCards = [
   {
-    icon: "🔒",
+    icon: Lock,
     title: "99.9% Uptime",
     subtitle: "Enterprise-grade reliability you can trust",
   },
   {
-    icon: "⚡",
+    icon: Bolt,
     title: "Real-Time Monitoring",
     subtitle: "Instant alerts and comprehensive insights",
   },
   {
-    icon: "📊",
+    icon: BarChart3,
     title: "Actionable Reports",
     subtitle: "Export audit-ready documentation instantly",
   },
@@ -41,11 +42,13 @@ const HeroSection = ({ onSignInClick }) => {
         </div>
 
         <div className="hero-visual" aria-hidden="true">
-          {floatingCards.map((card) => (
-            <article key={card.title} className="floating-card">
-              <div className="card-icon">{card.icon}</div>
-              <h3>{card.title}</h3>
-              <p>{card.subtitle}</p>
+          {floatingCards.map(({ icon: Icon, title, subtitle }) => (
+            <article key={title} className="floating-card">
+              <div className="card-icon">
+                <Icon size={18} strokeWidth={2.2} />
+              </div>
+              <h3>{title}</h3>
+              <p>{subtitle}</p>
             </article>
           ))}
         </div>
