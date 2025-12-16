@@ -133,16 +133,22 @@ The app will open at http://localhost:3000.
 
 ### Engine
 
-The engine handles compliance scanning and policy evaluation. It connects to OPA for policy decisions.
+The engine handles compliance scanning and policy evaluation. It runs as a Celery worker that connects to PostgreSQL, Redis, and OPA, so you need the infrastructure services running first.
 
 ```bash
+# Start infrastructure services (from the repo root)
+docker compose up -d
+
 cd engine
 
 # Install dependencies
 uv sync
+
+# Run the Celery worker
+uv run celery -A worker.celery_app worker --loglevel=info
 ```
 
-The engine runs as a Celery worker in production. For local development, make sure OPA is running (`docker compose up -d`) and check the engine documentation for running specific collectors or policies.
+The worker logs are output directly to your terminal. Use `--loglevel=debug` for more verbose output when troubleshooting. The worker will display task execution status, errors, and processing details as scans are triggered from the backend API.
 
 ## Verifying Your Setup
 
