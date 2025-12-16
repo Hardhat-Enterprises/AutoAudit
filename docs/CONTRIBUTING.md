@@ -39,7 +39,7 @@ AutoAudit is a compliance automation platform for cloud environments. It collect
 - `app/services/` - Business logic layer
 - `app/core/` - Configuration, auth, and middleware
 
-**Getting started**: See `backend-api/README.md` for setup instructions and examples of securing endpoints.
+**Getting started**: See `/backend-api/README.md` for setup instructions and examples of securing endpoints.
 
 ---
 
@@ -89,10 +89,10 @@ AutoAudit is a compliance automation platform for cloud environments. It collect
 - Enjoy working with APIs and data transformation
 
 **Key directories**:
-- `collectors/` - Data collectors for cloud APIs (see `collectors/README.md`)
-- `policies/` - Rego policies organized by framework (see `policies/README.md`)
+- `collectors/` - Data collectors for cloud APIs (see `/engine/collectors/README.md`)
+- `policies/` - Rego policies organized by framework (see `/engine/policies/README.md`)
 
-**Getting started**: The engine has detailed documentation for writing new collectors and policies. Start with the READMEs in the `collectors/` and `policies/` directories.
+**Getting started**: The engine has detailed documentation for writing new collectors and policies. Start with the READMEs in the `/engine/collectors/` and `/engine/policies/` directories.
 
 ---
 
