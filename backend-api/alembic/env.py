@@ -14,6 +14,7 @@ from app.models.m365_connection import M365Connection  # noqa
 from app.models.platform import Platform  # noqa
 from app.models.compliance import Scan  # noqa
 from app.models.scan_result import ScanResult  # noqa
+from app.models.evidence_validation import EvidenceValidation  # noqa
 from app.models.azure_connection import AzureConnection  # noqa
 from app.models.gcp_connection import GCPConnection  # noqa
 from app.models.aws_connection import AWSConnection  # noqa

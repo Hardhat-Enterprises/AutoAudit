@@ -1,211 +1,195 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Info, X } from 'lucide-react';
+// Evidence Scanner page (frontend).
+//
+// This file contains:
+// - The UI for selecting a strategy + uploading evidence
+// - The "Scan Evidence" button click handler (calls the API)
+// - Rendering the scan results table returned by the backend
+//
+// Backend endpoints used (see backend-api/app/api/v1/evidence.py):
+// - GET  /v1/evidence/strategies  -> list strategies for dropdown
+// - POST /v1/evidence/scan        -> run scan on uploaded file
+// - GET  /v1/evidence/reports/:id -> download a generated report
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { getEvidenceReportUrl, getEvidenceStrategies, scanEvidence } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import './Evidence.css';
-import { parseApiError, formatEvidenceList } from '../utils/api';
 
-const RECENT_SCANS_INFO_MESSAGE =
-  'This table shows the 5 most recent scans recorded by the Evidence service. If you need additional history or assistance, please contact support@autoaudit.';
-
-const EvidenceDetails = ({ details, evidence }) => {
-  const toText = (value) => {
-    if (!value) return '';
-    if (Array.isArray(value)) {
-      return value
+const EvidenceExtract = ({ evidence }) => {
+  // Frontend helper to render the "Evidence Extract" cell.
+  // The backend returns `finding.evidence` as an array of strings (or sometimes an object),
+  // and we normalize that into display text for the <pre> block.
+  const text = useMemo(() => {
+    if (!evidence) return '';
+    if (Array.isArray(evidence)) {
+      return evidence
         .filter(Boolean)
         .map((item) => String(item).trim())
+        .filter(Boolean)
         .join('\n');
     }
-    if (typeof value === 'object') {
-      const stringifiable = value.observed || value.expected || value.recommendation;
-      if (!stringifiable) return '';
-      return String(stringifiable).trim();
+    if (typeof evidence === 'object') {
+      try {
+        return JSON.stringify(evidence, null, 2);
+      } catch {
+        return String(evidence);
+      }
     }
-    return String(value).trim();
-  };
+    return String(evidence).trim();
+  }, [evidence]);
 
-  const observed = toText(
-    details?.observed_full ??
-    details?.observed ??
-    (Array.isArray(details?.evidence) ? details.evidence : details?.evidence)
-  );
-
-  const evidenceList = formatEvidenceList(evidence);
-  const merged = [observed, evidenceList.join('\n')].filter(Boolean).join('\n').trim();
-  const hasContent = merged.length > 0;
-
-  if (!hasContent) return <span>—</span>;
+  if (!text) return <span>—</span>;
 
   return (
     <div className="evidence-cell">
       <div className="evidence-block">
-        <pre className="evidence-block__body">
-          {merged}
-        </pre>
+        {/* Styled by .evidence-block__body in Evidence.css (monospace, wrap, max-height scroll). */}
+        <pre className="evidence-block__body">{text}</pre>
       </div>
     </div>
   );
 };
 
 const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
-  const [observedSidebarWidth, setObservedSidebarWidth] = useState(sidebarWidth);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
-      setObservedSidebarWidth(sidebarWidth);
-      return;
-    }
-    const sidebarEl = document.querySelector('.sidebar');
-    if (!sidebarEl) {
-      setObservedSidebarWidth(sidebarWidth);
-      return;
-    }
-    const observer = new ResizeObserver((entries) => {
-      const width = entries?.[0]?.contentRect?.width;
-      if (width && Math.abs(width - observedSidebarWidth) > 1) {
-        setObservedSidebarWidth(width);
-      }
-    });
-    observer.observe(sidebarEl);
-    return () => observer.disconnect();
-  }, [sidebarWidth, observedSidebarWidth]);
-
-  const apiCandidates = useMemo(() => {
-    const roots = [
-      process.env.REACT_APP_EVIDENCE_API_BASE,
-      process.env.REACT_APP_EVIDENCE_API,
-      process.env.REACT_APP_API_URL,
-      typeof window !== 'undefined' ? window.location.origin : null,
-      'http://localhost:8000',
-    ]
-      .filter(Boolean)
-      .map((root) => root.replace(/\/+$/, ''));
-
-    const urls = roots.map((root) => `${root}/v1/evidence`);
-
-    return urls.filter((url, idx) => urls.indexOf(url) === idx);
-  }, []);
-
-  const [apiBase, setApiBase] = useState(() => apiCandidates[0] || '');
+  // ------------------------------
+  // Frontend UI state (React).
+  // ------------------------------
+  // Available strategies to show in the dropdown (fetched from backend).
   const [strategies, setStrategies] = useState([]);
-  const [strategiesLoading, setStrategiesLoading] = useState(false);
-  const [strategiesError, setStrategiesError] = useState('');
-  const [health, setHealth] = useState(null);
-
+  // Currently selected strategy name (used in scan request).
   const [selectedStrategy, setSelectedStrategy] = useState('');
+  // The file chosen in the <input type="file"> (sent to backend).
   const [selectedFile, setSelectedFile] = useState(null);
+  // While a scan request is in-flight (used to disable button + show spinner).
   const [isScanning, setIsScanning] = useState(false);
+  // User-facing error message for strategy load / scan errors.
   const [error, setError] = useState('');
-  const [errorDetails, setErrorDetails] = useState([]);
-  const [note, setNote] = useState('');
+  // Full JSON payload returned by the backend scan endpoint.
   const [results, setResults] = useState(null);
-  const [recentScansOpen, setRecentScansOpen] = useState(false);
-  const [recentScans, setRecentScans] = useState([]);
-  const [recentScansLoading, setRecentScansLoading] = useState(false);
-  const [recentScansError, setRecentScansError] = useState('');
-  const recentScansDialogRef = useRef(null);
+  // While we're loading strategies for the dropdown.
+  const [isLoadingStrategies, setIsLoadingStrategies] = useState(true);
 
-  useEffect(() => {
-    const dialog = recentScansDialogRef.current;
-    if (!dialog) return;
+  // File input is uncontrolled (browser-owned), so keep a ref to clear it when we reset state.
+  // This prevents the UI from showing a filename while `selectedFile` is null (which disables the scan button).
+  const fileInputRef = useRef(null);
 
-    if (recentScansOpen) {
-      if (!dialog.open && typeof dialog.showModal === 'function') {
-        dialog.showModal();
-      }
-      return;
+  // Auth token from AuthContext (frontend).
+  // Used as Bearer token when calling POST /v1/evidence/scan.
+  const { token } = useAuth();
+
+  // Normalize `results.findings` into a safe array for rendering.
+  const findings = useMemo(() => {
+    if (!results || !Array.isArray(results.findings)) return [];
+    return results.findings;
+  }, [results]);
+
+  // Lightweight counts used for the "Results" chips (pass/fail/warn).
+  const resultsSummary = useMemo(() => {
+    const summary = { total: findings.length, pass: 0, fail: 0, warning: 0, other: 0 };
+    for (const finding of findings) {
+      const status = String(finding?.pass_fail || '').toUpperCase();
+      if (status === 'PASS') summary.pass += 1;
+      else if (status === 'FAIL') summary.fail += 1;
+      else if (status === 'WARNING') summary.warning += 1;
+      else summary.other += 1;
     }
+    return summary;
+  }, [findings]);
 
-    if (dialog.open) {
-      dialog.close();
-    }
-  }, [recentScansOpen]);
+  // Reports returned by the backend (filenames in the reports output dir).
+  // We de-duplicate in case the backend returns the same filename multiple times.
+  const reportFiles = useMemo(() => {
+    const list = results?.reports;
+    if (!Array.isArray(list)) return [];
+    return Array.from(new Set(list.filter(Boolean)));
+  }, [results]);
 
+  // On page load (mount), fetch strategies so the user can pick one.
+  // Frontend -> Backend: GET /v1/evidence/strategies (see api/client.js).
   useEffect(() => {
-    let isActive = true;
-
     const fetchStrategies = async () => {
-      setStrategiesLoading(true);
-      setStrategiesError('');
-
-      for (const base of apiCandidates) {
-        try {
-          const res = await fetch(`${base}/strategies`);
-          if (!res.ok) {
-            const parsed = await parseApiError(res, `Failed to load strategies (${res.status})`);
-            throw new Error(parsed.message);
-          }
-          const data = await res.json();
-          if (!isActive) {
-            return;
-          }
-
-          setStrategies(Array.isArray(data) ? data : []);
-          setApiBase(base);
-          setStrategiesLoading(false);
-          return;
-        } catch (err) {
-          // try the next candidate
-        }
-      }
-
-      if (isActive) {
-        setStrategiesError('Unable to load strategies from the Evidence API.');
-        setStrategies([]);
-        setApiBase(apiCandidates[0] || '');
-        setStrategiesLoading(false);
+      setIsLoadingStrategies(true);
+      try {
+        const data = await getEvidenceStrategies();
+        setStrategies(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setError(err.message || 'Unable to load strategies.');
+      } finally {
+        setIsLoadingStrategies(false);
       }
     };
 
     fetchStrategies();
-    return () => { isActive = false; };
-  }, [apiCandidates]);
+  }, []);
 
-  useEffect(() => {
-    if (!apiBase) {
-      return;
-    }
-    let isActive = true;
+  // Resolve the selected strategy object (description + evidence types) for UI hints.
+  const selectedStrategyData = useMemo(
+    () => strategies.find((s) => s.name === selectedStrategy),
+    [strategies, selectedStrategy]
+  );
 
-    const fetchHealth = async () => {
-      try {
-        const res = await fetch(`${apiBase}/health`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (isActive) setHealth(data);
-      } catch (err) {
-        // health is best-effort
-      }
-    };
+  // Build the file input "accept" list (frontend-only).
+  // If the backend provides evidence_types for a strategy, we use it; otherwise we allow a broad set.
+  const acceptedFileTypes = useMemo(() => {
+    const fallback = [
+      'pdf',
+      'png',
+      'jpg',
+      'jpeg',
+      'tif',
+      'tiff',
+      'bmp',
+      'webp',
+      'txt',
+      'docx',
+      'csv',
+      'log',
+      'reg',
+      'ini',
+      'json',
+      'xml',
+      'htm',
+      'html'
+    ];
+    const list =
+      selectedStrategyData?.evidence_types && selectedStrategyData.evidence_types.length > 0
+        ? selectedStrategyData.evidence_types
+        : fallback;
+    return list.map((ext) => (ext.startsWith('.') ? ext : `.${ext}`)).join(',');
+  }, [selectedStrategyData]);
 
-    fetchHealth();
-    return () => { isActive = false; };
-  }, [apiBase]);
-
+  // When the user picks a different strategy:
+  // - clear the selected file (since file requirements may change)
+  // - clear previous results/errors to avoid confusion
   const handleStrategyChange = (e) => {
     setSelectedStrategy(e.target.value);
-    setError('');
-    setErrorDetails([]);
+    setSelectedFile(null);
+    // Also clear the native file input value so the browser UI matches our state.
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     setResults(null);
-    setNote('');
+    setError('');
   };
 
+  // When the user selects a file:
+  // - store the File object for upload
+  // - clear any previous error
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     setSelectedFile(file || null);
     setError('');
-    setErrorDetails([]);
   };
 
+  // "Scan Evidence" click handler (frontend).
+  //
+  // Flow:
+  // 1) Validate required inputs (strategy + file)
+  // 2) POST multipart/form-data to backend /v1/evidence/scan
+  //    - handled by backend-api/app/api/v1/evidence.py
+  //    - which delegates scanning to security/evidence_ui/app.py
+  // 3) Store the JSON response in `results` to render the table below
   const handleScan = async () => {
     setError('');
-    setErrorDetails([]);
-    setNote('');
-    const base = apiBase || apiCandidates[0];
-
-    if (!base) {
-      setError('Evidence API is not configured.');
-      return;
-    }
 
     if (!selectedStrategy) {
       setError('Please select a strategy.');
@@ -219,163 +203,74 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
 
     setIsScanning(true);
 
-    const formData = new FormData();
-    // Send strategy under both names to satisfy legacy and current API handlers
-    formData.append('strategy_name', selectedStrategy);
-    formData.append('strategy', selectedStrategy);
-    // User ID input removed for now; send a stable default.
-    formData.append('user_id', 'user');
-    formData.append('evidence', selectedFile);
-
     try {
-      const res = await fetch(`${base}/scan`, {
-        method: 'POST',
-        body: formData
+      // Frontend -> Backend call lives in api/client.js (scanEvidence()).
+      const data = await scanEvidence(token, {
+        strategyName: selectedStrategy,
+        file: selectedFile,
       });
-
-      const raw = await res.text();
-      let data = {};
-      try {
-        data = JSON.parse(raw);
-      } catch (err) {
-        throw new Error(raw?.slice(0, 160) || 'Scan failed.');
-      }
-
-      if (!res.ok || data.ok === false) {
-        const errs = Array.isArray(data?.errors) ? data.errors : [];
-        const errMsg =
-          errs[0]?.message ||
-          data?.detail ||
-          `Scan failed (${res.status})`;
-        setErrorDetails(errs);
-        throw new Error(errMsg);
-      }
-
+      // Backend returns an object like:
+      // { ok: true, findings: [...], reports: [...], note?: string }
       setResults(data);
-      setNote(data?.note || '');
-      setErrorDetails(Array.isArray(data?.errors) ? data.errors : []);
     } catch (err) {
-      setError(err?.message || 'Scan failed. Please try again.');
-      setResults(null);
+      setError(err.message || 'Scan failed. Please try again.');
     } finally {
       setIsScanning(false);
     }
   };
 
+  // Map PASS/FAIL/WARNING to CSS badge classes (frontend).
   const getStatusClass = (status) => {
     switch (status?.toUpperCase()) {
-      case 'PASS': return 'status-pass';
-      case 'FAIL': return 'status-fail';
-      case 'WARNING': return 'status-warning';
-      default: return '';
+      case 'PASS':
+        return 'status-pass';
+      case 'FAIL':
+        return 'status-fail';
+      case 'WARNING':
+        return 'status-warning';
+      default:
+        return 'status-muted';
     }
   };
-
-  const getRecentScanStatusClass = (status) => {
-    const normalized = String(status || '').toLowerCase();
-    if (normalized === 'success' || normalized === 'ok' || normalized === 'pass') {
-      return 'scan-status-success';
-    }
-    if (normalized === 'fail' || normalized === 'error' || normalized === 'bad') {
-      return 'scan-status-fail';
-    }
-    return 'scan-status-muted';
-  };
-
-  const selectedStrategyData = useMemo(
-    () => strategies.find((s) => s.name === selectedStrategy),
-    [strategies, selectedStrategy]
-  );
-
-  const fetchRecentScans = async () => {
-    const base = apiBase || apiCandidates[0];
-    if (!base) {
-      setRecentScansError('Evidence API is not configured.');
-      return;
-    }
-    setRecentScansLoading(true);
-    setRecentScansError('');
-    try {
-      const res = await fetch(`${base}/scan-mem-log`);
-      if (!res.ok) {
-        throw new Error(`Failed to load recent scans (${res.status})`);
-      }
-      const data = await res.json();
-      setRecentScans(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setRecentScansError(err?.message || 'Unable to load recent scans.');
-      setRecentScans([]);
-    } finally {
-      setRecentScansLoading(false);
-    }
-  };
-
-  const toggleRecentScans = () => {
-    const nextOpen = !recentScansOpen;
-    setRecentScansOpen(nextOpen);
-    if (nextOpen && recentScans.length === 0 && !recentScansLoading) {
-      fetchRecentScans();
-    }
-  };
-
-  const closeRecentScansDialog = () => {
-    setRecentScansOpen(false);
-  };
-
-  const buildReportLink = (filename) => {
-    const base = apiBase || apiCandidates[0] || '';
-    return base ? `${base}/reports/${encodeURIComponent(filename)}` : '#';
-  };
-
-  const recentScansTop = useMemo(() => {
-    if (!Array.isArray(recentScans)) return [];
-    return recentScans.slice(0, 5);
-  }, [recentScans]);
 
   return (
-    <div 
+    <div
       className={`evidence-scanner ${isDarkMode ? 'dark' : 'light'}`}
-      style={{ 
-        marginLeft: `${observedSidebarWidth}px`, 
-        width: `calc(100% - ${observedSidebarWidth}px)`,
-        transition: 'none'
+      style={{
+        // Layout: keep page content aligned with collapsible sidebar width.
+        marginLeft: `${sidebarWidth}px`,
+        width: `calc(100% - ${sidebarWidth}px)`,
+        transition: 'margin-left 0.4s ease, width 0.4s ease'
       }}
     >
       <div className="evidence-container">
-        {/* Brand Header */}
         <div className="brand-wrap">
           <div className="brand-content">
-            <img 
-              src="/AutoAudit.png" 
-              alt="AutoAudit Logo" 
-              className="brand-logo"
-            />
+            <img src="/AutoAudit.png" alt="AutoAudit Logo" className="brand-logo" />
             <h1 className="brand-title">Evidence Scanner</h1>
           </div>
         </div>
 
         <p className="evidence-subtitle">
-          Your Evidence Assistant: Pick a strategy and upload your file. Images, PDF, DOCX, TXT, logs, registry exports are supported.
+          Your Evidence Assistant: Pick a strategy and upload your file. Images, PDF, DOCX, TXT, logs, registry exports
+          are supported.
         </p>
 
-        <div className="pill-row">
-          {strategiesLoading && <span className="status-busy">Loading strategies…</span>}
-          {strategiesError && <span className="status-error">{strategiesError}</span>}
-        </div>
-
-        {/* Main Form Card */}
         <div className="evidence-card">
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="strategy" className="form-label">Strategy</label>
-              <select 
-                id="strategy" 
+              <label htmlFor="strategy" className="form-label">
+                Strategy
+              </label>
+              <select
+                id="strategy"
                 className="form-select"
                 value={selectedStrategy}
+                // Disable dropdown while loading strategy list from backend.
+                disabled={isLoadingStrategies}
                 onChange={handleStrategyChange}
-                disabled={strategiesLoading || !strategies.length}
               >
-                <option value="">{strategiesLoading ? 'Loading…' : '— select a strategy —'}</option>
+                <option value="">{isLoadingStrategies ? 'Loading strategies…' : '— select a strategy —'}</option>
                 {strategies.map((strategy) => (
                   <option key={strategy.name} value={strategy.name}>
                     {strategy.name}
@@ -383,41 +278,46 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                 ))}
               </select>
               {selectedStrategyData && (
-                <div className="form-help">{selectedStrategyData.description}</div>
-              )}
-              {!strategiesLoading && !strategies.length && !strategiesError && (
-                <div className="form-help">No strategies returned by the API.</div>
+                <div className="form-help">
+                  {selectedStrategyData.description}
+                  <br />
+                  <strong>Category:</strong> {selectedStrategyData.category} · <strong>Severity:</strong>{' '}
+                  {selectedStrategyData.severity}
+                  <br />
+                  <strong>Evidence types:</strong> {selectedStrategyData.evidence_types?.join(', ')}
+                </div>
               )}
             </div>
           </div>
 
           <div className="file-group">
-            <label htmlFor="file" className="form-label">Evidence file</label>
-            <input 
-              id="file" 
-              type="file" 
+            <label htmlFor="file" className="form-label">
+              Evidence file
+            </label>
+            <input
+              id="file"
+              type="file"
               className="form-file"
-              disabled={!selectedStrategy || strategiesLoading}
-              accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.txt,.docx,.csv,.log,.reg,.ini,.json,.xml,.htm,.html"
+              ref={fileInputRef}
+              // Require a strategy first (so we can set accept list + UX guidance).
+              disabled={!selectedStrategy}
+              accept={acceptedFileTypes}
               onChange={handleFileChange}
             />
-            <div className="file-name">
-              {selectedFile ? selectedFile.name : 'Choose an evidence file.'}
-            </div>
-            <div className="file-help">
-              Enabled after you choose a strategy.
-            </div>
+            <div className="file-name">{selectedFile ? selectedFile.name : 'Choose an evidence file.'}</div>
+            <div className="file-help">Enabled after you choose a strategy.</div>
           </div>
 
           <div className="actions">
-            <button 
-              className="btn btn-primary" 
+            <button
+              className="btn btn-primary"
+              // Disable until strategy + file selected (and while scanning).
               disabled={!selectedStrategy || !selectedFile || isScanning}
               onClick={handleScan}
             >
               {isScanning ? (
                 <>
-                  <span className="spinner"></span>
+                  <span className="spinner" />
                   Scanning...
                 </>
               ) : (
@@ -425,115 +325,33 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
               )}
             </button>
 
-            <button 
-              className="btn btn-secondary recent-scans-trigger"
-              type="button"
-              onClick={toggleRecentScans}
-              aria-expanded={recentScansOpen}
-            >
-              Recent Scans
-            </button>
-
             {error && <span className="status-error">{error}</span>}
-            {errorDetails.length > 0 && (
-              <ul className="error-list">
-                {errorDetails.map((err, idx) => (
-                  <li key={idx}>
-                    {err.code ? `[${err.code}] ` : ''}{err.message || JSON.stringify(err)}
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         </div>
 
-        {note && (
-          <div className="note-banner" role="status">{note}</div>
-        )}
-
-        <dialog
-          className="recent-scans-dialog"
-          ref={recentScansDialogRef}
-          aria-labelledby="recent-scans-title"
-          onClose={() => setRecentScansOpen(false)}
-          onCancel={(e) => {
-            e.preventDefault();
-            closeRecentScansDialog();
-          }}
-        >
-          <div className="recent-scans-dialog__surface">
-            <div className="recent-scans-dialog__header">
-              <h3 className="results-header" id="recent-scans-title">Recent Scans</h3>
-            </div>
-
-            <div className="recent-scans-dialog__body">
-              <div className="recent-scans-info" role="note">
-                <Info size={18} aria-hidden="true" />
-                <p className="recent-scans-info__text">
-                  {RECENT_SCANS_INFO_MESSAGE}{' '}
-                  <a className="recent-scans-info__link" href="mailto:support@autoaudit">
-                    support@autoaudit
-                  </a>
-                  .
-                </p>
-              </div>
-
-              {recentScansLoading && (
-                <div className="status-busy">Loading recent scans…</div>
-              )}
-
-              {!recentScansLoading && recentScansError && (
-                <div className="status-error">{recentScansError}</div>
-              )}
-
-              {!recentScansLoading && !recentScansError && (
-                recentScansTop.length > 0 ? (
-                  <table className="recent-scans-table">
-                    <thead>
-                      <tr>
-                        <th>Timestamp</th>
-                        <th>User Name</th>
-                        <th>Strategy</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentScansTop.map((scan, idx) => (
-                        <tr key={idx}>
-                          <td>{scan.ts || scan.time || ''}</td>
-                          <td>{scan.user || scan.user_id || 'user'}</td>
-                          <td>{scan.strategy || scan.strategy_name || ''}</td>
-                          <td className={getRecentScanStatusClass(scan.status)}>
-                            {scan.status || ''}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="no-findings">No runs yet.</div>
-                )
-              )}
-            </div>
-
-            <div className="recent-scans-dialog__footer">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={closeRecentScansDialog}
-              >
-                <X size={18} />
-                Close
-              </button>
-            </div>
-          </div>
-        </dialog>
-
-        {/* Results Section */}
         {results && (
           <div className="results-card">
-            <h3 className="results-header">Results</h3>
-            
+            <div className="results-title-row">
+              <h3 className="results-header">Results</h3>
+              <div className="results-kpis">
+                {/* Prefer a single download action instead of repeating a link per row. */}
+                {reportFiles.length > 0 && (
+                  <a
+                    href={getEvidenceReportUrl(reportFiles[0])}
+                    className="report-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Download PDF
+                  </a>
+                )}
+                <span className="kpi-chip kpi-total">{resultsSummary.total} total</span>
+                <span className="kpi-chip kpi-pass">{resultsSummary.pass} pass</span>
+                <span className="kpi-chip kpi-fail">{resultsSummary.fail} fail</span>
+                <span className="kpi-chip kpi-warn">{resultsSummary.warning} warn</span>
+              </div>
+            </div>
+
             <div className="results-meta">
               <div className="meta-tag">
                 <span>Strategy</span>
@@ -545,57 +363,54 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
               </div>
             </div>
 
-            {results.findings && results.findings.length > 0 ? (
-              <table className="results-table">
-                <thead>
-                  <tr>
-                    <th>Test ID</th>
-                    <th>Sub-Strategy</th>
-                    <th>Level</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Recommendation</th>
-                    <th>Evidence / Evidence Extract</th>
-                    <th>Report</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.findings.map((finding, index) => (
-                    <tr key={index}>
-                      <td>{finding.test_id}</td>
-                      <td>{finding.sub_strategy}</td>
-                      <td>{finding.detected_level}</td>
-                      <td className={getStatusClass(finding.pass_fail)}>
-                        {finding.pass_fail}
-                      </td>
-                      <td>{finding.priority}</td>
-                      <td>{finding.recommendation}</td>
-                      <td>
-                        <EvidenceDetails 
-                          details={finding.details} 
-                          evidence={finding.evidence} 
-                        />
-                      </td>
-                      <td>
-                        {results.reports?.[index] && (
-                          <a 
-                            href={buildReportLink(results.reports[index])} 
-                            className="evidence-link"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            PDF
-                          </a>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="no-findings">
-                No readable text found or no findings.
+            {results.note && (
+              <div className="note-banner" role="status">
+                {/* Backend-supplied note (e.g. "No readable text found"). */}
+                {results.note}
               </div>
+            )}
+
+            {findings.length > 0 ? (
+              <div className="results-table-wrap">
+                <table className="results-table">
+                  <thead>
+                    <tr>
+                      <th>Test ID</th>
+                      <th>Sub-Strategy</th>
+                      <th>Status</th>
+                      <th>Recommendation</th>
+                      <th>Evidence Extract</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {findings.map((finding, index) => {
+                      return (
+                        <tr className="results-row" key={index}>
+                          <td>
+                            <span className="mono">{finding.test_id || '—'}</span>
+                          </td>
+                          <td>{finding.sub_strategy}</td>
+                          <td>
+                            <span className={`result-badge ${getStatusClass(finding.pass_fail)}`}>
+                              {finding.pass_fail || '—'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="cell-clamp" title={finding.recommendation || ''}>
+                              {finding.recommendation || '—'}
+                            </div>
+                          </td>
+                          <td>
+                            <EvidenceExtract evidence={finding.evidence} />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="no-findings">No readable text found or no findings.</div>
             )}
           </div>
         )}

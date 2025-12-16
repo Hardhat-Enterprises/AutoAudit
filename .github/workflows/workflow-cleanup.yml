@@ -1,9 +1,23 @@
-name: "Cleanup Old Workflows (Dry Run)"
+name: "Cleanup Old Workflow Runs"
 
 on:
   schedule:
     - cron: "0 0 * * 0"   # Every Sunday at midnight UTC
-  workflow_dispatch:       # Manual trigger from Actions tab
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "If true, only print what would be deleted"
+        required: true
+        type: boolean
+        default: true
+      confirm:
+        description: "Type DELETE to confirm deletion when dry_run=false"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  actions: write
 
 jobs:
   cleanup:
@@ -18,13 +32,35 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: npm install
+        working-directory: tools/workflow-cleanup
+        run: npm ci
 
-      - name: Run cleanup script (dry run)
-        run: npm run cleanup
+      - name: Run cleanup script (scheduled dry run)
+        if: github.event_name == 'schedule'
+        working-directory: tools/workflow-cleanup
+        run: node cleanup-workflows.js --dryRun=true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO_OWNER: ${{ github.repository_owner }}
           REPO_NAME: ${{ github.event.repository.name }}
 
-#
+      - name: Run cleanup script (manual)
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: tools/workflow-cleanup
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            node cleanup-workflows.js --dryRun=true
+            exit 0
+          fi
+
+          if [ "${{ inputs.confirm }}" != "DELETE" ]; then
+            echo "Refusing to delete workflow runs."
+            echo "Re-run this workflow with dry_run=false and confirm=DELETE."
+            exit 1
+          fi
+
+          node cleanup-workflows.js

@@ -1,11 +1,17 @@
 from fastapi import APIRouter, Depends
 from fastapi_users import exceptions
 from app.core.users import fastapi_users, auth_backend
-from app.schemas.user import UserRead, UserCreate, UserUpdate
+from app.schemas.user import UserRead, UserCreate, UserRegister, UserUpdate
 from app.core.auth import get_current_user
 from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+# Registration endpoint (creates users in DB; stores hashed_password)
+router.include_router(
+    fastapi_users.get_register_router(UserRead, UserRegister),
+    prefix="",
+)
 
 # Login endpoint
 router.include_router(

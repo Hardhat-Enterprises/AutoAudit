@@ -111,14 +111,14 @@ Plan: Engine Folder Restructure
 
  | Current Location             | New Location                      |
  |------------------------------|-----------------------------------|
- | engine/engine/GCPAccess.py   | engine/gcp/collector.py           |
- | engine/engine/aggregator.py  | engine/core/evaluator.py          |
- | engine/engine/risk_rating.py | engine/core/risk_rating.py        |
- | engine/engine/json_to_pdf.py | engine/core/reporter.py           |
- | engine/engine/Helpers.rego   | engine/shared/helpers.rego        |
- | engine/rules/*.rego          | engine/gcp/benchmarks/cis/v3.0/   |
- | engine/Rules-Azure/*.json    | engine/azure/benchmarks/cis/v3.0/ |
- | engine/test-configs/         | engine/gcp/test-configs/          |
+ | engine/legacy/engine/GCPAccess.py   | engine/gcp/collector.py           |
+ | engine/legacy/engine/aggregator.py  | engine/core/evaluator.py          |
+ | engine/legacy/engine/risk_rating.py | engine/core/risk_rating.py        |
+ | engine/legacy/engine/json_to_pdf.py | engine/core/reporter.py           |
+ | engine/legacy/engine/Helpers.rego   | engine/shared/helpers.rego        |
+ | engine/legacy/rules-gcp/*.rego      | engine/gcp/benchmarks/cis/v3.0/   |
+ | engine/legacy/rules-azure/*.json    | engine/azure/benchmarks/cis/v3.0/ |
+ | engine/legacy/test-configs/         | engine/gcp/test-configs/          |
 
  Future Extensibility
 

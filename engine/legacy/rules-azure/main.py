@@ -1,5 +1,14 @@
 import json
 import os
+import sys
+from pathlib import Path
+
+# Allow this legacy script to be run from repo root (or directly) by ensuring
+# the legacy engine helpers are importable.
+_LEGACY_ENGINE_DIR = Path(__file__).resolve().parents[1] / "engine"
+if str(_LEGACY_ENGINE_DIR) not in sys.path:
+    sys.path.insert(0, str(_LEGACY_ENGINE_DIR))
+
 from rule_helpers import match_value, match_in_list, match_regex, match_range
 from risk_rating import calculate_impact_level, calculate_risk_level
 
@@ -27,16 +36,19 @@ def evaluate_rule(rule, config):
         reason = f"{rule['tags']} = {value}, expected {expected} | Severity: {severity}"
         return False, reason, severity
 
-def load_mock_config(path="engine/test-configs/iam_policy.json"):
-    with open(path) as f:
+def load_mock_config(path: str | os.PathLike | None = None):
+    legacy_root = Path(__file__).resolve().parents[1]
+    config_path = Path(path) if path else (legacy_root / "test-configs" / "iam_policy.json")
+    with open(config_path) as f:
         return json.load(f)
     
 
-def load_rules(directory="engine/rules"):
+def load_rules(directory: str | os.PathLike | None = None):
+    rules_dir = Path(directory) if directory else Path(__file__).resolve().parent
     rules = []
-    for file in os.listdir(directory):
+    for file in os.listdir(rules_dir):
         if file.endswith(".json"):
-            with open(os.path.join(directory, file)) as f:
+            with open(os.path.join(rules_dir, file)) as f:
                 rule = json.load(f)
                 rules.append(rule)
     return rules

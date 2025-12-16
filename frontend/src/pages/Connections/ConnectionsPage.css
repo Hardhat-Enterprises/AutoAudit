@@ -1,5 +1,7 @@
 .connections-page {
   min-height: 100vh;
+  /* Match Dashboard primary button accent */
+  --teal: #4e94f8;
   background: var(--bg-primary);
   padding: 24px;
   transition: background-color 0.3s ease;

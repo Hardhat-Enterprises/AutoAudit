@@ -14,6 +14,8 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -23,7 +25,8 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setError('');
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match');
       return;
@@ -32,7 +35,17 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
       alert('Please agree to the terms and conditions');
       return;
     }
-    onSignUp(formData);
+    if (!onSignUp) return;
+
+    setIsSubmitting(true);
+    try {
+      await onSignUp(formData);
+    } catch (err) {
+      const message = err?.message || 'Sign up failed. Please try again.';
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -169,9 +182,10 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
                 </label>
               </div>
 
-              <button onClick={handleSubmit} className="signup-btn">
-                Create Account
+              <button onClick={handleSubmit} className="signup-btn" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating...' : 'Create Account'}
               </button>
+              {error && <div className="signup-error">{error}</div>}
 
               <div className="login-redirect">
                 <span>Already have an account? </span>
