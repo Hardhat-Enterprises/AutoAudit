@@ -138,17 +138,8 @@ The engine handles compliance scanning and policy evaluation. It connects to OPA
 ```bash
 cd engine
 
-# Create a virtual environment
-python -m venv .venv
-
-# Activate it
-# On Windows:
-.venv\Scripts\activate
-# On macOS/Linux:
-source .venv/bin/activate
-
 # Install dependencies
-pip install -r requirements.txt
+uv sync
 ```
 
 The engine runs as a Celery worker in production. For local development, make sure OPA is running (`docker compose up -d`) and check the engine documentation for running specific collectors or policies.
