@@ -6,6 +6,10 @@ secret authentication for app-only scenarios.
 
 Authentication: Client secret via MSAL -> access token for SharePoint resource
 
+CAVEAT: Access token authentication has not been fully tested.
+    It should work, but needs verification during implementation. Certificate-based
+    authentication may be required instead of client secret authentication.
+
 NOTE: If certificate authentication is adopted in the future, consider replacing
 these REST API calls with PowerShell cmdlets (Get-SPOTenant, Get-SPOSite, etc.)
 for consistency with other collectors.

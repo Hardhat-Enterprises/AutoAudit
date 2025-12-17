@@ -6,6 +6,10 @@ CIS Microsoft 365 Foundations Benchmark Controls:
 Connection Method: SharePoint REST API
 Authentication: Client secret via MSAL (access token)
 
+CAVEAT: Access token authentication has not been fully tested.
+    It should work, but needs verification during implementation. Certificate-based
+    authentication may be required instead of client secret authentication.
+
 NOTE: This collector uses SharePoint REST API instead of PowerShell because
 SharePoint Online PowerShell does not support client secret authentication.
 If certificate authentication is adopted in the future, this collector should

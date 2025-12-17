@@ -6,6 +6,10 @@ CIS Microsoft 365 Foundations Benchmark Controls:
 Connection Method: IPPSSession (Security & Compliance PowerShell)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-ReportSubmissionPolicy
+
+CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
+    It should work, but needs verification during implementation. Certificate-based
+    authentication may be required instead of client secret authentication.
 """
 
 from typing import Any

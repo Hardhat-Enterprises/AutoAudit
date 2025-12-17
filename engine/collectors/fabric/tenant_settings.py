@@ -8,6 +8,11 @@ Required Scopes: Tenant.Read.All (Fabric API) or Fabric Administrator role
 API Endpoint: GET https://api.fabric.microsoft.com/v1/admin/tenantsettings
 Rate Limit: 25 requests per minute
 
+CAVEAT: Access token authentication for the Fabric API has not been fully tested.
+    It should work using MSAL token acquisition with the Fabric API scope, but this
+    needs verification during implementation. Certificate-based authentication may
+    be required instead of client secret authentication for some tenant configurations.
+
 Controls covered:
     - 9.1.1: Ensure guest user access is restricted
     - 9.1.2: Ensure external user invitations are restricted
