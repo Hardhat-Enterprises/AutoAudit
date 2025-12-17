@@ -1,9 +1,9 @@
 # AutoAudit Development Docker Compose
 #
 # Usage with profiles:
-#   docker compose up                           # Start only db and redis
-#   docker compose --profile frontend-dev up   # For frontend devs (starts backend-api, db, redis)
-#   docker compose --profile backend-dev up    # For backend devs (starts frontend, db, redis)
+#   docker compose up                           # Start infrastructure only (db, redis, opa)
+#   docker compose --profile frontend-dev up   # For frontend devs (starts backend-api + infrastructure)
+#   docker compose --profile backend-dev up    # For backend devs (starts frontend + infrastructure)
 #   docker compose --profile all up            # Start all services
 #
 # To run in detached mode, add -d flag:
