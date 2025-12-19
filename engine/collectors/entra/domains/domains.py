@@ -30,5 +30,24 @@ class DomainsDataCollector(BaseDataCollector):
             - total_domains: Number of domains
             - managed_domains_count: Number of managed (non-federated) domains
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get all domains
+        domains = await client.get_domains()
+
+        # Categorize domains
+        verified_domains = [d for d in domains if d.get("isVerified")]
+        managed_domains = [d for d in domains if d.get("authenticationType") == "Managed"]
+        federated_domains = [d for d in domains if d.get("authenticationType") == "Federated"]
+
+        return {
+            "domains": domains,
+            "total_domains": len(domains),
+            "verified_domains_count": len(verified_domains),
+            "managed_domains_count": len(managed_domains),
+            "federated_domains_count": len(federated_domains),
+            "default_domain": next(
+                (d for d in domains if d.get("isDefault")), None
+            ),
+            "initial_domain": next(
+                (d for d in domains if d.get("isInitial")), None
+            ),
+        }

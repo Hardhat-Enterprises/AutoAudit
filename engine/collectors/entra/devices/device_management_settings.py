@@ -29,5 +29,22 @@ class DeviceManagementSettingsDataCollector(BaseDataCollector):
             - device_management_settings: The device management settings
             - compliance_policy_defaults: Default compliance policy settings
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get device management settings
+        settings = await client.get("/deviceManagement/settings", beta=True)
+
+        # Get device compliance policy setting state summary
+        try:
+            compliance_settings = await client.get(
+                "/deviceManagement/deviceCompliancePolicySettingStateSummaries",
+                beta=True,
+            )
+        except Exception:
+            compliance_settings = {}
+
+        return {
+            "device_management_settings": settings,
+            "device_compliance_on_boarded": settings.get("deviceComplianceCheckinThresholdDays"),
+            "is_scheduled_action_enabled": settings.get("isScheduledActionEnabled"),
+            "secure_by_default": settings.get("secureByDefault"),
+            "compliance_policy_summaries": compliance_settings.get("value", []),
+        }

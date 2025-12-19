@@ -30,7 +30,80 @@ class ConditionalAccessPoliciesDataCollector(BaseDataCollector):
             Dict containing:
             - policies: List of CA policies with full configuration
             - total_policies: Number of policies
+            - enabled_policies: List of enabled policies
             - enabled_policies_count: Number of enabled policies
+            - report_only_policies_count: Number of report-only policies
+            - disabled_policies_count: Number of disabled policies
+            - policies_requiring_mfa: List of policies requiring MFA
+            - policies_blocking_legacy_auth: List of policies blocking legacy auth
+            - policies_requiring_compliant_device: List of policies requiring device compliance
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get all Conditional Access policies
+        policies = await client.get_conditional_access_policies()
+
+        # Categorize policies by state
+        enabled_policies = [p for p in policies if p.get("state") == "enabled"]
+        report_only_policies = [
+            p for p in policies
+            if p.get("state") == "enabledForReportingButNotEnforced"
+        ]
+        disabled_policies = [p for p in policies if p.get("state") == "disabled"]
+
+        # Identify policies by function
+        policies_requiring_mfa = []
+        policies_blocking_legacy_auth = []
+        policies_requiring_compliant_device = []
+
+        for policy in enabled_policies:
+            grant_controls = policy.get("grantControls") or {}
+            built_in_controls = grant_controls.get("builtInControls", [])
+            conditions = policy.get("conditions") or {}
+            client_app_types = conditions.get("clientAppTypes", [])
+
+            # Check for MFA requirement
+            if "mfa" in built_in_controls:
+                policies_requiring_mfa.append({
+                    "id": policy.get("id"),
+                    "displayName": policy.get("displayName"),
+                    "state": policy.get("state"),
+                    "conditions": conditions,
+                    "grantControls": grant_controls,
+                })
+
+            # Check for legacy auth blocking
+            # Legacy auth is blocked when clientAppTypes includes legacy types and action is block
+            legacy_types = {"exchangeActiveSync", "other"}
+            if legacy_types.intersection(set(client_app_types)):
+                if "block" in built_in_controls:
+                    policies_blocking_legacy_auth.append({
+                        "id": policy.get("id"),
+                        "displayName": policy.get("displayName"),
+                        "state": policy.get("state"),
+                        "conditions": conditions,
+                        "grantControls": grant_controls,
+                    })
+
+            # Check for compliant device requirement
+            if "compliantDevice" in built_in_controls:
+                policies_requiring_compliant_device.append({
+                    "id": policy.get("id"),
+                    "displayName": policy.get("displayName"),
+                    "state": policy.get("state"),
+                    "conditions": conditions,
+                    "grantControls": grant_controls,
+                })
+
+        return {
+            "policies": policies,
+            "total_policies": len(policies),
+            "enabled_policies": enabled_policies,
+            "enabled_policies_count": len(enabled_policies),
+            "report_only_policies_count": len(report_only_policies),
+            "disabled_policies_count": len(disabled_policies),
+            "policies_requiring_mfa": policies_requiring_mfa,
+            "policies_requiring_mfa_count": len(policies_requiring_mfa),
+            "policies_blocking_legacy_auth": policies_blocking_legacy_auth,
+            "policies_blocking_legacy_auth_count": len(policies_blocking_legacy_auth),
+            "policies_requiring_compliant_device": policies_requiring_compliant_device,
+            "policies_requiring_compliant_device_count": len(policies_requiring_compliant_device),
+        }

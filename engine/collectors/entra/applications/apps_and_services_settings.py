@@ -29,5 +29,16 @@ class AppsAndServicesSettingsDataCollector(BaseDataCollector):
             - apps_and_services_settings: Apps and services configuration
             - user_owned_apps_enabled: Whether users can own apps
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get organization settings for apps and services
+        # This uses the admin/microsoft365Apps settings endpoint
+        try:
+            settings = await client.get("/admin/microsoft365Apps/settings", beta=True)
+        except Exception:
+            # Fallback if endpoint not available
+            settings = {}
+
+        return {
+            "apps_and_services_settings": settings,
+            "user_owned_apps_enabled": settings.get("isUserAppsAndServicesEnabled"),
+            "is_office_store_enabled": settings.get("isOfficeStoreEnabled"),
+        }

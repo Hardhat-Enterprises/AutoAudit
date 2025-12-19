@@ -31,5 +31,24 @@ class DeviceRegistrationPolicyDataCollector(BaseDataCollector):
             - local_admin_settings: Local admin assignment settings
             - laps_settings: LAPS configuration
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get device registration policy
+        policy = await client.get("/policies/deviceRegistrationPolicy", beta=True)
+
+        # Extract key settings
+        azure_ad_join = policy.get("azureADJoin", {})
+        azure_ad_registration = policy.get("azureADRegistration", {})
+        local_admin_password = policy.get("localAdminPassword", {})
+
+        return {
+            "device_registration_policy": policy,
+            "azure_ad_join_settings": azure_ad_join,
+            "azure_ad_join_allowed": azure_ad_join.get("isAdminConfigurable"),
+            "azure_ad_join_allowed_users": azure_ad_join.get("allowedUsers"),
+            "azure_ad_join_allowed_groups": azure_ad_join.get("allowedGroups"),
+            "azure_ad_registration_settings": azure_ad_registration,
+            "azure_ad_registration_allowed": azure_ad_registration.get("isAdminConfigurable"),
+            "local_admin_password_settings": local_admin_password,
+            "laps_enabled": local_admin_password.get("isEnabled"),
+            "user_device_quota": policy.get("userDeviceQuota"),
+            "multi_factor_auth_configuration": policy.get("multiFactorAuthConfiguration"),
+        }
