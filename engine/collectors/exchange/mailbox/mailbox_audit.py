@@ -1,15 +1,15 @@
-"""Mailbox audit collector.
+"""Mailbox audit bypass collector.
 
 CIS Microsoft 365 Foundations Benchmark Controls:
-    v6.0.0: 6.1.2, 6.1.3
+    v6.0.0: 6.1.3
 
-Connection Method: Exchange Online PowerShell
+Control Description:
+    6.1.3 - Ensure mailbox audit logging bypass is not enabled
+
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
-Required Cmdlets: Get-EXOMailbox -PropertySets Audit, Get-MailboxAuditBypassAssociation
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Cmdlets: Get-MailboxAuditBypassAssociation
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -19,20 +19,36 @@ from collectors.powershell_client import PowerShellClient
 
 
 class MailboxAuditDataCollector(BasePowerShellCollector):
-    """Collects mailbox audit settings for CIS compliance evaluation.
+    """Collects mailbox audit bypass associations for CIS 6.1.3 evaluation.
 
-    This collector retrieves mailbox audit configuration and bypass
-    associations to verify proper audit logging is enabled.
+    This collector retrieves mailboxes that have audit bypass enabled.
     """
 
     async def collect(self, client: PowerShellClient) -> dict[str, Any]:
-        """Collect mailbox audit data.
+        """Collect mailbox audit bypass data.
 
         Returns:
             Dict containing:
-            - mailbox_audit_settings: Audit settings for mailboxes
-            - audit_bypass_associations: Accounts bypassing audit
-            - mailboxes_with_audit_disabled: Mailboxes with audit disabled
+            - accounts_with_bypass_enabled: List of accounts with AuditBypassEnabled = True
+            - bypass_count: Number of accounts with bypass enabled
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get only mailboxes with AuditBypassEnabled = True
+        # Filter in PowerShell to avoid large output and suppress warnings
+        cmdlet = (
+            "Get-MailboxAuditBypassAssociation -ResultSize Unlimited "
+            "-WarningAction SilentlyContinue | "
+            "Where-Object { $_.AuditBypassEnabled -eq $true } | "
+            "Select-Object Name, AuditBypassEnabled"
+        )
+        bypassed = await client.run_cmdlet("ExchangeOnline", cmdlet)
+
+        # Handle None, single result, or list
+        if bypassed is None:
+            bypassed = []
+        elif isinstance(bypassed, dict):
+            bypassed = [bypassed]
+
+        return {
+            "accounts_with_bypass_enabled": bypassed,
+            "bypass_count": len(bypassed),
+        }

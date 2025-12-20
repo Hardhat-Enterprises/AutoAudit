@@ -3,13 +3,13 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 8.6.1
 
-Connection Method: IPPSSession (Security & Compliance PowerShell)
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-ReportSubmissionPolicy
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Note: Despite being related to security reporting, this cmdlet is in ExchangeOnline,
+not in the Compliance module.
 """
 
 from typing import Any
@@ -31,8 +31,16 @@ class ReportSubmissionPolicyDataCollector(BasePowerShellCollector):
         Returns:
             Dict containing:
             - report_submission_policy: The report submission policy
-            - user_reporting_enabled: Whether user reporting is enabled
-            - report_destination: Where reports are sent
+            - report_junk_to_customized_address: Custom junk reporting address
+            - report_not_junk_to_customized_address: Custom not-junk reporting address
+            - report_phish_to_customized_address: Custom phish reporting address
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        policy = await client.run_cmdlet("ExchangeOnline", "Get-ReportSubmissionPolicy")
+
+        return {
+            "report_submission_policy": policy,
+            "report_junk_to_customized_address": policy.get("ReportJunkToCustomizedAddress") if policy else None,
+            "report_not_junk_to_customized_address": policy.get("ReportNotJunkToCustomizedAddress") if policy else None,
+            "report_phish_to_customized_address": policy.get("ReportPhishToCustomizedAddress") if policy else None,
+            "enable_reported_message_to_microsoft": policy.get("EnableReportToMicrosoft") if policy else None,
+        }

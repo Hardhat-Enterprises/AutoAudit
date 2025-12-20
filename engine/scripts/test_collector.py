@@ -28,6 +28,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from collectors.registry import DATA_COLLECTORS, get_collector
 from collectors.graph_client import GraphClient
+from collectors.powershell_base import BasePowerShellCollector
+from collectors.powershell_client import PowerShellClient, PowerShellExecutionError
 
 
 def list_collectors() -> None:
@@ -102,9 +104,12 @@ async def test_collector(
         print(f"Client ID: {client_id}")
         print()
 
-    # Create client and collector
-    client = GraphClient(tenant_id, client_id, client_secret)
+    # Create collector and appropriate client
     collector = get_collector(collector_id)
+    if isinstance(collector, BasePowerShellCollector):
+        client = PowerShellClient(tenant_id, client_id, client_secret)
+    else:
+        client = GraphClient(tenant_id, client_id, client_secret)
 
     # Run collection
     print(f"Running collector: {collector_id}")
@@ -118,6 +123,9 @@ async def test_collector(
         print(f"Collection completed in {elapsed:.2f}s")
     except NotImplementedError:
         print("Error: This collector is not yet implemented (stub only)")
+        sys.exit(1)
+    except PowerShellExecutionError as e:
+        print(f"PowerShell Error: {e}")
         sys.exit(1)
     except Exception as e:
         print(f"Error during collection: {type(e).__name__}: {e}")
@@ -158,12 +166,21 @@ async def test_all_collectors(output_dir: Path | None = None) -> None:
     print("=" * 60)
 
     tenant_id, client_id, client_secret = get_credentials()
-    client = GraphClient(tenant_id, client_id, client_secret)
+    graph_client = GraphClient(tenant_id, client_id, client_secret)
+    ps_client = None  # Lazy init PowerShell client
 
     results = []
     for collector_id in sorted(DATA_COLLECTORS.keys()):
         print(f"\n{collector_id}:")
         collector = get_collector(collector_id)
+
+        # Use appropriate client based on collector type
+        if isinstance(collector, BasePowerShellCollector):
+            if ps_client is None:
+                ps_client = PowerShellClient(tenant_id, client_id, client_secret)
+            client = ps_client
+        else:
+            client = graph_client
 
         start = datetime.now()
         try:
@@ -177,6 +194,11 @@ async def test_all_collectors(output_dir: Path | None = None) -> None:
             error = "Stub only"
             elapsed = 0
             print(f"  Status: NOT_IMPLEMENTED (stub)")
+        except PowerShellExecutionError as e:
+            status = "POWERSHELL_ERROR"
+            error = str(e)
+            elapsed = 0
+            print(f"  Status: POWERSHELL_ERROR - {e}")
         except Exception as e:
             status = "ERROR"
             error = str(e)
@@ -195,10 +217,12 @@ async def test_all_collectors(output_dir: Path | None = None) -> None:
     print("Summary:")
     ok_count = sum(1 for r in results if r["status"] == "OK")
     stub_count = sum(1 for r in results if r["status"] == "NOT_IMPLEMENTED")
+    ps_error_count = sum(1 for r in results if r["status"] == "POWERSHELL_ERROR")
     error_count = sum(1 for r in results if r["status"] == "ERROR")
     print(f"  OK: {ok_count}")
     print(f"  Not Implemented: {stub_count}")
-    print(f"  Errors: {error_count}")
+    print(f"  PowerShell Errors: {ps_error_count}")
+    print(f"  Other Errors: {error_count}")
 
     # Save summary if output_dir specified
     if output_dir:
@@ -210,6 +234,7 @@ async def test_all_collectors(output_dir: Path | None = None) -> None:
                 "summary": {
                     "ok": ok_count,
                     "not_implemented": stub_count,
+                    "powershell_errors": ps_error_count,
                     "errors": error_count,
                 },
                 "results": results,

@@ -3,6 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 2.1.8, 2.1.10
 
+Control Descriptions:
+    2.1.8 - Ensure that SPF records are published for all Exchange Domains
+    2.1.10 - Ensure DMARC Records for all Exchange Online domains are published
+
 Connection Method: Microsoft Graph API + DNS queries
 Required Scopes: Domain.Read.All
 Graph Endpoint: /domains
@@ -31,12 +35,8 @@ class DnsSecurityRecordsDataCollector(BaseDataCollector):
 
         Returns:
             Dict containing:
-            - domains: List of domain records with SPF/DMARC status
+            - domains: List of domain records with SPF/DMARC data
             - total_domains: Number of verified domains checked
-            - domains_with_spf: Count of domains with valid SPF records
-            - domains_with_dmarc: Count of domains with valid DMARC records
-            - domains_missing_spf: List of domains without SPF records
-            - domains_missing_dmarc: List of domains without DMARC records
         """
         import dns.resolver
 
@@ -58,8 +58,7 @@ class DnsSecurityRecordsDataCollector(BaseDataCollector):
                 "authentication_type": domain.get("authenticationType"),
                 "spf_record": None,
                 "dmarc_record": None,
-                "has_valid_spf": False,
-                "has_valid_dmarc": False,
+                "dmarc_policy": None,
                 "spf_error": None,
                 "dmarc_error": None,
             }
@@ -72,7 +71,6 @@ class DnsSecurityRecordsDataCollector(BaseDataCollector):
                     txt_value = "".join(s.decode() if isinstance(s, bytes) else s for s in rdata.strings)
                     if txt_value.startswith("v=spf1"):
                         record["spf_record"] = txt_value
-                        record["has_valid_spf"] = True
                         break
             except dns.resolver.NXDOMAIN:
                 record["spf_error"] = "Domain not found"
@@ -93,7 +91,6 @@ class DnsSecurityRecordsDataCollector(BaseDataCollector):
                     txt_value = "".join(s.decode() if isinstance(s, bytes) else s for s in rdata.strings)
                     if txt_value.startswith("v=DMARC1"):
                         record["dmarc_record"] = txt_value
-                        record["has_valid_dmarc"] = True
                         # Parse DMARC policy
                         record["dmarc_policy"] = self._parse_dmarc_policy(txt_value)
                         break
@@ -110,21 +107,9 @@ class DnsSecurityRecordsDataCollector(BaseDataCollector):
 
             domain_records.append(record)
 
-        # Build summary
-        domains_with_spf = [d for d in domain_records if d["has_valid_spf"]]
-        domains_with_dmarc = [d for d in domain_records if d["has_valid_dmarc"]]
-        domains_missing_spf = [d["domain"] for d in domain_records if not d["has_valid_spf"]]
-        domains_missing_dmarc = [d["domain"] for d in domain_records if not d["has_valid_dmarc"]]
-
         return {
             "domains": domain_records,
             "total_domains": len(domain_records),
-            "domains_with_spf": len(domains_with_spf),
-            "domains_with_dmarc": len(domains_with_dmarc),
-            "domains_missing_spf": domains_missing_spf,
-            "domains_missing_dmarc": domains_missing_dmarc,
-            "all_domains_have_spf": len(domains_missing_spf) == 0,
-            "all_domains_have_dmarc": len(domains_missing_dmarc) == 0,
         }
 
     def _parse_dmarc_policy(self, dmarc_record: str) -> dict[str, str]:

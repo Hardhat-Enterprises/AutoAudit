@@ -75,13 +75,82 @@ from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
 # Users
 from collectors.entra.users.users import UsersDataCollector
 
-# Exchange
+# Exchange - DNS
 from collectors.exchange.dns.dns_security_records import (
     DnsSecurityRecordsDataCollector,
 )
 
-# Fabric
-from collectors.fabric.tenant_settings import FabricTenantSettingsDataCollector
+# Exchange - Audit
+from collectors.exchange.audit.admin_audit_log_config import (
+    AdminAuditLogConfigDataCollector,
+)
+
+# Exchange - Organization
+from collectors.exchange.organization.organization_config import (
+    OrganizationConfigDataCollector,
+)
+from collectors.exchange.organization.owa_mailbox_policy import (
+    OwaMailboxPolicyDataCollector,
+)
+from collectors.exchange.organization.sharing_policy import (
+    SharingPolicyDataCollector,
+)
+from collectors.exchange.organization.transport_config import (
+    TransportConfigDataCollector,
+)
+
+# Exchange - Authentication
+from collectors.exchange.authentication.dkim_signing_config import (
+    DkimSigningConfigDataCollector,
+)
+
+# Exchange - Mailbox
+from collectors.exchange.mailbox.mailbox_audit import MailboxAuditDataCollector
+from collectors.exchange.mailbox.mailbox_audit_actions import (
+    MailboxAuditActionsDataCollector,
+)
+from collectors.exchange.mailbox.mailboxes import MailboxesDataCollector
+from collectors.exchange.mailbox.role_assignment_policy import (
+    RoleAssignmentPolicyDataCollector,
+)
+
+# Exchange - Protection
+from collectors.exchange.protection.anti_phish_policy import (
+    AntiPhishPolicyDataCollector,
+)
+from collectors.exchange.protection.atp_policy_o365 import AtpPolicyO365DataCollector
+from collectors.exchange.protection.hosted_connection_filter import (
+    HostedConnectionFilterDataCollector,
+)
+from collectors.exchange.protection.hosted_content_filter import (
+    HostedContentFilterDataCollector,
+)
+from collectors.exchange.protection.hosted_outbound_spam_filter import (
+    HostedOutboundSpamFilterDataCollector,
+)
+from collectors.exchange.protection.malware_filter_policy import (
+    MalwareFilterPolicyDataCollector,
+)
+from collectors.exchange.protection.safe_attachment_policy import (
+    SafeAttachmentPolicyDataCollector,
+)
+from collectors.exchange.protection.safe_links_policy import (
+    SafeLinksPolicyDataCollector,
+)
+from collectors.exchange.protection.teams_protection_policy import (
+    TeamsProtectionPolicyDataCollector,
+)
+
+# Exchange - Transport
+from collectors.exchange.transport.external_in_outlook import (
+    ExternalInOutlookDataCollector,
+)
+from collectors.exchange.transport.transport_rules import TransportRulesDataCollector
+
+# Compliance
+from collectors.compliance.report_submission_policy import (
+    ReportSubmissionPolicyDataCollector,
+)
 
 # Registry mapping data_collector_id to collector class
 DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
@@ -120,10 +189,37 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,
     # Users
     "entra.users.users": UsersDataCollector,
-    # Exchange
+    # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
-    # Fabric
-    "fabric.tenant_settings": FabricTenantSettingsDataCollector,
+    # Exchange - Audit
+    "exchange.audit.admin_audit_log_config": AdminAuditLogConfigDataCollector,
+    # Exchange - Organization
+    "exchange.organization.organization_config": OrganizationConfigDataCollector,
+    "exchange.organization.owa_mailbox_policy": OwaMailboxPolicyDataCollector,
+    "exchange.organization.sharing_policy": SharingPolicyDataCollector,
+    "exchange.organization.transport_config": TransportConfigDataCollector,
+    # Exchange - Authentication
+    "exchange.authentication.dkim_signing_config": DkimSigningConfigDataCollector,
+    # Exchange - Mailbox
+    "exchange.mailbox.mailbox_audit": MailboxAuditDataCollector,
+    "exchange.mailbox.mailbox_audit_actions": MailboxAuditActionsDataCollector,
+    "exchange.mailbox.mailboxes": MailboxesDataCollector,
+    "exchange.mailbox.role_assignment_policy": RoleAssignmentPolicyDataCollector,
+    # Exchange - Protection
+    "exchange.protection.anti_phish_policy": AntiPhishPolicyDataCollector,
+    "exchange.protection.atp_policy_o365": AtpPolicyO365DataCollector,
+    "exchange.protection.hosted_connection_filter": HostedConnectionFilterDataCollector,
+    "exchange.protection.hosted_content_filter": HostedContentFilterDataCollector,
+    "exchange.protection.hosted_outbound_spam_filter": HostedOutboundSpamFilterDataCollector,
+    "exchange.protection.malware_filter_policy": MalwareFilterPolicyDataCollector,
+    "exchange.protection.safe_attachment_policy": SafeAttachmentPolicyDataCollector,
+    "exchange.protection.safe_links_policy": SafeLinksPolicyDataCollector,
+    "exchange.protection.teams_protection_policy": TeamsProtectionPolicyDataCollector,
+    # Exchange - Transport
+    "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
+    "exchange.transport.transport_rules": TransportRulesDataCollector,
+    # Compliance
+    "compliance.report_submission_policy": ReportSubmissionPolicyDataCollector,
 }
 
 
