@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import String, Text
+from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class EvidenceValidation(Base):
@@ -19,16 +21,11 @@ class EvidenceValidation(Base):
 
     __tablename__ = "evidence_validation"
 
-    # UUID stored as string for portability and simplicity
-    id: Mapped[str] = mapped_column(
-        String(36),
-        primary_key=True,
-        default=lambda: str(uuid.uuid4()),
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
-    user_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     strategy_name: Mapped[str] = mapped_column(String(255), nullable=False)
     source_filename: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
 
@@ -44,3 +41,5 @@ class EvidenceValidation(Base):
     # success | error
     status: Mapped[str] = mapped_column(String(25), nullable=False, default="success")
 
+    # Relationships
+    user: Mapped["User"] = relationship(back_populates="evidence_validations")

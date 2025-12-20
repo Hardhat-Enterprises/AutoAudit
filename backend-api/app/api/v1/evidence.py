@@ -26,8 +26,10 @@ if SECURITY_DIR and str(SECURITY_DIR.parent) not in sys.path:
 # Reuse existing evidence logic from security package
 from security.evidence_ui import app as evidence_ui
 
+from app.core.auth import get_current_user
 from app.db.session import get_async_session
 from app.models.evidence_validation import EvidenceValidation
+from app.models.user import User
 from app.services.encryption import encrypt
 from app.services.evidence_validator import validate_text
 
@@ -79,7 +81,7 @@ async def scan_log_redirect():
 async def scan(
     evidence: UploadFile = File(...),
     strategy_name: str = Form(...),
-    user_id: str = Form("user"),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
 ):
     """
@@ -132,7 +134,7 @@ async def scan(
     scan_result = await evidence_ui.scan(
         evidence=evidence,
         strategy_name=strategy_name,
-        user_id=user_id,
+        user_id=str(current_user.id),
     )
 
     # --- Append validator to response (without changing existing keys) ---
@@ -162,7 +164,7 @@ async def scan(
         status = "success" if ok_value is True else "error"
         if validator_payload is not None:
             record = EvidenceValidation(
-                user_id=user_id or "user",
+                user_id=current_user.id,
                 strategy_name=strategy_name,
                 source_filename=getattr(evidence, "filename", None),
                 text_hash=text_hash,

@@ -173,11 +173,12 @@ export async function getEvidenceStrategies() {
   return fetchWithAuth('/v1/evidence/strategies', null);
 }
 
-export async function scanEvidence(token, { strategyName, userId, file }) {
+export async function scanEvidence(token, { strategyName, file }) {
   // Frontend -> Backend
   // POST /v1/evidence/scan (multipart/form-data)
   //
   // This uploads an evidence file and tells the backend which strategy to run.
+  // The user is derived from the Bearer token (server-side), not a client-provided user_id.
   // Backend returns a JSON payload that the UI renders in the Results section.
   if (!strategyName) {
     throw new Error('Strategy is required');
@@ -190,7 +191,6 @@ export async function scanEvidence(token, { strategyName, userId, file }) {
   // These field names must match the FastAPI endpoint signature in:
   // backend-api/app/api/v1/evidence.py -> scan(...)
   formData.append('strategy_name', strategyName);
-  if (userId) formData.append('user_id', userId);
   formData.append('evidence', file);
 
   const headers = {};

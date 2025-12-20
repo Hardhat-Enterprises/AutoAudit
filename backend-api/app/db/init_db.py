@@ -4,9 +4,10 @@ Database initialization script for seeding default admin user.
 Run this script to create the default admin user:
     python -m app.db.init_db
 """
-import os
 import asyncio
+
 from sqlalchemy import select
+
 from app.db.session import async_session_maker
 from app.models.user import User, Role
 from fastapi_users.password import PasswordHelper
@@ -14,56 +15,50 @@ from fastapi_users.password import PasswordHelper
 
 async def init_db():
     """
-    Optional database seeding for local/dev environments.
+    Database seeding for local/dev environments.
 
     IMPORTANT:
     - Passwords are stored hashed in the DB (see User.hashed_password).
-    - We intentionally avoid hardcoding default credentials in code.
+    - This script will create OR update a default admin user for local development.
     """
-    seed_enabled = os.environ.get("AUTOAUDIT_SEED_USERS", "").strip().lower() in ("1", "true", "yes")
-    if not seed_enabled:
-        print("Skipping user seed. Set AUTOAUDIT_SEED_USERS=true to enable.")
-        return
-
-    admin_email = os.environ.get("AUTOAUDIT_ADMIN_EMAIL", "").strip()
-    admin_password = os.environ.get("AUTOAUDIT_ADMIN_PASSWORD", "").strip()
-    if not admin_email or not admin_password:
-        print(
-            "Skipping user seed. Set AUTOAUDIT_ADMIN_EMAIL and AUTOAUDIT_ADMIN_PASSWORD "
-            "to create an initial admin user."
-        )
-        return
+    admin_email = "admin@example.com"
+    admin_password = "admin"
 
     password_helper = PasswordHelper()
 
     async with async_session_maker() as session:
-        # Check if admin user already exists
+        # Look up the canonical seed user.
         result = await session.execute(
             select(User).where(User.email == admin_email)
         )
         existing_user = result.scalar_one_or_none()
 
+        created = False
         if existing_user:
-            print("Seed admin user already exists. Skipping seed.")
-            return
+            admin_user = existing_user
+        else:
+            created = True
+            admin_user = User(email=admin_email)
+            session.add(admin_user)
 
-        # Create default admin user
-        admin_user = User(
-            email=admin_email,
-            hashed_password=password_helper.hash(admin_password),
-            role=Role.ADMIN.value,
-            is_active=True,
-            is_superuser=True,
-            is_verified=True,
-        )
-        session.add(admin_user)
+        # Ensure the account is a usable admin for local development.
+        admin_user.hashed_password = password_helper.hash(admin_password)
+        admin_user.role = Role.ADMIN.value
+        admin_user.is_active = True
+        admin_user.is_superuser = True
+        admin_user.is_verified = True
+
         await session.commit()
 
-        print("[SUCCESS] Created default admin user with the following details.")
+        print(
+            "[SUCCESS] Created default admin user with the following details."
+            if created
+            else "[SUCCESS] Updated default admin user with the following details."
+        )
         print(f"  Email: {admin_email}")
-        print("  Password: (set via AUTOAUDIT_ADMIN_PASSWORD)")
+        print(f"  Password: {admin_password}")
         print(f"  Role: {Role.ADMIN.value}")
-        print("\nIMPORTANT: Ensure the admin password is reset at first login.")
+        print("\nIMPORTANT: Change this password after first login.")
 
 
 if __name__ == "__main__":

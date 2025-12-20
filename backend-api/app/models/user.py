@@ -9,6 +9,7 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.compliance import Scan
+    from app.models.evidence_validation import EvidenceValidation
     from app.models.m365_connection import M365Connection
 
 
@@ -17,7 +18,6 @@ class Role(str, Enum):
     ADMIN = "admin"
     AUDITOR = "auditor"
     VIEWER = "viewer"
-    USER = "user"
 
 
 class User(SQLAlchemyBaseUserTable[int], Base):
@@ -46,3 +46,6 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         back_populates="user"
     )
     scans: Mapped[list["Scan"]] = relationship(back_populates="user")
+    evidence_validations: Mapped[list["EvidenceValidation"]] = relationship(
+        back_populates="user"
+    )

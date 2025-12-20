@@ -14,6 +14,10 @@ import { getEvidenceReportUrl, getEvidenceStrategies, scanEvidence } from '../ap
 import { useAuth } from '../context/AuthContext';
 import './Evidence.css';
 
+// If the validator finds fewer than this number of expected terms for the selected strategy,
+// treat the scan as "not readable / not relevant" and suppress findings in the UI.
+const MIN_VALIDATOR_MATCHED_TERMS = 2;
+
 const EvidenceExtract = ({ evidence }) => {
   // Frontend helper to render the "Evidence Extract" cell.
   // The backend returns `finding.evidence` as an array of strings (or sometimes an object),
@@ -76,11 +80,27 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
   // Used as Bearer token when calling POST /v1/evidence/scan.
   const { token } = useAuth();
 
+  // If the backend returned a validator payload, use it to decide whether the scan output
+  // is meaningful for the chosen strategy.
+  const isLowSignalScan = useMemo(() => {
+    const summary = results?.validator?.summary;
+    if (!summary) return false;
+
+    const totalTerms = Number(summary.totalTerms ?? 0);
+    const matchedCount = Number(summary.matchedCount ?? 0);
+
+    // If the strategy has no validator terms (totalTerms=0), don't suppress anything.
+    if (!Number.isFinite(totalTerms) || totalTerms <= 0) return false;
+
+    return matchedCount < MIN_VALIDATOR_MATCHED_TERMS;
+  }, [results]);
+
   // Normalize `results.findings` into a safe array for rendering.
   const findings = useMemo(() => {
     if (!results || !Array.isArray(results.findings)) return [];
+    if (isLowSignalScan) return [];
     return results.findings;
-  }, [results]);
+  }, [results, isLowSignalScan]);
 
   // Lightweight counts used for the "Results" chips (pass/fail/warn).
   const resultsSummary = useMemo(() => {
@@ -98,10 +118,11 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
   // Reports returned by the backend (filenames in the reports output dir).
   // We de-duplicate in case the backend returns the same filename multiple times.
   const reportFiles = useMemo(() => {
+    if (isLowSignalScan) return [];
     const list = results?.reports;
     if (!Array.isArray(list)) return [];
     return Array.from(new Set(list.filter(Boolean)));
-  }, [results]);
+  }, [results, isLowSignalScan]);
 
   // On page load (mount), fetch strategies so the user can pick one.
   // Frontend -> Backend: GET /v1/evidence/strategies (see api/client.js).
@@ -410,7 +431,11 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                 </table>
               </div>
             ) : (
-              <div className="no-findings">No readable text found or no findings.</div>
+              <div className="no-findings">
+                {isLowSignalScan
+                  ? 'No readable text found (or the file does not match the selected strategy).'
+                  : 'No readable text found or no findings.'}
+              </div>
             )}
           </div>
         )}
