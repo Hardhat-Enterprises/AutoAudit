@@ -17,6 +17,7 @@ class Role(str, Enum):
     ADMIN = "admin"
     AUDITOR = "auditor"
     VIEWER = "viewer"
+    USER = "user"
 
 
 class User(SQLAlchemyBaseUserTable[int], Base):
