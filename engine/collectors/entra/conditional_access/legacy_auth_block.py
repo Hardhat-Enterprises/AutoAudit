@@ -1,6 +1,11 @@
-"""Legacy authentication block data collector.
+"""Legacy authentication block collector.
 
-CIS-5.2.2.3: Ensure Conditional Access policies block legacy authentication.
+CIS Microsoft 365 Foundations Benchmark Controls:
+    v6.0.0: 5.2.2.3
+
+Connection Method: Microsoft Graph API
+Required Scopes: Policy.Read.All
+Graph Endpoint: /identity/conditionalAccess/policies
 """
 
 from typing import Any
