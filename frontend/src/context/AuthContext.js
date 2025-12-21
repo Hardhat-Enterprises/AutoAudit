@@ -76,7 +76,7 @@ export function AuthProvider({ children }) {
         }
       } catch (error) {
         // Only clear auth when the backend confirms token is invalid/expired
-        if (error instanceof APIError && (error.status === 401 || error.status === 403)) {
+        if (error instanceof APIError && (error.status === 401 )) {
           clearStoredAuth();
           setToken(null);
           setUser(null);
