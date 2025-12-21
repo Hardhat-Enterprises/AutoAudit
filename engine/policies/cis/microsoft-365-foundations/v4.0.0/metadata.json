@@ -13,9 +13,14 @@
       "description": "Configure password policies to never expire. NIST and Microsoft recommend this approach when MFA is enabled, as forced rotation leads to weaker passwords.",
       "severity": "medium",
       "service": "EntraID",
+      "level": "L1",
+      "is_manual": false,
+      "cis_audit_type": "Automated",
+      "automation_status": "ready",
       "data_collector_id": "entra.domains.password_policy",
       "policy_file": "1.3.1_password_expiration.rego",
-      "requires_permissions": ["Domain.Read.All"]
+      "requires_permissions": ["Domain.Read.All"],
+      "notes": null
     },
     {
       "control_id": "CIS-5.2.2.3",
@@ -23,9 +28,14 @@
       "description": "Legacy authentication protocols do not support MFA and are commonly exploited in attacks. Implement Conditional Access policies to block these protocols.",
       "severity": "high",
       "service": "EntraID",
+      "level": "L1",
+      "is_manual": false,
+      "cis_audit_type": "Automated",
+      "automation_status": "ready",
       "data_collector_id": "entra.conditional_access.legacy_auth_block",
       "policy_file": "5.2.2.3_block_legacy_auth.rego",
-      "requires_permissions": ["Policy.Read.All"]
+      "requires_permissions": ["Policy.Read.All"],
+      "notes": null
     }
   ]
 }
