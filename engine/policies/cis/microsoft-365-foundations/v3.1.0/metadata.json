@@ -8,14 +8,14 @@
   "source_url": "https://www.cisecurity.org/benchmark/microsoft_365",
   "controls": [
     {
-      "control_id": "CIS-1.1.1",
+      "control_id": "1.1.1",
       "title": "Ensure Administrative accounts are cloud-only",
       "description": "Administrative accounts should not be synced from on-premises Active Directory. Cloud-only accounts reduce the attack surface by not being tied to on-premises infrastructure.",
       "severity": "critical",
       "service": "EntraID",
       "level": "L1",
       "is_manual": false,
-      "cis_audit_type": "Automated",
+      "benchmark_audit_type": "Automated",
       "automation_status": "ready",
       "data_collector_id": "entra.roles.cloud_only_admins",
       "policy_file": "1.1.1_admin_cloud_only.rego",
@@ -23,14 +23,14 @@
       "notes": null
     },
     {
-      "control_id": "CIS-1.1.3",
+      "control_id": "1.1.3",
       "title": "Ensure that between two and four global admins are designated",
       "description": "Maintain between 2-4 global administrators to ensure operational continuity while minimizing attack surface. Having fewer than 2 creates a single point of failure, while having more than 4 unnecessarily expands the attack surface.",
       "severity": "high",
       "service": "EntraID",
       "level": "L1",
       "is_manual": false,
-      "cis_audit_type": "Automated",
+      "benchmark_audit_type": "Automated",
       "automation_status": "ready",
       "data_collector_id": "entra.roles.privileged_roles",
       "policy_file": "1.1.3_global_admin_count.rego",
