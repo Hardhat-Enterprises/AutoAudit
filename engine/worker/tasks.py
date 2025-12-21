@@ -106,19 +106,36 @@ def run_scan(scan_id: int) -> dict:
 
     # Dispatch all tasks for parallel execution (fire-and-forget)
     dispatched = 0
+    skipped = 0
+
     for result in pending_results:
         control = get_control_metadata(metadata, result["control_id"])
         if control:
-            evaluate_control.delay(
-                scan_id=scan_id,
-                result_id=result["id"],
-                control=control,
-                credentials=credentials,
-                framework=scan["framework"],
-                benchmark=scan["benchmark"],
-                version=scan["version"],
-            )
-            dispatched += 1
+            # Check automation_status before dispatching
+            status = control.get("automation_status", "ready")
+
+            if status == "ready":
+                evaluate_control.delay(
+                    scan_id=scan_id,
+                    result_id=result["id"],
+                    control=control,
+                    credentials=credentials,
+                    framework=scan["framework"],
+                    benchmark=scan["benchmark"],
+                    version=scan["version"],
+                )
+                dispatched += 1
+            else:
+                # Skip non-ready controls (deferred, blocked, manual, not_started)
+                with get_db_session() as session:
+                    update_scan_result(
+                        session,
+                        result_id=result["id"],
+                        status="skipped",
+                        message=f"Control {status}: {control.get('notes') or 'Not yet automatable'}",
+                    )
+                    session.commit()
+                skipped += 1
 
     # Return immediately - don't wait for results
     # Each evaluate_control task will update PostgreSQL directly
@@ -127,6 +144,7 @@ def run_scan(scan_id: int) -> dict:
         "scan_id": scan_id,
         "status": "running",
         "dispatched": dispatched,
+        "skipped": skipped,
     }
 
 
