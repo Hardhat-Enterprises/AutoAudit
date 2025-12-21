@@ -96,6 +96,165 @@ AutoAudit is a compliance automation platform for cloud environments. It collect
 
 ---
 
+### When You Complete a Component
+
+This section explains what you need to update when you finish work on different parts of the compliance engine. Following these steps ensures your work is properly integrated and can be used in scans.
+
+#### Completing a Collector
+
+When you finish implementing a data collector:
+
+1. **Register the collector** in `engine/collectors/registry.py`:
+   ```python
+   from engine.collectors.entra.my_domain.my_collector import MyCollector
+
+   DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
+       # ... existing collectors ...
+       "entra.my_domain.my_collector": MyCollector,
+   }
+   ```
+
+2. **Update metadata.json** for the benchmark version you're implementing:
+   - Set `data_collector_id` to your collector's registry ID
+   - Change `automation_status` from `not_started` to `ready` (or `deferred`/`blocked` with notes if applicable)
+
+   File: `engine/policies/cis/microsoft-365-foundations/vX.X.X/metadata.json`
+
+3. **Update the controls documentation**:
+   - Set the Status column to "Automated" or "Deferred"
+   - Add the Collector ID
+
+   File: `docs/engine/policies/cis/microsoft-365-foundations/vX.X.X/controls.md`
+
+4. **Document your collector output** in the analysis document:
+   - Add example JSON output
+   - Note what the OPA policy can evaluate
+
+   File: `docs/engine/cis-m365-v6-collectors-analysis.md`
+
+5. **Test your collector** against a live M365 tenant (see Testing Your Collector below)
+
+#### Testing Your Collector
+
+Use the collector test script to verify your collector works against a live M365 tenant.
+
+**Step 1: Set environment variables**
+
+You need to configure credentials for your M365 app registration before running the test script.
+
+**macOS / Linux:**
+```bash
+export M365_TENANT_ID=your-tenant-id-here
+export M365_CLIENT_ID=your-client-id-here
+export M365_CLIENT_SECRET=your-client-secret-here
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:M365_TENANT_ID = "your-tenant-id-here"
+$env:M365_CLIENT_ID = "your-client-id-here"
+$env:M365_CLIENT_SECRET = "your-client-secret-here"
+```
+
+**Step 2: Run the test script**
+
+**macOS / Linux:**
+```bash
+cd engine
+
+# List available collectors
+python -m scripts.test_collector --list
+
+# Test a specific collector
+python -m scripts.test_collector -c entra.roles.cloud_only_admins
+
+# Test and save output to a file
+python -m scripts.test_collector -c entra.roles.cloud_only_admins -o ./samples/
+
+# Test all collectors and generate summary report
+python -m scripts.test_collector --all -o ./samples/
+```
+
+**Windows (PowerShell):**
+```powershell
+cd engine
+
+# List available collectors
+python -m scripts.test_collector --list
+
+# Test a specific collector
+python -m scripts.test_collector -c entra.roles.cloud_only_admins
+
+# Test and save output to a file
+python -m scripts.test_collector -c entra.roles.cloud_only_admins -o .\samples\
+
+# Test all collectors and generate summary report
+python -m scripts.test_collector --all -o .\samples\
+```
+
+**What the test script does:**
+- Authenticates to your M365 tenant using the provided credentials
+- Runs the specified collector and captures the JSON output
+- Reports elapsed time and any errors encountered
+- Optionally saves results to a JSON file for documentation
+
+#### Completing a Rego Policy
+
+When you finish implementing a Rego policy:
+
+1. **Ensure metadata annotations** are complete in the policy file:
+   ```rego
+   # METADATA
+   # title: Short control name
+   # description: What this control checks
+   # custom:
+   #   control_id: X.X.X
+   #   framework: cis
+   #   benchmark: microsoft-365-foundations
+   #   version: vX.X.X
+   #   severity: critical|high|medium|low
+   #   service: EntraID|Exchange|SharePoint|Teams|etc
+   #   requires_permissions:
+   #   - Permission.Read.All
+   ```
+
+2. **Update metadata.json** for the benchmark version:
+   - Set `policy_file` to your Rego file name
+
+   File: `engine/policies/cis/microsoft-365-foundations/vX.X.X/metadata.json`
+
+3. **Test the policy** with sample collector output using OPA eval.
+
+#### When Both Collector and Policy are Ready
+
+A control is scannable when both its collector and policy are implemented:
+
+1. Set `automation_status` to `ready` in metadata.json
+2. Update the controls.md Status column to "Automated"
+3. Verify the control works end-to-end with the test harness
+
+#### Control Metadata Schema
+
+Each control in metadata.json uses this schema:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `control_id` | string | Yes | Control ID without framework prefix (e.g., "1.1.1") |
+| `title` | string | Yes | Control title |
+| `description` | string | No | Control description |
+| `severity` | string | No | critical, high, medium, low |
+| `service` | string | No | EntraID, Exchange, SharePoint, Teams, etc. |
+| `level` | string | Yes | "L1" or "L2" |
+| `is_manual` | boolean | Yes | true if no API available |
+| `benchmark_audit_type` | string | Yes | What the benchmark says: "Automated" or "Manual" |
+| `automation_status` | string | Yes | ready, deferred, blocked, manual, not_started |
+| `data_collector_id` | string | Nullable | Collector registry ID, null for manual |
+| `policy_file` | string | Nullable | Rego policy filename, null for manual |
+| `requires_permissions` | array | Nullable | Required API permissions |
+| `notes` | string | Nullable | Blockers, special considerations |
+
+---
+
 ### Infrastructure
 
 **Location**: `/infrastructure`
