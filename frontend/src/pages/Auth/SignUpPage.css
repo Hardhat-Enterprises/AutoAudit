@@ -8,14 +8,14 @@
 
 .signup-brand__logo {
   width: 220px;
-  filter: drop-shadow(0 12px 35px rgba(64, 224, 208, 0.35));
+  filter: drop-shadow(0 12px 35px rgba(59, 130, 246, 0.3));
 }
 
 .signup-brand__text h1 {
   font-size: 2.7rem;
   margin-bottom: 0.75rem;
   line-height: 1.2;
-  background: linear-gradient(135deg, #ffffff, #40e0d0);
+  background: linear-gradient(135deg, #ffffff, var(--accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -38,7 +38,7 @@
   gap: 1rem;
   padding: 1rem;
   border-radius: 16px;
-  border: 1px solid rgba(64, 224, 208, 0.15);
+  border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.04);
   text-align: left;
   transition: transform 0.2s ease, border-color 0.2s ease;
@@ -46,14 +46,14 @@
 
 .signup-brand__feature:hover {
   transform: translateX(6px);
-  border-color: #40e0d0;
+  border-color: var(--accent);
 }
 
 .signup-brand__feature-icon {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,14 +91,14 @@
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #40e0d0;
+  color: var(--accent);
 }
 
 .signup-field input {
   width: 100%;
   padding: 0.9rem 1rem 0.9rem 3rem;
   border-radius: 12px;
-  border: 2px solid rgba(64, 224, 208, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.2);
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
   font-size: 1rem;
@@ -110,8 +110,9 @@
 
 .signup-field input:focus {
   outline: none;
-  border-color: #40e0d0;
-  box-shadow: 0 0 0 4px rgba(64, 224, 208, 0.15);
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
 }
 
 .signup-checkbox {
@@ -122,16 +123,16 @@
 
 .signup-checkbox input {
   margin-top: 0.35rem;
-  accent-color: #40e0d0;
+  accent-color: var(--accent);
 }
 
 .signup-checkbox a {
-  color: #40e0d0;
+  color: var(--accent);
   text-decoration: none;
 }
 
 .signup-checkbox a:hover {
-  color: #1e90ff;
+  color: var(--accent-strong);
 }
 
 .signup-error {
@@ -163,7 +164,8 @@
 }
 
 .signup-btn:hover {
-  background: #28c5c0;
+  background: var(--accent-strong);
+}
 
 .social-login .social-btn {
   display: flex;
@@ -182,45 +184,13 @@
 .signup-text button {
   background: none;
   border: none;
-  color: #40e0d0;
+  color: var(--accent);
   font-weight: 600;
   cursor: pointer;
 }
 
 .signup-text button:hover {
-  color: #1e90ff;
-}
-
-.signup-security {
-  margin-top: 1.25rem;
-  padding: 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(64, 224, 208, 0.15);
-  background: rgba(64, 224, 208, 0.05);
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.signup-security__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #40e0d0, #1e90ff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-}
-
-.signup-security h4 {
-  margin: 0 0 0.3rem;
-}
-
-.signup-security p {
-  margin: 0;
-  color: #b0c4de;
-  line-height: 1.4;
+  color: var(--accent-strong);
 }
 
 @media (max-width: 1024px) {
