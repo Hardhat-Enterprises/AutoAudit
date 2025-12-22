@@ -8,6 +8,7 @@ from app.models.aws_connection import AWSConnection
 from app.models.platform import Platform
 from app.models.scan_result import ScanResult
 from app.models.compliance import Scan
+from app.models.evidence_validation import EvidenceValidation
 
 __all__ = [
     "User",
@@ -19,4 +20,5 @@ __all__ = [
     "Platform",
     "ScanResult",
     "Scan",
+    "EvidenceValidation",
 ]

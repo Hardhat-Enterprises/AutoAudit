@@ -1,4 +1,8 @@
 .contact-page {
+  --accent: #3b82f6;
+  --accent-strong: #2563eb;
+  --border: rgba(59, 130, 246, 0.1);
+
   background: #0a1628;
   color: #ffffff;
   min-height: 100vh;
@@ -31,7 +35,7 @@
 .contact-hero::before {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(64, 224, 208, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
   top: -200px;
   right: -200px;
 }
@@ -39,7 +43,7 @@
 .contact-hero::after {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(30, 144, 255, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
   bottom: -100px;
   left: -100px;
   animation-duration: 6s;
@@ -67,7 +71,7 @@
 .contact-hero h1 {
   font-size: clamp(2.5rem, 6vw, 3.5rem);
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, #ffffff, #40e0d0);
+  background: linear-gradient(135deg, #ffffff, var(--accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -99,14 +103,14 @@
 
 .info-card {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(64, 224, 208, 0.1);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 2rem;
   transition: all 0.3s ease;
 }
 
 .info-card:hover {
-  border-color: #40e0d0;
+  border-color: var(--accent);
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -114,7 +118,7 @@
   width: 56px;
   height: 56px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -136,13 +140,13 @@
 
 .contact-link {
   display: block;
-  color: #40e0d0;
+  color: var(--accent);
   text-decoration: none;
   margin-top: 0.25rem;
 }
 
 .contact-link:hover {
-  color: #1e90ff;
+  color: var(--accent-strong);
 }
 
 .social-links {
@@ -155,18 +159,18 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  border: 1px solid rgba(64, 224, 208, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
   color: #ffffff;
-  background: rgba(64, 224, 208, 0.12);
+  background: rgba(59, 130, 246, 0.12);
   transition: all 0.3s ease;
 }
 
 .social-link:hover {
-  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border-color: transparent;
 }
 
@@ -178,7 +182,7 @@
 
 .contact-form-wrapper {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(64, 224, 208, 0.1);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 3rem;
   backdrop-filter: blur(10px);
@@ -204,7 +208,7 @@
   width: 100%;
   padding: 1rem;
   border-radius: 12px;
-  border: 1px solid rgba(64, 224, 208, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   background: rgba(255, 255, 255, 0.05);
   color: #ffffff;
   font-size: 1rem;
@@ -215,9 +219,9 @@
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #40e0d0;
+  border-color: var(--accent);
   background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 2px rgba(64, 224, 208, 0.15);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
 }
 
 .form-row {
@@ -242,10 +246,10 @@
   margin-top: 1rem;
   padding: 1rem;
   border-radius: 12px;
-  border: 1px solid #40e0d0;
-  background: rgba(64, 224, 208, 0.12);
+  border: 1px solid var(--accent);
+  background: rgba(59, 130, 246, 0.12);
   text-align: center;
-  color: #40e0d0;
+  color: var(--accent);
 }
 
 .success-message.show {
@@ -289,7 +293,7 @@
 }
 
 .faq-item {
-  border: 1px solid rgba(64, 224, 208, 0.1);
+  border: 1px solid var(--border);
   border-radius: 15px;
   margin-bottom: 1rem;
   background: rgba(255, 255, 255, 0.02);
@@ -316,7 +320,7 @@
 
 .faq-icon {
   font-size: 1.4rem;
-  color: #40e0d0;
+  color: var(--accent);
   transition: transform 0.3s ease;
 }
 

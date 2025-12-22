@@ -150,12 +150,28 @@
   gap: 1rem;
 }
 
+
+.signup-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: #ef4444;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.signup-btn:hover {
+  background: #28c5c0;
+
 .social-login .social-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   padding: 0.85rem;
+
 }
 
 .social-login .social-btn svg {

@@ -14,6 +14,9 @@ The repo follows the established modular structure:
 - `/security`  
 - `/frontend`  
 - `/engine`  
+- `/infrastructure`  
+- `/tools`  
+- `/docs`  
 - `/.github/workflows`
 
 Full commit history and traceability from team forks are preserved.

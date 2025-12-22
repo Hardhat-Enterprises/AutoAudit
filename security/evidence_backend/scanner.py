@@ -1,14 +1,18 @@
 import os
 import csv
-from pathlib import Path
 from typing import List
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[1])) 
-from security.strategies import load_strategies  
+
+# Ensure the monorepo root is importable when running this file directly.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from security.strategies import load_strategies
 
 #------------------------ Import core_ocr.py----------------
-from backend.core_ocr import extract_text_and_preview, SUPPORTED_ALL_EXTS
+from security.evidence_backend.core_ocr import extract_text_and_preview, SUPPORTED_ALL_EXTS
 
 # ------------------------ recent-scan logger (add-on) ----------------
 import json
@@ -167,10 +171,7 @@ def main():
             rows_added = 0  # track whether any hits were written
 
             if hasattr(strat, "emit_hits"):
-                try:
-                    rows = strat.emit_hits(raw_text, source_file=fpath.name, user_id=user_id)
-                except TypeError:
-                    rows = strat.emit_hits(raw_text)
+                rows = strat.emit_hits(raw_text, source_file=fpath.name)
                 for r in rows:
                     report_rows.append((
                         user_id,

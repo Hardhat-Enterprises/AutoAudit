@@ -2,13 +2,17 @@ import os
 from pathlib import Path
 from typing import Optional
 import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[1])) 
-from reports.report_service import generate_pdf
+
+# Ensure the monorepo root is importable when running this file directly.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from security.reports.report_service import generate_pdf
 from security.strategies import load_strategies
 
 #------------------------ Import core_ocr.py----------------
-from backend.core_ocr import (
+from security.evidence_backend.core_ocr import (
     configure_tesseract,
     extract_text_and_preview,
 )

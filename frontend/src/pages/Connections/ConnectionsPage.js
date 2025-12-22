@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getPlatforms, getConnections, createConnection, updateConnection, deleteConnection } from '../../api/client';
 import './ConnectionsPage.css';
 
-const ConnectionsPage = ({ isDarkMode }) => {
+const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const { token } = useAuth();
   const [platforms, setPlatforms] = useState([]);
   const [connections, setConnections] = useState([]);
@@ -161,7 +161,14 @@ const ConnectionsPage = ({ isDarkMode }) => {
 
   if (isLoading) {
     return (
-      <div className={`connections-page ${isDarkMode ? 'dark' : 'light'}`}>
+      <div
+        className={`connections-page ${isDarkMode ? 'dark' : 'light'}`}
+        style={{
+          marginLeft: `${sidebarWidth}px`,
+          width: `calc(100% - ${sidebarWidth}px)`,
+          transition: 'margin-left 0.4s ease, width 0.4s ease'
+        }}
+      >
         <div className="connections-container">
           <div className="loading-state">
             <Loader2 size={32} className="spinning" />
@@ -173,7 +180,14 @@ const ConnectionsPage = ({ isDarkMode }) => {
   }
 
   return (
-    <div className={`connections-page ${isDarkMode ? 'dark' : 'light'}`}>
+    <div
+      className={`connections-page ${isDarkMode ? 'dark' : 'light'}`}
+      style={{
+        marginLeft: `${sidebarWidth}px`,
+        width: `calc(100% - ${sidebarWidth}px)`,
+        transition: 'margin-left 0.4s ease, width 0.4s ease'
+      }}
+    >
       <div className="connections-container">
         <div className="page-header">
           <div className="header-content">

@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getScans, getConnections, getBenchmarks, createScan } from '../../api/client';
 import './ScansPage.css';
 
-const ScansPage = ({ isDarkMode }) => {
+const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const navigate = useNavigate();
   const { token } = useAuth();
   const [scans, setScans] = useState([]);
@@ -128,7 +128,14 @@ const ScansPage = ({ isDarkMode }) => {
 
   if (isLoading) {
     return (
-      <div className={`scans-page ${isDarkMode ? 'dark' : 'light'}`}>
+      <div
+        className={`scans-page ${isDarkMode ? 'dark' : 'light'}`}
+        style={{
+          marginLeft: `${sidebarWidth}px`,
+          width: `calc(100% - ${sidebarWidth}px)`,
+          transition: 'margin-left 0.4s ease, width 0.4s ease'
+        }}
+      >
         <div className="scans-container">
           <div className="loading-state">
             <Loader2 size={32} className="spinning" />
@@ -140,7 +147,14 @@ const ScansPage = ({ isDarkMode }) => {
   }
 
   return (
-    <div className={`scans-page ${isDarkMode ? 'dark' : 'light'}`}>
+    <div
+      className={`scans-page ${isDarkMode ? 'dark' : 'light'}`}
+      style={{
+        marginLeft: `${sidebarWidth}px`,
+        width: `calc(100% - ${sidebarWidth}px)`,
+        transition: 'margin-left 0.4s ease, width 0.4s ease'
+      }}
+    >
       <div className="scans-container">
         <div className="page-header">
           <div className="header-content">

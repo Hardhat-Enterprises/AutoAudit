@@ -5,6 +5,8 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Evidence from './pages/Evidence';
+import SettingsPage from './pages/SettingsPage';
+import AccountPage from './pages/AccountPage';
 import StyleGuide from './pages/StyleGuide';
 import ConnectionsPage from './pages/Connections/ConnectionsPage';
 import ScansPage from './pages/Scans/ScansPage';
@@ -19,6 +21,7 @@ import SignUpPage from './pages/Auth/SignUpPage';
 
 // Auth Context
 import { useAuth } from './context/AuthContext';
+import { register as apiRegister } from './api/client';
 
 // Styles
 import './styles/global.css';
@@ -84,8 +87,8 @@ function App() {
   }, [isDarkMode]);
 
   // Authentication handlers
-  const handleUserLogin = async (email, password) => {
-    await auth.login(email, password);
+  const handleUserLogin = async (email, password, remember = true) => {
+    await auth.login(email, password, remember);
     navigate('/dashboard');
   };
 
@@ -94,9 +97,18 @@ function App() {
     navigate('/');
   };
 
-  const handleSignUp = (signUpData) => {
-    console.log("Sign up data:", signUpData);
-    navigate('/login');
+  const handleSignUp = async (signUpData) => {
+    const email = signUpData?.email;
+    const password = signUpData?.password;
+
+    if (!email || !password) {
+      throw new Error('Email and password are required');
+    }
+
+    // Create the user in the DB, then sign them in.
+    await apiRegister(email, password);
+    await auth.login(email, password, true);
+    navigate('/dashboard');
   };
 
   const handleThemeToggle = () => {
@@ -108,7 +120,7 @@ function App() {
   };
 
   // Check if current route should show sidebar
-  const isDashboardRoute = ['/dashboard', '/evidence-scanner', '/styleguide', '/cloud-platforms', '/scans'].includes(location.pathname) || location.pathname.startsWith('/scans/');
+  const isDashboardRoute = ['/dashboard', '/evidence-scanner', '/styleguide', '/cloud-platforms', '/scans', '/settings', '/account'].includes(location.pathname) || location.pathname.startsWith('/scans/');
 
   return (
     <div className="App">
@@ -192,6 +204,38 @@ function App() {
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <Evidence />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout
+                sidebarWidth={sidebarWidth}
+                isDarkMode={isDarkMode}
+                onThemeToggle={handleThemeToggle}
+                onSidebarWidthChange={handleSidebarWidthChange}
+              >
+                <SettingsPage />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout
+                sidebarWidth={sidebarWidth}
+                isDarkMode={isDarkMode}
+                onThemeToggle={handleThemeToggle}
+                onSidebarWidthChange={handleSidebarWidthChange}
+              >
+                <AccountPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

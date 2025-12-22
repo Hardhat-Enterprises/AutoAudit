@@ -13,6 +13,15 @@ class UserCreate(schemas.BaseUserCreate):
     role: Role = Role.VIEWER
 
 
+class UserRegister(schemas.BaseUserCreate):
+    """
+    Public registration schema.
+
+    Intentionally does NOT expose role/is_superuser/etc so a self-registering
+    user cannot elevate privileges.
+    """
+
+
 class UserUpdate(schemas.BaseUserUpdate):
     """Schema for updating user data."""
     role: Role | None = None
