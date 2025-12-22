@@ -15,7 +15,7 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    remember: false,
+    remember: true,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
@@ -37,9 +37,10 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
     setIsLoading(true);
 
     try {
-      await auth.login(formData.email, formData.password);
       if (onLogin) {
-        onLogin(formData.email, formData.password);
+        await onLogin(formData.email, formData.password, formData.remember);
+      } else {
+        await auth.login(formData.email, formData.password, formData.remember);
       }
     } catch (err) {
       setError(err.message || "Login failed. Please check your credentials.");

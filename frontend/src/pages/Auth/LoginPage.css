@@ -1,4 +1,12 @@
 .login-page {
+  --bg-dark: #0a1628;
+  --bg-darker: #0f1f38;
+  --text-main: #ffffff;
+  --text-muted: #b0c4de;
+  --accent: #3b82f6;
+  --accent-strong: #2563eb;
+  --border: rgba(59, 130, 246, 0.1);
+
   min-height: 100vh;
   background: #0a1628;
   color: #ffffff;
@@ -14,12 +22,12 @@
   justify-content: space-between;
   align-items: center;
   background: rgba(10, 22, 40, 0.95);
-  border-bottom: 1px solid rgba(64, 224, 208, 0.1);
+  border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px);
 }
 
 .auth-logo img {
-  height: 50px;
+  height: 70px;
   width: auto;
   transition: transform 0.3s ease;
   display: block;
@@ -49,12 +57,12 @@
   bottom: -4px;
   width: 0;
   height: 2px;
-  background: #40e0d0;
+  background: var(--accent);
   transition: width 0.3s ease;
 }
 
 .auth-nav a:hover {
-  color: #40e0d0;
+  color: var(--accent);
 }
 
 .auth-nav a:hover::after {
@@ -98,7 +106,7 @@
 .login-brand::before {
   width: 480px;
   height: 480px;
-  background: radial-gradient(circle, rgba(64, 224, 208, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
   top: -160px;
   right: -160px;
 }
@@ -106,7 +114,7 @@
 .login-brand::after {
   width: 360px;
   height: 360px;
-  background: radial-gradient(circle, rgba(30, 144, 255, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
   bottom: -120px;
   left: -120px;
   animation-delay: 2s;
@@ -128,7 +136,7 @@
   position: absolute;
   width: 4px;
   height: 4px;
-  background: #40e0d0;
+  background: var(--accent);
   border-radius: 50%;
   opacity: 0.4;
   animation: floatParticle 18s infinite;
@@ -187,10 +195,15 @@
   align-items: center;
 }
 
+/* BrandPanel: keep headings centered, but left-align span text content */
+.login-brand span {
+  text-align: left;
+}
+
 .brand-kicker {
   text-transform: uppercase;
   letter-spacing: 3px;
-  color: #40e0d0;
+  color: var(--accent);
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
 }
@@ -199,13 +212,13 @@
   width: 180px;
   height: auto;
   margin: 0 auto 1rem;
-  filter: drop-shadow(0 10px 25px rgba(64, 224, 208, 0.3));
+  filter: drop-shadow(0 10px 25px rgba(59, 130, 246, 0.3));
 }
 
 .brand-text h1 {
   font-size: clamp(1.8rem, 4vw, 2.3rem);
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, #ffffff, #40e0d0);
+  background: linear-gradient(135deg, #ffffff, var(--accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-align: center;
@@ -230,10 +243,11 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  text-align: left;
   padding: 1rem;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 12px;
-  border: 1px solid rgba(64, 224, 208, 0.1);
+  border: 1px solid var(--border);
 }
 
 .brand-feature-icon {
@@ -241,7 +255,7 @@
   height: 40px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border-radius: 10px;
   font-size: 1.2rem;
 }
@@ -297,7 +311,7 @@
   width: 100%;
   padding: 1rem 1rem 1rem 3rem;
   border-radius: 12px;
-  border: 2px solid rgba(64, 224, 208, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.2);
   background: rgba(255, 255, 255, 0.05);
   color: #ffffff;
   font-size: 1rem;
@@ -309,9 +323,9 @@
 
 .input-wrapper input:focus {
   outline: none;
-  border-color: #40e0d0;
+  border-color: var(--accent);
   background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 4px rgba(64, 224, 208, 0.12);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
 }
 
 .input-icon {
@@ -319,7 +333,7 @@
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #40e0d0;
+  color: var(--accent);
 }
 
 .password-toggle {
@@ -334,7 +348,7 @@
 }
 
 .password-toggle:hover {
-  color: #40e0d0;
+  color: var(--accent);
 }
 
 .form-options {
@@ -355,11 +369,11 @@
 .checkbox-wrapper input {
   width: 18px;
   height: 18px;
-  accent-color: #40e0d0;
+  accent-color: var(--accent);
 }
 
 .forgot-link {
-  color: #40e0d0;
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -369,11 +383,7 @@
   border-radius: 12px;
   border: none;
   background-color: rgba(255, 255, 255, 1);
-  background-image: linear-gradient(
-    135deg,
-    rgba(64, 224, 208, 1) 0%,
-    rgba(30, 144, 255, 1) 100%
-  );
+  background-image: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
   color: #ffffff;
   font-size: 1rem;
   font-weight: 600;
@@ -387,7 +397,7 @@
 
 .btn-signin:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(64, 224, 208, 0.4);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
 .divider {
@@ -405,7 +415,7 @@
   content: "";
   flex: 1;
   height: 1px;
-  background: rgba(64, 224, 208, 0.2);
+  background: rgba(59, 130, 246, 0.2);
 }
 
 .divider span {
@@ -427,7 +437,7 @@
 .social-btn {
   padding: 0.9rem;
   border-radius: 12px;
-  border: 2px solid rgba(64, 224, 208, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.2);
   background: rgba(255, 255, 255, 0.04);
   color: #ffffff;
   display: flex;
@@ -442,14 +452,14 @@
 
 .social-btn:hover {
   transform: translateY(-2px);
-  border-color: #40e0d0;
+  border-color: var(--accent);
 }
 
 .social-icon {
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: rgba(64, 224, 208, 0.15);
+  background: rgba(59, 130, 246, 0.15);
   display: grid;
   place-items: center;
   font-weight: 600;
@@ -465,13 +475,13 @@
 .signup-text button {
   background: none;
   border: none;
-  color: #40e0d0;
+  color: var(--accent);
   font-weight: 600;
   cursor: pointer;
 }
 
 .signup-text button:hover {
-  color: #1e90ff;
+  color: var(--accent);
 }
 
 @media (max-width: 1024px) {

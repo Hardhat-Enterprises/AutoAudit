@@ -4,6 +4,15 @@ if (!API_BASE_URL) {
   throw new Error('REACT_APP_API_URL environment variable must be set');
 }
 
+export class APIError extends Error {
+  constructor(message, status, payload) {
+    super(message);
+    this.name = "APIError";
+    this.status = status;
+    this.payload = payload;
+  }
+}
+
 // Helper for making authenticated requests
 async function fetchWithAuth(endpoint, token, options = {}) {
   const headers = {
@@ -15,17 +24,24 @@ async function fetchWithAuth(endpoint, token, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: response.statusText }));
-    throw new Error(error.detail || 'Request failed');
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: response.statusText }));
+      throw new APIError(error.detail || 'Request failed', response.status, error);
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof APIError) {
+      throw error;
+    }
+    throw new APIError(error?.message || 'Network error', 0);
   }
-
-  return response.json();
 }
 
 // Auth endpoints
@@ -43,10 +59,41 @@ export async function login(email, password) {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Login failed' }));
-    throw new Error(error.detail || 'Invalid credentials');
+    throw new APIError(error.detail || 'Invalid credentials', response.status, error);
   }
 
   return response.json();
+}
+
+export async function register(email, password) {
+  return fetchWithAuth('/v1/auth/register', null, {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function logout(token) {
+  // Backend uses FastAPI Users; JWT logout typically returns 204 No Content.
+  // This is best-effort because JWTs are stateless; the client must clear local auth.
+  if (!token) return;
+
+  const response = await fetch(`${API_BASE_URL}/v1/auth/logout`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new APIError(error.detail || 'Logout failed', response.status, error);
+  }
+
+  // 204 No Content (common for logout); nothing to parse.
+  if (response.status === 204) return;
+
+  // If the backend ever returns JSON, tolerate empty bodies.
+  return response.json().catch(() => null);
 }
 
 export async function getCurrentUser(token) {
@@ -113,4 +160,68 @@ export async function createScan(token, data) {
     method: 'POST',
     body: JSON.stringify(data),
   });
+}
+
+// Evidence scanner endpoints
+export async function getEvidenceStrategies() {
+  // Frontend -> Backend
+  // GET /v1/evidence/strategies
+  //
+  // Returns an array of strategy objects, e.g.
+  // [{ name, description, category, severity, evidence_types }, ...]
+  // (see backend-api/app/api/v1/evidence.py -> strategies()).
+  return fetchWithAuth('/v1/evidence/strategies', null);
+}
+
+export async function scanEvidence(token, { strategyName, file }) {
+  // Frontend -> Backend
+  // POST /v1/evidence/scan (multipart/form-data)
+  //
+  // This uploads an evidence file and tells the backend which strategy to run.
+  // The user is derived from the Bearer token (server-side), not a client-provided user_id.
+  // Backend returns a JSON payload that the UI renders in the Results section.
+  if (!strategyName) {
+    throw new Error('Strategy is required');
+  }
+  if (!file) {
+    throw new Error('Evidence file is required');
+  }
+
+  const formData = new FormData();
+  // These field names must match the FastAPI endpoint signature in:
+  // backend-api/app/api/v1/evidence.py -> scan(...)
+  formData.append('strategy_name', strategyName);
+  formData.append('evidence', file);
+
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/v1/evidence/scan`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    // The backend may respond with JSON (FastAPI error) or plain text.
+    // We parse best-effort and throw APIError so callers can display a message.
+    const raw = await response.text().catch(() => '');
+    try {
+      const error = raw ? JSON.parse(raw) : { detail: response.statusText };
+      throw new APIError(error.detail || 'Scan failed', response.status, error);
+    } catch {
+      throw new APIError(raw || 'Scan failed', response.status);
+    }
+  }
+
+  return response.json();
+}
+
+export function getEvidenceReportUrl(filename) {
+  // Frontend helper to build a direct download URL for a generated report.
+  // Backend endpoint: GET /v1/evidence/reports/{filename}
+  if (!filename) return '';
+  return `${API_BASE_URL}/v1/evidence/reports/${encodeURIComponent(filename)}`;
 }

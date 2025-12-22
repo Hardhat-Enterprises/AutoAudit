@@ -1,8 +1,8 @@
 import subprocess, json, sys
 from pathlib import Path
 
-RULES = Path("engine/rules")
-CONFIGS = Path("engine/test-configs")
+RULES = Path("engine/legacy/rules-gcp")
+CONFIGS = Path("engine/legacy/test-configs")
 
 policy_map = {
     "CIS_GCP_1_1.rego": "iam_policy.json",
@@ -67,7 +67,19 @@ for rego, config in policy_map.items():
     pkg = Path(rego).stem  
     query = f"data.AutoAudit_tester.rules.{pkg}.report"
 
-    cmd = ["opa", "eval", "-f", "json", "-i", str(CONFIGS/config), "-d" , "engine/engine", "-d", str(RULES/rego), query]
+    cmd = [
+        "opa",
+        "eval",
+        "-f",
+        "json",
+        "-i",
+        str(CONFIGS / config),
+        "-d",
+        "engine/legacy/engine",
+        "-d",
+        str(RULES / rego),
+        query,
+    ]
     proc = subprocess.run(cmd, capture_output=True, text=True)
     if proc.returncode != 0:
         reports[pkg] = {"error": proc.stderr}
@@ -86,7 +98,7 @@ for rego, config in policy_map.items():
     except Exception as e:
         reports[pkg] = {"error": f"Failed to parse OPA output: {e}"}
 
-output_path = "engine/engine/autoaudit_reports.json"
+output_path = "engine/legacy/engine/autoaudit_reports.json"
 with open(output_path, "w") as f:
     json.dump(reports, f, indent=2)
 print(f"Wrote {output_path}")

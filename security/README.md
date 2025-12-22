@@ -63,20 +63,20 @@ python security/evidenceassistant.py
 python -m venv .venv && source .venv/bin/activate # macOS/Linux
 python -m venv .venv && .venv\Scripts\activate # Windows
 pip install -r security/requirements.txt
-python -m uvicorn --app-dir Security frontend.ui:app --reload
+python -m uvicorn security.evidence_ui.app:app --reload
 ```
 ---
 
 ## Folder Structure
 
-AutoAudit/Security/
-├── aa_ui/             # Web UI files and name to be changed to "frontend" 
+AutoAudit/security/
+├── evidence_ui/           # Evidence Scanner web UI + API (FastAPI)
 │   ├── ui.html
-│   └── ui.py
-├── backend/              # Core OCR + scanner/reportgenerator tools
+│   └── app.py
+├── evidence_backend/      # Core OCR + scanner/reportgenerator tools
 │   ├── core_ocr.py
 │   ├── scanner.py
-│   ├── reportgenerator.py
+│   └── reportgenerator.py
 ├── evidence/             # Place your screenshots/docs here
 ├── reports/              # Report generation logic
 ├── results/              # Auto-generated reports and preview documents

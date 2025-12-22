@@ -15,7 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getScan } from '../../api/client';
 import './ScanDetailPage.css';
 
-const ScanDetailPage = ({ isDarkMode }) => {
+const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const { scanId } = useParams();
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -124,7 +124,14 @@ const ScanDetailPage = ({ isDarkMode }) => {
 
   if (isLoading) {
     return (
-      <div className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}>
+      <div
+        className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}
+        style={{
+          marginLeft: `${sidebarWidth}px`,
+          width: `calc(100% - ${sidebarWidth}px)`,
+          transition: 'margin-left 0.4s ease, width 0.4s ease'
+        }}
+      >
         <div className="scan-detail-container">
           <div className="loading-state">
             <Loader2 size={32} className="spinning" />
@@ -137,7 +144,14 @@ const ScanDetailPage = ({ isDarkMode }) => {
 
   if (error || !scan) {
     return (
-      <div className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}>
+      <div
+        className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}
+        style={{
+          marginLeft: `${sidebarWidth}px`,
+          width: `calc(100% - ${sidebarWidth}px)`,
+          transition: 'margin-left 0.4s ease, width 0.4s ease'
+        }}
+      >
         <div className="scan-detail-container">
           <div className="error-state">
             <AlertCircle size={48} />
@@ -164,7 +178,14 @@ const ScanDetailPage = ({ isDarkMode }) => {
   const results = scan.results || [];
 
   return (
-    <div className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}>
+    <div
+      className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}
+      style={{
+        marginLeft: `${sidebarWidth}px`,
+        width: `calc(100% - ${sidebarWidth}px)`,
+        transition: 'margin-left 0.4s ease, width 0.4s ease'
+      }}
+    >
       <div className="scan-detail-container">
         <div className="page-header">
           <button className="back-button" onClick={() => navigate('/scans')}>

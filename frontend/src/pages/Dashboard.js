@@ -68,8 +68,8 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
                   alt="AutoAudit Logo" 
                   className="logo-image"
                   loading="lazy"
-                  width="140"
-                  height="140"
+                  width="56"
+                  height="56"
                 />
               </picture>
             </div>
@@ -196,18 +196,6 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
               <p className="issue-desc">Ready for next scan</p>
             </div>
           </div>
-        </div>
-
-        <div className='fit'>
-          <section className="below-grid">
-            <h3 className="section-title"></h3>
-            <div className="content"></div>
-          </section>
-
-          <section className="bottom-grid">
-            <h3 className="section-title"></h3>
-            <div className="content"></div>
-          </section>
         </div>
       </div>
     </div>

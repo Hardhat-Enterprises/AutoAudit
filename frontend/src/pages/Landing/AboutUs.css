@@ -1,4 +1,8 @@
 .about-page {
+  --accent: #3b82f6;
+  --accent-strong: #2563eb;
+  --border: rgba(59, 130, 246, 0.1);
+
   background: #0a1628;
   color: #ffffff;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -25,7 +29,7 @@
   width: 520px;
   height: 520px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(64, 224, 208, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
   top: -180px;
   right: -140px;
   animation: aboutPulse 8s ease-in-out infinite;
@@ -47,13 +51,13 @@
   width: 220px;
   margin: 0 auto 2rem;
   display: block;
-  filter: drop-shadow(0 10px 25px rgba(64, 224, 208, 0.35));
+  filter: drop-shadow(0 10px 25px rgba(59, 130, 246, 0.35));
 }
 
 .about-hero h1 {
   font-size: clamp(2.5rem, 6vw, 3.4rem);
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, #ffffff, #40e0d0);
+  background: linear-gradient(135deg, #ffffff, var(--accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -73,12 +77,12 @@
   text-align: center;
   font-size: clamp(2rem, 5vw, 2.6rem);
   margin-bottom: 2rem;
-  color: #40e0d0;
+  color: var(--accent);
 }
 
 .section-content {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(64, 224, 208, 0.1);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 3rem;
   max-width: 1200px;
@@ -102,7 +106,7 @@
 
 .feature-card {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(64, 224, 208, 0.1);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 2rem;
   position: relative;
@@ -116,8 +120,8 @@
   inset: 0;
   background: linear-gradient(
     135deg,
-    rgba(64, 224, 208, 0.08),
-    rgba(30, 144, 255, 0.08)
+    rgba(59, 130, 246, 0.08),
+    rgba(37, 99, 235, 0.08)
   );
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -125,8 +129,8 @@
 
 .feature-card:hover {
   transform: translateY(-10px);
-  border-color: #40e0d0;
-  box-shadow: 0 20px 40px rgba(64, 224, 208, 0.2);
+  border-color: var(--accent);
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2);
 }
 
 .feature-card:hover::before {
@@ -137,7 +141,7 @@
   width: 60px;
   height: 60px;
   border-radius: 15px;
-  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -171,20 +175,20 @@
 
 .standard-card {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(64, 224, 208, 0.1);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 2rem;
   transition: all 0.3s ease;
 }
 
 .standard-card:hover {
-  border-color: #40e0d0;
+  border-color: var(--accent);
   transform: translateY(-6px);
 }
 
 .standard-card h3 {
   font-size: 1.2rem;
-  color: #40e0d0;
+  color: var(--accent);
   margin-bottom: 0.6rem;
 }
 
@@ -196,7 +200,7 @@
 
 .cta-section {
   background: linear-gradient(135deg, #1e3a5f, #0a1628);
-  border: 1px solid rgba(64, 224, 208, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 30px;
   padding: 4rem 5%;
   margin: 0 5% 4rem;
@@ -220,7 +224,7 @@
   padding: 0.9rem 2.5rem;
   font-size: 1rem;
   font-weight: 600;
-  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #ffffff;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -228,7 +232,7 @@
 
 .cta-button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(64, 224, 208, 0.35);
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.35);
 }
 
 @media (max-width: 768px) {

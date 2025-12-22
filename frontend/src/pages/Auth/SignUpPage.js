@@ -1,8 +1,22 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
-import './SignUpPage.css';
+import React, { useState } from "react";
+import "./LoginPage.css";
+import "./SignUpPage.css";
+import LoginHeader from "./components/LoginHeader";
+import LandingFooter from "../Landing/components/LandingFooter";
+import SignupBrandPanel from "./components/SignupBrandPanel";
+import SignupFormPanel from "./components/SignupFormPanel";
+
+const emptyForm = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  organizationName: "",
+  password: "",
+  confirmPassword: "",
+};
 
 export default function SignUpPage({ onSignUp, onBackToLogin }) {
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -14,16 +28,22 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+  const [formData, setFormData] = useState(emptyForm);
+
+
+  const handleFormChange = (field, value) => {
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
   };
 
-  const handleSubmit = () => {
+
+  const handleSubmit = async () => {
+    setError('');
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match');
       return;
@@ -32,7 +52,17 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
       alert('Please agree to the terms and conditions');
       return;
     }
-    onSignUp(formData);
+    if (!onSignUp) return;
+
+    setIsSubmitting(true);
+    try {
+      await onSignUp(formData);
+    } catch (err) {
+      const message = err?.message || 'Sign up failed. Please try again.';
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -169,9 +199,10 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
                 </label>
               </div>
 
-              <button onClick={handleSubmit} className="signup-btn">
-                Create Account
+              <button onClick={handleSubmit} className="signup-btn" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating...' : 'Create Account'}
               </button>
+              {error && <div className="signup-error">{error}</div>}
 
               <div className="login-redirect">
                 <span>Already have an account? </span>
@@ -195,6 +226,26 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
           </div>
         </div>
       </div>
+
+  const handleFormSubmit = (payload) => {
+    onSignUp(payload);
+    setFormData(emptyForm);
+  };
+
+  return (
+    <div className="login-page signup-page">
+      <LoginHeader />
+      <main className="login-main signup-main">
+        <SignupBrandPanel />
+        <SignupFormPanel
+          formData={formData}
+          onFormChange={handleFormChange}
+          onSubmit={handleFormSubmit}
+          onBackToLogin={onBackToLogin}
+        />
+      </main>
+      <LandingFooter />
+
     </div>
   );
 }

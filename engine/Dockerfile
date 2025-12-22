@@ -18,9 +18,6 @@ COPY collectors/ ./collectors/
 COPY policies/ ./policies/
 COPY opa_client.py ./
 
-# Copy legacy engine code (for existing helpers if needed)
-COPY engine/ ./engine/
-
 # Set Python path to include /app
 ENV PYTHONPATH=/app
 
