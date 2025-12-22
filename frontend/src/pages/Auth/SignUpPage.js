@@ -1,8 +1,22 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
-import './SignUpPage.css';
+import React, { useState } from "react";
+import "./LoginPage.css";
+import "./SignUpPage.css";
+import LoginHeader from "./components/LoginHeader";
+import LandingFooter from "../Landing/components/LandingFooter";
+import SignupBrandPanel from "./components/SignupBrandPanel";
+import SignupFormPanel from "./components/SignupFormPanel";
+
+const emptyForm = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  organizationName: "",
+  password: "",
+  confirmPassword: "",
+};
 
 export default function SignUpPage({ onSignUp, onBackToLogin }) {
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -17,13 +31,16 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+  const [formData, setFormData] = useState(emptyForm);
+
+
+  const handleFormChange = (field, value) => {
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
   };
+
 
   const handleSubmit = async () => {
     setError('');
@@ -209,6 +226,26 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
           </div>
         </div>
       </div>
+
+  const handleFormSubmit = (payload) => {
+    onSignUp(payload);
+    setFormData(emptyForm);
+  };
+
+  return (
+    <div className="login-page signup-page">
+      <LoginHeader />
+      <main className="login-main signup-main">
+        <SignupBrandPanel />
+        <SignupFormPanel
+          formData={formData}
+          onFormChange={handleFormChange}
+          onSubmit={handleFormSubmit}
+          onBackToLogin={onBackToLogin}
+        />
+      </main>
+      <LandingFooter />
+
     </div>
   );
 }
