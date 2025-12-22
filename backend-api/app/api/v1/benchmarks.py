@@ -102,9 +102,14 @@ async def list_controls(
                 description=control.get("description"),
                 severity=control.get("severity"),
                 service=control.get("service"),
-                data_collector_id=control.get("data_collector_id", ""),
-                policy_file=control.get("policy_file", ""),
+                level=control.get("level", ""),
+                is_manual=control.get("is_manual", False),
+                benchmark_audit_type=control.get("benchmark_audit_type", ""),
+                automation_status=control.get("automation_status", "not_started"),
+                data_collector_id=control.get("data_collector_id"),
+                policy_file=control.get("policy_file"),
                 requires_permissions=control.get("requires_permissions"),
+                notes=control.get("notes"),
             )
         )
     return result
@@ -143,7 +148,12 @@ async def get_control(
         description=control.get("description"),
         severity=control.get("severity"),
         service=control.get("service"),
-        data_collector_id=control.get("data_collector_id", ""),
-        policy_file=control.get("policy_file", ""),
+        level=control.get("level", ""),
+        is_manual=control.get("is_manual", False),
+        benchmark_audit_type=control.get("benchmark_audit_type", ""),
+        automation_status=control.get("automation_status", "not_started"),
+        data_collector_id=control.get("data_collector_id"),
+        policy_file=control.get("policy_file"),
         requires_permissions=control.get("requires_permissions"),
+        notes=control.get("notes"),
     )
