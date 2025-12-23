@@ -31,5 +31,31 @@ class PasswordProtectionDataCollector(BaseDataCollector):
             - on_prem_protection_enabled: Whether on-prem protection is enabled
             - lockout_settings: Account lockout configuration
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get directory settings which include password rule settings
+        settings_response = await client.get("/settings", beta=True)
+        settings_list = settings_response.get("value", [])
+
+        # Find the password rule settings template
+        password_settings = None
+        for setting in settings_list:
+            if setting.get("templateId") == "5cf42378-d67d-4f36-ba46-e8b86229381d":
+                # Password Rule Settings
+                password_settings = setting
+                break
+
+        # Extract values from settings
+        values = {}
+        if password_settings:
+            for value in password_settings.get("values", []):
+                values[value.get("name")] = value.get("value")
+
+        return {
+            "password_protection_settings": password_settings,
+            "settings_values": values,
+            "banned_password_list_enabled": values.get("EnableBannedPasswordCheck") == "True",
+            "banned_password_list": values.get("BannedPasswordList"),
+            "on_prem_protection_enabled": values.get("EnableBannedPasswordCheckOnPremises") == "True",
+            "lockout_threshold": values.get("LockoutThreshold"),
+            "lockout_duration_in_seconds": values.get("LockoutDurationInSeconds"),
+            "enforce_custom_banned_passwords": values.get("BannedPasswordCheckOnPremisesMode"),
+        }

@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 1.3.9, 6.3.1, 6.5.3
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-OwaMailboxPolicy
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -31,9 +28,39 @@ class OwaMailboxPolicyDataCollector(BasePowerShellCollector):
         Returns:
             Dict containing:
             - owa_policies: List of OWA mailbox policies
-            - default_policy: The default OWA policy
-            - additional_storage_providers_enabled: External storage status
-            - bookings_enabled: Bookings feature status
+            - policies_with_external_storage: Policies allowing external storage
+            - policies_with_bookings: Policies with Bookings enabled
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        policies = await client.run_cmdlet("ExchangeOnline", "Get-OwaMailboxPolicy")
+
+        # Handle None, single policy, or list
+        if policies is None:
+            policies = []
+        elif isinstance(policies, dict):
+            policies = [policies]
+
+        # Find default policy
+        default_policy = next(
+            (p for p in policies if p.get("IsDefault")),
+            policies[0] if policies else None
+        )
+
+        # Check for policies with external storage enabled
+        policies_with_external_storage = [
+            p.get("Name") for p in policies
+            if p.get("AdditionalStorageProvidersAvailable")
+        ]
+
+        # Check for policies with Bookings enabled
+        policies_with_bookings = [
+            p.get("Name") for p in policies
+            if p.get("BookingsMailboxCreationEnabled")
+        ]
+
+        return {
+            "owa_policies": policies,
+            "total_policies": len(policies),
+            "default_policy": default_policy,
+            "policies_with_external_storage": policies_with_external_storage,
+            "policies_with_bookings": policies_with_bookings,
+        }

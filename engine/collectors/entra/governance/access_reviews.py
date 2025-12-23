@@ -31,5 +31,25 @@ class AccessReviewsDataCollector(BaseDataCollector):
             - guest_reviews: Access reviews for guest users
             - guest_reviews_count: Number of guest user reviews
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get access review definitions
+        definitions = await client.get_all_pages(
+            "/identityGovernance/accessReviews/definitions",
+            beta=True,
+        )
+
+        # Filter for guest user reviews
+        guest_reviews = []
+        for definition in definitions:
+            scope = definition.get("scope", {})
+            # Check if review targets guest users
+            query = scope.get("query", "")
+            if "guest" in query.lower() or "userType eq 'Guest'" in query:
+                guest_reviews.append(definition)
+
+        return {
+            "access_review_definitions": definitions,
+            "total_reviews": len(definitions),
+            "guest_reviews": guest_reviews,
+            "guest_reviews_count": len(guest_reviews),
+            "has_guest_reviews": len(guest_reviews) > 0,
+        }

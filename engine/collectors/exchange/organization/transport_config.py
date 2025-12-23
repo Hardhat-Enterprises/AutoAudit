@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 6.5.4
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-TransportConfig
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -31,7 +28,11 @@ class TransportConfigDataCollector(BasePowerShellCollector):
         Returns:
             Dict containing:
             - transport_config: Full transport configuration
-            - smtp_client_authentication_disabled: SMTP client auth status
+            - smtp_client_authentication_disabled: SMTP client auth status (CIS 6.5.4)
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        config = await client.run_cmdlet("ExchangeOnline", "Get-TransportConfig")
+
+        return {
+            "transport_config": config,
+            "smtp_client_authentication_disabled": config.get("SmtpClientAuthenticationDisabled"),
+        }

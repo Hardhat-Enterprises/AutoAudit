@@ -30,5 +30,18 @@ class AdminConsentRequestPolicyDataCollector(BaseDataCollector):
             - is_enabled: Whether admin consent workflow is enabled
             - reviewers: List of designated reviewers
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get admin consent request policy
+        policy = await client.get("/policies/adminConsentRequestPolicy", beta=True)
+
+        # Extract reviewer information
+        reviewers = policy.get("reviewers", [])
+
+        return {
+            "admin_consent_policy": policy,
+            "is_enabled": policy.get("isEnabled"),
+            "notify_reviewers": policy.get("notifyReviewers"),
+            "reminders_enabled": policy.get("remindersEnabled"),
+            "request_duration_in_days": policy.get("requestDurationInDays"),
+            "reviewers": reviewers,
+            "reviewers_count": len(reviewers),
+        }

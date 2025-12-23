@@ -106,9 +106,40 @@ def run_scan(scan_id: int) -> dict:
 
     # Dispatch all tasks for parallel execution (fire-and-forget)
     dispatched = 0
+    skipped = 0
+
     for result in pending_results:
         control = get_control_metadata(metadata, result["control_id"])
-        if control:
+        if not control:
+            # Control not found in metadata (possible ID format mismatch)
+            with get_db_session() as session:
+                update_scan_result(
+                    session,
+                    result_id=result["id"],
+                    status="error",
+                    message=f"Control {result['control_id']} not found in metadata",
+                )
+                increment_scan_error_count(session, scan_id)
+                session.commit()
+            continue
+
+        # Check automation_status before dispatching
+        status = control.get("automation_status", "ready")
+
+        if status == "ready":
+            # Verify collector exists before dispatching
+            if not control.get("data_collector_id"):
+                with get_db_session() as session:
+                    update_scan_result(
+                        session,
+                        result_id=result["id"],
+                        status="error",
+                        message="Control marked ready but has no data_collector_id",
+                    )
+                    increment_scan_error_count(session, scan_id)
+                    session.commit()
+                continue
+
             evaluate_control.delay(
                 scan_id=scan_id,
                 result_id=result["id"],
@@ -119,6 +150,30 @@ def run_scan(scan_id: int) -> dict:
                 version=scan["version"],
             )
             dispatched += 1
+        else:
+            # Skip non-ready controls (deferred, blocked, manual, not_started)
+            with get_db_session() as session:
+                update_scan_result(
+                    session,
+                    result_id=result["id"],
+                    status="skipped",
+                    message=f"Control {status}: {control.get('notes') or 'Not yet automatable'}",
+                )
+                session.commit()
+            skipped += 1
+
+    # If no tasks were dispatched, finalize the scan immediately
+    # (all controls were skipped due to automation_status)
+    if dispatched == 0:
+        with get_db_session() as session:
+            finalize_scan_if_complete(session, scan_id)
+            session.commit()
+        return {
+            "scan_id": scan_id,
+            "status": "completed",
+            "dispatched": dispatched,
+            "skipped": skipped,
+        }
 
     # Return immediately - don't wait for results
     # Each evaluate_control task will update PostgreSQL directly
@@ -127,6 +182,7 @@ def run_scan(scan_id: int) -> dict:
         "scan_id": scan_id,
         "status": "running",
         "dispatched": dispatched,
+        "skipped": skipped,
     }
 
 
@@ -289,13 +345,12 @@ async def _evaluate_control_async(
     # Transform:
     # - benchmark: "microsoft-365-foundations" -> "microsoft_365_foundations"
     # - version: "v3.1.0" -> "v3_1_0"
-    # - control_id: "CIS-1.1.1" -> "control_1_1_1"
+    # - control_id: "1.1.1" -> "control_1_1_1"
     benchmark_normalized = benchmark.replace("-", "_")
     version_normalized = version.replace(".", "_")
 
-    # Convert control_id like "CIS-1.1.1" to "control_1_1_1"
-    # Remove framework prefix and convert dots to underscores
-    control_suffix = control_id.split("-", 1)[-1].replace(".", "_")
+    # Convert control_id like "1.1.1" to "control_1_1_1"
+    control_suffix = control_id.replace(".", "_")
     control_package = f"control_{control_suffix}"
 
     package_path = f"{framework}/{benchmark_normalized}/{version_normalized}/{control_package}"

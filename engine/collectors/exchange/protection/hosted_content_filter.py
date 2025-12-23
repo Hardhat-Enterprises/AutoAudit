@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 2.1.14
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-HostedContentFilterPolicy
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -34,5 +31,26 @@ class HostedContentFilterDataCollector(BasePowerShellCollector):
             - allowed_sender_domains: Domains allowed to bypass filtering
             - allowed_senders: Senders allowed to bypass filtering
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        policies = await client.run_cmdlet(
+            "ExchangeOnline", "Get-HostedContentFilterPolicy"
+        )
+
+        # Handle None, single policy, or list
+        if policies is None:
+            policies = []
+        elif isinstance(policies, dict):
+            policies = [policies]
+
+        # Get default policy settings
+        default_policy = next(
+            (p for p in policies if p.get("IsDefault")),
+            policies[0] if policies else None
+        )
+
+        return {
+            "content_filter_policies": policies,
+            "total_policies": len(policies),
+            "default_policy": default_policy,
+            "allowed_sender_domains": default_policy.get("AllowedSenderDomains", []) if default_policy else [],
+            "allowed_senders": default_policy.get("AllowedSenders", []) if default_policy else [],
+        }

@@ -31,5 +31,39 @@ class GroupsDataCollector(BaseDataCollector):
             - dynamic_groups_count: Number of dynamic membership groups
             - public_groups_count: Number of public groups
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get all groups with relevant properties
+        groups = await client.get_all_pages(
+            "/groups",
+            params={
+                "$select": "id,displayName,groupTypes,membershipRule,visibility,securityEnabled,mailEnabled"
+            },
+        )
+
+        # Categorize groups
+        dynamic_groups = [
+            g for g in groups
+            if "DynamicMembership" in g.get("groupTypes", [])
+        ]
+        public_groups = [
+            g for g in groups
+            if g.get("visibility") == "Public"
+        ]
+        security_groups = [
+            g for g in groups
+            if g.get("securityEnabled")
+        ]
+        m365_groups = [
+            g for g in groups
+            if "Unified" in g.get("groupTypes", [])
+        ]
+
+        return {
+            "groups": groups,
+            "total_groups": len(groups),
+            "dynamic_groups": dynamic_groups,
+            "dynamic_groups_count": len(dynamic_groups),
+            "public_groups": public_groups,
+            "public_groups_count": len(public_groups),
+            "security_groups_count": len(security_groups),
+            "m365_groups_count": len(m365_groups),
+        }

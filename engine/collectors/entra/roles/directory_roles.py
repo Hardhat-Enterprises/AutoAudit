@@ -30,5 +30,47 @@ class DirectoryRolesDataCollector(BaseDataCollector):
             - total_roles: Number of directory roles
             - admin_users: Deduplicated list of users with admin roles
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get all directory roles
+        roles = await client.get_directory_roles()
+
+        # For each role, get members
+        roles_with_members = []
+        admin_users: dict[str, dict] = {}
+
+        for role in roles:
+            role_id = role.get("id")
+            role_name = role.get("displayName", "")
+
+            # Get members of this role
+            members = await client.get_role_members(role_id)
+
+            role_data = {
+                "id": role_id,
+                "displayName": role_name,
+                "description": role.get("description"),
+                "roleTemplateId": role.get("roleTemplateId"),
+                "members": members,
+                "members_count": len(members),
+            }
+            roles_with_members.append(role_data)
+
+            # Collect unique admin users
+            for member in members:
+                if member.get("@odata.type") == "#microsoft.graph.user":
+                    user_id = member.get("id")
+                    if user_id not in admin_users:
+                        admin_users[user_id] = {
+                            "id": user_id,
+                            "displayName": member.get("displayName"),
+                            "userPrincipalName": member.get("userPrincipalName"),
+                            "roles": [role_name],
+                        }
+                    else:
+                        admin_users[user_id]["roles"].append(role_name)
+
+        return {
+            "directory_roles": roles_with_members,
+            "total_roles": len(roles_with_members),
+            "admin_users": list(admin_users.values()),
+            "admin_users_count": len(admin_users),
+        }

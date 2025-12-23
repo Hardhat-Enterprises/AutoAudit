@@ -30,5 +30,32 @@ class ServicePrincipalsDataCollector(BaseDataCollector):
             - total_service_principals: Number of service principals
             - third_party_storage_apps: Third-party storage service principals
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get all service principals
+        service_principals = await client.get_all_pages("/servicePrincipals")
+
+        # Known third-party storage app IDs (Dropbox, Google Drive, Box, etc.)
+        third_party_storage_app_names = [
+            "dropbox",
+            "google drive",
+            "box",
+            "egnyte",
+            "citrix sharefile",
+        ]
+
+        # Filter for third-party storage apps
+        third_party_storage_apps = [
+            sp
+            for sp in service_principals
+            if any(
+                name in (sp.get("displayName") or "").lower()
+                for name in third_party_storage_app_names
+            )
+        ]
+
+        return {
+            "service_principals": service_principals,
+            "total_service_principals": len(service_principals),
+            "third_party_storage_apps": third_party_storage_apps,
+            "third_party_storage_apps_count": len(third_party_storage_apps),
+            "has_third_party_storage_apps": len(third_party_storage_apps) > 0,
+        }
