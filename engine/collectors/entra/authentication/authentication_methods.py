@@ -32,5 +32,35 @@ class AuthenticationMethodsDataCollector(BaseDataCollector):
             - voice_enabled: Whether voice call authentication is enabled
             - email_otp_enabled: Whether email OTP is enabled
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get the authentication methods policy
+        policy = await client.get("/policies/authenticationMethodsPolicy", beta=True)
+
+        # Get individual method configurations
+        method_configs = policy.get("authenticationMethodConfigurations", [])
+
+        # Build lookup by method type
+        methods_by_type = {}
+        for config in method_configs:
+            method_id = config.get("id", "")
+            methods_by_type[method_id] = config
+
+        # Check specific method states
+        def is_method_enabled(method_id: str) -> bool | None:
+            method = methods_by_type.get(method_id)
+            if method is None:
+                return None
+            return method.get("state") == "enabled"
+
+        return {
+            "authentication_methods_policy": policy,
+            "method_configurations": method_configs,
+            "methods_by_type": methods_by_type,
+            "sms_enabled": is_method_enabled("Sms"),
+            "voice_enabled": is_method_enabled("Voice"),
+            "email_otp_enabled": is_method_enabled("Email"),
+            "fido2_enabled": is_method_enabled("Fido2"),
+            "microsoft_authenticator_enabled": is_method_enabled("MicrosoftAuthenticator"),
+            "temporary_access_pass_enabled": is_method_enabled("TemporaryAccessPass"),
+            "software_oath_enabled": is_method_enabled("SoftwareOath"),
+            "hardware_oath_enabled": is_method_enabled("HardwareOath"),
+        }

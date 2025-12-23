@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 6.2.3
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-ExternalInOutlook
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -34,5 +31,10 @@ class ExternalInOutlookDataCollector(BasePowerShellCollector):
             - enabled: Whether external tagging is enabled
             - allowed_senders: Senders exempt from tagging
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        settings = await client.run_cmdlet("ExchangeOnline", "Get-ExternalInOutlook")
+
+        return {
+            "external_in_outlook_settings": settings,
+            "enabled": settings.get("Enabled") if settings else None,
+            "allowed_senders": settings.get("AllowList", []) if settings else [],
+        }

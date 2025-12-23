@@ -24,6 +24,11 @@ class ControlRead(BaseModel):
     description: str | None = None
     severity: str | None = None
     service: str | None = None
-    data_collector_id: str
-    policy_file: str
+    level: str  # Benchmark level (e.g., "L1", "L2" for CIS; varies by framework)
+    is_manual: bool  # True if control has no API, always manual
+    benchmark_audit_type: str  # What the benchmark says: "Automated" or "Manual"
+    automation_status: str  # ready, deferred, blocked, manual, not_started
+    data_collector_id: str | None = None  # Null for manual controls
+    policy_file: str | None = None  # Null for manual controls
     requires_permissions: list[str] | None = None
+    notes: str | None = None  # Blockers, special considerations

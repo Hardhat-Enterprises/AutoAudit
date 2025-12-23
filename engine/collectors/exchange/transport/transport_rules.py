@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 6.2.1, 6.2.2
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-TransportRule
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -34,5 +31,41 @@ class TransportRulesDataCollector(BasePowerShellCollector):
             - forwarding_rules: Rules that forward mail externally
             - whitelist_rules: Rules that whitelist domains
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        rules = await client.run_cmdlet("ExchangeOnline", "Get-TransportRule")
+
+        # Handle None, single rule, or list
+        if rules is None:
+            rules = []
+        elif isinstance(rules, dict):
+            rules = [rules]
+
+        # Find rules that forward mail
+        forwarding_rules = [
+            {
+                "name": r.get("Name"),
+                "state": r.get("State"),
+                "redirect_to": r.get("RedirectMessageTo"),
+                "forward_to": r.get("BlindCopyTo"),
+            }
+            for r in rules
+            if r.get("RedirectMessageTo") or r.get("BlindCopyTo")
+        ]
+
+        # Find rules that whitelist domains (SetSCL -1 or similar)
+        whitelist_rules = [
+            {
+                "name": r.get("Name"),
+                "state": r.get("State"),
+                "sender_domain": r.get("SenderDomainIs"),
+                "set_scl": r.get("SetSCL"),
+            }
+            for r in rules
+            if r.get("SetSCL") == -1 or r.get("SenderDomainIs")
+        ]
+
+        return {
+            "transport_rules": rules,
+            "total_rules": len(rules),
+            "forwarding_rules": forwarding_rules,
+            "whitelist_rules": whitelist_rules,
+        }

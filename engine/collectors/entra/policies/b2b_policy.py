@@ -31,5 +31,25 @@ class B2BPolicyDataCollector(BaseDataCollector):
             - blocked_domains: List of blocked domains (if blocklist)
             - restriction_mode: The domain restriction mode
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get cross-tenant access policy default settings
+        policy = await client.get("/policies/crossTenantAccessPolicy/default", beta=True)
+
+        # Extract B2B collaboration settings
+        b2b_collaboration = policy.get("b2bCollaborationInbound", {})
+        b2b_direct_connect = policy.get("b2bDirectConnectInbound", {})
+
+        # Get cross-tenant access policy partners for domain restrictions
+        partners_response = await client.get("/policies/crossTenantAccessPolicy/partners", beta=True)
+        partners = partners_response.get("value", [])
+
+        return {
+            "cross_tenant_access_policy": policy,
+            "b2b_collaboration_inbound": b2b_collaboration,
+            "b2b_collaboration_outbound": policy.get("b2bCollaborationOutbound", {}),
+            "b2b_direct_connect_inbound": b2b_direct_connect,
+            "b2b_direct_connect_outbound": policy.get("b2bDirectConnectOutbound", {}),
+            "inbound_trust": policy.get("inboundTrust", {}),
+            "partners": partners,
+            "partners_count": len(partners),
+            "is_service_provider": policy.get("isServiceProvider"),
+        }

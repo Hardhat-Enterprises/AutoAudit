@@ -3,6 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 2.1.8, 2.1.10
 
+Control Descriptions:
+    2.1.8 - Ensure that SPF records are published for all Exchange Domains
+    2.1.10 - Ensure DMARC Records for all Exchange Online domains are published
+
 Connection Method: Microsoft Graph API + DNS queries
 Required Scopes: Domain.Read.All
 Graph Endpoint: /domains
@@ -31,18 +35,98 @@ class DnsSecurityRecordsDataCollector(BaseDataCollector):
 
         Returns:
             Dict containing:
-            - domains: List of domain records with SPF/DMARC status
+            - domains: List of domain records with SPF/DMARC data
             - total_domains: Number of verified domains checked
-            - domains_with_spf: Count of domains with valid SPF records
-            - domains_with_dmarc: Count of domains with valid DMARC records
-            - domains_missing_spf: List of domains without SPF records
-            - domains_missing_dmarc: List of domains without DMARC records
         """
-        # TODO: Implement collector
-        # Step 1: Get domains from Graph API using client.get_domains()
+        import dns.resolver
+
+        # Step 1: Get domains from Graph API
+        domains = await client.get_domains()
+
         # Step 2: Filter for verified domains
-        # Step 3: For each domain, query DNS for:
-        #   - SPF: TXT record containing "v=spf1"
-        #   - DMARC: TXT record at _dmarc.{domain} containing "v=DMARC1"
-        # Dependencies: dnspython library (dns.resolver)
-        raise NotImplementedError("Collector not yet implemented")
+        verified_domains = [d for d in domains if d.get("isVerified", False)]
+
+        domain_records = []
+        for domain in verified_domains:
+            domain_id = domain.get("id")
+
+            record = {
+                "domain": domain_id,
+                "is_verified": True,
+                "is_default": domain.get("isDefault", False),
+                "is_initial": domain.get("isInitial", False),
+                "authentication_type": domain.get("authenticationType"),
+                "spf_record": None,
+                "dmarc_record": None,
+                "dmarc_policy": None,
+                "spf_error": None,
+                "dmarc_error": None,
+            }
+
+            # Query SPF record (TXT record at domain root)
+            try:
+                answers = dns.resolver.resolve(domain_id, "TXT")
+                for rdata in answers:
+                    # TXT records may have multiple strings, join them
+                    txt_value = "".join(s.decode() if isinstance(s, bytes) else s for s in rdata.strings)
+                    if txt_value.startswith("v=spf1"):
+                        record["spf_record"] = txt_value
+                        break
+            except dns.resolver.NXDOMAIN:
+                record["spf_error"] = "Domain not found"
+            except dns.resolver.NoAnswer:
+                record["spf_error"] = "No TXT records"
+            except dns.resolver.NoNameservers:
+                record["spf_error"] = "No nameservers available"
+            except dns.resolver.Timeout:
+                record["spf_error"] = "DNS query timeout"
+            except Exception as e:
+                record["spf_error"] = str(e)
+
+            # Query DMARC record (TXT record at _dmarc.{domain})
+            dmarc_domain = f"_dmarc.{domain_id}"
+            try:
+                answers = dns.resolver.resolve(dmarc_domain, "TXT")
+                for rdata in answers:
+                    txt_value = "".join(s.decode() if isinstance(s, bytes) else s for s in rdata.strings)
+                    if txt_value.startswith("v=DMARC1"):
+                        record["dmarc_record"] = txt_value
+                        # Parse DMARC policy
+                        record["dmarc_policy"] = self._parse_dmarc_policy(txt_value)
+                        break
+            except dns.resolver.NXDOMAIN:
+                record["dmarc_error"] = "DMARC record not found"
+            except dns.resolver.NoAnswer:
+                record["dmarc_error"] = "No DMARC TXT record"
+            except dns.resolver.NoNameservers:
+                record["dmarc_error"] = "No nameservers available"
+            except dns.resolver.Timeout:
+                record["dmarc_error"] = "DNS query timeout"
+            except Exception as e:
+                record["dmarc_error"] = str(e)
+
+            domain_records.append(record)
+
+        return {
+            "domains": domain_records,
+            "total_domains": len(domain_records),
+        }
+
+    def _parse_dmarc_policy(self, dmarc_record: str) -> dict[str, str]:
+        """Parse DMARC record into key-value pairs.
+
+        Args:
+            dmarc_record: Raw DMARC TXT record value
+
+        Returns:
+            Dict with DMARC policy settings (p, sp, rua, ruf, pct, etc.)
+        """
+        policy = {}
+        # Split by semicolons and parse key=value pairs
+        parts = dmarc_record.split(";")
+        for part in parts:
+            part = part.strip()
+            if "=" in part:
+                key, value = part.split("=", 1)
+                policy[key.strip()] = value.strip()
+        return policy

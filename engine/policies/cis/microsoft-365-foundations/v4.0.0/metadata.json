@@ -8,24 +8,34 @@
   "source_url": "https://www.cisecurity.org/benchmark/microsoft_365",
   "controls": [
     {
-      "control_id": "CIS-1.3.1",
+      "control_id": "1.3.1",
       "title": "Ensure the 'Password expiration policy' is set to 'Set passwords to never expire'",
       "description": "Configure password policies to never expire. NIST and Microsoft recommend this approach when MFA is enabled, as forced rotation leads to weaker passwords.",
       "severity": "medium",
       "service": "EntraID",
+      "level": "L1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
       "data_collector_id": "entra.domains.password_policy",
       "policy_file": "1.3.1_password_expiration.rego",
-      "requires_permissions": ["Domain.Read.All"]
+      "requires_permissions": ["Domain.Read.All"],
+      "notes": null
     },
     {
-      "control_id": "CIS-5.2.2.3",
+      "control_id": "5.2.2.3",
       "title": "Ensure Conditional Access policies are configured to block legacy authentication",
       "description": "Legacy authentication protocols do not support MFA and are commonly exploited in attacks. Implement Conditional Access policies to block these protocols.",
       "severity": "high",
       "service": "EntraID",
+      "level": "L1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
       "data_collector_id": "entra.conditional_access.legacy_auth_block",
       "policy_file": "5.2.2.3_block_legacy_auth.rego",
-      "requires_permissions": ["Policy.Read.All"]
+      "requires_permissions": ["Policy.Read.All"],
+      "notes": null
     }
   ]
 }

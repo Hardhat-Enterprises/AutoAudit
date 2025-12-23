@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 2.1.1
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-SafeLinksPolicy
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -31,8 +28,32 @@ class SafeLinksPolicyDataCollector(BasePowerShellCollector):
         Returns:
             Dict containing:
             - safe_links_policies: List of Safe Links policies
-            - office_apps_enabled: Safe Links for Office apps status
-            - click_protection_enabled: Click-time protection status
+            - policies_with_protection: Policies with URL protection enabled
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        policies = await client.run_cmdlet("ExchangeOnline", "Get-SafeLinksPolicy")
+
+        # Handle None, single policy, or list
+        if policies is None:
+            policies = []
+        elif isinstance(policies, dict):
+            policies = [policies]
+
+        # Find policies with protection enabled
+        policies_with_protection = [
+            {
+                "name": p.get("Name"),
+                "enable_safe_links_for_email": p.get("EnableSafeLinksForEmail"),
+                "enable_safe_links_for_office": p.get("EnableSafeLinksForOffice"),
+                "enable_safe_links_for_teams": p.get("EnableSafeLinksForTeams"),
+                "scan_urls": p.get("ScanUrls"),
+                "track_clicks": p.get("TrackClicks"),
+            }
+            for p in policies
+            if p.get("EnableSafeLinksForEmail") or p.get("EnableSafeLinksForOffice")
+        ]
+
+        return {
+            "safe_links_policies": policies,
+            "total_policies": len(policies),
+            "policies_with_protection": policies_with_protection,
+        }

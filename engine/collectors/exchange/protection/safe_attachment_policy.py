@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 2.1.4
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-SafeAttachmentPolicy
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -31,8 +28,30 @@ class SafeAttachmentPolicyDataCollector(BasePowerShellCollector):
         Returns:
             Dict containing:
             - safe_attachment_policies: List of Safe Attachment policies
-            - action_on_detection: Action taken when malware is detected
-            - redirect_enabled: Whether malicious attachments are redirected
+            - policies_with_protection: Policies with protection enabled
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        policies = await client.run_cmdlet("ExchangeOnline", "Get-SafeAttachmentPolicy")
+
+        # Handle None, single policy, or list
+        if policies is None:
+            policies = []
+        elif isinstance(policies, dict):
+            policies = [policies]
+
+        # Find policies with protection enabled (Action != "Off")
+        policies_with_protection = [
+            {
+                "name": p.get("Name"),
+                "action": p.get("Action"),
+                "enable": p.get("Enable"),
+                "redirect": p.get("Redirect"),
+            }
+            for p in policies
+            if p.get("Enable") and p.get("Action") != "Off"
+        ]
+
+        return {
+            "safe_attachment_policies": policies,
+            "total_policies": len(policies),
+            "policies_with_protection": policies_with_protection,
+        }
