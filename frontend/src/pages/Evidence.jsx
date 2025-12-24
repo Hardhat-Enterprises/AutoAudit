@@ -58,6 +58,46 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
   // Frontend UI state (React).
   // ------------------------------
   // Available strategies to show in the dropdown (fetched from backend).
+
+  const [observedSidebarWidth, setObservedSidebarWidth] = useState(sidebarWidth);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
+      setObservedSidebarWidth(sidebarWidth);
+      return;
+    }
+    const sidebarEl = document.querySelector('.sidebar');
+    if (!sidebarEl) {
+      setObservedSidebarWidth(sidebarWidth);
+      return;
+    }
+    const observer = new ResizeObserver((entries) => {
+      const width = entries?.[0]?.contentRect?.width;
+      if (width && Math.abs(width - observedSidebarWidth) > 1) {
+        setObservedSidebarWidth(width);
+      }
+    });
+    observer.observe(sidebarEl);
+    return () => observer.disconnect();
+  }, [sidebarWidth, observedSidebarWidth]);
+
+  const apiCandidates = useMemo(() => {
+    const roots = [
+      import.meta.env.VITE_EVIDENCE_API_BASE,
+      import.meta.env.VITE_EVIDENCE_API,
+      import.meta.env.VITE_API_URL,
+      typeof window !== 'undefined' ? window.location.origin : null,
+      'http://localhost:8000',
+    ]
+      .filter(Boolean)
+      .map((root) => root.replace(/\/+$/, ''));
+
+    const urls = roots.map((root) => `${root}/v1/evidence`);
+
+    return urls.filter((url, idx) => urls.indexOf(url) === idx);
+  }, []);
+
+  const [apiBase, setApiBase] = useState(() => apiCandidates[0] || '');
   const [strategies, setStrategies] = useState([]);
   // Currently selected strategy name (used in scan request).
   const [selectedStrategy, setSelectedStrategy] = useState('');
