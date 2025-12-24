@@ -319,7 +319,7 @@
   text-align: left;
 }
 
-.stats-grid {
+.landing-stats .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 2rem;
@@ -327,8 +327,11 @@
   margin: 0 auto;
 }
 
-.stat-card {
-  text-align: left;
+.landing-stats .stat-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
   padding: 2rem;
   border-radius: 20px;
   border: 1px solid var(--border);
@@ -336,30 +339,31 @@
   transition: transform 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
 }
 
-.stat-card:hover {
+.landing-stats .stat-card:hover {
   transform: translateY(-6px);
   border-color: var(--accent);
   box-shadow: 0 20px 45px rgba(59, 130, 246, 0.18);
 }
 
-.stat-number {
+.landing-stats .stat-card .stat-number {
   font-size: 3rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-align: left;
-  width: 167px;
-  display: flex;
-  flex-wrap: wrap;
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
 }
 
-.stat-label {
+.landing-stats .stat-card .stat-label {
   color: var(--text-muted);
-  font-size: 1.1rem;
-  text-align: left;
+  /* Keep original smaller stat-label sizing (avoid making the text feel “bigger” after layout fix) */
+  font-size: 0.875rem;
+  margin: 0;
+  text-align: center;
+  max-width: 14ch;
 }
 
 /* Features */
