@@ -30,6 +30,7 @@ from collectors.registry import DATA_COLLECTORS, get_collector
 from collectors.graph_client import GraphClient
 from collectors.powershell_base import BasePowerShellCollector
 from collectors.powershell_client import PowerShellClient, PowerShellExecutionError
+from collectors.sharepoint_client import SharePointClient
 
 
 def list_collectors() -> None:
@@ -73,6 +74,16 @@ def get_credentials() -> tuple[str, str, str]:
     return tenant_id, client_id, client_secret
 
 
+def get_sharepoint_client(tenant_id: str, client_id: str, client_secret: str) -> SharePointClient:
+    """Build a SharePoint client, requiring tenant name for the admin URL."""
+    tenant_name = os.environ.get("SHAREPOINT_TENANT_NAME")
+    if not tenant_name:
+        print("Error: Missing required environment variable for SharePoint:")
+        print("  - SHAREPOINT_TENANT_NAME (e.g., 'contoso' for contoso-admin.sharepoint.com)")
+        sys.exit(1)
+    return SharePointClient(tenant_id, client_id, client_secret, tenant_name)
+
+
 async def test_collector(
     collector_id: str,
     output_dir: Path | None = None,
@@ -107,6 +118,11 @@ async def test_collector(
     # Create collector and appropriate client
     collector = get_collector(collector_id)
     if isinstance(collector, BasePowerShellCollector):
+        client = PowerShellClient(tenant_id, client_id, client_secret)
+    elif collector_id.startswith("sharepoint."):
+        client = get_sharepoint_client(tenant_id, client_id, client_secret)
+    elif collector_id == "exchange.protection.priority_accounts":
+        # This collector can fall back to PowerShell; provide PS client so both paths are available.
         client = PowerShellClient(tenant_id, client_id, client_secret)
     else:
         client = GraphClient(tenant_id, client_id, client_secret)
@@ -179,6 +195,8 @@ async def test_all_collectors(output_dir: Path | None = None) -> None:
             if ps_client is None:
                 ps_client = PowerShellClient(tenant_id, client_id, client_secret)
             client = ps_client
+        elif collector_id.startswith("sharepoint."):
+            client = get_sharepoint_client(tenant_id, client_id, client_secret)
         else:
             client = graph_client
 

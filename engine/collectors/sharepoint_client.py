@@ -50,6 +50,22 @@ class SharePointClient:
             authority=f"https://login.microsoftonline.com/{tenant_id}",
         )
 
+    async def _request(self, endpoint: str) -> dict[str, Any]:
+        """Issue an authenticated GET request to the SharePoint Admin REST API."""
+        token = await self._get_access_token()
+        url = f"{self.admin_url}{endpoint}"
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.get(
+                url,
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/json;odata=nometadata",
+                },
+            )
+            resp.raise_for_status()
+            return resp.json() if resp.content else {}
+
     async def _get_access_token(self) -> str:
         """Get access token for SharePoint.
 
@@ -78,8 +94,8 @@ class SharePointClient:
         Returns:
             Dict containing tenant configuration properties.
         """
-        # TODO: Implement REST API call
-        raise NotImplementedError("SharePoint client not yet implemented")
+        # SP_TenantSettings is available on the admin site and returns a flat object
+        return await self._request("/_api/SP_TenantSettings")
 
     async def get_site_properties(self, site_url: str) -> dict[str, Any]:
         """Get site properties via REST API.
@@ -90,8 +106,18 @@ class SharePointClient:
         Returns:
             Dict containing site properties.
         """
-        # TODO: Implement REST API call
-        raise NotImplementedError("SharePoint client not yet implemented")
+        # Site properties are exposed via the site collection _api endpoint
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            token = await self._get_access_token()
+            resp = await client.get(
+                f"{site_url}/_api/site",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/json;odata=nometadata",
+                },
+            )
+            resp.raise_for_status()
+            return resp.json() if resp.content else {}
 
     async def get_sync_client_restriction(self) -> dict[str, Any]:
         """Get OneDrive sync client restriction settings.
@@ -99,5 +125,4 @@ class SharePointClient:
         Returns:
             Dict containing sync client restriction settings.
         """
-        # TODO: Implement REST API call
-        raise NotImplementedError("SharePoint client not yet implemented")
+        return await self._request("/_api/SyncClientRestriction")

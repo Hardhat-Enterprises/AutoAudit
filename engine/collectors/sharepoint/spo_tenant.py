@@ -43,5 +43,24 @@ class SpoTenantDataCollector(BaseDataCollector):
             - default_sharing_link_type: Default sharing link type
             - default_link_permission: Default link permission level
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        settings = await client.get_tenant_settings()
+
+        # Map a handful of frequently used fields to make OPA policy writing easier
+        legacy_auth_enabled = settings.get("LegacyAuthProtocolsEnabled")
+        sharing_capability = settings.get("SharingCapability")
+        default_link_type = settings.get("DefaultSharingLinkType")
+        default_link_permission = settings.get("DefaultLinkPermission")
+        guest_expiration_days = settings.get("ExternalUserExpirationInDays")
+        conditional_access_policy = settings.get("ConditionalAccessPolicy")
+        limited_access_file_type = settings.get("LimitedAccessFileType")
+
+        return {
+            "tenant_settings": settings,
+            "legacy_auth_protocols_enabled": legacy_auth_enabled,
+            "sharing_capability": sharing_capability,
+            "default_sharing_link_type": default_link_type,
+            "default_link_permission": default_link_permission,
+            "guest_expiration_days": guest_expiration_days,
+            "conditional_access_policy": conditional_access_policy,
+            "limited_access_file_type": limited_access_file_type,
+        }

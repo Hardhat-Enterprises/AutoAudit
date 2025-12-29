@@ -2,6 +2,9 @@
 
 from collectors.base import BaseDataCollector
 
+# Bookings
+from collectors.m365.bookings.shared_pages import BookingsSharedPagesDataCollector
+
 # Applications
 from collectors.entra.applications.apps_and_services_settings import (
     AppsAndServicesSettingsDataCollector,
@@ -74,6 +77,9 @@ from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
 
 # Users
 from collectors.entra.users.users import UsersDataCollector
+
+# Defender
+from collectors.exchange.protection.priority_accounts import PriorityAccountsDataCollector
 
 # Exchange - DNS
 from collectors.exchange.dns.dns_security_records import (
@@ -152,8 +158,13 @@ from collectors.compliance.report_submission_policy import (
     ReportSubmissionPolicyDataCollector,
 )
 
+# SharePoint
+from collectors.sharepoint.spo_tenant import SpoTenantDataCollector
+
 # Registry mapping data_collector_id to collector class
 DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
+    # Bookings (M365)
+    "m365.bookings.shared_pages": BookingsSharedPagesDataCollector,
     # Applications
     "entra.applications.apps_and_services_settings": AppsAndServicesSettingsDataCollector,
     "entra.applications.forms_settings": FormsSettingsDataCollector,
@@ -189,6 +200,8 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,
     # Users
     "entra.users.users": UsersDataCollector,
+    # Defender (EXO/Protection)
+    "exchange.protection.priority_accounts": PriorityAccountsDataCollector,
     # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
     # Exchange - Audit
@@ -220,6 +233,8 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "exchange.transport.transport_rules": TransportRulesDataCollector,
     # Compliance
     "compliance.report_submission_policy": ReportSubmissionPolicyDataCollector,
+    # SharePoint
+    "sharepoint.spo_tenant": SpoTenantDataCollector,
 }
 
 
