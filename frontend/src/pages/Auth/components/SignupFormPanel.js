@@ -38,6 +38,7 @@ const inputFields = [
 const socialButtons = [
   {
     label: "Google",
+    provider: "google",
     icon: (
       <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
         <path
@@ -59,17 +60,6 @@ const socialButtons = [
       </svg>
     ),
   },
-  {
-    label: "Microsoft",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="2" y="2" width="9" height="9" fill="#F25022" />
-        <rect x="13" y="2" width="9" height="9" fill="#7FBA00" />
-        <rect x="2" y="13" width="9" height="9" fill="#00A4EF" />
-        <rect x="13" y="13" width="9" height="9" fill="#FFB900" />
-      </svg>
-    ),
-  },
 ];
 
 const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, submitError }) => {
@@ -77,6 +67,7 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
+  const apiBaseUrl = process.env.REACT_APP_API_URL;
 
   const handleAgreeTermsChange = (event) => {
     const checked = event.target.checked;
@@ -112,6 +103,22 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
     event.preventDefault();
     if (!validate()) return;
     await onSubmit({ ...formData, agreeTerms: true });
+  };
+
+  const handleSocialSignUp = (provider) => {
+    if (!apiBaseUrl) {
+      setError("Missing API configuration. Please set REACT_APP_API_URL.");
+      return;
+    }
+
+    if (provider === "google") {
+      // Backend-driven OAuth redirect flow.
+      // The callback will land on: /auth/google/callback#access_token=...
+      window.location.assign(`${apiBaseUrl}/v1/auth/google/authorize`);
+      return;
+    }
+
+    setError("Unsupported provider.");
   };
 
   return (
@@ -240,11 +247,21 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
           <span>Or sign up with</span>
         </div>
 
-        <div className="social-login">
+        <div className={`social-login ${socialButtons.length === 1 ? "single" : ""}`}>
           {socialButtons.map((button) => (
-            <button key={button.label} type="button" className="social-btn">
-              {button.icon}
-              {button.label}
+            <button
+              key={button.label}
+              type="button"
+              className="social-btn"
+              onClick={() => handleSocialSignUp(button.provider)}
+              disabled={button.disabled}
+              aria-disabled={button.disabled ? "true" : "false"}
+              title={button.disabled ? "Coming soon" : `Continue with ${button.label}`}
+            >
+              <span className={`social-icon social-icon--${button.provider}`} aria-hidden="true">
+                {button.icon}
+              </span>
+              <span className="social-label">{button.label}</span>
             </button>
           ))}
         </div>
