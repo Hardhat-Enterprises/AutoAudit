@@ -106,14 +106,12 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     e.preventDefault();
     setIsEditing(true);
     setError(null);
-
     try {
       const updateData = {
         name: editFormData.name,
         tenant_id: editFormData.tenant_id,
         client_id: editFormData.client_id,
       };
-
       // Only include client_secret if user entered a new one
       if (editFormData.client_secret) {
         updateData.client_secret = editFormData.client_secret;

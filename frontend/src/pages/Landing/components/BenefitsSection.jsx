@@ -6,7 +6,7 @@ const benefits = [
     icon: Timer,
     title: "Save Time & Resources",
     description:
-      "Reduce manual compliance work by 80% so your team can focus on strategic initiatives.",
+      "Reduce manual compliance work so your team can focus on strategic initiatives.",
   },
   {
     icon: Target,
@@ -18,7 +18,7 @@ const benefits = [
     icon: ShieldCheck,
     title: "Ensure Compliance",
     description:
-      "Stay aligned with CIS, NIST, ISO 27001, SOC 2, and other regulatory frameworks.",
+      "Stay aligned with cybersecurity frameworks as they get updated wit ease",
   },
   {
     icon: Lightbulb,

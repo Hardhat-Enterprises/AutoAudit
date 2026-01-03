@@ -16,7 +16,7 @@ import './Evidence.css';
 
 // If the validator finds fewer than this number of expected terms for the selected strategy,
 // treat the scan as "not readable / not relevant" and suppress findings in the UI.
-const MIN_VALIDATOR_MATCHED_TERMS = 2;
+const MIN_VALIDATOR_MATCHED_TERMS = 1;
 
 const EvidenceExtract = ({ evidence }) => {
   // Frontend helper to render the "Evidence Extract" cell.
@@ -124,8 +124,9 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
   // is meaningful for the chosen strategy.
   const isLowSignalScan = useMemo(() => {
     const summary = results?.validator?.summary;
-    if (!summary) return false;
-
+    if (!summary) {
+      return false;
+    }
     const totalTerms = Number(summary.totalTerms ?? 0);
     const matchedCount = Number(summary.matchedCount ?? 0);
 

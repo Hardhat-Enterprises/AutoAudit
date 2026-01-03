@@ -15,6 +15,15 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # Public URLs (used for OAuth redirects)
+    # These must be the externally reachable URLs (e.g. localhost from the browser).
+    BACKEND_PUBLIC_URL: str = "http://localhost:8000"
+    FRONTEND_URL: str = "http://localhost:3000"
+
+    # Google OAuth (SSO)
+    GOOGLE_OAUTH_CLIENT_ID: str = ""
+    GOOGLE_OAUTH_CLIENT_SECRET: str = ""
+
     # Redis (for Celery broker)
     REDIS_URL: str = "redis://localhost:6379"
 

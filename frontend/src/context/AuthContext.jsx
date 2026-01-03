@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { login as apiLogin, getCurrentUser, APIError } from "../api/client";
 
 const AuthContext = createContext(null);
@@ -53,6 +53,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getStoredUser());
   const [token, setToken] = useState(() => getStoredToken());
   const [isLoading, setIsLoading] = useState(true);
+  const skipNextValidationRef = useRef(false);
 
   const isAuthenticated = !!token && !!user;
 
@@ -60,6 +61,13 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     async function validateToken() {
       if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Avoid a duplicate /users/me call right after a successful login.
+      if (skipNextValidationRef.current) {
+        skipNextValidationRef.current = false;
         setIsLoading(false);
         return;
       }
@@ -97,6 +105,21 @@ export function AuthProvider({ children }) {
     const userData = await getCurrentUser(accessToken);
     persistAuth(accessToken, userData, remember);
 
+    skipNextValidationRef.current = true;
+    setToken(accessToken);
+    setUser(userData);
+    return userData;
+  }
+
+  async function loginWithAccessToken(accessToken, remember = false) {
+    if (!accessToken) {
+      throw new Error("Access token is required");
+    }
+
+    const userData = await getCurrentUser(accessToken);
+    persistAuth(accessToken, userData, remember);
+
+    skipNextValidationRef.current = true;
     setToken(accessToken);
     setUser(userData);
     return userData;
@@ -114,6 +137,7 @@ export function AuthProvider({ children }) {
     isAuthenticated,
     isLoading,
     login,
+    loginWithAccessToken,
     logout,
   };
 

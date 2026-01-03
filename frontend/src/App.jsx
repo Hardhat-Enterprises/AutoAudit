@@ -18,6 +18,7 @@ import AboutUs from './pages/Landing/AboutUs';
 import ContactPage from './pages/Contact/ContactPage';
 import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
+import GoogleCallbackPage from './pages/Auth/GoogleCallbackPage';
 
 // Auth Context
 import { useAuth } from './context/AuthContext';
@@ -162,6 +163,11 @@ function App() {
               onSignUpClick={() => navigate('/signup')}
             />
           } 
+        />
+
+        <Route
+          path="/auth/google/callback"
+          element={<GoogleCallbackPage />}
         />
         
         <Route 

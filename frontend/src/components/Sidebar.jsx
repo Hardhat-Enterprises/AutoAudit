@@ -10,7 +10,7 @@ import {
   FileSearch,
   ShieldCheck,
   FileText,
-  Settings2,
+  Settings,
   User,
   Menu,
   ArrowLeft,
@@ -182,7 +182,7 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
           <NavButton
             href={"/settings"}
             name={"Settings"}
-            icon={Settings2}
+            icon={Settings}
             isExpanded={isExpanded}
             isActive={activeItem === "settings"}
             onClick={() => handleNavClick("settings", "/settings")}
