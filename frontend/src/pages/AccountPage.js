@@ -75,10 +75,6 @@ export default function AccountPage({ sidebarWidth = 220, isDarkMode = true }) {
               <span className="meta-value">{primaryLabel}</span>
             </div>
           </div>
-          <p className="account-note">
-            This page is a placeholder so the sidebar doesn&apos;t route you back
-            to the public landing page.
-          </p>
         </div>
       </div>
     </div>

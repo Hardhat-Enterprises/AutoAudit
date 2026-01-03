@@ -1,6 +1,7 @@
 """Database models for the AutoAudit backend API."""
 
 from app.models.user import User, Role
+from app.models.oauth_account import OAuthAccount
 from app.models.m365_connection import M365Connection
 from app.models.azure_connection import AzureConnection
 from app.models.gcp_connection import GCPConnection
@@ -13,6 +14,7 @@ from app.models.evidence_validation import EvidenceValidation
 __all__ = [
     "User",
     "Role",
+    "OAuthAccount",
     "M365Connection",
     "AzureConnection",
     "GCPConnection",

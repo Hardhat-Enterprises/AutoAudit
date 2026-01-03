@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.db.session import get_async_session
 from app.models.user import User
+from app.models.oauth_account import OAuthAccount
 
 settings = get_settings()
 
@@ -53,7 +54,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     """Dependency for getting the user database."""
-    yield SQLAlchemyUserDatabase(session, User)
+    yield SQLAlchemyUserDatabase(session, User, OAuthAccount)
 
 
 async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):

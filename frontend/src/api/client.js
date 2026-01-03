@@ -46,23 +46,27 @@ async function fetchWithAuth(endpoint, token, options = {}) {
 
 // Auth endpoints
 export async function login(email, password) {
-  const response = await fetch(`${API_BASE_URL}/v1/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      username: email,
-      password: password,
-    }),
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/v1/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        username: email,
+        password: password,
+      }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Login failed' }));
-    throw new APIError(error.detail || 'Invalid credentials', response.status, error);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Login failed' }));
+      throw new APIError(error.detail || 'Invalid credentials', response.status, error);
+    }
+
+    return response.json();
+  } catch (error) {
+    throw error;
   }
-
-  return response.json();
 }
 
 export async function register(email, password) {

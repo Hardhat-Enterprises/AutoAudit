@@ -31,7 +31,8 @@ async def init_db():
         result = await session.execute(
             select(User).where(User.email == admin_email)
         )
-        existing_user = result.scalar_one_or_none()
+        # Be resilient to relationship eager-loads that can duplicate rows.
+        existing_user = result.unique().scalar_one_or_none()
 
         created = False
         if existing_user:

@@ -64,7 +64,8 @@ AutoAudit is a compliance automation platform for cloud environments. It collect
 **Key directories**:
 - `src/components/` - Reusable UI components
 - `src/pages/` - Route-level page components
-- `src/services/` - API client and data fetching
+- `src/api/` - API client and data fetching
+- `src/context/` - Shared app state (e.g. auth)
 
 **Note**: The frontend currently uses mock data in some areas. Connecting it to the live backend API is ongoing work.
 
@@ -106,7 +107,7 @@ When you finish implementing a data collector:
 
 1. **Register the collector** in `engine/collectors/registry.py`:
    ```python
-   from engine.collectors.entra.my_domain.my_collector import MyCollector
+   from collectors.entra.my_domain.my_collector import MyCollector
 
    DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
        # ... existing collectors ...
@@ -130,7 +131,7 @@ When you finish implementing a data collector:
    - Add example JSON output
    - Note what the OPA policy can evaluate
 
-   File: `docs/engine/cis-m365-v6-collectors-analysis.md`
+   File: `docs/engine/policies/cis/microsoft-365-foundations/vX.X.X/controls.md`
 
 5. **Test your collector** against a live M365 tenant (see Testing Your Collector below)
 

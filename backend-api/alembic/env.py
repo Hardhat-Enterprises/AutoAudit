@@ -10,6 +10,7 @@ from alembic import context
 # Import models for autogenerate support
 from app.db.base import Base
 from app.models.user import User  # noqa
+from app.models.oauth_account import OAuthAccount  # noqa
 from app.models.m365_connection import M365Connection  # noqa
 from app.models.platform import Platform  # noqa
 from app.models.compliance import Scan  # noqa

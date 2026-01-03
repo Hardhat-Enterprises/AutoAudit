@@ -444,10 +444,28 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease;
   width: 100%;
   max-width: 280px;
+}
+
+.social-btn:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
+}
+
+.social-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.social-btn:disabled:hover {
+  transform: none;
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 .social-btn:hover {
@@ -464,6 +482,15 @@
   place-items: center;
   font-weight: 600;
   letter-spacing: 0.5px;
+}
+
+.social-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.social-icon--google {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .signup-text {
