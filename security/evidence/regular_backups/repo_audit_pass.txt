@@ -1,1 +1,1 @@
-role=backup-admin user=jane result=success
+role=backup-admin access=allowed audit=success
