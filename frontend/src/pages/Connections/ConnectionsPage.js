@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Link2, AlertCircle, Loader2, RefreshCw, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Link2, AlertCircle, Loader2, RefreshCw, Pencil, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getPlatforms, getConnections, createConnection, updateConnection, deleteConnection } from '../../api/client';
+import { getPlatforms, getConnections, createConnection, updateConnection, deleteConnection, testConnection } from '../../api/client';
 import './ConnectionsPage.css';
 
 const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
@@ -28,6 +28,8 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [testingId, setTestingId] = useState(null);
+  const [testResults, setTestResults] = useState({});
 
   useEffect(() => {
     loadData();
@@ -83,8 +85,24 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   }
 
-  function handleTestConnection() {
-    alert('Connection testing needs to be implemented');
+  async function handleTestConnection(connection) {
+    setTestingId(connection.id);
+    setError(null);
+    try {
+      const result = await testConnection(token, connection.id);
+      setTestResults(prev => ({ ...prev, [connection.id]: result }));
+      if (!result?.success) {
+        setError(result?.message || 'Connection test failed');
+      }
+    } catch (err) {
+      setError(err.message || 'Connection test failed');
+      setTestResults(prev => ({
+        ...prev,
+        [connection.id]: { success: false, message: err.message || 'Connection test failed' },
+      }));
+    } finally {
+      setTestingId(null);
+    }
   }
 
   function startEditing(connection) {
@@ -420,6 +438,22 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                 <div className="connection-info">
                   <div className="connection-header">
                     <h4>{connection.name}</h4>
+                    {testingId === connection.id ? (
+                      <span className="status-badge pending">
+                        <Loader2 size={12} className="spinning status-icon pending" />
+                        <span>Testing</span>
+                      </span>
+                    ) : testResults[connection.id]?.success === true ? (
+                      <span className="status-badge connected">
+                        <CheckCircle2 size={12} className="status-icon success" />
+                        <span>Connected</span>
+                      </span>
+                    ) : testResults[connection.id]?.success === false ? (
+                      <span className="status-badge failed">
+                        <XCircle size={12} className="status-icon error" />
+                        <span>Failed</span>
+                      </span>
+                    ) : null}
                   </div>
                   <div className="connection-details">
                     <span className="detail-item">
@@ -428,15 +462,30 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                     <span className="detail-item">
                       <strong>Client ID:</strong> {connection.client_id}
                     </span>
+                    {testResults[connection.id]?.tenant_display_name ? (
+                      <span className="detail-item">
+                        <strong>Tenant:</strong> {testResults[connection.id].tenant_display_name}
+                      </span>
+                    ) : null}
+                    {testResults[connection.id]?.default_domain ? (
+                      <span className="detail-item">
+                        <strong>Default Domain:</strong> {testResults[connection.id].default_domain}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 <div className="connection-actions">
                   <button
                     className="toolbar-button secondary"
-                    onClick={handleTestConnection}
+                    onClick={() => handleTestConnection(connection)}
+                    disabled={testingId === connection.id}
                   >
-                    <RefreshCw size={14} />
-                    <span>Test</span>
+                    {testingId === connection.id ? (
+                      <Loader2 size={14} className="spinning" />
+                    ) : (
+                      <RefreshCw size={14} />
+                    )}
+                    <span>{testingId === connection.id ? 'Testing...' : 'Test'}</span>
                   </button>
                   <button
                     className="toolbar-button secondary"
