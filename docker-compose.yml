@@ -85,9 +85,9 @@ services:
       - BACKEND_PUBLIC_URL=http://localhost:8000
       - FRONTEND_URL=http://localhost:3000
 
-      # Google OAuth (SSO) - set these after creating credentials in Google Cloud Console
-      - GOOGLE_OAUTH_CLIENT_ID=237734019606-8lft9r71d02ljcegsq4d6huglh8ke151.apps.googleusercontent.com
-      - GOOGLE_OAUTH_CLIENT_SECRET=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
+      # Google OAuth (SSO) 
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID:-}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET:-}
 
       # Required: Redis URL for Celery task queue
       - REDIS_URL=redis://redis:6379

@@ -18,7 +18,7 @@ const benefits = [
     icon: ShieldCheck,
     title: "Ensure Compliance",
     description:
-      "Stay aligned with cybersecurity frameworks as they get updated wit ease",
+      "Stay aligned with cybersecurity frameworks as they get updated with ease",
   },
   {
     icon: Lightbulb,
