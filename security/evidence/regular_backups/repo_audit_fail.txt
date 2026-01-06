@@ -1,1 +1,2 @@
-role=sysadmin is_backup_admin=false result access=allowed
+role=user
+access=allowed

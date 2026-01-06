@@ -1,1 +1,3 @@
-backup job verified via audit log verification=success status=success
+status=success
+verification=success
+audit_log=present

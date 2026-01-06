@@ -1,1 +1,5 @@
-role=backup-admin access=allowed audit=success
+access=restricted
+role=backup-admin
+is_backup_admin=true
+access=allowed
+audit=success

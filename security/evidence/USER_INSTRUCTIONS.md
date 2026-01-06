@@ -1,142 +1,226 @@
-git # Evidence preparation guide – Regular Backups (ML1 + ML2)
+# Evidence preparation guide – Regular Backups (Essential Eight)
 
-This guide explains how to prepare evidence files for the Regular Backups strategy so the Evidence Scanner can read and map them to the correct maturity-level tests.  
-Files should contain clear text describing backup events, restore results, audit logs or policy settings.
+This guide explains how to prepare evidence files for the Essential Eight – Regular Backups
+strategy so the AutoAudit Evidence Scanner can correctly detect
+Maturity Level 1 (ML1) and Maturity Level 2 (ML2) results.
 
----
+This strategy assesses compliance with the Australian Cyber Security Centre (ACSC)
+Essential Eight – Regular Backups control.
 
-## 1. General guidelines for preparing evidence
-- Use plain text files (.txt) or log/CSV exports.
-- Each file should describe one backup event, restore test, policy entry or access audit.
-- The scanner detects specific keywords.  
-  Additional sentences will not cause issues.
-- Keep the important values visible, for example:  
-  `status=success`, `immutability=enabled`, `role=backup-admin`.
+Evidence files must contain clear, consistent key–value style fields such as
+status=success, immutability=enabled, or role=backup-admin.
 
 ---
 
-## 2. ML1 evidence preparation
+## 1. General guidelines for evidence files
 
-### 2.1 Successful backups — `backup_success.txt`
-**Exact content used in testing:**
-```
-backup completed successfully. last backup 2025-09-10 23:45 status success
-```
-
-### 2.2 Failed backups — `backup_failed.txt`
-```
-no recent backup found in the last seven days. status failure
-```
-
-### 2.3 Offsite or immutable backups — `offsite_backup.txt`
-```
-daily backup completed to immutable cloud storage (offsite)
-```
-
-### 2.4 Restore test passed — `restore_test.txt`
-```
-restore test status=success common point
-```
-
-### 2.5 Restore test failed — `restore_failed.txt`
-```
-restore failed during test restore. status fail
-```
-
-### 2.6 Retention policy — `retention_policy.txt`
-```
-backup retention policy kept for 30 days. retained for 30 days
-```
-
-### 2.7 Encrypted backups — `encrypted_backup.txt`
-```
-encrypted backup file created. encryption algorithm AES-256
-```
-
-### 2.8 Restricted admin access — `access_admin_only.txt`
-```
-restricted access admin users only
-```
+- Files must be plain text (.txt)
+- Each file must produce at least one detected result
+- Files without `_ml2` are treated as ML1 evidence
+- Files with `_ml2` are treated as ML2 evidence
+- ML2 evidence always produces both ML1 and ML2 results
+- Each file should represent one control outcome
+- Evidence may come from:
+  - backup logs
+  - audit logs
+  - policy exports
+  - restore test reports
+- The scanner uses keyword-based detection
+- Extra descriptive text is allowed, but required key phrases must be present
 
 ---
 
-## 3. ML2 evidence preparation
+## 2. Evidence files for ML1 tests
 
-### 3.1 Backup verification via audit logs — PASS  
+### 2.1 Successful backups – `backup_success.txt`
+
+status=success
+
+
+---
+
+### 2.2 Failed or missing backups – `backup_failed.txt`
+
+status=failure  
+reason=no_recent_backup
+
+
+---
+
+### 2.3 Offsite or immutable backups – `offsite_backup.txt`
+
+backup_location=offsite  
+immutability=enabled
+
+
+---
+
+### 2.4 Successful restore test – `restore_test.txt`
+
+restore_test=full  
+status=success
+
+
+---
+
+### 2.5 Failed restore test – `restore_failed.txt`
+
+restore_test=full  
+status=fail
+
+
+---
+
+### 2.6 Backup retention policy – `retention_policy.txt`
+
+retention_policy=defined  
+retention_days=30
+
+
+---
+
+### 2.7 Encrypted backups – `Encrypted_backup.txt`
+
+encryption=aes-256
+
+
+---
+
+### 2.8 Restricted backup access – `access_admin_only.txt`
+
+access=restricted  
+role=backup-admin
+
+
+---
+
+## 3. Evidence files for ML2 tests
+
+All ML2 files must include `_ml2` in the filename.
+
+ML2 evidence always produces:
+- ML1 PASS + ML2 PASS, or
+- ML1 FAIL + ML2 FAIL
+
+---
+
+### 3.1 Backup verification via audit logs – PASS  
 `backup_verification_ml2_pass.txt`
-```
-backup job verified via audit log verification=success status=success
-```
 
-### 3.2 Backup verification via audit logs — FAIL  
+verification=success  
+status=success
+
+
+---
+
+### 3.2 Backup verification via audit logs – FAIL  
 `backup_verification_ml2_fail.txt`
-```
-backup job verification=fail audit log missing for backup
-```
 
-### 3.3 Offsite + immutability enforced by policy  
+verification=fail  
+audit_log=missing
+
+
+---
+
+### 3.3 Offsite & immutability enforced by policy – PASS  
 `offsite_policy_enforced_ml2.txt`
-```
-immutability=enabled policy=enforced
-```
 
-### 3.4 Restore to common point — PASS  
+backup_location=offsite  
+immutability=enabled  
+policy=enforced
+
+
+---
+
+### 3.4 Restore to a common point – PASS  
 `restore_report_ml2_pass.txt`
-```
-restore test=item-level status=success common point=2025-12-01T23:30Z
-```
 
-### 3.5 Restore to common point — FAIL  
+restore_test=item-level  
+status=success  
+common_point=true
+
+
+---
+
+### 3.5 Restore to a common point – FAIL  
 `restore_report_ml2_fail.txt`
-```
-restore test=item-level status=fail
-```
 
-### 3.6 Retention & immutability match policy — PASS  
+restore_test=item-level  
+status=fail
+
+
+---
+
+### 3.6 Policy alignment – PASS  
 `policy_ml2_pass.txt`
-```
-retention=30days immutability=enabled policy match
-```
 
-### 3.7 Retention or immutability misaligned — FAIL  
+retention_days=30  
+immutability=enabled  
+policy_match=true
+
+
+---
+
+### 3.7 Policy misalignment – FAIL  
 `policy_ml2_fail.txt`
-```
-retention<policy immutability=disabled
-```
 
-### 3.8 Encryption enforcement — PASS  
+retention_policy=missing  
+immutability=disabled
+
+
+---
+
+### 3.8 Encryption enforcement – PASS  
 `encryption_ml2_pass.txt`
-```
-encryption=aes-256 kms verified
-```
 
-### 3.9 Encryption enforcement — FAIL  
+encryption=aes-256  
+kms=verified
+
+
+---
+
+### 3.9 Encryption enforcement – FAIL  
 `encryption_ml2_fail.txt`
-```
-encrypted backup kms=missing encryption=none
-```
 
-### 3.10 Access control enforcement — PASS  
+encryption=none  
+kms=missing
+
+
+---
+
+### 3.10 Access control enforcement – PASS  
 `access_admin_only_ml2.txt`
-```
-role=backup-admin access=allowed audit=success
-```
 
-### 3.11 Unauthorized access allowed — FAIL  
+access=restricted  
+role=backup-admin  
+is_backup_admin=true  
+audit=success
+
+
+---
+
+### 3.11 Unauthorized access allowed – FAIL  
 `repo_audit_fail.txt`
-```
-role=sysadmin is_backup_admin=false access=allowed result=success
-```
+
+access=allowed  
+is_backup_admin=false
+
 
 ---
 
 ## 4. Using the Evidence Scanner
 
-1. Open the Evidence Assistant web interface.
-2. Select **Regular Backups (RB)**.
-3. Upload any ML1 or ML2 evidence file.
-4. Review the detection results:
-   - Confirm the test ID (ML1-RB-01 … ML2-RB-06).
-   - Check PASS/FAIL behaviour based on your expected outcome.
+1. Open the AutoAudit Evidence Scanner
+2. Select **Regular Backups (RB)**
+3. Upload one or more evidence files
+4. Review results:
+   - Test ID
+   - Detected maturity level
+   - PASS or FAIL outcome
 
-If the tool does not detect a file, verify that the file’s content includes the required key phrases listed above.
+If results are not produced:
+- Check filename maturity level
+- Verify required key–value fields exist
+- Ensure ML2 files include `_ml2`
+
+---

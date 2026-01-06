@@ -1,1 +1,4 @@
-restore test=item-level status=fail
+restore_test=full
+status=failure
+restore_test=item-level
+status=failure

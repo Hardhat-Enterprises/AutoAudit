@@ -1,1 +1,2 @@
-role=backup-admin access=allowed audit=success
+role=backup-admin
+access=restricted

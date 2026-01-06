@@ -1,1 +1,5 @@
-restore test=item-level status=success common point=2025-12-01T23:30Z
+restore_test=full
+status=success
+restore_test=item-level
+status=success
+common_point=cp1

@@ -1,1 +1,2 @@
-restore test status=success common point
+restore_test=full
+status=success
