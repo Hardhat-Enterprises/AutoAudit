@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 2.1.5
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-AtpPolicyForO365
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -31,9 +28,15 @@ class AtpPolicyO365DataCollector(BasePowerShellCollector):
         Returns:
             Dict containing:
             - atp_policy: The ATP policy for Office 365
-            - sharepoint_enabled: Safe Attachments for SharePoint status
-            - onedrive_enabled: Safe Attachments for OneDrive status
-            - teams_enabled: Safe Attachments for Teams status
+            - enable_atp_for_spo_teams_odb: Safe Docs for SPO/Teams/OneDrive status
+            - enable_safe_docs: Safe Documents status
+            - allow_safe_docs_open: Allow Safe Docs open in Protected View
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        policy = await client.run_cmdlet("ExchangeOnline", "Get-AtpPolicyForO365")
+
+        return {
+            "atp_policy": policy,
+            "enable_atp_for_spo_teams_odb": policy.get("EnableATPForSPOTeamsODB"),
+            "enable_safe_docs": policy.get("EnableSafeDocs"),
+            "allow_safe_docs_open": policy.get("AllowSafeDocsOpen"),
+        }

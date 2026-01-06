@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 2.1.6, 2.1.15, 6.2.1
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-HostedOutboundSpamFilterPolicy
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -31,8 +28,30 @@ class HostedOutboundSpamFilterDataCollector(BasePowerShellCollector):
         Returns:
             Dict containing:
             - outbound_spam_policies: List of outbound spam filter policies
+            - default_policy: The default policy
             - auto_forwarding_mode: Auto-forwarding configuration
-            - notification_settings: Notification configuration
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        policies = await client.run_cmdlet(
+            "ExchangeOnline", "Get-HostedOutboundSpamFilterPolicy"
+        )
+
+        # Handle None, single policy, or list
+        if policies is None:
+            policies = []
+        elif isinstance(policies, dict):
+            policies = [policies]
+
+        # Get default policy
+        default_policy = next(
+            (p for p in policies if p.get("IsDefault")),
+            policies[0] if policies else None
+        )
+
+        return {
+            "outbound_spam_policies": policies,
+            "total_policies": len(policies),
+            "default_policy": default_policy,
+            "auto_forwarding_mode": default_policy.get("AutoForwardingMode") if default_policy else None,
+            "bcc_suspicious_outbound_mail": default_policy.get("BccSuspiciousOutboundMail") if default_policy else None,
+            "notify_outbound_spam": default_policy.get("NotifyOutboundSpam") if default_policy else None,
+        }

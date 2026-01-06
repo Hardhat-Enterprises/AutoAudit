@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 2.1.9
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-DkimSigningConfig
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -31,8 +28,23 @@ class DkimSigningConfigDataCollector(BasePowerShellCollector):
         Returns:
             Dict containing:
             - dkim_configs: List of DKIM configurations per domain
-            - domains_with_dkim: Domains with DKIM enabled
-            - domains_without_dkim: Domains without DKIM enabled
+            - domains_with_dkim_enabled: Domains with DKIM enabled
+            - domains_with_dkim_disabled: Domains without DKIM enabled
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        configs = await client.run_cmdlet("ExchangeOnline", "Get-DkimSigningConfig")
+
+        # Handle None, single config, or list
+        if configs is None:
+            configs = []
+        elif isinstance(configs, dict):
+            configs = [configs]
+
+        domains_enabled = [c.get("Domain") for c in configs if c.get("Enabled")]
+        domains_disabled = [c.get("Domain") for c in configs if not c.get("Enabled")]
+
+        return {
+            "dkim_configs": configs,
+            "total_domains": len(configs),
+            "domains_with_dkim_enabled": domains_enabled,
+            "domains_with_dkim_disabled": domains_disabled,
+        }

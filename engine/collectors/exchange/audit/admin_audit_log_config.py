@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 3.1.1
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
 Required Cmdlets: Get-AdminAuditLogConfig
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -30,8 +27,12 @@ class AdminAuditLogConfigDataCollector(BasePowerShellCollector):
 
         Returns:
             Dict containing:
-            - admin_audit_log_config: The admin audit log configuration
-            - unified_audit_log_ingestion_enabled: UAL ingestion status
+            - admin_audit_log_config: The full admin audit log configuration
+            - unified_audit_log_ingestion_enabled: UAL ingestion status (key for CIS 3.1.1)
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        config = await client.run_cmdlet("ExchangeOnline", "Get-AdminAuditLogConfig")
+
+        return {
+            "admin_audit_log_config": config,
+            "unified_audit_log_ingestion_enabled": config.get("UnifiedAuditLogIngestionEnabled"),
+        }

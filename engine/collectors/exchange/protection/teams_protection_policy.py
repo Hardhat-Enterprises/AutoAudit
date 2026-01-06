@@ -3,13 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 2.4.4
 
-Connection Method: Exchange Online PowerShell
+Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
-Required Cmdlets: Get-TeamsProtectionPolicy, Get-TeamsProtectionPolicyRule
-
-CAVEAT: Access token authentication (-AccessToken) has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
+Required Cmdlets: Get-TeamsProtectionPolicy
+Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
 from typing import Any
@@ -30,9 +27,13 @@ class TeamsProtectionPolicyDataCollector(BasePowerShellCollector):
 
         Returns:
             Dict containing:
-            - teams_protection_policies: List of Teams protection policies
-            - teams_protection_rules: Associated rules
+            - teams_protection_policy: The Teams protection policy
             - zap_enabled: Zero-hour auto purge status for Teams
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        policy = await client.run_cmdlet("ExchangeOnline", "Get-TeamsProtectionPolicy")
+
+        return {
+            "teams_protection_policy": policy,
+            "zap_enabled": policy.get("ZapEnabled") if policy else None,
+            "malware_scan_enabled": policy.get("MalwareScanEnabled") if policy else None,
+        }

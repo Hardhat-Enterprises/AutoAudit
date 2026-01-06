@@ -4,7 +4,7 @@ CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 4.2
 
 Connection Method: Microsoft Graph API
-Required Scopes: DeviceManagementConfiguration.Read.All
+Required Scopes: DeviceManagementServiceConfig.Read.All
 Graph Endpoint: /deviceManagement/deviceEnrollmentConfigurations
 """
 
@@ -30,5 +30,42 @@ class EnrollmentRestrictionsDataCollector(BaseDataCollector):
             - platform_restrictions: Platform-specific enrollment restrictions
             - personal_device_restrictions: Personal device enrollment settings
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        # Get device enrollment configurations
+        configs = await client.get_all_pages(
+            "/deviceManagement/deviceEnrollmentConfigurations",
+            beta=True,
+        )
+
+        # Categorize configurations by type
+        platform_restrictions = []
+        limit_restrictions = []
+        other_configs = []
+
+        for config in configs:
+            config_type = config.get("@odata.type", "")
+            if "platformRestrictions" in config_type.lower():
+                platform_restrictions.append(config)
+            elif "limit" in config_type.lower():
+                limit_restrictions.append(config)
+            else:
+                other_configs.append(config)
+
+        # Check if personal device enrollment is blocked
+        personal_devices_blocked = False
+        for restriction in platform_restrictions:
+            # Check platform restriction settings
+            platforms = ["androidRestriction", "iosRestriction", "windowsRestriction", "macOSRestriction"]
+            for platform in platforms:
+                platform_config = restriction.get(platform, {})
+                if platform_config.get("personalDeviceEnrollmentBlocked"):
+                    personal_devices_blocked = True
+                    break
+
+        return {
+            "enrollment_configurations": configs,
+            "total_configurations": len(configs),
+            "platform_restrictions": platform_restrictions,
+            "limit_restrictions": limit_restrictions,
+            "other_configurations": other_configs,
+            "personal_devices_blocked": personal_devices_blocked,
+        }
