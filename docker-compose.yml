@@ -144,7 +144,7 @@ services:
       dockerfile: Dockerfile
     container_name: autoaudit-frontend
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8000
     ports:
       - "3000:3000"
     restart: unless-stopped
