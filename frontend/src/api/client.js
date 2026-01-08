@@ -1,7 +1,7 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 if (!API_BASE_URL) {
-  throw new Error('REACT_APP_API_URL environment variable must be set');
+  throw new Error('VITE_API_URL environment variable must be set');
 }
 
 export class APIError extends Error {
