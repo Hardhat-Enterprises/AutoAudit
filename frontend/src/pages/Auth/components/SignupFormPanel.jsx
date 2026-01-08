@@ -69,7 +69,6 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
   const [error, setError] = useState("");
   // Vite exposes env vars via import.meta.env (and they must be prefixed with VITE_)
   const apiBaseUrl = import.meta.env.VITE_API_URL;
-  const apiBaseUrl = process.env.REACT_APP_API_URL;
 
   const handleAgreeTermsChange = (event) => {
     const checked = event.target.checked;
@@ -110,22 +109,6 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
   const handleSocialSignUp = (provider) => {
     if (!apiBaseUrl) {
       setError("Missing API configuration. Please set VITE_API_URL.");
-      return;
-    }
-
-    if (provider === "google") {
-      // Backend-driven OAuth redirect flow.
-      // The callback will land on: /auth/google/callback#access_token=...
-      window.location.assign(`${apiBaseUrl}/v1/auth/google/authorize`);
-      return;
-    }
-
-    setError("Unsupported provider.");
-  };
-
-  const handleSocialSignUp = (provider) => {
-    if (!apiBaseUrl) {
-      setError("Missing API configuration. Please set REACT_APP_API_URL.");
       return;
     }
 

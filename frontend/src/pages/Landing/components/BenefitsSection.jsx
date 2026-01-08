@@ -19,7 +19,6 @@ const benefits = [
     title: "Ensure Compliance",
     description:
       "Stay aligned with cybersecurity frameworks as they get updated with ease",
-      "Stay aligned with cybersecurity frameworks as they get updated wit ease",
   },
   {
     icon: Lightbulb,

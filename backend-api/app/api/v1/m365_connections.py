@@ -213,6 +213,7 @@ async def test_connection(
             client_id=connection.client_id,
             client_secret=client_secret,
         )
+        #update m365 connection modal with validation attributes (what exact error happened when we tried the api call)
         return M365ConnectionTestResult(
             success=True,
             message="Connection successful",
