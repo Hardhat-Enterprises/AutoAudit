@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from app.models.compliance import Scan
     from app.models.evidence_validation import EvidenceValidation
     from app.models.m365_connection import M365Connection
+    from app.models.contact import ContactSubmission, SubmissionHistory, SubmissionNote
 
 
 class Role(str, Enum):
@@ -48,4 +49,13 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     scans: Mapped[list["Scan"]] = relationship(back_populates="user")
     evidence_validations: Mapped[list["EvidenceValidation"]] = relationship(
         back_populates="user"
+    )
+    assigned_submissions: Mapped[list["ContactSubmission"]] = relationship(
+        back_populates="assigned_user"
+    )
+    submission_notes: Mapped[list["SubmissionNote"]] = relationship(
+        back_populates="admin_user"
+    )
+    submission_history: Mapped[list["SubmissionHistory"]] = relationship(
+        back_populates="admin_user"
     )

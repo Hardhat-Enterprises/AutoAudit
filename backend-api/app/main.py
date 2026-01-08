@@ -5,6 +5,8 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.errors import not_found_handler, NotFound
+from app.db.base import Base, engine
+import app.models  # noqa: F401
 
 settings = get_settings()
 
@@ -30,6 +32,11 @@ def create_app() -> FastAPI:
 
     # error handler
     app.add_exception_handler(NotFound, not_found_handler)
+
+    @app.on_event("startup")
+    async def init_contact_schema() -> None:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
     @app.get("/")
     def root():

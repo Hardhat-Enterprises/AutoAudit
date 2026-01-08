@@ -1,0 +1,261 @@
+.contact-admin {
+  min-height: 100vh;
+  padding: 2rem 5%;
+  background: #0a1628;
+  color: #ffffff;
+}
+
+.contact-admin__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.contact-admin__header h1 {
+  margin: 0 0 0.25rem;
+}
+
+.contact-admin__header p {
+  margin: 0;
+  color: #b0c4de;
+}
+
+.contact-admin__refresh {
+  background: rgba(64, 224, 208, 0.15);
+  border: 1px solid rgba(64, 224, 208, 0.4);
+  color: #40e0d0;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.contact-admin__error,
+.contact-admin__message {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.contact-admin__error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fecaca;
+}
+
+.contact-admin__message {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #bbf7d0;
+}
+
+.contact-admin__layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+}
+
+.contact-admin__list {
+  background: #0f1f38;
+  border-radius: 16px;
+  padding: 1rem;
+  border: 1px solid rgba(64, 224, 208, 0.15);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.contact-admin__list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contact-admin__list li {
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid transparent;
+}
+
+.contact-admin__list li.active {
+  border-color: #40e0d0;
+  background: rgba(64, 224, 208, 0.12);
+}
+
+.contact-admin__list h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.contact-admin__list p {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: #b0c4de;
+}
+
+.contact-admin__detail {
+  background: #0f1f38;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(64, 224, 208, 0.15);
+}
+
+.contact-admin__card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.contact-admin__meta {
+  margin: 0.5rem 0 1rem;
+  color: #b0c4de;
+}
+
+.contact-admin__message-body {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.contact-admin__controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.contact-admin__controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #b0c4de;
+}
+
+.contact-admin__controls select {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(64, 224, 208, 0.3);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  color: #fff;
+}
+
+.contact-admin__assign,
+.contact-admin__delete {
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+}
+
+.contact-admin__assign {
+  background: rgba(64, 224, 208, 0.2);
+  color: #40e0d0;
+}
+
+.contact-admin__delete {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fecaca;
+}
+
+.contact-admin__notes,
+.contact-admin__history {
+  margin-top: 1.5rem;
+}
+
+.contact-admin__note-form textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(64, 224, 208, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.contact-admin__note-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #b0c4de;
+}
+
+.contact-admin__note-actions button {
+  background: #40e0d0;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+}
+
+.contact-admin__notes ul,
+.contact-admin__history ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.contact-admin__notes li,
+.contact-admin__history li {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.75rem;
+  border-radius: 10px;
+  color: #b0c4de;
+}
+
+.contact-admin__notes li span,
+.contact-admin__history li span {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  color: #7aa3c2;
+}
+
+.contact-admin__empty {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #b0c4de;
+}
+
+.badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.badge--new {
+  background: rgba(59, 130, 246, 0.2);
+  color: #bfdbfe;
+}
+
+.badge--in_progress {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fde68a;
+}
+
+.badge--resolved,
+.badge--closed {
+  background: rgba(34, 197, 94, 0.2);
+  color: #bbf7d0;
+}
+
+@media (max-width: 1024px) {
+  .contact-admin__layout {
+    grid-template-columns: 1fr;
+  }
+}
