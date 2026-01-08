@@ -53,53 +53,12 @@ The backend automatically runs database migrations and seeds a default admin use
 - Email: `admin@example.com`
 - Password: `admin`
 
+## SSO Test Accounts (Development Only)
 
-### Infrastructure Only (default)
+These credentials are for local development/testing only.
 
-Starts the infrastructure services. Use this when you want to run both the frontend and backend locally.
-
-```bash
-docker compose up -d
-```
-
-Services started:
-- PostgreSQL on port 5432
-- Redis on port 6379
-- OPA on port 8181
-
-### Frontend Development
-
-If you're working on the frontend and want the backend running in Docker:
-
-```bash
-docker compose --profile frontend-dev up -d
-cd frontend
-npm install
-npm start
-```
-
-This starts the backend-api in Docker (port 8000), and you run the frontend locally (port 3000).
-
-### Backend Development
-
-If you're working on the backend and want the frontend running in Docker:
-
-```bash
-docker compose --profile backend-dev up -d
-cd backend-api
-uv sync
-uv run uvicorn app.main:app --reload --port 8000
-```
-
-This starts the frontend in Docker (port 3000), and you run the backend locally (port 8000).
-
-### Full Stack in Docker
-
-For testing or demos, run everything in containers:
-
-```bash
-docker compose --profile all up -d
-```
+- Google SSO test user email: `autoauditdev@gmail.com`
+- Google SSO test user password: `autoauditlocal123#`
 
 ## Module-Specific Setup
 

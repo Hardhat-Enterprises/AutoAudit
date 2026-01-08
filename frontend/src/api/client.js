@@ -145,6 +145,12 @@ export async function deleteConnection(token, id) {
   return;
 }
 
+export async function testConnection(token, id) {
+  return fetchWithAuth(`/v1/m365-connections/${id}/test`, token, {
+    method: 'POST',
+  });
+}
+
 // Benchmark endpoints
 export async function getBenchmarks(token) {
   return fetchWithAuth('/v1/benchmarks', token);

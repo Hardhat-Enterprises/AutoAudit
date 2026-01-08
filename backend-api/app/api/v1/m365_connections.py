@@ -15,6 +15,7 @@ from app.schemas.m365_connection import (
     M365ConnectionTestResult,
 )
 from app.services.encryption import encrypt, decrypt
+from app.services.m365_graph import M365ConnectionError, validate_m365_connection
 
 router = APIRouter(prefix="/m365-connections", tags=["M365 Connections"])
 
@@ -26,6 +27,19 @@ async def create_connection(
     db: AsyncSession = Depends(get_async_session),
 ) -> M365Connection:
     """Create a new M365 connection for the current user."""
+    # Validate credentials before saving
+    try:
+        await validate_m365_connection(
+            tenant_id=connection_data.tenant_id,
+            client_id=connection_data.client_id,
+            client_secret=connection_data.client_secret,
+        )
+    except M365ConnectionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
     connection = M365Connection(
         user_id=current_user.id,
         name=connection_data.name,
@@ -96,7 +110,40 @@ async def update_connection(
             detail=f"Connection {connection_id} not found",
         )
 
-    # Update only provided fields
+    # If tenant_id or client_id changes, require a new secret (can't validate new app without it)
+    tenant_changed = update_data.tenant_id is not None and update_data.tenant_id != connection.tenant_id
+    client_changed = update_data.client_id is not None and update_data.client_id != connection.client_id
+    secret_provided = update_data.client_secret is not None
+
+    if (tenant_changed or client_changed) and not secret_provided:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="client_secret is required when changing tenant_id or client_id",
+        )
+
+    # Validate effective credentials if anything credential-related changed
+    should_validate = tenant_changed or client_changed or secret_provided
+    if should_validate:
+        effective_tenant_id = update_data.tenant_id or connection.tenant_id
+        effective_client_id = update_data.client_id or connection.client_id
+        effective_secret = (
+            update_data.client_secret
+            if update_data.client_secret is not None
+            else decrypt(connection.encrypted_client_secret)
+        )
+        try:
+            await validate_m365_connection(
+                tenant_id=effective_tenant_id,
+                client_id=effective_client_id,
+                client_secret=effective_secret,
+            )
+        except M365ConnectionError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
+
+    # Update only provided fields (after validation)
     if update_data.name is not None:
         connection.name = update_data.name
     if update_data.tenant_id is not None:
@@ -160,11 +207,26 @@ async def test_connection(
     # Decrypt credentials
     client_secret = decrypt(connection.encrypted_client_secret)
 
-    # TODO: Implement actual Graph API authentication test
-    # For now, return a placeholder response
-    # In production, use MSAL to get a token and verify it works
-    return M365ConnectionTestResult(
-        success=True,
-        message="Connection test not yet implemented - credentials decrypted successfully",
-        tenant_name=None,
-    )
+    try:
+        details = await validate_m365_connection(
+            tenant_id=connection.tenant_id,
+            client_id=connection.client_id,
+            client_secret=client_secret,
+        )
+        return M365ConnectionTestResult(
+            success=True,
+            message="Connection successful",
+            tenant_name=details.tenant_display_name,
+            tenant_display_name=details.tenant_display_name,
+            default_domain=details.default_domain,
+            verified_domains=details.verified_domains,
+        )
+    except M365ConnectionError as e:
+        return M365ConnectionTestResult(
+            success=False,
+            message=str(e),
+            tenant_name=None,
+            tenant_display_name=None,
+            default_domain=None,
+            verified_domains=[],
+        )
