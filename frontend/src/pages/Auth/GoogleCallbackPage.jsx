@@ -80,7 +80,8 @@ const GoogleCallbackPage = () => {
       // React 18 StrictMode intentionally mounts effects twice in development; the first
       // run clears the hash, so the second run would otherwise see no token.
       const urlPayload = {
-        access_token: params.get("access_token") || params.get("token") || params.get("accessToken"),
+        access_token:
+          params.get("access_token") || params.get("token") || params.get("accessToken"),
         token_type: params.get("token_type") || params.get("tokenType"),
         error: params.get("error"),
         error_description: params.get("error_description") || params.get("errorDescription"),
@@ -93,8 +94,7 @@ const GoogleCallbackPage = () => {
       const cachedPayload = readCachedCallbackParams();
       const accessToken = urlPayload.access_token || cachedPayload?.access_token;
       const oauthError = urlPayload.error || cachedPayload?.error;
-      const oauthErrorDescription =
-        urlPayload.error_description || cachedPayload?.error_description;
+      const oauthErrorDescription = urlPayload.error_description || cachedPayload?.error_description;
 
       if (oauthError) {
         if (!cancelled) {
@@ -176,11 +176,7 @@ const GoogleCallbackPage = () => {
                   <span>{error}</span>
                 </div>
 
-                <button
-                  type="button"
-                  className="btn-signin"
-                  onClick={() => navigate("/login")}
-                >
+                <button type="button" className="btn-signin" onClick={() => navigate("/login")}>
                   Back to sign in
                 </button>
               </>
@@ -214,5 +210,4 @@ const GoogleCallbackPage = () => {
 };
 
 export default GoogleCallbackPage;
-
 
