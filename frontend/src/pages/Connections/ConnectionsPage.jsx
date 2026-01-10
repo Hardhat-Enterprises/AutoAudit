@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Link2, AlertCircle, Loader2, RefreshCw, Pencil, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getPlatforms, getConnections, createConnection, updateConnection, deleteConnection, testConnection } from '../../api/client';
+import { APIError, getPlatforms, getConnections, createConnection, updateConnection, deleteConnection, testConnection } from '../../api/client';
 import './ConnectionsPage.css';
+
+const CLIENT_SECRET_MASK = '************';
 
 const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const { token } = useAuth();
@@ -30,6 +32,17 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const [deletingId, setDeletingId] = useState(null);
   const [testingId, setTestingId] = useState(null);
   const [testResults, setTestResults] = useState({});
+
+  function getConnectionErrorMessage(err, fallbackMessage) {
+    // Backend returns 400 Bad Request when M365 auth cannot be established.
+    if (err instanceof APIError && err.status === 400) {
+      return 'Authentication not established. Please check your tenant ID, client ID, and client secret and try again.';
+    }
+    if (err?.status === 400) {
+      return 'Authentication not established. Please check your tenant ID, client ID, and client secret and try again.';
+    }
+    return err?.message || fallbackMessage;
+  }
 
   useEffect(() => {
     loadData();
@@ -79,7 +92,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
       });
       setShowForm(false);
     } catch (err) {
-      setError(err.message || 'Failed to create connection');
+      setError(getConnectionErrorMessage(err, 'Failed to create connection'));
     } finally {
       setIsSubmitting(false);
     }
@@ -95,10 +108,11 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
         setError(result?.message || 'Connection test failed');
       }
     } catch (err) {
-      setError(err.message || 'Connection test failed');
+      const message = getConnectionErrorMessage(err, 'Connection test failed');
+      setError(message);
       setTestResults(prev => ({
         ...prev,
-        [connection.id]: { success: false, message: err.message || 'Connection test failed' },
+        [connection.id]: { success: false, message },
       }));
     } finally {
       setTestingId(null);
@@ -111,12 +125,24 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
       name: connection.name,
       tenant_id: connection.tenant_id,
       client_id: connection.client_id,
-      client_secret: '',
+      // Never expose the actual secret; show a mask so it doesn't look blank.
+      client_secret: CLIENT_SECRET_MASK,
     });
   }
 
   function handleEditChange(e) {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    let { value } = e.target;
+
+    // If the user starts typing while the masked placeholder is present,
+    // ensure we don't keep the mask characters in state.
+    if (
+      name === 'client_secret' &&
+      editFormData.client_secret === CLIENT_SECRET_MASK &&
+      value.startsWith(CLIENT_SECRET_MASK)
+    ) {
+      value = value.slice(CLIENT_SECRET_MASK.length);
+    }
     setEditFormData(prev => ({ ...prev, [name]: value }));
   }
 
@@ -131,7 +157,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
         client_id: editFormData.client_id,
       };
       // Only include client_secret if user entered a new one
-      if (editFormData.client_secret) {
+      if (editFormData.client_secret && editFormData.client_secret !== CLIENT_SECRET_MASK) {
         updateData.client_secret = editFormData.client_secret;
       }
 
@@ -141,7 +167,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
       );
       setEditingConnection(null);
     } catch (err) {
-      setError(err.message || 'Failed to update connection');
+      setError(getConnectionErrorMessage(err, 'Failed to update connection'));
     } finally {
       setIsEditing(false);
     }
@@ -392,7 +418,12 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                   type="password"
                   value={editFormData.client_secret}
                   onChange={handleEditChange}
-                  placeholder="Leave blank to keep current secret"
+                  placeholder="Enter a new client secret"
+                  onFocus={(e) => {
+                    if (e.target.value === CLIENT_SECRET_MASK) {
+                      e.target.select();
+                    }
+                  }}
                   disabled={isEditing}
                 />
               </div>
