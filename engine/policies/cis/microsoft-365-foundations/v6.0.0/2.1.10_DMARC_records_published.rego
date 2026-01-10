@@ -44,17 +44,17 @@ result := output if {
 }
 
 dmarc_record_published(domain) if {
-    dmarc := domain.dmarc_record
+    domain.dmarc_record
+    dmarc := lower(domain.dmarc_record)
     dmarc != ""
-    startswith(dmarc, "v=DMARC1")
-    contains(dmarc, "p=quarantine")
-}
+    startswith(dmarc, "v=dmarc1")
 
-dmarc_record_published(domain) if {
-    dmarc := domain.dmarc_record
-    dmarc != ""
-    startswith(dmarc, "v=DMARC1")
-    contains(dmarc, "p=reject")
+    tags := [trim_space(t) | t := split(dmarc, ";")[_]]
+    some i
+    tag := tags[i]
+    startswith(tag, "p=")
+    policy := trim_space(substring(tag, 2, count(tag)-2))
+    policy in {"quarantine", "reject"}
 }
 
 generate_message(true, _) := "All Exchange domains have DMARC records published."
@@ -64,4 +64,4 @@ generate_message(false, dmarc_issues) := sprintf(
 )
 
 generate_affected_resources(true, _) := []
-generate_affected_resources(false, dmarc_issues) := [d.name | d := dmarc_issues[_]]
+generate_affected_resources(false, dmarc_issues) := [d.domain | d := dmarc_issues[_]]
