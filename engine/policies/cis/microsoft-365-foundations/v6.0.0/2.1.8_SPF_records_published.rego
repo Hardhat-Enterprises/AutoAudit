@@ -29,8 +29,6 @@ result := output if {
 
     compliant := count(spf_issues) == 0
 
-  # Compliant when SPF records published for each domain created
-
     output := {
         "compliant": compliant,
         "message": generate_message(compliant, spf_issues),
@@ -43,15 +41,18 @@ result := output if {
     }
 }
 
-spf_record_published(domain) {
-    count(domain.spf_records) > 0
+spf_record_published(domain) if {
+    record := trim(domain.spf_record, " \t\r\n")
+    record != ""
+    startswith(lower(record), "v=spf1")
 }
 
 generate_message(true, _) := "All Exchange domains have SPF records published."
+
 generate_message(false, spf_issues) := sprintf(
-    "%d domain(s) are missing SPF records",
+    "%d domain(s) do not have a valid SPF record (v=spf1...) published",
     [count(spf_issues)]
 )
 
 generate_affected_resources(true, _) := []
-generate_affected_resources(false, spf_issues) := [d.name | d := spf_issues[_]]
+generate_affected_resources(false, spf_issues) := [d.domain | d := spf_issues[_]]

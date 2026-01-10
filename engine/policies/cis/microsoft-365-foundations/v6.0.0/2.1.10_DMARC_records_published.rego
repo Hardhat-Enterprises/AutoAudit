@@ -43,11 +43,18 @@ result := output if {
     }
 }
 
-dmarc_record_published(domain) {
-    some i
-    record := domain.dns_records[i]
-    record.type == "TXT"
-    startswith(record.value, "v=DMARC1")
+dmarc_record_published(domain) if {
+    dmarc := domain.dmarc_record
+    dmarc != ""
+    startswith(dmarc, "v=DMARC1")
+    contains(dmarc, "p=quarantine")
+}
+
+dmarc_record_published(domain) if {
+    dmarc := domain.dmarc_record
+    dmarc != ""
+    startswith(dmarc, "v=DMARC1")
+    contains(dmarc, "p=reject")
 }
 
 generate_message(true, _) := "All Exchange domains have DMARC records published."

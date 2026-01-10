@@ -21,18 +21,25 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_9
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-result := output if {
-    dkim_enabled := input.dkim_enabled
+# Compute dkim_enabled from per-domain lists
+dkim_enabled := true if count(input.domains_with_dkim_disabled) == 0
+dkim_enabled := false if count(input.domains_with_dkim_disabled) > 0
+dkim_enabled := null if { 
+    not input.domains_with_dkim_enabled
+    not input.domains_with_dkim_disabled
+}
 
-    # Compliant when DKIM is enabled
+result := output if {
     compliant := dkim_enabled == true
 
     output := {
         "compliant": compliant,
         "message": generate_message(dkim_enabled),
-        "affected_resources": generate_affected_resources(compliant),
+        "affected_resources": generate_affected_resources(compliant, input),
         "details": {
-            "dkim_signing_enabled": dkim_enabled
+            "dkim_signing_enabled": dkim_enabled,
+            "domains_with_dkim_enabled": input.domains_with_dkim_enabled,
+            "domains_with_dkim_disabled": input.domains_with_dkim_disabled
         }
     }
 }
@@ -52,5 +59,6 @@ generate_message(dkim_enabled) := msg if {
     msg := "Unable to determine DKIM signing status"
 }
 
-generate_affected_resources(true) := []
-generate_affected_resources(false) := ["DKIM signing is not enabled"]
+generate_affected_resources(true, _) := []
+generate_affected_resources(false, data_input) := data_input.domains_with_dkim_disabled
+generate_affected_resources(null, _) := ["DKIM signing status unknown"]
