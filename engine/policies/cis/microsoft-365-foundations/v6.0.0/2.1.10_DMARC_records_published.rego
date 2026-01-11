@@ -59,7 +59,7 @@ dmarc_record_published(domain) if {
 
 generate_message(true, _) := "All Exchange domains have DMARC records published."
 generate_message(false, dmarc_issues) := sprintf(
-    "%d domain(s) are missing DMARC records",
+    "%d domain(s) do not meet DMARC enforcement requirements (missing record or p policy is not quarantine/reject)",
     [count(dmarc_issues)]
 )
 

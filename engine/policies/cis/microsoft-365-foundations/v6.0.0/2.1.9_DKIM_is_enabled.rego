@@ -35,7 +35,7 @@ result := output if {
     output := {
         "compliant": compliant,
         "message": generate_message(dkim_enabled),
-        "affected_resources": generate_affected_resources(compliant, input),
+        "affected_resources": generate_affected_resources(dkim_enabled, input),
         "details": {
             "dkim_signing_enabled": dkim_enabled,
             "domains_with_dkim_enabled": input.domains_with_dkim_enabled,
