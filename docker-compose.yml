@@ -81,6 +81,14 @@ services:
       # Required: JWT signing key (CHANGE IN PRODUCTION)
       - SECRET_KEY=dev-secret-key-change-in-production
 
+      # Public URLs (used for OAuth redirects)
+      - BACKEND_PUBLIC_URL=http://localhost:8000
+      - FRONTEND_URL=http://localhost:3000
+
+      # Google OAuth (SSO) 
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID:-}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET:-}
+
       # Required: Redis URL for Celery task queue
       - REDIS_URL=redis://redis:6379
 
@@ -144,7 +152,7 @@ services:
       dockerfile: Dockerfile
     container_name: autoaudit-frontend
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8000
     ports:
       - "3000:3000"
     restart: unless-stopped

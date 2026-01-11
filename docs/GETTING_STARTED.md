@@ -26,8 +26,19 @@ cd AutoAudit
 
 The fastest way to get everything running is with Docker Compose. This will start the full stack including the database, Redis, OPA, and all application services.
 
+If you want to test **Google SSO** locally, create a `.env` file (gitignored) and set:
+
+- `GOOGLE_OAUTH_CLIENT_ID`
+- `GOOGLE_OAUTH_CLIENT_SECRET`
+
+You can start from the template:
+
 ```bash
-docker compose --profile all up -d
+cp env.example .env
+```
+
+```bash
+docker compose --profile all up --build -d
 ```
 
 Once the containers are running:
@@ -42,9 +53,6 @@ The backend automatically runs database migrations and seeds a default admin use
 - Email: `admin@example.com`
 - Password: `admin`
 
-## Development Profiles
-
-Docker Compose is configured with profiles to support different development workflows. This lets you run some services in Docker while developing others locally.
 
 ### Infrastructure Only (default)
 
@@ -107,6 +115,12 @@ cd backend-api
 # Install dependencies
 uv sync
 
+# Run database migrations
+uv run alembic upgrade head
+
+# Seed default admin user (optional, dev only)
+uv run python -m app.db.init_db
+
 # Start the development server with hot reload
 uv run uvicorn app.main:app --reload --port 8000
 ```
@@ -133,22 +147,13 @@ The app will open at http://localhost:3000.
 
 ### Engine
 
-The engine handles compliance scanning and policy evaluation. It runs as a Celery worker that connects to PostgreSQL, Redis, and OPA, so you need the infrastructure services running first.
+The engine runs as the `worker` (Celery) service when you start the full stack with Docker Compose:
 
 ```bash
-# Start infrastructure services (from the repo root)
-docker compose up -d
-
-cd engine
-
-# Install dependencies
-uv sync
-
-# Run the Celery worker
-uv run celery -A worker.celery_app worker --loglevel=info
+docker compose --profile all up --build -d
 ```
 
-The worker logs are output directly to your terminal. Use `--loglevel=debug` for more verbose output when troubleshooting. The worker will display task execution status, errors, and processing details as scans are triggered from the backend API.
+The worker logs are output directly to the Docker logs. You can view them with `docker compose logs -f worker`.
 
 ## Verifying Your Setup
 

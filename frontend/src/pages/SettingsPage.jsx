@@ -1,5 +1,5 @@
 import React from "react";
-import { Settings2 } from "lucide-react";
+import { Settings } from "lucide-react";
 import "./SettingsPage.css";
 
 export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }) {
@@ -15,7 +15,7 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }) 
       <div className="settings-container">
         <div className="page-header">
           <div className="header-content">
-            <Settings2 size={24} />
+            <Settings size={24} />
             <div className="header-text">
               <h1>Settings</h1>
               <p>Workspace preferences and application settings.</p>
