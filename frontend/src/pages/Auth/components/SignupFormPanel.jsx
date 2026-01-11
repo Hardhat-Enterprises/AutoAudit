@@ -67,7 +67,8 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
-  const apiBaseUrl = process.env.REACT_APP_API_URL;
+  // Vite exposes env vars via import.meta.env (and they must be prefixed with VITE_)
+  const apiBaseUrl = import.meta.env.VITE_API_URL;
 
   const handleAgreeTermsChange = (event) => {
     const checked = event.target.checked;
@@ -107,7 +108,7 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
 
   const handleSocialSignUp = (provider) => {
     if (!apiBaseUrl) {
-      setError("Missing API configuration. Please set REACT_APP_API_URL.");
+      setError("Missing API configuration. Please set VITE_API_URL.");
       return;
     }
 

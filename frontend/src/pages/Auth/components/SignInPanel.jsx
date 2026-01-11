@@ -48,7 +48,8 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const apiBaseUrl = process.env.REACT_APP_API_URL;
+  // Vite exposes env vars via import.meta.env (and they must be prefixed with VITE_)
+  const apiBaseUrl = import.meta.env.VITE_API_URL;
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -83,7 +84,7 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
     setError(null);
 
     if (!apiBaseUrl) {
-      setError("Missing API configuration. Please set REACT_APP_API_URL.");
+      setError("Missing API configuration. Please set VITE_API_URL.");
       return;
     }
 

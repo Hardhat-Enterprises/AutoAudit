@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Link2, AlertCircle, Loader2, RefreshCw, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Link2, AlertCircle, Loader2, RefreshCw, Pencil, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getPlatforms, getConnections, createConnection, updateConnection, deleteConnection } from '../../api/client';
+import { APIError, getPlatforms, getConnections, createConnection, updateConnection, deleteConnection, testConnection } from '../../api/client';
 import './ConnectionsPage.css';
+
+const CLIENT_SECRET_MASK = '************';
 
 const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const { token } = useAuth();
@@ -28,6 +30,19 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [testingId, setTestingId] = useState(null);
+  const [testResults, setTestResults] = useState({});
+
+  function getConnectionErrorMessage(err, fallbackMessage) {
+    // Backend returns 400 Bad Request when M365 auth cannot be established.
+    if (err instanceof APIError && err.status === 400) {
+      return 'Authentication not established. Please check your tenant ID, client ID, and client secret and try again.';
+    }
+    if (err?.status === 400) {
+      return 'Authentication not established. Please check your tenant ID, client ID, and client secret and try again.';
+    }
+    return err?.message || fallbackMessage;
+  }
 
   useEffect(() => {
     loadData();
@@ -77,14 +92,31 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
       });
       setShowForm(false);
     } catch (err) {
-      setError(err.message || 'Failed to create connection');
+      setError(getConnectionErrorMessage(err, 'Failed to create connection'));
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  function handleTestConnection() {
-    alert('Connection testing needs to be implemented');
+  async function handleTestConnection(connection) {
+    setTestingId(connection.id);
+    setError(null);
+    try {
+      const result = await testConnection(token, connection.id);
+      setTestResults(prev => ({ ...prev, [connection.id]: result }));
+      if (!result?.success) {
+        setError(result?.message || 'Connection test failed');
+      }
+    } catch (err) {
+      const message = getConnectionErrorMessage(err, 'Connection test failed');
+      setError(message);
+      setTestResults(prev => ({
+        ...prev,
+        [connection.id]: { success: false, message },
+      }));
+    } finally {
+      setTestingId(null);
+    }
   }
 
   function startEditing(connection) {
@@ -93,12 +125,24 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
       name: connection.name,
       tenant_id: connection.tenant_id,
       client_id: connection.client_id,
-      client_secret: '',
+      // Never expose the actual secret; show a mask so it doesn't look blank.
+      client_secret: CLIENT_SECRET_MASK,
     });
   }
 
   function handleEditChange(e) {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    let { value } = e.target;
+
+    // If the user starts typing while the masked placeholder is present,
+    // ensure we don't keep the mask characters in state.
+    if (
+      name === 'client_secret' &&
+      editFormData.client_secret === CLIENT_SECRET_MASK &&
+      value.startsWith(CLIENT_SECRET_MASK)
+    ) {
+      value = value.slice(CLIENT_SECRET_MASK.length);
+    }
     setEditFormData(prev => ({ ...prev, [name]: value }));
   }
 
@@ -113,7 +157,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
         client_id: editFormData.client_id,
       };
       // Only include client_secret if user entered a new one
-      if (editFormData.client_secret) {
+      if (editFormData.client_secret && editFormData.client_secret !== CLIENT_SECRET_MASK) {
         updateData.client_secret = editFormData.client_secret;
       }
 
@@ -123,7 +167,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
       );
       setEditingConnection(null);
     } catch (err) {
-      setError(err.message || 'Failed to update connection');
+      setError(getConnectionErrorMessage(err, 'Failed to update connection'));
     } finally {
       setIsEditing(false);
     }
@@ -374,7 +418,12 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                   type="password"
                   value={editFormData.client_secret}
                   onChange={handleEditChange}
-                  placeholder="Leave blank to keep current secret"
+                  placeholder="Enter a new client secret"
+                  onFocus={(e) => {
+                    if (e.target.value === CLIENT_SECRET_MASK) {
+                      e.target.select();
+                    }
+                  }}
                   disabled={isEditing}
                 />
               </div>
@@ -420,6 +469,22 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                 <div className="connection-info">
                   <div className="connection-header">
                     <h4>{connection.name}</h4>
+                    {testingId === connection.id ? (
+                      <span className="status-badge pending">
+                        <Loader2 size={12} className="spinning status-icon pending" />
+                        <span>Testing</span>
+                      </span>
+                    ) : testResults[connection.id]?.success === true ? (
+                      <span className="status-badge connected">
+                        <CheckCircle2 size={12} className="status-icon success" />
+                        <span>Connected</span>
+                      </span>
+                    ) : testResults[connection.id]?.success === false ? (
+                      <span className="status-badge failed">
+                        <XCircle size={12} className="status-icon error" />
+                        <span>Failed</span>
+                      </span>
+                    ) : null}
                   </div>
                   <div className="connection-details">
                     <span className="detail-item">
@@ -428,15 +493,30 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                     <span className="detail-item">
                       <strong>Client ID:</strong> {connection.client_id}
                     </span>
+                    {testResults[connection.id]?.tenant_display_name ? (
+                      <span className="detail-item">
+                        <strong>Tenant:</strong> {testResults[connection.id].tenant_display_name}
+                      </span>
+                    ) : null}
+                    {testResults[connection.id]?.default_domain ? (
+                      <span className="detail-item">
+                        <strong>Default Domain:</strong> {testResults[connection.id].default_domain}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 <div className="connection-actions">
                   <button
                     className="toolbar-button secondary"
-                    onClick={handleTestConnection}
+                    onClick={() => handleTestConnection(connection)}
+                    disabled={testingId === connection.id}
                   >
-                    <RefreshCw size={14} />
-                    <span>Test</span>
+                    {testingId === connection.id ? (
+                      <Loader2 size={14} className="spinning" />
+                    ) : (
+                      <RefreshCw size={14} />
+                    )}
+                    <span>{testingId === connection.id ? 'Testing...' : 'Test'}</span>
                   </button>
                   <button
                     className="toolbar-button secondary"
