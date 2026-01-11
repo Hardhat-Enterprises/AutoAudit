@@ -121,8 +121,18 @@ async def test_collector(
 
     # Create collector and appropriate client
     collector = get_collector(collector_id)
+    client = None
+    graph_client = None
+    ps_client = None
+
     if isinstance(collector, BasePowerShellCollector):
         client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
+    elif collector_id.startswith("sharepoint."):
+        client = get_sharepoint_client(tenant_id, client_id, client_secret)
+    elif collector_id == "exchange.protection.priority_accounts":
+        graph_client = GraphClient(tenant_id, client_id, client_secret)
+        ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
+        client = graph_client
     else:
         client = GraphClient(tenant_id, client_id, client_secret)
 
@@ -133,7 +143,15 @@ async def test_collector(
 
     start = datetime.now()
     try:
-        result = await collector.collect(client)
+        try:
+            result = await collector.collect(client)
+        except Exception as e:
+            # Priority accounts: fall back to PowerShell if Graph path fails
+            if collector_id == "exchange.protection.priority_accounts" and ps_client:
+                result = await collector.collect(ps_client)
+            else:
+                raise e
+
         elapsed = (datetime.now() - start).total_seconds()
         print(f"Collection completed in {elapsed:.2f}s")
     except NotImplementedError:
@@ -188,6 +206,7 @@ async def test_all_collectors(
     tenant_id, client_id, client_secret = get_credentials()
     graph_client = GraphClient(tenant_id, client_id, client_secret)
     ps_client = None  # Lazy init PowerShell client
+    priority_ps_client = None
 
     results = []
     for collector_id in sorted(DATA_COLLECTORS.keys()):
@@ -201,12 +220,24 @@ async def test_all_collectors(
             client = ps_client
         elif collector_id.startswith("sharepoint."):
             client = get_sharepoint_client(tenant_id, client_id, client_secret)
+        elif collector_id == "exchange.protection.priority_accounts":
+            # Try Graph first; if it fails, fall back to PowerShell
+            client = graph_client
+            if priority_ps_client is None:
+                priority_ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
         else:
             client = graph_client
 
         start = datetime.now()
         try:
-            result = await collector.collect(client)
+            try:
+                result = await collector.collect(client)
+            except Exception:
+                if collector_id == "exchange.protection.priority_accounts" and priority_ps_client:
+                    result = await collector.collect(priority_ps_client)
+                else:
+                    raise
+
             elapsed = (datetime.now() - start).total_seconds()
             status = "OK"
             error = None

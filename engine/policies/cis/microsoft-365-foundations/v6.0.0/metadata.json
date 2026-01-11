@@ -62,7 +62,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.roles.admin_license_footprint",
       "policy_file": null,
       "requires_permissions": null,
       "notes": "Need to check user license assignments"
@@ -482,7 +482,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "exchange.protection.priority_accounts",
       "policy_file": null,
       "requires_permissions": null,
       "notes": "Need Priority Account Protection collector"
@@ -497,7 +497,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "exchange.protection.priority_accounts",
       "policy_file": null,
       "requires_permissions": null,
       "notes": "Need Priority Account Protection collector"
@@ -812,7 +812,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.laps_policy",
       "policy_file": null,
       "requires_permissions": null,
       "notes": "Need LAPS configuration collector"

@@ -14,6 +14,9 @@ from collectors.entra.applications.service_principals import (
     ServicePrincipalsDataCollector,
 )
 
+# Devices
+from collectors.entra.devices.laps_policy import LapsPolicyDataCollector
+
 # Authentication
 from collectors.entra.authentication.authentication_methods import (
     AuthenticationMethodsDataCollector,
@@ -74,6 +77,9 @@ from collectors.entra.policies.b2b_policy import B2BPolicyDataCollector
 from collectors.entra.roles.cloud_only_admins import CloudOnlyAdminsDataCollector
 from collectors.entra.roles.directory_roles import DirectoryRolesDataCollector
 from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
+from collectors.entra.roles.admin_license_footprint import (
+    AdminLicenseFootprintDataCollector,
+)
 
 # Users
 from collectors.entra.users.users import UsersDataCollector
@@ -178,6 +184,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.conditional_access.policies": ConditionalAccessPoliciesDataCollector,
     "entra.conditional_access.legacy_auth_block": LegacyAuthBlockDataCollector,
     # Devices
+    "entra.devices.laps_policy": LapsPolicyDataCollector,
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
@@ -195,6 +202,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.policies.authorization_policy": AuthorizationPolicyDataCollector,
     "entra.policies.b2b_policy": B2BPolicyDataCollector,
     # Roles
+    "entra.roles.admin_license_footprint": AdminLicenseFootprintDataCollector,
     "entra.roles.cloud_only_admins": CloudOnlyAdminsDataCollector,
     "entra.roles.directory_roles": DirectoryRolesDataCollector,
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,
