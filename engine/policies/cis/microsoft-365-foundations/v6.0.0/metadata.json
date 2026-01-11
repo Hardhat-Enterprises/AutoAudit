@@ -1457,7 +1457,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
-      "data_collector_id": "exchange.organization.organization_config",
+      "data_collector_id": "exchange.organization.transport_config",
       "policy_file": "6.5.4_smtp_auth.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -1472,7 +1472,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
-      "data_collector_id": "exchange.organization.transport_config",
+      "data_collector_id": "exchange.organization.organization_config",
       "policy_file": "6.5.5_direct_send.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null

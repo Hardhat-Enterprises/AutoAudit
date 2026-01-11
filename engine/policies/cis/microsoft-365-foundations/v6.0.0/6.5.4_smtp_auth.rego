@@ -22,7 +22,7 @@ package cis.microsoft_365_foundations.v6_0_0.control_6_5_4
 default result := {"compliant": false, "message": "Evaluation failed"}
 
 result := output if {
-    smtp_auth_disabled := input.smtp_client_auth_disabled
+    smtp_auth_disabled := input.smtp_client_authentication_disabled
 
     # Compliant when SMTP client authentication is disabled
     compliant := smtp_auth_disabled == true

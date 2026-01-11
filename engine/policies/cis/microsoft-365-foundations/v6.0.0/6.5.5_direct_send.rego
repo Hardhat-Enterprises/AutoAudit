@@ -22,41 +22,33 @@ package cis.microsoft_365_foundations.v6_0_0.control_6_5_5
 default result := {"compliant": false, "message": "Evaluation failed"}
 
 result := output if {
-    transport_config := input.transport_config
-    smtp_auth_disabled := input.smtp_client_authentication_disabled
+    reject_direct_send := input.reject_direct_send
 
-    # Direct Send is blocked when SMTP client authentication is disabled
-    # Additional check: ExternalSubmissionEnabled should be False for full compliance
-    external_submission := transport_config.ExternalDelayDsnEnabled
-
-    # Compliant when SMTP client authentication is disabled
-    compliant := smtp_auth_disabled == true
+    # Compliant when RejectDirectSend is true
+    compliant := reject_direct_send == true
 
     output := {
         "compliant": compliant,
-        "message": generate_message(smtp_auth_disabled),
+        "message": generate_message(reject_direct_send),
         "affected_resources": generate_affected_resources(compliant),
         "details": {
-            "smtp_client_authentication_disabled": smtp_auth_disabled,
-            "transport_config": {
-                "external_delay_dsn_enabled": external_submission
-            }
+            "reject_direct_send": reject_direct_send
         }
     }
 }
 
-generate_message(smtp_auth_disabled) := msg if {
-    smtp_auth_disabled == true
-    msg := "Direct Send submissions are blocked (SMTP client auth disabled)"
+generate_message(reject_direct_send) := msg if {
+    reject_direct_send == true
+    msg := "Direct Send submissions are rejected"
 }
 
-generate_message(smtp_auth_disabled) := msg if {
-    smtp_auth_disabled == false
-    msg := "Direct Send submissions are allowed (SMTP client auth enabled)"
+generate_message(reject_direct_send) := msg if {
+    reject_direct_send == false
+    msg := "Direct Send submissions are allowed (RejectDirectSend is False)"
 }
 
-generate_message(smtp_auth_disabled) := msg if {
-    smtp_auth_disabled == null
+generate_message(reject_direct_send) := msg if {
+    reject_direct_send == null
     msg := "Unable to determine Direct Send status"
 }
 

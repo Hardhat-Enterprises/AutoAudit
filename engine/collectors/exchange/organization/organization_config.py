@@ -1,7 +1,7 @@
 """Organization config collector.
 
 CIS Microsoft 365 Foundations Benchmark Controls:
-    v6.0.0: 1.3.6, 1.3.9, 6.1.1, 6.5.1, 6.5.2, 6.5.4, 6.5.5
+    v6.0.0: 1.3.6, 1.3.9, 6.1.1, 6.5.1, 6.5.2, 6.5.5
 
 Control Descriptions:
     1.3.6 - Ensure Customer Lockbox is enabled
@@ -9,8 +9,7 @@ Control Descriptions:
     6.1.1 - Ensure AuditDisabled is set to False (mailbox auditing at org level)
     6.5.1 - Ensure SMTP AUTH is disabled
     6.5.2 - Ensure all senders are notified when mail is blocked
-    6.5.4 - Ensure Direct Send is disabled
-    6.5.5 - Ensure IMAP is disabled for all users
+    6.5.5 - Ensure Direct Send submissions are rejected
 
 Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
@@ -40,7 +39,7 @@ class OrganizationConfigDataCollector(BasePowerShellCollector):
             - customer_lockbox_enabled: Customer lockbox status (CIS 1.3.6)
             - oauth_enabled: OAuth authentication status
             - audit_disabled: Whether audit is disabled (CIS 6.1.1)
-            - smtp_client_auth_disabled: SMTP client auth status (CIS 6.5.1)
+            - reject_direct_send: Whether direct send is rejected (CIS 6.5.5)
         """
         config = await client.run_cmdlet("ExchangeOnline", "Get-OrganizationConfig")
 
@@ -49,5 +48,5 @@ class OrganizationConfigDataCollector(BasePowerShellCollector):
             "customer_lockbox_enabled": config.get("CustomerLockBoxEnabled"),
             "oauth_enabled": config.get("OAuth2ClientProfileEnabled"),
             "audit_disabled": config.get("AuditDisabled"),
-            "smtp_client_auth_disabled": config.get("SmtpClientAuthenticationDisabled"),
+            "reject_direct_send": config.get("RejectDirectSend"),
         }
