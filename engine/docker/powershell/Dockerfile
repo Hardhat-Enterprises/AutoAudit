@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0
+FROM mcr.microsoft.com/powershell:7.5-mariner-2.0
 
 # Install PowerShell modules for M365 management
 RUN pwsh -NoProfile -Command " \

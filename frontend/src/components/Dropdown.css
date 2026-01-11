@@ -4,7 +4,8 @@ Updated with theme support while preserving original design */
 
 /* Dark theme (default) - aligned with Landing/Dashboard palette */
 .chart-dropdown {
-  --dropdown-bg-primary: var(--bg-secondary, rgba(255, 255, 255, 0.03));
+  /* Use a truly opaque surface for the open menu so options remain readable above any content. */
+  --dropdown-bg-primary: rgb(var(--surface-2, 30 41 59));
   --dropdown-bg-secondary: var(--bg-tertiary, rgba(255, 255, 255, 0.05));
   --dropdown-text-primary: var(--text-secondary, #b0c4de);
   --dropdown-text-secondary: var(--text-tertiary, #94a3b8);

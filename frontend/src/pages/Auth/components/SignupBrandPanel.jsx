@@ -1,9 +1,10 @@
 import React from "react";
+import { BarChart3, Lock, Zap } from "lucide-react";
 
 const featureItems = [
-  { icon: "⚡", text: "Setup in minutes, not hours" },
-  { icon: "🔒", text: "Bank-level security & encryption" },
-  { icon: "📊", text: "Real-time compliance monitoring" },
+  { icon: Zap, text: "Setup in minutes, not hours" },
+  { icon: Lock, text: "Bank-level security & encryption" },
+  { icon: BarChart3, text: "Real-time compliance monitoring" },
 ];
 
 const SignupBrandPanel = () => {
@@ -33,14 +34,17 @@ const SignupBrandPanel = () => {
         </div>
 
         <div className="signup-brand__features" aria-label="AutoAudit highlights">
-          {featureItems.map((item) => (
-            <article key={item.text} className="signup-brand__feature">
-              <span className="signup-brand__feature-icon" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span>{item.text}</span>
-            </article>
-          ))}
+          {featureItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <article key={item.text} className="signup-brand__feature">
+                <span className="signup-brand__feature-icon" aria-hidden="true">
+                  <Icon size={18} strokeWidth={2.2} />
+                </span>
+                <span>{item.text}</span>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

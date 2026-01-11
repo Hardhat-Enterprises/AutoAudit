@@ -47,4 +47,10 @@ class M365ConnectionTestResult(BaseModel):
 
     success: bool
     message: str
+    # Backwards-compatible display field (legacy)
     tenant_name: str | None = None
+
+    # Preferred structured tenant details
+    tenant_display_name: str | None = None
+    default_domain: str | None = None
+    verified_domains: list[str] | None = None

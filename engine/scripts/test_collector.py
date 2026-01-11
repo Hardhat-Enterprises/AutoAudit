@@ -88,6 +88,7 @@ async def test_collector(
     collector_id: str,
     output_dir: Path | None = None,
     verbose: bool = False,
+    service_url: str | None = None,
 ) -> dict:
     """Run a collector and return/save results.
 
@@ -95,6 +96,7 @@ async def test_collector(
         collector_id: The collector ID to run (e.g., 'entra.roles.cloud_only_admins')
         output_dir: Optional directory to save JSON output
         verbose: If True, print additional debug info
+        service_url: Optional PowerShell HTTP service URL
 
     Returns:
         Dict containing collector_id, timestamp, elapsed_seconds, and data
@@ -113,17 +115,14 @@ async def test_collector(
     if verbose:
         print(f"Tenant ID: {tenant_id}")
         print(f"Client ID: {client_id}")
+        if service_url:
+            print(f"Using PowerShell service: {service_url}")
         print()
 
     # Create collector and appropriate client
     collector = get_collector(collector_id)
     if isinstance(collector, BasePowerShellCollector):
-        client = PowerShellClient(tenant_id, client_id, client_secret)
-    elif collector_id.startswith("sharepoint."):
-        client = get_sharepoint_client(tenant_id, client_id, client_secret)
-    elif collector_id == "exchange.protection.priority_accounts":
-        # This collector can fall back to PowerShell; provide PS client so both paths are available.
-        client = PowerShellClient(tenant_id, client_id, client_secret)
+        client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
     else:
         client = GraphClient(tenant_id, client_id, client_secret)
 
@@ -176,9 +175,14 @@ async def test_collector(
     return output
 
 
-async def test_all_collectors(output_dir: Path | None = None) -> None:
+async def test_all_collectors(
+    output_dir: Path | None = None,
+    service_url: str | None = None,
+) -> None:
     """Test all registered collectors and report status."""
     print("Testing all registered collectors...")
+    if service_url:
+        print(f"Using PowerShell service: {service_url}")
     print("=" * 60)
 
     tenant_id, client_id, client_secret = get_credentials()
@@ -193,7 +197,7 @@ async def test_all_collectors(output_dir: Path | None = None) -> None:
         # Use appropriate client based on collector type
         if isinstance(collector, BasePowerShellCollector):
             if ps_client is None:
-                ps_client = PowerShellClient(tenant_id, client_id, client_secret)
+                ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
             client = ps_client
         elif collector_id.startswith("sharepoint."):
             client = get_sharepoint_client(tenant_id, client_id, client_secret)
@@ -272,6 +276,9 @@ Examples:
   python -m scripts.test_collector -c entra.roles.cloud_only_admins -o ./samples/
   python -m scripts.test_collector --all -o ./samples/
 
+  # Use PowerShell HTTP service instead of local Docker
+  python -m scripts.test_collector -c exchange.organization.organization_config --use-service http://localhost:8001
+
 Environment Variables:
   M365_TENANT_ID      Azure AD tenant ID
   M365_CLIENT_ID      App registration client ID
@@ -302,6 +309,13 @@ Environment Variables:
         action="store_true",
         help="Show verbose output including credentials (masked) and stack traces",
     )
+    parser.add_argument(
+        "--use-service",
+        type=str,
+        default=None,
+        metavar="URL",
+        help="Use PowerShell HTTP service instead of Docker (e.g., http://localhost:8001)",
+    )
 
     args = parser.parse_args()
 
@@ -310,13 +324,13 @@ Environment Variables:
         return
 
     if args.all:
-        asyncio.run(test_all_collectors(args.output))
+        asyncio.run(test_all_collectors(args.output, args.use_service))
         return
 
     if not args.collector:
         parser.error("--collector is required (or use --list to see available collectors)")
 
-    asyncio.run(test_collector(args.collector, args.output, args.verbose))
+    asyncio.run(test_collector(args.collector, args.output, args.verbose, args.use_service))
 
 
 if __name__ == "__main__":
