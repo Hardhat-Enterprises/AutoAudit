@@ -338,6 +338,7 @@ async def _evaluate_control_async(
             tenant_id=credentials["tenant_id"],
             client_id=credentials["client_id"],
             client_secret=credentials["client_secret"],
+            service_url=settings.POWERSHELL_SERVICE_URL,
         )
     else:
         # Entra and other collectors use Graph API
