@@ -16,9 +16,9 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "entra.roles.cloud_only_admins",
-      "policy_file": null,
+      "policy_file": "1.1.1_admin_cloud_only.rego",
       "requires_permissions": ["User.Read.All", "RoleManagement.Read.Directory"],
       "notes": null
     },
@@ -961,9 +961,9 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "entra.conditional_access.legacy_auth_block",
-      "policy_file": null,
+      "policy_file": "5.2.2.3_block_legacy_auth.rego",
       "requires_permissions": ["Policy.Read.All"],
       "notes": null
     },
