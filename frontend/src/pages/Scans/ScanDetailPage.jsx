@@ -87,7 +87,53 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
 
   function formatDate(dateString) {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleString();
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return '-';
+    // Force "DD Mon YYYY" and show timezone explicitly.
+    return d.toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  }
+
+  function formatTime(dateString) {
+    if (!dateString) return '-';
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return '-';
+
+    function getLocalTimeZoneAbbr(dateObj) {
+      const longName = new Intl.DateTimeFormat('en-US', {
+        timeZoneName: 'long',
+      }).formatToParts(dateObj).find(p => p.type === 'timeZoneName')?.value;
+
+      if (!longName) return '';
+      if (longName ==='India Standard Time') return 'IST';
+      if (longName === 'Coordinated Universal Time') return 'UTC';
+      if (longName === 'Greenwich Mean Time') return 'GMT';
+      if (longName === 'Universal Coordinated Time') return 'UTC';
+
+      const embedded = longName.match(/\b[A-Z]{2,6}\b/)?.[0];
+      if (embedded) return embedded;
+
+      const words = longName
+        .replace(/[^A-Za-z\s]/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean);
+      const trimmed = words.filter((w, idx) => !(idx === words.length - 1 && w.toLowerCase() === 'time'));
+      const abbr = trimmed.map(w => w[0]).join('').toUpperCase();
+      return abbr.length >= 2 ? abbr : '';
+    }
+
+    const timeCore = new Intl.DateTimeFormat('en-GB', {
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      fractionalSecondDigits: 3,
+      hour12: true,
+    }).format(d);
+    const tzAbbr = getLocalTimeZoneAbbr(d);
+    return tzAbbr ? `${timeCore} ${tzAbbr}` : timeCore;
   }
 
   function getResultIcon(status) {
@@ -175,6 +221,11 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     errors: scan.error_count || 0,
     pending: (scan.total_controls || 0) - (scan.passed_count || 0) - (scan.failed_count || 0) - (scan.error_count || 0) - (scan.skipped_count || 0),
   };
+  const done = summary.passed + summary.failed + summary.errors + (scan.skipped_count || 0);
+  const progressPercent =
+    summary.total > 0
+      ? Math.min(100, Math.round((done / summary.total) * 100))
+      : scan.status === 'completed' ? 100: 0;
   const results = scan.results || [];
 
   return (
@@ -212,15 +263,31 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
           <div className="scan-meta">
             <div className="meta-item">
               <span className="meta-label">Connection</span>
-              <span className="meta-value">{scan.connection_name || '-'}</span>
+              <span className="meta-value">
+                {scan.connection_name || (scan.m365_connection_id ? `Connection #${scan.m365_connection_id}` : '-')}
+              </span>
             </div>
             <div className="meta-item">
               <span className="meta-label">Started</span>
-              <span className="meta-value">{formatDate(scan.created_at)}</span>
+              <div className="meta-value">
+                <div className="meta-date">{formatDate(scan.started_at || scan.created_at)}</div>
+                <div className="meta-time">{formatTime(scan.started_at || scan.created_at)}</div>
+              </div>
             </div>
             <div className="meta-item">
               <span className="meta-label">Completed</span>
-              <span className="meta-value">{formatDate(scan.completed_at)}</span>
+              {scan.finished_at || scan.completed_at ? (
+                <div className="meta-value">
+                  <div className="meta-date">{formatDate(scan.finished_at || scan.completed_at)}</div>
+                  <div className="meta-time">{formatTime(scan.finished_at || scan.completed_at)}</div>
+                </div>
+              ) : (
+                <div className="meta-value">
+                  <div className="meta-date">
+                    {(scan.status === 'pending' || scan.status === 'running') ? 'In progress' : '-'}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -234,8 +301,22 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                 <p>
                   {scan.status === 'pending'
                     ? 'Waiting to start...'
-                    : `Evaluating controls... ${summary.passed + summary.failed + summary.errors} of ${summary.total} complete`}
+                    : `Evaluating controls... ${done} of ${summary.total} complete`}
                 </p>
+              </div>
+            </div>
+
+            <div className="scan-progress-bar">
+              <div className="scan-progress-track">
+                <div
+                  className={`scan-progress-fill ${scan.status || 'pending'}`}
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <div className="scan-progress-meta">
+                <span>{done}/{summary.total} controls</span>
+                <span className="scan-progress-sep">•</span>
+                <span>{progressPercent}%</span>
               </div>
             </div>
           </div>

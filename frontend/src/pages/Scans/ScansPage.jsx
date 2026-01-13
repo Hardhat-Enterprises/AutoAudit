@@ -123,7 +123,58 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
 
   function formatDate(dateString) {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleString();
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return '-';
+    // Prettier "DD Mon YYYY" + "h:mm AM TZ" (2-line in UI).
+    const date = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(d);
+
+    function getLocalTimeZoneAbbr(dateObj) {
+      // Use the *local* timezone name and derive an abbreviation (e.g., "India Standard Time" -> "IST").
+      const longName = new Intl.DateTimeFormat('en-US', {
+        timeZoneName: 'long',
+      }).formatToParts(dateObj).find(p => p.type === 'timeZoneName')?.value;
+      console.log(longName);
+      if (!longName) return '';
+      if (longName ==='India Standard Time') return 'IST';// Common canonical names that shouldn't be initialised.
+      if (longName === 'Coordinated Universal Time') return 'UTC';
+      if (longName === 'Greenwich Mean Time') return 'GMT';
+      if (longName === 'Universal Coordinated Time') return 'UTC';
+
+      // If a long name already contains a clean abbreviation, prefer it.
+      const embedded = longName.match(/\b[A-Z]{2,6}\b/)?.[0];
+      if (embedded) return embedded;
+
+      // Initialism from words, dropping common filler.
+      const stop = new Set(['time', 'standard', 'daylight']);
+      const words = longName
+        .replace(/[^A-Za-z\s]/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean);
+
+      // Keep 'Standard'/'Daylight' because they matter (EST vs EDT, AEST vs AEDT).
+      // Only drop the generic trailing "Time".
+      const trimmed = words.filter((w, idx) => !(idx === words.length - 1 && w.toLowerCase() === 'time'));
+      const abbr = trimmed.map(w => w[0]).join('').toUpperCase();
+
+      // Fallback to the long name if initialism is weirdly short.
+      return abbr.length >= 2 ? abbr : '';
+    }
+
+    const timeCore = new Intl.DateTimeFormat('en-GB', {
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      fractionalSecondDigits: 3,
+      hour12: true,
+    }).format(d);
+    const tzAbbr = getLocalTimeZoneAbbr(d);
+    const time = tzAbbr ? `${timeCore} ${tzAbbr}` : timeCore;
+
+    return { date, time };
   }
 
   if (isLoading) {
@@ -303,8 +354,19 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                       </span>
                       <span className="benchmark-version">{scan.version || ''}</span>
                     </td>
-                    <td>{scan.connection_name || '-'}</td>
-                    <td>{formatDate(scan.created_at)}</td>
+                    <td>{scan.connection_name || (scan.m365_connection_id ? `Connection #${scan.m365_connection_id}` : '-')}</td>
+                    <td>
+                      {(() => {
+                        const dt = formatDate(scan.started_at || scan.created_at);
+                        if (dt === '-') return '-';
+                        return (
+                          <div className="datetime">
+                            <div className="date">{dt.date}</div>
+                            <div className="time">{dt.time}</div>
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td>
                       {scan.status === 'completed' || scan.status === 'running' ? (
                         <div className="results-summary">
