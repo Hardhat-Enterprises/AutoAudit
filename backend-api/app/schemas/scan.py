@@ -50,6 +50,7 @@ class ScanRead(BaseModel):
     id: int
     user_id: int
     m365_connection_id: int | None
+    connection_name: str | None = None
     azure_connection_id: int | None
     gcp_connection_id: int | None
     aws_connection_id: int | None
@@ -77,6 +78,7 @@ class ScanListItem(BaseModel):
     id: int
     user_id: int
     m365_connection_id: int | None
+    connection_name: str | None = None
     framework: str
     benchmark: str
     version: str
