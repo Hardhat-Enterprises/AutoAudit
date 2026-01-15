@@ -23,6 +23,9 @@ class WorkerSettings(BaseSettings):
     # Policies directory
     POLICIES_DIR: str = os.path.join(os.path.dirname(__file__), "..", "policies")
 
+    # PowerShell service URL (optional - if set, uses HTTP instead of Docker)
+    POWERSHELL_SERVICE_URL: str | None = None
+
     class Config:
         env_file = ".env"
 

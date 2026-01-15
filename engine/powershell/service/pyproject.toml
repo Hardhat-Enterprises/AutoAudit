@@ -1,0 +1,10 @@
+[project]
+name = "powershell-service"
+version = "1.0.0"
+description = "HTTP service for executing M365 PowerShell cmdlets"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+]
