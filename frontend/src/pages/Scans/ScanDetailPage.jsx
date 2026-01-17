@@ -15,6 +15,21 @@ import { useAuth } from '../../context/AuthContext';
 import { getScan } from '../../api/client';
 import './ScanDetailPage.css';
 
+function compareControlIdAscending(a, b) {
+  const aId = (a?.control_id || '').toString();
+  const bId = (b?.control_id || '').toString();
+  const aParts = aId.split('.').map(s => Number.parseInt(s, 10));
+  const bParts = bId.split('.').map(s => Number.parseInt(s, 10));
+
+  const len = Math.max(aParts.length, bParts.length);
+  for (let i = 0; i < len; i++) {
+    const av = Number.isFinite(aParts[i]) ? aParts[i] : -1;
+    const bv = Number.isFinite(bParts[i]) ? bParts[i] : -1;
+    if (av !== bv) return av - bv;
+  }
+  return aId.localeCompare(bId);
+}
+
 const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const { scanId } = useParams();
   const navigate = useNavigate();
@@ -226,7 +241,10 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     summary.total > 0
       ? Math.min(100, Math.round((done / summary.total) * 100))
       : scan.status === 'completed' ? 100: 0;
-  const results = scan.results || [];
+  const results = (scan.results || [])
+    .filter(r => (r?.status || '').toLowerCase() !== 'skipped')
+    .slice()
+    .sort(compareControlIdAscending);
 
   return (
     <div
