@@ -1,7 +1,7 @@
 """Scan API endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -184,37 +184,3 @@ async def get_scan_results(
 
     results = await db.execute(query)
     return list(results.scalars().all())
-
-
-@router.delete("/{scan_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_scan(
-    scan_id: int,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session),
-) -> None:
-    """Delete a scan and its results.
-
-    Only allow deleting scans that are no longer running to avoid race conditions
-    with in-flight Celery tasks updating scan results.
-    """
-    result = await db.execute(
-        select(Scan).where(Scan.id == scan_id, Scan.user_id == current_user.id)
-    )
-    scan = result.scalar_one_or_none()
-    if not scan:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Scan {scan_id} not found",
-        )
-#prevent this from the ui itself by hiding/disabling the button when the scanning is happening
-    if scan.status in {"pending", "running"}:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot delete a scan while it is pending or running",
-        )
-
-    # Explicitly delete child rows to avoid relying on DB-level cascades.
-    await db.execute(delete(ScanResult).where(ScanResult.scan_id == scan_id))
-    await db.delete(scan)
-    await db.commit()
-    return None

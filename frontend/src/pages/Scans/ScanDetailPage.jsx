@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getScan } from '../../api/client';
+import { formatDateAEST, formatTimeAEST } from '../../utils/helpers';
 import './ScanDetailPage.css';
 
 function compareControlIdAscending(a, b) {
@@ -101,54 +102,11 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   }
 
   function formatDate(dateString) {
-    if (!dateString) return '-';
-    const d = new Date(dateString);
-    if (Number.isNaN(d.getTime())) return '-';
-    // Force "DD Mon YYYY" and show timezone explicitly.
-    return d.toLocaleString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
+    return formatDateAEST(dateString);
   }
 
   function formatTime(dateString) {
-    if (!dateString) return '-';
-    const d = new Date(dateString);
-    if (Number.isNaN(d.getTime())) return '-';
-
-    function getLocalTimeZoneAbbr(dateObj) {
-      const longName = new Intl.DateTimeFormat('en-US', {
-        timeZoneName: 'long',
-      }).formatToParts(dateObj).find(p => p.type === 'timeZoneName')?.value;
-
-      if (!longName) return '';
-      if (longName ==='India Standard Time') return 'IST';
-      if (longName === 'Coordinated Universal Time') return 'UTC';
-      if (longName === 'Greenwich Mean Time') return 'GMT';
-      if (longName === 'Universal Coordinated Time') return 'UTC';
-
-      const embedded = longName.match(/\b[A-Z]{2,6}\b/)?.[0];
-      if (embedded) return embedded;
-
-      const words = longName
-        .replace(/[^A-Za-z\s]/g, ' ')
-        .split(/\s+/)
-        .filter(Boolean);
-      const trimmed = words.filter((w, idx) => !(idx === words.length - 1 && w.toLowerCase() === 'time'));
-      const abbr = trimmed.map(w => w[0]).join('').toUpperCase();
-      return abbr.length >= 2 ? abbr : '';
-    }
-
-    const timeCore = new Intl.DateTimeFormat('en-GB', {
-      hour: 'numeric',
-      minute: '2-digit',
-      second: '2-digit',
-      fractionalSecondDigits: 3,
-      hour12: true,
-    }).format(d);
-    const tzAbbr = getLocalTimeZoneAbbr(d);
-    return tzAbbr ? `${timeCore} ${tzAbbr}` : timeCore;
+    return formatTimeAEST(dateString);
   }
 
   function getResultIcon(status) {
