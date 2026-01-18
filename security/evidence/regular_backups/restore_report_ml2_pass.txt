@@ -1,5 +1,3 @@
-restore_test=full
-status=success
 restore_test=item-level
 status=success
-common_point=cp1
+common_point=true

@@ -1,152 +1,126 @@
 # Regular Backups (RB) strategy
 
-This strategy checks evidence for Essential Eight Regular Backups controls.
+This strategy checks evidence for the ACSC Essential Eight **Regular Backups** control.
 
-It supports detection for both Maturity Level 1 (ML1) and Maturity Level 2 (ML2) requirements
-as defined by the Australian Cyber Security Centre (ACSC) Essential Eight framework.
+Evidence detection is **key=value driven**, deterministic, and case-insensitive. The parser extracts `key=value` pairs from anywhere in the text.
 
-The strategy analyses plain text evidence such as backup logs, audit records,
-policy exports, and restore test reports using keyword-based detection.
+> Note: Evidence screenshots must not be committed to the repo. Store them externally (PR attachments, OneDrive, SharePoint) and link them instead.
 
 ---
 
 ## 1. Tests implemented
 
-| Test ID     | Level | Sub-strategy                                           | What it checks                
-
-| ML1-RB-01   | ML1   | Backups are configured and recent                      | Whether backups are running successfully or failing              
-| ML1-RB-02   | ML1   | Backups stored offsite or immutable                    | Whether backups are offsite or immutable  
-| ML1-RB-03   | ML1   | Restore tests completed                                | Whether restore tests are performed and their outcome             |
-| ML1-RB-04   | ML1   | Backup retention policy in place                       | Whether a retention policy exists                                 |
-| ML1-RB-05   | ML1   | Backups encrypted                                      | Whether backups are encrypted                               
-| ML1-RB-06   | ML1   | Backup access restricted                               | Whether backup access is restricted to administrators             
-| ML2-RB-01   | ML2   | Backup jobs verified through audit logs                | Verification events recorded in audit logs                        
-| ML2-RB-02   | ML2   | Offsite + immutability enforced by policy              | Policy enforcement of offsite and immutable backups               
-| ML2-RB-03   | ML2   | Restore to a common point proven                       | Ability to restore data consistently to a common point            
-| ML2-RB-04   | ML2   | Retention and immutability meet policy baseline        | Alignment of retention and immutability with policy               
-| ML2-RB-05   | ML2   | Encryption enforcement verified                        | Encryption and KMS enforcement                                    
-| ML2-RB-06   | ML2   | Access control enforcement for backup administrators   | Enforcement of backup administrator access controls               
-
----
-
-## 2. How the scanner decides PASS and FAIL
-
-The strategy performs simple keyword checks on the extracted text.
-
-### ML1 tests
-
-#### **ML1-RB-01 Backups are configured and recent**
-- PASS if text contains:  
-  `status=success` or `last_backup=`
-- FAIL if text contains:  
-  `status=failure` or `reason=no_recent_backup`
-
-#### **ML1-RB-02 Offsite or immutable backups**
-- PASS if text contains:  
-  `backup_location=offsite` or `immutability=enabled` or `offsite`
-
-#### **ML1-RB-03 Restore tests completed**
-- PASS if text contains:  
-  `restore_test=full` and `status=success` and `common_point=true`
-- FAIL if text contains:  
-  `restore_test=full` and `status=fail`
-
-#### **ML1-RB-04 Backup retention policy**
-- PASS if text contains:  
-  `retention_policy=defined` or `retention_days=`
-
-#### **ML1-RB-05 Backups encrypted**
-- PASS if text contains:  
-  `encryption=aes-256`
-- FAIL if text contains:  
-  `encryption=none` or `unencrypted backup` or `kms=missing`
-
-#### **ML1-RB-06 Backup access restricted**
-- PASS if text contains:  
-  `access=restricted` and `role=backup-admin`
+| Test ID   | Level | Sub-strategy | What it checks |
+|----------|------|--------------|----------------|
+| ML1-RB-01 | ML1 | Backups configured and recent | Backup success or failure, including “no recent backup” reasons |
+| ML1-RB-02 | ML1 | Offsite OR immutable backups | Backups stored offsite, or immutability enabled |
+| ML1-RB-03 | ML1 | Restore test with proven restore point | Successful full restore plus evidence of a common restore point |
+| ML1-RB-04 | ML1 | Retention policy | Retention policy defined and retention days present |
+| ML1-RB-05 | ML1 | Backup encryption | Encryption enabled, KMS configured where relevant |
+| ML1-RB-06 | ML1 | Access control | Backup access restricted to backup administrators |
+| ML2-RB-01 | ML2 | Audit verification | Verification recorded and audit log presence |
+| ML2-RB-02 | ML2 | Policy enforcement | Policy enforced for offsite and immutability together |
+| ML2-RB-03 | ML2 | Restore consistency | Item-level restore success with a common point |
+| ML2-RB-04 | ML2 | Policy alignment | Retention and immutability aligned to baseline |
+| ML2-RB-05 | ML2 | Encryption enforcement | Encryption enforced with verified KMS |
+| ML2-RB-06 | ML2 | Access enforcement | Admin-only access enforced with auditing |
 
 ---
 
-### ML2 tests
+## 2. How PASS and FAIL are decided
 
-#### **ML2-RB-01 Backup jobs verified through audit logs**
-- PASS:  
-  Contains `backup job verified` and `verification=success`
-- FAIL:  
-  Contains `verification=fail` or `audit log missing`
+The strategy evaluates extracted `key=value` pairs. Extra descriptive text is allowed.
 
-#### **ML2-RB-02 Offsite and immutability enforced by policy**
-- PASS if text contains:  
-  `immutability=enabled` and `policy=enforced`
+### ML1 rules
 
-#### **ML2-RB-03 Restore to a common point proven**
-- PASS if text contains:  
-  `restore test=item-level` and `status=success` and `common point=`
-- FAIL if text contains:  
-  `restore test=item-level` and `status=fail`
+**ML1-RB-01 Backups configured and recent**
+- PASS when: `status=success`
+- FAIL when: `status=failure` or `status=fail` or `reason=no_recent_backup`
 
-#### **ML2-RB-04 Retention & immutability meet policy baseline**
-- PASS:  
-  `retention_days=30` and `immutability=enabled` and `policy_match=true`
-- FAIL:  
-  `retention<policy` or `immutability=disabled`
+**ML1-RB-02 Offsite OR immutable backups**
+- PASS when either: `backup_location=offsite` or `immutability=enabled`
+- FAIL when: `backup_location=local`
 
-#### **ML2-RB-05 Encryption enforcement verified**
-- PASS:  
-  `encryption=aes-256` and `kms=verified`
-- FAIL:  
-  `kms=missing` or `encryption=none` or `unencrypted backup`
+**ML1-RB-03 Restore test with proven restore point**
+- PASS when all are present: `restore_test=full`, `status=success`, and `common_point` (any value)
+- FAIL when: `restore_test=full` and (`status=failure` or `status=fail`)
 
-#### **ML2-RB-06 Access control enforcement**
-- PASS:  
-  `role=backup-admin` and `access=allowed` and `audit=success`
-- FAIL:  
-  `is_backup_admin=false` and `access=allowed`
+**ML1-RB-04 Retention policy**
+- PASS when: `retention_policy=defined` and `retention_days` is present
+- FAIL when: `retention_policy=missing` or `immutability=disabled`, or when retention is defined but `retention_days` is missing
+
+**ML1-RB-05 Backup encryption**
+- PASS when: `encryption=aes-256`
+- FAIL when: `encryption=none` or `kms=missing` (or text contains `unencrypted_backup`)
+
+**ML1-RB-06 Access control**
+- PASS when: `access=restricted` and (`role=backup-admin` or `role=backup_admin` or `is_backup_admin=true`)
+- FAIL when: `access=allowed` and the evidence does not indicate a backup admin role
+
+### ML2 rules
+
+ML2 checks run only when `_ml2` appears in the filename.
+
+**ML2-RB-01 Audit verification**
+- PASS when: `verification=success`
+- FAIL when: `verification=fail` or `audit_log=missing`
+
+**ML2-RB-02 Policy enforcement**
+- PASS when all are present: `policy=enforced`, `backup_location=offsite`, `immutability=enabled`
+- FAIL when `policy=enforced` is present but offsite and immutability are not both present
+
+**ML2-RB-03 Restore consistency**
+- PASS when: `restore_test=item-level`, `status=success`, and `common_point` is present
+- FAIL when: `restore_test=item-level` and (`status=failure` or `status=fail`)
+
+**ML2-RB-04 Policy alignment**
+- PASS when: `policy_match=true`, `immutability=enabled`, and `retention_days` is present
+- FAIL when: `retention_policy=missing` or `immutability=disabled`
+
+**ML2-RB-05 Encryption enforcement**
+- PASS when: `encryption=aes-256` and `kms=verified`
+- FAIL when: `encryption=none` and `kms=missing`
+
+**ML2-RB-06 Access enforcement**
+- PASS when all are present: backup admin role, `access=allowed`, `audit=success`, `is_backup_admin=true`
+- FAIL when: `access=allowed` and `is_backup_admin=false`
 
 ---
 
 ## 3. Evidence files used for testing
 
-These are the **exact contents from your test files**.
+Files are structured as **one outcome per file**, with no contradictory keys and no mixed restore types.
 
-### ML1 evidence files
+### ML1 evidence (no `_ml2`)
 
-| File | Content used by scanner |
-|------|--------------------------|
-| **backup_success.txt** | `status=success` `last_backup=2025-12-01T23:45Z` |
-| **backup_failed.txt** | `status=failure` `reason=no_recent_backup` |
-| **offsite_backup.txt** | `backup_location=offsite` `immutability=enabled` |
-| **retention_policy.txt** | `retention_policy=defined` `retention_days=30` |
-| **restore_test.txt** | `restore_test=full` `status=success` `common_point=true` |
-| **restore_failed.txt** | `restore_test=full` `status=fail` |
-| **encrypted_backup.txt** | `encryption=aes-256` |
-| **access_admin_only.txt** | `access=restricted` `role=backup-admin` |
+- `backup_success.txt`
+- `backup_failed.txt`
+- `offsite_backup.txt`
+- `retention_policy.txt`
+- `restore_test.txt`
+- `restore_failed.txt`
+- `Encrypted_backup.txt`
+- `access_admin_only.txt`
+- `repo_audit_pass.txt`
+- `repo_audit_fail.txt`
 
-### ML2 evidence files
+### ML2 evidence (`_ml2` required)
 
-| File | Content used by scanner |
-|------|--------------------------|
-| **backup_verification_ml2_pass.txt** | `backup job verified via audit log verification=success status=success` |
-| **backup_verification_ml2_fail.txt** | `backup job verification=fail audit log missing for backup` |
-| **offsite_policy_enforced_ml2.txt** | `offsite backup immutability=enabled policy=enforced` |
-| **restore_report_ml2_pass.txt** | `restore test=item-level status=success common point=2025-12-01T23:30Z` |
-| **restore_report_ml2_fail.txt** | `restore test=item-level status=fail` |
-| **policy_ml2_pass.txt** | `retention_days=30` `immutability=enabled` `policy_match=true` |
-| **policy_ml2_fail.txt** | `retention<policy immutability=disabled` |
-| **encryption_ml2_pass.txt** | `encryption=aes-256 kms=verified` |
-| **encryption_ml2_fail.txt** | `unencrypted backup kms=missing encryption=none` |
-| **access_admin_only_ml2.txt** | `role=backup-admin access=allowed audit=success` |
-| **repo_audit_fail.txt** | `role=sysadmin` `is_backup_admin=false` `access=allowed` `result=success` |
+- `backup_verification_ml2_pass.txt`
+- `backup_verification_ml2_fail.txt`
+- `offsite_policy_enforced_ml2.txt`
+- `restore_report_ml2_pass.txt`
+- `restore_report_ml2_fail.txt`
+- `policy_ml2_pass.txt`
+- `policy_ml2_fail.txt`
+- `encryption_ml2_pass.txt`
+- `encryption_ml2_fail.txt`
+- `access_admin_only_ml2.txt`
 
 ---
 
 ## 4. Strategy execution behaviour
 
-- Evidence files **without `_ml2`** in the filename are evaluated as **ML1 only**
-- Evidence files **with `_ml2`** in the filename are evaluated as **ML2 evidence**
-- ML2 evidence always produces **both ML1 and ML2 results**
-- ML2 PASS implies ML1 PASS
-- ML2 FAIL implies ML1 FAIL
-- No evidence file is ignored or produces empty results
-
-This ensures deterministic and auditable Essential Eight maturity assessment.
+- Files without `_ml2` → ML1-only evaluation
+- Files with `_ml2` → ML2 evaluation and output includes **both ML1 and ML2 rows**
+- No evidence file should produce empty output

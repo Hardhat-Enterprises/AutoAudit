@@ -1,5 +1,4 @@
-access=restricted
+access=allowed
 role=backup-admin
 is_backup_admin=true
-access=allowed
 audit=success

@@ -1,4 +1,2 @@
-restore_test=full
-status=failure
 restore_test=item-level
 status=failure
