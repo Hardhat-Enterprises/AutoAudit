@@ -10,7 +10,7 @@ if str(_REPO_ROOT) not in sys.path:
     
 from security.strategies import load_strategies
 
-#------------------------ Import core_ocr.py----------------
+#------------------------ Import core_ocr.py---------------
 from security.evidence_backend.core_ocr import extract_text_and_preview, SUPPORTED_ALL_EXTS
 
 # ------------------------ recent-scan logger (add-on) ----------------

@@ -71,7 +71,7 @@ class RegularBackups(Strategy):
     id = "RB"
     name = "Regular Backups"
 
-    # Map each ML2 control to the corresponding ML1 control for implied ML1 rows
+    # Map each ML2 control to the corresponding ML1 control for implied ML1 rows.
     _ML2_TO_ML1: Dict[str, Tuple[str, str]] = {
         "ML2-RB-01": ("ML1-RB-01", "Backups configured and recent"),
         "ML2-RB-02": ("ML1-RB-02", "Offsite or immutable backups"),
