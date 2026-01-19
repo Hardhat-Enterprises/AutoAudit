@@ -1,1 +1,4 @@
-retention=30days immutability=enabled
+retention_policy=defined
+retention_days=30
+immutability=enabled
+policy_match=true
