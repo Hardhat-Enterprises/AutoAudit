@@ -20,31 +20,35 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_5
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-non_compliant_policies = [policy.Name |
-    policy := input.policies[_]
-    (
-        policy.EnableATPForSPOTeamsODB == false
-        || policy.EnableSafeDocs == false
-        || policy.AllowSafeDocsOpen == true
-    )
+policy := input.atp_policy
+
+non_compliant_policies = [
+    { "Name": "ATPPolicy", "Issue": "EnableATPForSPOTeamsODB is disabled" } 
+    | policy.EnableATPForSPOTeamsODB == false
+] + [
+    { "Name": "ATPPolicy", "Issue": "EnableSafeDocs is disabled" } 
+    | policy.EnableSafeDocs == false
+] + [
+    { "Name": "ATPPolicy", "Issue": "AllowSafeDocsOpen should be false" } 
+    | policy.AllowSafeDocsOpen == true
 ]
 
 compliant := count(non_compliant_policies) == 0
 
-message_text := "Safe Attachments for SharePoint, OneDrive, and Teams is configured securely" if {
-    compliant == true
+message_text := "Safe Attachments for SharePoint, OneDrive, and Teams is configured securely" {
+    compliant
 }
 
-message_text := "Safe Attachments for SharePoint, OneDrive, or Teams is not configured securely" if {
-    compliant == false
+message_text := "Safe Attachments for SharePoint, OneDrive, or Teams is not configured securely" {
+    not compliant
 }
 
-affected_list := [] if {
-    compliant == true
+affected_list := [] {
+    compliant
 }
 
-affected_list := non_compliant_policies if {
-    compliant == false
+affected_list := non_compliant_policies {
+    not compliant
 }
 
 result := {
@@ -52,6 +56,6 @@ result := {
     "message": message_text,
     "affected_resources": affected_list,
     "details": {
-        "policies_evaluated": input.policies
+        "policy_evaluated": policy
     }
 }

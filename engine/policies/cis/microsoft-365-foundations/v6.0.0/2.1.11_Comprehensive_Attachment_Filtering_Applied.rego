@@ -44,37 +44,36 @@ passing_value := 0.9
 
 missing_exts[policy_identity] = missing {
     policy := input.malware_filter_policies[_]
-    policy_identity := policy.identity
+    policy_identity := policy.Identity
 
     missing := [ext |
         ext := attach_exts[_]
-        not ext in policy.file_types
+        not ext in policy.FileTypes
     ]
 }
 
 is_compliant[policy_identity] {
     policy := input.malware_filter_policies[_]
-    policy_identity := policy.identity
+    policy_identity := policy.Identity
 
     missing := missing_exts[policy_identity]
     fail_threshold := count(attach_exts) * (1 - passing_value)
 
     count(missing) <= fail_threshold
-    policy.enable_file_filter == true
+    policy.EnableFileFilter == true
 }
 
 any_policy_compliant {
     some i
-    is_compliant[input.malware_filter_policies[i].identity]
+    is_compliant[input.malware_filter_policies[i].Identity]
 }
 
 generate_message(true) := "Attachment filtering policy is correctly configured and enforced"
 generate_message(false) := "Attachment filtering policy is misconfigured or not enforced"
 
 generate_affected_resources(true, _) := []
-
 generate_affected_resources(false, data_input) := [
-    pol.identity |
+    pol.Identity |
     pol := data_input.malware_filter_policies[_]
 ]
 
