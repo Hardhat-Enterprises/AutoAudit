@@ -58,3 +58,5 @@ def load_strategies() -> List[Any]:
 
 def get_checker(strategy_name: str):
     return next((s for s in load_strategies() if getattr(s, "name", "") == strategy_name), None)
+
+##

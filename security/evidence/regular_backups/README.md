@@ -6,7 +6,6 @@ Evidence detection is **key=value driven**, deterministic, and case-insensitive.
 
 > Note: Evidence screenshots must not be committed to the repo. Store them externally (PR attachments, OneDrive, SharePoint) and link them instead.
 
----
 
 ## 1. Tests implemented
 
@@ -25,7 +24,7 @@ Evidence detection is **key=value driven**, deterministic, and case-insensitive.
 | ML2-RB-05 | ML2 | Encryption enforcement | Encryption enforced with verified KMS |
 | ML2-RB-06 | ML2 | Access enforcement | Admin-only access enforced with auditing |
 
----
+
 
 ## 2. How PASS and FAIL are decided
 

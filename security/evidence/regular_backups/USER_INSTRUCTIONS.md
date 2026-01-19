@@ -6,7 +6,7 @@ Evidence detection is **key=value driven**, deterministic, and case-insensitive.
 
 ---
 
-## 1. General rules
+## 1. General rules   
 
 - Files must be plain text (`.txt`)
 - Evidence is parsed using `key=value` pairs (anywhere in the text)

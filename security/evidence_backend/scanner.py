@@ -155,7 +155,7 @@ def main():
 
             if not raw_text.strip():
                 print("   (no readable text found)\n")
-                # record a row so you see the file in the CSV
+                # record a row so you can see the file in the CSV
                 report_rows.append((
                     user_id, fpath.name, strat.name, "", "", "",
                     "NO_TEXT", "Low",
