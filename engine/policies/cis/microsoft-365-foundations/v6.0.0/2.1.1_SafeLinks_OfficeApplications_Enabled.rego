@@ -23,20 +23,12 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_1
 default result := {"compliant": false, "message": "Evaluation failed"}
 
 required_fields := {
-    "ZapEnabled": true,
-    "ExceptIfConditions": "valid_condition"
+    "EnableSafeLinksForOffice": true
 }
 
 # Identify non-compliant fields in a policy
 non_compliant_fields(p) := {f |
-    # Manually check each required field
-    f := "ZapEnabled"
-    not p[f] = required_fields[f]
-} 
-
-non_compliant_fields(p) := {f |
-    # Manually check each required field
-    f := "ExceptIfConditions"
+    f := "EnableSafeLinksForOffice"
     not p[f] = required_fields[f]
 }
 
@@ -44,10 +36,9 @@ non_compliant_fields(p) := {f |
 policy_compliant(p) := true if count(non_compliant_fields(p)) == 0
 policy_compliant(p) := false if count(non_compliant_fields(p)) > 0
 
-# Generate a message based on compliance status
-generate_message(true, _) := "All Teams Protection policies are configured according to CIS recommendations"
+generate_message(true, _) := "All Safe Links policies for Office applications are compliant"
 generate_message(false, non_compliant) := sprintf(
-    "%d Teams Protection policy(ies) are not compliant with CIS recommendations",
+    "%d Safe Links policy(ies) for Office applications are not compliant",
     [count(non_compliant)]
 )
 

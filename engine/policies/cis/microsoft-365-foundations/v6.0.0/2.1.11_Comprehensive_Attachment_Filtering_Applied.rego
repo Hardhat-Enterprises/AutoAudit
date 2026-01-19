@@ -42,7 +42,7 @@ attach_exts := [
 
 passing_value := 0.9
 
-missing_exts[policy_identity] = missing if {
+missing_exts[policy_identity] = missing {
     policy := input.malware_filter_policies[_]
     policy_identity := policy.identity
 
@@ -52,44 +52,20 @@ missing_exts[policy_identity] = missing if {
     ]
 }
 
-is_compliant[policy_identity] if {
+is_compliant[policy_identity] {
     policy := input.malware_filter_policies[_]
     policy_identity := policy.identity
-
-    rule := input.malware_filter_rules[_]
-    rule.malware_filter_policy == policy.id
 
     missing := missing_exts[policy_identity]
     fail_threshold := count(attach_exts) * (1 - passing_value)
 
     count(missing) <= fail_threshold
     policy.enable_file_filter == true
-    rule.state == "Enabled"
 }
 
-policy_report[report] if {
-    policy := input.malware_filter_policies[_]
-    rule := input.malware_filter_rules[_]
-    rule.malware_filter_policy == policy.id
-
-    missing := missing_exts[policy.identity]
-    compliant := is_compliant[policy.identity]
-
-    report := {
-        "policy_name": policy.identity,
-        "is_cis_compliant": compliant,
-        "enable_file_filter": policy.enable_file_filter,
-        "state": rule.state,
-        "missing_count": count(missing),
-        "missing_extensions": missing,
-        "extension_count": count(policy.file_types)
-    }
-}
-
-any_policy_compliant if {
+any_policy_compliant {
     some i
-    compliant := is_compliant[input.malware_filter_policies[i].identity]
-    compliant == true
+    is_compliant[input.malware_filter_policies[i].identity]
 }
 
 generate_message(true) := "Attachment filtering policy is correctly configured and enforced"
@@ -108,7 +84,6 @@ result := {
     "affected_resources": generate_affected_resources(any_policy_compliant, input),
     "details": {
         "malware_filter_policies_evaluated": count(input.malware_filter_policies),
-        "malware_filter_rules_evaluated": count(input.malware_filter_rules),
         "passing_threshold": passing_value,
         "total_known_extensions": count(attach_exts)
     }
