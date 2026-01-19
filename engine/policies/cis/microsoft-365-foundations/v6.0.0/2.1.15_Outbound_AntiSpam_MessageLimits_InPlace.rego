@@ -31,24 +31,23 @@ required_policy_fields := {
   "RecipientLimitInternalPerHour": 1000,
   "RecipientLimitPerDay": 1000,
   "ActionWhenThresholdReached": "BlockUser",
-  "NotifyOutboundSpamRecipients": {"monitored@example.com"}
 }
 
-# Function to validate individual policy settings
 validate_policy_setting(setting_name, setting_value) if {
   required_policy_fields[setting_name] == setting_value
 }
 
 validate_notify_outbound_spam_recipients if {
+  input.NotifyOutboundSpamRecipients
   count(input.NotifyOutboundSpamRecipients) > 0
 }
 
 compliant if {
-  # Validate that all required policy fields match
-  count({
-    k |
-      required_policy_fields[k] == input[k]
-  }) == count(required_policy_fields)
+  # Numeric limits and action
+  count({k | required_policy_fields[k] == input[k]}) == count(required_policy_fields)
+
+  # Ensure at least one monitored recipient is set
+  validate_notify_outbound_spam_recipients
 }
 
 compliant_message := "Outbound spam filter policy is correctly configured and meets required standards"
@@ -63,7 +62,7 @@ generate_message(null) := unknown_message
 
 generate_affected_resources(true, _) := []
 
-generate_affected_resources(false, data_input) := [
+generate_affected_resources(false, _) := [
   "Outbound Spam Filter Policy"
 ]
 

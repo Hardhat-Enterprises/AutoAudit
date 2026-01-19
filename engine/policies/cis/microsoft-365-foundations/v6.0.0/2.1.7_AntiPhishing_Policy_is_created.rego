@@ -75,10 +75,10 @@ antiphish_configured if {
   targets_majority(rule_obj)
 }
 
-# Non-compliant: policies exist but none match requirements
-antiphish_configured if {
-  count(input.antiPhishPolicies) > 0
-  count({p | matching_policy[p]}) == 0
+# non_compliant if policies exist but none match
+antiphish_non_compliant {
+    count(input.antiPhishPolicies) > 0
+    count({p | matching_policy[p]}) == 0
 }
 
 antiphish_configured = null if {

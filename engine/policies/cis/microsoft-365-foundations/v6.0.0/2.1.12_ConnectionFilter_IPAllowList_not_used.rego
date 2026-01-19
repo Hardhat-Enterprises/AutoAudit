@@ -30,24 +30,16 @@ required_fields := {
     "IPAllowList": []
 }
 
-ip_allow_list_is_empty := true if {
-    input.IPAllowList == []  # empty array
-}
-
-ip_allow_list_is_empty := true if {
-    input.IPAllowList == {}  # empty object
-}
-
-ip_allow_list_is_empty := false if {
-    input.IPAllowList != []  # non-empty array
-}
-
-ip_allow_list_is_empty := false if {
-    input.IPAllowList != {}  # non-empty object
-}
-
-ip_allow_list_is_empty := null if {
-    not input.IPAllowList  # field is missing
+ip_allow_list_is_empty := true {
+    input.IPAllowList == []        # empty array
+} else := true {
+    input.IPAllowList == {}        # empty object
+} else := false {
+    input.IPAllowList != {}        # non-empty object
+} else := false {
+    input.IPAllowList != []        # non-empty array
+} else := null {
+    not input.IPAllowList          # field missing
 }
 
 result := output if {

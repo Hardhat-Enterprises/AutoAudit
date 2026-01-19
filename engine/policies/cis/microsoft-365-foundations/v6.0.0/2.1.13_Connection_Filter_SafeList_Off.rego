@@ -26,23 +26,14 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_13
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-# Required EnableSafeList setting
-required_fields := {
-    "EnableSafeList": false
+# Compute compliance for EnableSafeList
+enable_safe_list_is_false = if input.EnableSafeList == null {
+    null  # Field missing → null
+} else {
+    !input.EnableSafeList  # Explicit value → invert: false means compliant
 }
 
-enable_safe_list_is_false := true if {
-    input.EnableSafeList == false  # Ensure EnableSafeList is False
-}
-
-enable_safe_list_is_false := false if {
-    input.EnableSafeList == true  # If EnableSafeList is True, it's non-compliant
-}
-
-enable_safe_list_is_false := null if {
-    not input.EnableSafeList  # If EnableSafeList is missing, return null
-}
-
+# Determine overall result
 result := output if {
     compliant := enable_safe_list_is_false == true
 

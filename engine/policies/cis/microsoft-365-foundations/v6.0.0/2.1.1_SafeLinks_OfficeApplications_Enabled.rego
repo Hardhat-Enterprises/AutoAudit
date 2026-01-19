@@ -62,7 +62,7 @@ generate_affected_resources(false, non_compliant) := [
 
 # Main evaluation
 result := output if {
-    policies := input.teams_protection_policies
+    policies := input.safe_links_policies
 
     # Identify non-compliant policies
     non_compliant := [p | p := policies[_]; not policy_compliant(p)]
