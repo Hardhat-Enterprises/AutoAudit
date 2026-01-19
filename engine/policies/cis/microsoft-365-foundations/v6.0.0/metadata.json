@@ -242,7 +242,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.safe_links_policy",
+      "policy_file": "2.1.1_SafeLinks_OfficeApplications_Enabled.rego",
       "policy_file": "2.1.1_SafeLinks_OfficeApplications_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -257,8 +259,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.malware_filter_policy",
-      "policy_file": "2.1.2_Common_AttachmentTypes_Enabled.rego",
+      "policy_file": "2.1.2_Common_AttachmentTypes_Filter_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
     },
@@ -272,7 +275,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.malware_filter_policy",
+      "policy_file": "2.1.3_Notifications_InternalUsers_sendingMalware_Enabled.rego",
       "policy_file": "2.1.3_Notifications_InternalUsers_sendingMalware_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -287,7 +292,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.safe_attachment_policy",
+      "policy_file": "2.1.4_Safe_AttachementsPolicy_Enabled.rego",
       "policy_file": "2.1.4_Safe_AttachementsPolicy_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -302,7 +309,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.atp_policy_o365",
+      "policy_file": "2.1.5_Safe_Attachments_SharePoint_OneDrive_MSTeams_Enabled.rego",
       "policy_file": "2.1.5_Safe_Attachments_SharePoint_OneDrive_MSTeams_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -317,7 +326,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.hosted_outbound_spam_filter",
+      "policy_file": "2.1.6_Exchange_OnlineSpam_Policies_Notify_Administrators.rego",
       "policy_file": "2.1.6_Exchange_OnlineSpam_Policies_Notify_Administrators.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -332,7 +343,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.anti_phish_policy",
+      "policy_file": "2.1.7_AntiPhishing_Policy_is_created.rego",
       "policy_file": "2.1.7_AntiPhishing_Policy_is_created.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -392,7 +405,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.malware_filter_policy",
+      "policy_file": "2.1.11_Comprehensive_Attachment_Filtering_Applied.rego",
       "policy_file": "2.1.11_Comprehensive_Attachment_Filtering_Applied.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -407,7 +422,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.hosted_connection_filter",
+      "policy_file": "2.1.12_ConnectionFilter_IPAllowList_not_used.rego",
       "policy_file": "2.1.12_ConnectionFilter_IPAllowList_not_used.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -422,7 +439,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.hosted_connection_filter",
+      "policy_file": "2.1.13_Connection_Filter_SafeList_Off.rego",
       "policy_file": "2.1.13_Connection_Filter_SafeList_Off.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -437,7 +456,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.hosted_content_filter",
+      "policy_file": "2.1.14_Inbound_AntiSpam_Policies_DoNot_AllowedDomains.rego",
       "policy_file": "2.1.14_Inbound_AntiSpam_Policies_DoNot_AllowedDomains.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -452,7 +473,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.hosted_outbound_spam_filter",
+      "policy_file": "2.1.15_Outbound_AntiSpam_MessageLimits_InPlace.rego",
       "policy_file": "2.1.15_Outbound_AntiSpam_MessageLimits_InPlace.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
@@ -527,7 +550,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
+      "automation_status": "ready",
       "data_collector_id": "exchange.protection.teams_protection_policy",
+      "policy_file": "2.4.4_Zero_hour_AutoPurge_MSTeams_is_On.rego",
       "policy_file": "2.4.4_Zero_hour_AutoPurge_MSTeams_is_On.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null

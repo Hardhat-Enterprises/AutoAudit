@@ -25,30 +25,38 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_14
 
-import rego.v1
-
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-allowed_sender_domains := object.get(input, "allowed_sender_domains", [])
+allowed_sender_domains_undefined := true if {
+    not input.AllowedSenderDomains  # AllowedSenderDomains is undefined
+}
 
-allowed_sender_domains_undefined := true if count(allowed_sender_domains) == 0
-allowed_sender_domains_undefined := false if count(allowed_sender_domains) > 0
+allowed_sender_domains_undefined := false if {
+    input.AllowedSenderDomains != null  # If AllowedSenderDomains is defined
+}
 
-result := {
-    "compliant": allowed_sender_domains_undefined,
-    "message": messages[allowed_sender_domains_undefined],
-    "affected_resources": affected_resources[allowed_sender_domains_undefined],
-    "details": {
-        "allowed_sender_domains": allowed_sender_domains
+allowed_sender_domains_undefined := null if {
+    not input.AllowedSenderDomains  # If AllowedSenderDomains is missing entirely
+}
+
+result := output if {
+    # Ensure all inbound policies pass
+    compliant := allowed_sender_domains_undefined == true
+
+    output := {
+        "compliant": compliant,
+        "message": generate_message(allowed_sender_domains_undefined),
+        "affected_resources": generate_affected_resources(allowed_sender_domains_undefined),
+        "details": {
+            "AllowedSenderDomains": input.AllowedSenderDomains
+        }
     }
 }
 
-messages := {
-    true: "AllowedSenderDomains is undefined or empty for the policy",
-    false: "AllowedSenderDomains is defined for the policy"
-}
+generate_message(true) := "AllowedSenderDomains is undefined for the policy"
+generate_message(false) := "AllowedSenderDomains is defined for the policy"
+generate_message(null) := "Unable to determine the AllowedSenderDomains status for the policy"
 
-affected_resources := {
-    true: [],
-    false: ["HostedContentFilterPolicy"]
-}
+generate_affected_resources(true) := []
+generate_affected_resources(false) := ["HostedContentFilterPolicy"]
+generate_affected_resources(null) := ["HostedContentFilterPolicy status unknown"]

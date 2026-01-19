@@ -1,9 +1,9 @@
 # METADATA
 # title: Ensure that DKIM is enabled for all Exchange Online Domains
 # description: |
-#   DKIM is one of the trio of Authentication methods (SPF, DKIM and DMARC) that help 
-#   prevent attackers from sending messages that look like they come from your domain. 
-#  
+#     DKIM is one of the trio of authentication methods (SPF, DKIM, and DMARC) that help
+#     prevent attackers from sending messages that look like they come from your domain.
+# 
 # related_resources:
 # - ref: https://www.cisecurity.org/benchmark/microsoft_365
 #   description: CIS Microsoft 365 Foundations Benchmark

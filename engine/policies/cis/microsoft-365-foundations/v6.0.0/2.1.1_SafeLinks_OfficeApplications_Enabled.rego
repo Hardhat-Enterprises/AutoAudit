@@ -20,104 +20,61 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_1
 
-import rego.v1
-
 default result := {"compliant": false, "message": "Evaluation failed"}
 
 required_fields := {
-    "EnableSafeLinksForEmail": true,
-    "EnableSafeLinksForTeams": true,
-    "EnableSafeLinksForOffice": true,
-    "TrackClicks": true,
-    "AllowClickThrough": false,
-    "ScanUrls": true,
-    "EnableForInternalSenders": true,
-    "DeliverMessageAfterScan": true,
-    "DisableUrlRewrite": false
+    "ZapEnabled": true,
+    "ExceptIfConditions": "valid_condition"
 }
 
-missing_sentinel := "__missing__"
+# Identify non-compliant fields in a policy
+non_compliant_fields(p) := {f |
+    # Manually check each required field
+    f := "ZapEnabled"
+    not p[f] = required_fields[f]
+} 
 
-field_non_compliant(p, f) if {
-    object.get(p, f, missing_sentinel) == missing_sentinel
+non_compliant_fields(p) := {f |
+    # Manually check each required field
+    f := "ExceptIfConditions"
+    not p[f] = required_fields[f]
 }
 
-field_non_compliant(p, f) if {
-    object.get(p, f, missing_sentinel) != missing_sentinel
-    p[f] != required_fields[f]
-}
+# Check if a policy is compliant
+policy_compliant(p) := true if count(non_compliant_fields(p)) == 0
+policy_compliant(p) := false if count(non_compliant_fields(p)) > 0
 
-non_compliant_fields(p) := fields if {
-    fields := {f |
-        some f
-        required_fields[f] = _  # f is a key in required_fields (even if value is false)
-        field_non_compliant(p, f)
-    }
-}
-
-policy_compliant(p) := true if {
-    count(non_compliant_fields(p)) == 0
-}
-
-policy_compliant(p) := false if {
-    count(non_compliant_fields(p)) > 0
-}
-
-generate_message(true, _) := "All Safe Links policies for Office applications are compliant"
-generate_message_no_policies := "No Safe Links policies found for Office applications"
-
+# Generate a message based on compliance status
+generate_message(true, _) := "All Teams Protection policies are configured according to CIS recommendations"
 generate_message(false, non_compliant) := sprintf(
-    "%d Safe Links policy(ies) for Office applications are not compliant",
+    "%d Teams Protection policy(ies) are not compliant with CIS recommendations",
     [count(non_compliant)]
 )
 
+# Generate list of affected resources
 generate_affected_resources(true, _) := []
+generate_affected_resources(false, non_compliant) := [
+    {
+        "identity": p.identity,
+        "non_compliant_fields": [f | f := non_compliant_fields(p)[_]]
+    } | p := non_compliant[_]
+]
 
-generate_affected_resources(false, non_compliant) := resources if {
-    resources := [
-        {
-            "identity": object.get(p, "Identity", object.get(p, "Name", null)),
-            "non_compliant_fields": [f | f := non_compliant_fields(p)[_]]
-        } |
-        p := non_compliant[_]
-    ]
-}
-
-no_policies_result := {
-    "compliant": false,
-    "message": generate_message_no_policies,
-    "affected_resources": [{"identity": "Safe Links policy", "non_compliant_fields": ["missing_policy"]}],
-    "details": {
-        "policies_checked": [],
-        "required_fields": required_fields
-    }
-}
-
-with_policies_result(policies, non_compliant) := {
-    "compliant": count(non_compliant) == 0,
-    "message": generate_message(count(non_compliant) == 0, non_compliant),
-    "affected_resources": generate_affected_resources(count(non_compliant) == 0, non_compliant),
-    "details": {
-        "policies_checked": [object.get(p, "Identity", object.get(p, "Name", null)) | p := policies[_]],
-        "required_fields": required_fields
-    }
-}
-
+# Main evaluation
 result := output if {
-    policies := object.get(input, "safe_links_policies", [])
-    count(policies) == 0
-    output := no_policies_result
-}
+    policies := input.teams_protection_policies
 
-result := output if {
-    policies := object.get(input, "safe_links_policies", [])
-    count(policies) > 0
+    # Identify non-compliant policies
+    non_compliant := [p | p := policies[_]; not policy_compliant(p)]
+    compliant := count(non_compliant) == 0
 
-    non_compliant := [
-        p |
-        p := policies[_]
-        not policy_compliant(p)
-    ]
-
-    output := with_policies_result(policies, non_compliant)
+    output := {
+        "compliant": compliant,
+        "message": generate_message(compliant, non_compliant),
+        "affected_resources": generate_affected_resources(compliant, non_compliant),
+        "details": {
+            "policies_checked": [p.identity | p := policies[_]],
+            "required_fields": required_fields
+        }
+    }
 }

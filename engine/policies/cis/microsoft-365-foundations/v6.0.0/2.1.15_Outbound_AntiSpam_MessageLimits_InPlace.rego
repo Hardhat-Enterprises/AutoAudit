@@ -24,121 +24,61 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_15
 
-import rego.v1
+default result := {"compliant": false, "message": "Evaluation failed"}
 
-# Expected policy values
 required_policy_fields := {
-    "RecipientLimitExternalPerHour": 500,
-    "RecipientLimitInternalPerHour": 1000,
-    "RecipientLimitPerDay": 1000,
+  "RecipientLimitExternalPerHour": 500,
+  "RecipientLimitInternalPerHour": 1000,
+  "RecipientLimitPerDay": 1000,
+  "ActionWhenThresholdReached": "BlockUser",
+  "NotifyOutboundSpamRecipients": {"monitored@example.com"}
 }
 
-valid_actions := {"BlockUser", "RestrictUser", "Restrict"}
-missing_sentinel := "__missing__"
-
-limits_compliant if {
-    policy != null
-
-    all_keys_correct := {k | k in required_policy_fields; policy[k] == required_policy_fields[k]}
-    count(all_keys_correct) == count(required_policy_fields)
-
-    # Action must match one of the valid options
-    policy.ActionWhenThresholdReached in valid_actions
+# Function to validate individual policy settings
+validate_policy_setting(setting_name, setting_value) if {
+  required_policy_fields[setting_name] == setting_value
 }
 
-limits_compliant := false if {
-    policy != null
-    some k
-    required_policy_fields[k]
-    object.get(policy, k, missing_sentinel) == missing_sentinel
+validate_notify_outbound_spam_recipients if {
+  count(input.NotifyOutboundSpamRecipients) > 0
 }
 
-limits_compliant := false if {
-    policy != null
-    object.get(policy, "ActionWhenThresholdReached", missing_sentinel) == missing_sentinel
+compliant if {
+  # Validate that all required policy fields match
+  count({
+    k |
+      required_policy_fields[k] == input[k]
+  }) == count(required_policy_fields)
 }
 
-limits_compliant := false if {
-    policy != null
-    some k
-    required_policy_fields[k]
-    object.get(policy, k, missing_sentinel) != missing_sentinel
-    policy[k] != required_policy_fields[k]
-}
+compliant_message := "Outbound spam filter policy is correctly configured and meets required standards"
 
-limits_compliant := false if {
-    policy != null
-    object.get(policy, "ActionWhenThresholdReached", missing_sentinel) != missing_sentinel
-    not policy.ActionWhenThresholdReached in valid_actions
-}
+non_compliant_message := "Outbound spam filter policy settings are misconfigured or incomplete"
 
-policy := value if {
-    input != null
-    value := object.get(input, "default_policy", null)
-} else = null
-has_policy := policy != null
+unknown_message := "Unable to determine outbound spam filter policy configuration"
 
-safe_get(obj, key) = value if {
-    obj != null
-    value := object.get(obj, key, null)
-} else = null
-
-policy_detail_fields := {
-    "RecipientLimitExternalPerHour",
-    "RecipientLimitInternalPerHour",
-    "RecipientLimitPerDay",
-    "ActionWhenThresholdReached",
-}
-
-add_if_not_null(obj, key, value) = out if {
-    value != null
-    out := object.union(obj, {key: value})
-} else = obj
-
-details := out if {
-    base := {
-        "required_policy_settings": required_policy_fields,
-        "valid_actions": valid_actions,
-    }
-
-    v_external := safe_get(policy, "RecipientLimitExternalPerHour")
-    d1 := add_if_not_null(base, "RecipientLimitExternalPerHour", v_external)
-
-    v_internal := safe_get(policy, "RecipientLimitInternalPerHour")
-    d2 := add_if_not_null(d1, "RecipientLimitInternalPerHour", v_internal)
-
-    v_day := safe_get(policy, "RecipientLimitPerDay")
-    d3 := add_if_not_null(d2, "RecipientLimitPerDay", v_day)
-
-    v_action := safe_get(policy, "ActionWhenThresholdReached")
-    out := add_if_not_null(d3, "ActionWhenThresholdReached", v_action)
-}
-
-compliant := true if {
-    has_policy
-    limits_compliant
-}
-
-compliant := false if {
-    has_policy
-    not limits_compliant
-}
-
-compliant := false if {
-    not has_policy
-}
-
-compliant_message := "Outbound spam filter policy is correctly configured for message limits and over-limit action"
-non_compliant_message := "Outbound spam filter policy settings for message limits or over-limit action are misconfigured"
 generate_message(true) := compliant_message
 generate_message(false) := non_compliant_message
+generate_message(null) := unknown_message
 
 generate_affected_resources(true, _) := []
-generate_affected_resources(false, _) := ["Outbound Spam Filter Policy"]
+
+generate_affected_resources(false, data_input) := [
+  "Outbound Spam Filter Policy"
+]
+
+generate_affected_resources(null, _) := ["Outbound Spam Filter Policy configuration status unknown"]
 
 result := {
-    "compliant": compliant,
-    "message": generate_message(compliant),
-    "affected_resources": generate_affected_resources(compliant, input),
-    "details": details
+  "compliant": compliant == true,
+  "message": generate_message(compliant),
+  "affected_resources": generate_affected_resources(compliant, input),
+  "details": {
+    "RecipientLimitExternalPerHour": input.RecipientLimitExternalPerHour,
+    "RecipientLimitInternalPerHour": input.RecipientLimitInternalPerHour,
+    "RecipientLimitPerDay": input.RecipientLimitPerDay,
+    "ActionWhenThresholdReached": input.ActionWhenThresholdReached,
+    "NotifyOutboundSpamRecipients": input.NotifyOutboundSpamRecipients,
+    "required_policy_settings": required_policy_fields
+  }
 }
