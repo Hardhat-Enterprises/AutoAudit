@@ -22,31 +22,33 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_6
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-outbound_spam_monitoring_enabled := true if {
+default outbound_spam_monitoring_enabled := null
+
+outbound_spam_monitoring_enabled := true {
     input.BccSuspiciousOutboundMail == true
     input.NotifyOutboundSpam == true
     count(input.BccSuspiciousOutboundAdditionalRecipients) > 0
     count(input.NotifyOutboundSpamRecipients) > 0
 }
 
-outbound_spam_monitoring_enabled := false if {
-    input.BccSuspiciousOutboundMail != true
-} else := false if {
-    input.NotifyOutboundSpam != true
-} else := false if {
+# Rule is false if any condition is explicitly false or empty
+outbound_spam_monitoring_enabled := false {
+    input.BccSuspiciousOutboundMail == false
+}
+
+outbound_spam_monitoring_enabled := false {
+    input.NotifyOutboundSpam == false
+}
+
+outbound_spam_monitoring_enabled := false {
     count(input.BccSuspiciousOutboundAdditionalRecipients) == 0
-} else := false if {
+}
+
+outbound_spam_monitoring_enabled := false {
     count(input.NotifyOutboundSpamRecipients) == 0
 }
 
-outbound_spam_monitoring_enabled := null if {
-    not input.BccSuspiciousOutboundMail
-    not input.NotifyOutboundSpam
-    not input.BccSuspiciousOutboundAdditionalRecipients
-    not input.NotifyOutboundSpamRecipients
-}
-
-result := output if {
+result := output {
     compliant := outbound_spam_monitoring_enabled == true
 
     output := {

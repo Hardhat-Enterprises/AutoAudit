@@ -33,27 +33,19 @@ required_policy_fields := {
   "ActionWhenThresholdReached": "BlockUser",
 }
 
-validate_policy_setting(setting_name, setting_value) if {
-  required_policy_fields[setting_name] == setting_value
+limits_compliant if {
+  input != null
+  all k in required_policy_fields {
+    input[k] != null
+    input[k] == required_policy_fields[k]
+  }
 }
 
-validate_notify_outbound_spam_recipients if {
-  input.NotifyOutboundSpamRecipients
-  count(input.NotifyOutboundSpamRecipients) > 0
-}
+# Final compliance now only depends on limits/action
+compliant := limits_compliant
 
-compliant if {
-  # Numeric limits and action
-  count({k | required_policy_fields[k] == input[k]}) == count(required_policy_fields)
-
-  # Ensure at least one monitored recipient is set
-  validate_notify_outbound_spam_recipients
-}
-
-compliant_message := "Outbound spam filter policy is correctly configured and meets required standards"
-
-non_compliant_message := "Outbound spam filter policy settings are misconfigured or incomplete"
-
+compliant_message := "Outbound spam filter policy is correctly configured for message limits and over-limit action"
+non_compliant_message := "Outbound spam filter policy settings for message limits or over-limit action are misconfigured"
 unknown_message := "Unable to determine outbound spam filter policy configuration"
 
 generate_message(true) := compliant_message
@@ -61,15 +53,11 @@ generate_message(false) := non_compliant_message
 generate_message(null) := unknown_message
 
 generate_affected_resources(true, _) := []
-
-generate_affected_resources(false, _) := [
-  "Outbound Spam Filter Policy"
-]
-
+generate_affected_resources(false, _) := ["Outbound Spam Filter Policy"]
 generate_affected_resources(null, _) := ["Outbound Spam Filter Policy configuration status unknown"]
 
 result := {
-  "compliant": compliant == true,
+  "compliant": compliant,
   "message": generate_message(compliant),
   "affected_resources": generate_affected_resources(compliant, input),
   "details": {
@@ -77,7 +65,6 @@ result := {
     "RecipientLimitInternalPerHour": input.RecipientLimitInternalPerHour,
     "RecipientLimitPerDay": input.RecipientLimitPerDay,
     "ActionWhenThresholdReached": input.ActionWhenThresholdReached,
-    "NotifyOutboundSpamRecipients": input.NotifyOutboundSpamRecipients,
     "required_policy_settings": required_policy_fields
   }
 }
