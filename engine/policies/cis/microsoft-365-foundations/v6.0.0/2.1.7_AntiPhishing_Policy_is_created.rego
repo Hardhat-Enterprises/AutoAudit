@@ -43,45 +43,42 @@ required_policy_fields := {
   "HonorDmarcPolicy": true
 }
 
-matching_policy[policy_obj] if {
-  idx := input.antiPhishPolicies[_]
-  policy_obj := input.antiPhishPolicies[idx]
+matching_policy[policy_obj] {
+    policy_obj := input.antiPhishPolicies[_]
 
-  # All required fields must match
-  count({k | required_policy_fields[k] == policy_obj[k]}) == count(required_policy_fields)
+    # All required fields must match
+    count({k | required_policy_fields[k] == policy_obj[k]}) == count(required_policy_fields)
 
-  # Targeted users must be within limits
-  count(policy_obj.TargetedUsersToProtect) > 0
-  count(policy_obj.TargetedUsersToProtect) <= 350
+    # Targeted users must be within limits
+    count(policy_obj.TargetedUsersToProtect) > 0
+    count(policy_obj.TargetedUsersToProtect) <= 350
 }
 
-matching_rule[rule_obj] if {
-  j := input.antiPhishRules[_]
-  rule_obj := input.antiPhishRules[j]
+matching_rule[rule_obj] {
+  rule_obj := input.antiPhishRules[_]
   rule_obj.State == "Enabled"
 
-  matching_policy[policy_obj]   # ✅ unique variable name
+  matching_policy[policy_obj]
   rule_obj.AntiPhishPolicy == policy_obj.Name
 }
 
-targets_majority(rule_obj) if {
+targets_majority(rule_obj) {
   count(rule_obj.RecipientDomainIs) > 0
   count(rule_obj.SentToMemberOf) > 0
 }
 
-# Compliant: matching policy + enabled rule + targets majority
-antiphish_configured if {
+antiphish_configured {
   matching_rule[rule_obj]
   targets_majority(rule_obj)
 }
 
-# non_compliant if policies exist but none match
+# Non-compliant if policies exist but none match
 antiphish_non_compliant {
-    count(input.antiPhishPolicies) > 0
-    count({p | matching_policy[p]}) == 0
+  count(input.antiPhishPolicies) > 0
+  count({p | matching_policy[p]}) == 0
 }
 
-antiphish_configured = null if {
+antiphish_configured = null {
   count(input.antiPhishPolicies) == 0
   count(input.antiPhishRules) == 0
 }
@@ -93,9 +90,7 @@ generate_message(null) := "Unable to determine Anti-Phish policy or rule configu
 generate_affected_resources(true, _) := []
 
 generate_affected_resources(false, data_input) := [
-  pol.Name |
-  idx := data_input.antiPhishPolicies[_]
-  pol := data_input.antiPhishPolicies[idx]
+  pol.Name | pol := data_input.antiPhishPolicies[_]
 ]
 
 generate_affected_resources(null, _) := ["Anti-Phish configuration status unknown"]

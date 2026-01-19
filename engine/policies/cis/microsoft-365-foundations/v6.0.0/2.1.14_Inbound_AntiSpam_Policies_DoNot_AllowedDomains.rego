@@ -28,19 +28,20 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_14
 default result := {"compliant": false, "message": "Evaluation failed"}
 
 allowed_sender_domains_undefined := true if {
-    not input.AllowedSenderDomains  # AllowedSenderDomains is undefined
+    input.AllowedSenderDomains == null
+}
+
+allowed_sender_domains_undefined := true if {
+    input.AllowedSenderDomains != null
+    count(input.AllowedSenderDomains) == 0
 }
 
 allowed_sender_domains_undefined := false if {
-    input.AllowedSenderDomains != null  # If AllowedSenderDomains is defined
-}
-
-allowed_sender_domains_undefined := null if {
-    not input.AllowedSenderDomains  # If AllowedSenderDomains is missing entirely
+    input.AllowedSenderDomains != null
+    count(input.AllowedSenderDomains) > 0
 }
 
 result := output if {
-    # Ensure all inbound policies pass
     compliant := allowed_sender_domains_undefined == true
 
     output := {
@@ -53,10 +54,8 @@ result := output if {
     }
 }
 
-generate_message(true) := "AllowedSenderDomains is undefined for the policy"
+generate_message(true) := "AllowedSenderDomains is undefined or empty for the policy"
 generate_message(false) := "AllowedSenderDomains is defined for the policy"
-generate_message(null) := "Unable to determine the AllowedSenderDomains status for the policy"
 
 generate_affected_resources(true) := []
 generate_affected_resources(false) := ["HostedContentFilterPolicy"]
-generate_affected_resources(null) := ["HostedContentFilterPolicy status unknown"]

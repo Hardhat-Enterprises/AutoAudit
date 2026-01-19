@@ -22,9 +22,11 @@ default result := {"compliant": false, "message": "Evaluation failed"}
 
 non_compliant_policies = [policy.Name |
     policy := input.policies[_]
-    policy.EnableATPForSPOTeamsODB == false
-    policy.EnableSafeDocs == false
-    policy.AllowSafeDocsOpen == true
+    (
+        policy.EnableATPForSPOTeamsODB == false
+        || policy.EnableSafeDocs == false
+        || policy.AllowSafeDocsOpen == true
+    )
 ]
 
 compliant := count(non_compliant_policies) == 0
