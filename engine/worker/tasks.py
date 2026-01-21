@@ -325,18 +325,31 @@ async def _evaluate_control_async(
     # Import here to avoid circular imports
     from collectors.registry import get_collector
     from collectors.graph_client import GraphClient
+    from collectors.powershell_client import PowerShellClient
     from opa_client import opa_client
 
-    # Create Graph client with credentials
-    graph_client = GraphClient(
-        tenant_id=credentials["tenant_id"],
-        client_id=credentials["client_id"],
-        client_secret=credentials["client_secret"],
-    )
-
-    # Get collector and collect data
+    # Get collector
     collector = get_collector(collector_id)
-    collected_data = await collector.collect(graph_client)
+
+    # Determine client type based on collector_id prefix
+    # Exchange and Compliance collectors require PowerShell
+    if collector_id.startswith(("exchange.", "compliance.")):
+        client = PowerShellClient(
+            tenant_id=credentials["tenant_id"],
+            client_id=credentials["client_id"],
+            client_secret=credentials["client_secret"],
+            service_url=settings.POWERSHELL_SERVICE_URL,
+        )
+    else:
+        # Entra and other collectors use Graph API
+        client = GraphClient(
+            tenant_id=credentials["tenant_id"],
+            client_id=credentials["client_id"],
+            client_secret=credentials["client_secret"],
+        )
+
+    # Collect data using the appropriate client
+    collected_data = await collector.collect(client)
 
     # Build OPA package path to match the Rego package declaration
     # Rego package: "cis.microsoft_365_foundations.v3_1_0.control_1_1_1"

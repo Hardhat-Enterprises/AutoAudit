@@ -1,7 +1,7 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 if (!API_BASE_URL) {
-  throw new Error('REACT_APP_API_URL environment variable must be set');
+  throw new Error('VITE_API_URL environment variable must be set');
 }
 
 export class APIError extends Error {
@@ -46,23 +46,27 @@ async function fetchWithAuth(endpoint, token, options = {}) {
 
 // Auth endpoints
 export async function login(email, password) {
-  const response = await fetch(`${API_BASE_URL}/v1/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      username: email,
-      password: password,
-    }),
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/v1/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        username: email,
+        password: password,
+      }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Login failed' }));
-    throw new APIError(error.detail || 'Invalid credentials', response.status, error);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Login failed' }));
+      throw new APIError(error.detail || 'Invalid credentials', response.status, error);
+    }
+
+    return response.json();
+  } catch (error) {
+    throw error;
   }
-
-  return response.json();
 }
 
 export async function register(email, password) {
@@ -191,6 +195,12 @@ export async function deleteConnection(token, id) {
 
   // DELETE returns 204 No Content, so don't try to parse JSON
   return;
+}
+
+export async function testConnection(token, id) {
+  return fetchWithAuth(`/v1/m365-connections/${id}/test`, token, {
+    method: 'POST',
+  });
 }
 
 // Benchmark endpoints

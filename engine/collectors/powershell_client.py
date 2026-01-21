@@ -2,7 +2,9 @@
 
 This module provides connectivity to Microsoft 365 PowerShell modules using
 client secret authentication via MSAL access tokens. PowerShell execution
-happens inside a Docker container for consistent behavior across environments.
+can happen either:
+- Inside a Docker container (local development with Docker Desktop)
+- Via HTTP to a PowerShell service (Docker Compose / production)
 
 Supported modules:
 - ExchangeOnlineManagement (Exchange Online via -AccessToken)
@@ -12,8 +14,8 @@ Supported modules:
 Authentication Flow:
 1. Use MSAL ConfidentialClientApplication with client_id + client_secret
 2. Acquire token for the appropriate scope
-3. Pass token to Docker container via environment variable
-4. Container runs PowerShell cmdlet and returns JSON
+3. Pass token to Docker container (via env var) or HTTP service (via request body)
+4. Container/service runs PowerShell cmdlet and returns JSON
 """
 
 import json
@@ -21,6 +23,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+import httpx
 from msal import ConfidentialClientApplication
 
 
@@ -31,7 +34,7 @@ class PowerShellExecutionError(Exception):
 
 
 class PowerShellClient:
-    """Client for PowerShell-based M365 connections using Docker."""
+    """Client for PowerShell-based M365 connections using Docker or HTTP service."""
 
     # Service-specific scopes for token acquisition
     EXCHANGE_SCOPE = "https://outlook.office365.com/.default"
@@ -40,17 +43,26 @@ class PowerShellClient:
 
     DOCKER_IMAGE = "autoaudit-powershell"
 
-    def __init__(self, tenant_id: str, client_id: str, client_secret: str):
+    def __init__(
+        self,
+        tenant_id: str,
+        client_id: str,
+        client_secret: str,
+        service_url: str | None = None,
+    ):
         """Initialize PowerShell client.
 
         Args:
             tenant_id: Azure AD tenant ID
             client_id: Application (client) ID
             client_secret: Client secret for authentication
+            service_url: Optional URL of PowerShell HTTP service (e.g., http://powershell-service:8001).
+                         If provided, uses HTTP instead of spawning Docker containers.
         """
         self.tenant_id = tenant_id
         self.client_id = client_id
         self.client_secret = client_secret
+        self.service_url = service_url
         self._msal_app = ConfidentialClientApplication(
             client_id=client_id,
             client_credential=client_secret,
@@ -101,12 +113,97 @@ class PowerShellClient:
         self._image_checked = True
 
     async def run_cmdlet(self, module: str, cmdlet: str, **params: Any) -> dict[str, Any]:
-        """Execute a PowerShell cmdlet in Docker container.
+        """Execute a PowerShell cmdlet.
+
+        Uses HTTP service if service_url is configured, otherwise spawns Docker container.
 
         Args:
             module: The PowerShell module (ExchangeOnline, Teams, Compliance)
             cmdlet: The cmdlet to run (e.g., Get-OrganizationConfig)
             **params: Parameters to pass to the cmdlet
+
+        Returns:
+            Dict containing cmdlet output.
+        """
+        if self.service_url:
+            return await self._run_via_service(module, cmdlet, params)
+        else:
+            return await self._run_via_docker(module, cmdlet, params)
+
+    async def _run_via_service(
+        self, module: str, cmdlet: str, params: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Execute cmdlet via HTTP service.
+
+        Args:
+            module: The PowerShell module
+            cmdlet: The cmdlet to run
+            params: Parameters for the cmdlet
+
+        Returns:
+            Dict containing cmdlet output.
+        """
+        # Acquire tokens
+        graph_token = None
+        if module == "Teams":
+            # Teams needs both Graph and Teams tokens
+            graph_result = self._msal_app.acquire_token_for_client(
+                scopes=["https://graph.microsoft.com/.default"]
+            )
+            if "access_token" not in graph_result:
+                error_desc = graph_result.get("error_description", str(graph_result))
+                raise RuntimeError(f"Graph token acquisition failed: {error_desc}")
+            graph_token = graph_result["access_token"]
+
+            teams_result = self._msal_app.acquire_token_for_client(
+                scopes=[self.TEAMS_SCOPE]
+            )
+            if "access_token" not in teams_result:
+                error_desc = teams_result.get("error_description", str(teams_result))
+                raise RuntimeError(f"Teams token acquisition failed: {error_desc}")
+            token = teams_result["access_token"]
+        else:
+            # Exchange and Compliance use single token
+            scope = self._get_scope_for_module(module)
+            result = self._msal_app.acquire_token_for_client(scopes=[scope])
+            if "access_token" not in result:
+                error_desc = result.get("error_description", str(result))
+                raise RuntimeError(f"Token acquisition failed: {error_desc}")
+            token = result["access_token"]
+
+        # Build request payload
+        payload = {
+            "module": module,
+            "cmdlet": cmdlet,
+            "params": params,
+            "tenant_id": self.tenant_id,
+            "token": token,
+            "graph_token": graph_token,
+        }
+
+        # Call HTTP service
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                f"{self.service_url}/execute",
+                json=payload,
+            )
+            response.raise_for_status()
+
+        result = response.json()
+        if not result.get("success"):
+            raise PowerShellExecutionError(result.get("error", "Unknown error"))
+
+        return result.get("data")
+
+    async def _run_via_docker(
+        self, module: str, cmdlet: str, params: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Execute cmdlet by spawning Docker container.
+
+        Args:
+            module: The PowerShell module
+            cmdlet: The cmdlet to run
+            params: Parameters for the cmdlet
 
         Returns:
             Dict containing cmdlet output.

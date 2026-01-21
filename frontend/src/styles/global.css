@@ -1,11 +1,68 @@
-/* src/styles/global.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* order matters: tokens first, then component helpers */
 @import "./tokens.css";
 @import "./components.css";
+
+@theme {
+  /* Base palette in RGB for alpha support */
+  --surface-1: 15 23 42;    /* #0f172a Oxford Blue */
+  --surface-2: 30 41 59;    /* #1e293b Prussian Blue (Muted) */
+  --border-subtle: 51 65 85;/* #334155 Charcoal (Grey) */
+
+  --text-strong: 226 232 240; /* #e2e8f0 Dusty White*/
+  --text-muted: 148 163 184;  /* #94a3b8 Cadet grey */
+
+  --accent-teal: 100 223 223;   /* #64dfdf Teal */
+  --accent-navy: 0 18 66;       /* #001242 Navy Blue */
+
+  --accent-good: 16 185 129;  /* #10b981 Green */
+  --accent-warn: 249 115 22;  /* #f97316 Pumpkin Orange */
+  --accent-bad: 239 68 68;    /* #ef4444 Imperial Red */
+
+  --radius-1: 8px;
+  --radius-2: 12px;
+  --radius-3: 16px;
+
+  --shadow-1: 0 4px 12px rgba(0,0,0,.2);
+  --shadow-2: 0 10px 25px rgba(0,0,0,.3);
+
+  /* Breakpoints (to mirror Tailwind sm/md/lg) */
+  --bp-sm: 600px;
+  --bp-md: 900px;
+  --bp-lg: 1200px;
+
+  /* Surfaces */
+  --surface-1: 16 18 22;
+  --surface-2: 22 25 30;
+
+  /* Border */
+  --border-subtle: 60 65 75;
+
+  /* Text */
+  --text-strong: 235 235 235;
+  --text-muted: 160 165 175;
+
+  /* Accents */
+  --accent-teal: 20 180 170;
+  --accent-navy: 15 30 80;
+  --accent-good: 40 180 60;
+  --accent-warn: 240 180 0;
+  --accent-bad: 220 40 40;
+
+  /* Radius */
+  --radius-2: 12px;
+
+  /* Shadows */
+  --shadow-1: 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-2: 0 4px 8px rgba(0,0,0,0.1);
+
+  /* Fonts */
+  --font-header: "League Spartan", ui-sans-serif, system-ui, "Segoe UI", Inter, Arial;
+  --font-body: "Segoe UI", ui-sans-serif, system-ui, Inter, Arial;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
 
 /* Global base defaults (not going to be visible just yet but setting defaults) */
 @layer base {

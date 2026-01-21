@@ -13,6 +13,7 @@ import { useAuth } from "../../../context/AuthContext";
 const socialButtons = [
   {
     label: "Google",
+    provider: "google",
     icon: (
       <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
         <path
@@ -34,17 +35,6 @@ const socialButtons = [
       </svg>
     ),
   },
-  {
-    label: "Microsoft",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="2" y="2" width="9" height="9" fill="#F25022" />
-        <rect x="13" y="2" width="9" height="9" fill="#7FBA00" />
-        <rect x="2" y="13" width="9" height="9" fill="#00A4EF" />
-        <rect x="13" y="13" width="9" height="9" fill="#FFB900" />
-      </svg>
-    ),
-  },
 ];
 
 const SignInPanel = ({ onLogin, onSignUpClick }) => {
@@ -57,6 +47,9 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Vite exposes env vars via import.meta.env (and they must be prefixed with VITE_)
+  const apiBaseUrl = import.meta.env.VITE_API_URL;
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -84,6 +77,25 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSocialLogin = (provider) => {
+    if (isLoading) return;
+    setError(null);
+
+    if (!apiBaseUrl) {
+      setError("Missing API configuration. Please set VITE_API_URL.");
+      return;
+    }
+
+    if (provider === "google") {
+      // Backend-driven OAuth redirect flow.
+      // The callback will land on: /auth/google/callback#access_token=...
+      window.location.assign(`${apiBaseUrl}/v1/auth/google/authorize`);
+      return;
+    }
+
+    setError("Unsupported provider.");
   };
 
   return (
@@ -189,11 +201,21 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
           <span>Or sign in with</span>
         </div>
 
-        <div className="social-login">
+        <div className={`social-login ${socialButtons.length === 1 ? "single" : ""}`}>
           {socialButtons.map((button) => (
-            <button key={button.label} type="button" className="social-btn">
-              {button.icon}
-              {button.label}
+            <button
+              key={button.label}
+              type="button"
+              className="social-btn"
+              onClick={() => handleSocialLogin(button.provider)}
+              disabled={isLoading || button.disabled}
+              aria-disabled={isLoading || button.disabled ? "true" : "false"}
+              title={button.disabled ? "Coming soon" : `Continue with ${button.label}`}
+            >
+              <span className={`social-icon social-icon--${button.provider}`} aria-hidden="true">
+                {button.icon}
+              </span>
+              <span className="social-label">{button.label}</span>
             </button>
           ))}
         </div>
