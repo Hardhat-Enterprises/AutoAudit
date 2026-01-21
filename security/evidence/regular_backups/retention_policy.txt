@@ -1,0 +1,2 @@
+retention_policy=defined
+retention_days=30 
