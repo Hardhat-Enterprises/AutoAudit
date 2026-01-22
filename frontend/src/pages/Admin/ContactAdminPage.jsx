@@ -77,6 +77,8 @@ const ContactAdminPage = () => {
       setSubmissions((prev) =>
         prev.map((item) => (item.id === updated.id ? updated : item))
       );
+      const historyData = await getContactHistory(token, selectedSubmission.id);
+      setHistory(historyData);
       setActionMessage("Submission updated.");
     } catch (err) {
       setError(err?.message || "Unable to update submission.");
