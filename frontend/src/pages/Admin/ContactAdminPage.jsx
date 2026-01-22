@@ -54,11 +54,15 @@ const ContactAdminPage = () => {
     if (!selectedId) return;
 
     const loadDetail = async () => {
+      const currentId = selectedId;
       try {
         const [noteData, historyData] = await Promise.all([
           getContactNotes(token, selectedId),
           getContactHistory(token, selectedId),
         ]);
+        if (currentId !== selectedId) {
+          return;
+        }
         setNotes(noteData);
         setHistory(historyData);
       } catch (err) {
