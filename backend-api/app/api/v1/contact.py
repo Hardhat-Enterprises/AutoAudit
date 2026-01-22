@@ -135,16 +135,30 @@ async def update_submission(
             )
 
     if "status" in payload.__fields_set__:
+        if payload.status is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="status cannot be null")
         track_change("status", submission.status, payload.status)
         submission.status = payload.status
-        if payload.status and payload.status.lower() == "resolved" and payload.resolved_at is None:
+        if payload.status.lower() == "resolved" and submission.resolved_at is None:
             submission.resolved_at = datetime.utcnow()
 
     if "priority" in payload.__fields_set__:
+        if payload.priority is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="priority cannot be null")
         track_change("priority", submission.priority, payload.priority)
         submission.priority = payload.priority
 
     if "assigned_to" in payload.__fields_set__:
+        if payload.assigned_to is not None:
+            user_result = await db.execute(
+                select(User).where(User.id == payload.assigned_to)
+            )
+            assigned_user = user_result.scalar_one_or_none()
+            if not assigned_user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="assigned_to user not found",
+                )
         track_change(
             "assigned_to",
             str(submission.assigned_to) if submission.assigned_to is not None else None,
