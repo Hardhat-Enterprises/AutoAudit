@@ -94,6 +94,8 @@ const ContactAdminPage = () => {
         is_internal: isInternal,
       });
       setNotes((prev) => [newNote, ...prev]);
+      const historyData = await getContactHistory(token, selectedSubmission.id);
+      setHistory(historyData);
       setNoteText("");
       setActionMessage("Note added.");
     } catch (err) {
