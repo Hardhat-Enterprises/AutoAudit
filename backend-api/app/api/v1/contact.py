@@ -134,7 +134,7 @@ async def update_submission(
                 )
             )
 
-    if "status" in payload.__fields_set__:
+    if "status" in payload.model_fields_set:
         if payload.status is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="status cannot be null")
         track_change("status", submission.status, payload.status)
@@ -145,13 +145,13 @@ async def update_submission(
         elif submission.resolved_at is not None:
             submission.resolved_at = None
 
-    if "priority" in payload.__fields_set__:
+    if "priority" in payload.model_fields_set:
         if payload.priority is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="priority cannot be null")
         track_change("priority", submission.priority, payload.priority)
         submission.priority = payload.priority
 
-    if "assigned_to" in payload.__fields_set__:
+    if "assigned_to" in payload.model_fields_set:
         if payload.assigned_to is not None:
             user_result = await db.execute(
                 select(User).where(User.id == payload.assigned_to)
@@ -169,7 +169,7 @@ async def update_submission(
         )
         submission.assigned_to = payload.assigned_to
 
-    if "resolved_at" in payload.__fields_set__:
+    if "resolved_at" in payload.model_fields_set:
         track_change(
             "resolved_at",
             submission.resolved_at.isoformat() if submission.resolved_at else None,
