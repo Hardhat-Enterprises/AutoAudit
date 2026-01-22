@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./ContactAdminPage.css";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -24,6 +24,7 @@ const ContactAdminPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
+  const latestSelectionRef = useRef(null);
 
   const selectedSubmission = useMemo(
     () => submissions.find((item) => item.id === selectedId) || null,
@@ -54,13 +55,13 @@ const ContactAdminPage = () => {
     if (!selectedId) return;
 
     const loadDetail = async () => {
-      const currentId = selectedId;
+      latestSelectionRef.current = selectedId;
       try {
         const [noteData, historyData] = await Promise.all([
           getContactNotes(token, selectedId),
           getContactHistory(token, selectedId),
         ]);
-        if (currentId !== selectedId) {
+        if (latestSelectionRef.current !== selectedId) {
           return;
         }
         setNotes(noteData);
