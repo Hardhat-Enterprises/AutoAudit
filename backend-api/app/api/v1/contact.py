@@ -136,9 +136,16 @@ async def update_submission(
 
     if "status" in payload.__fields_set__:
         track_change("status", submission.status, payload.status)
+        new_status = payload.status.lower()
         submission.status = payload.status
+<<<<<<< HEAD
         if payload.status and payload.status.lower() == "resolved" and payload.resolved_at is None:
+=======
+        if new_status == "resolved":
+>>>>>>> d1e9d71 (review addressed)
             submission.resolved_at = datetime.utcnow()
+        elif submission.resolved_at is not None:
+            submission.resolved_at = None
 
     if "priority" in payload.__fields_set__:
         track_change("priority", submission.priority, payload.priority)

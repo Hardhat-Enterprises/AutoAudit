@@ -48,8 +48,11 @@ const ContactAdminPage = () => {
   };
 
   useEffect(() => {
+    if (!user || user.role !== "admin") {
+      return;
+    }
     loadSubmissions();
-  }, []);
+  }, [user, token]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -76,6 +79,7 @@ const ContactAdminPage = () => {
 
   const handleUpdate = async (updates) => {
     if (!selectedSubmission) return;
+    const currentId = selectedSubmission.id;
     setActionMessage("");
     try {
       const updated = await updateContactSubmission(token, selectedSubmission.id, updates);
@@ -83,7 +87,9 @@ const ContactAdminPage = () => {
         prev.map((item) => (item.id === updated.id ? updated : item))
       );
       const historyData = await getContactHistory(token, selectedSubmission.id);
-      setHistory(historyData);
+      if (latestSelectionRef.current === currentId) {
+        setHistory(historyData);
+      }
       setActionMessage("Submission updated.");
     } catch (err) {
       setError(err?.message || "Unable to update submission.");
@@ -92,6 +98,7 @@ const ContactAdminPage = () => {
 
   const handleAddNote = async () => {
     if (!noteText.trim() || !selectedSubmission) return;
+    const currentId = selectedSubmission.id;
     setActionMessage("");
     try {
       const newNote = await addContactNote(token, selectedSubmission.id, {
@@ -100,7 +107,9 @@ const ContactAdminPage = () => {
       });
       setNotes((prev) => [newNote, ...prev]);
       const historyData = await getContactHistory(token, selectedSubmission.id);
-      setHistory(historyData);
+      if (latestSelectionRef.current === currentId) {
+        setHistory(historyData);
+      }
       setNoteText("");
       setActionMessage("Note added.");
     } catch (err) {
