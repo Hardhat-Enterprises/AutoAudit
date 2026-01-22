@@ -138,9 +138,12 @@ async def update_submission(
         if payload.status is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="status cannot be null")
         track_change("status", submission.status, payload.status)
+        new_status = payload.status.lower()
         submission.status = payload.status
-        if payload.status.lower() == "resolved" and submission.resolved_at is None:
+        if new_status == "resolved":
             submission.resolved_at = datetime.utcnow()
+        elif submission.resolved_at is not None:
+            submission.resolved_at = None
 
     if "priority" in payload.__fields_set__:
         if payload.priority is None:
