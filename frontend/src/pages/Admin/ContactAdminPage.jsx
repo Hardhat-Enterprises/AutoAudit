@@ -143,15 +143,20 @@ const ContactAdminPage = () => {
     );
   }
 
+  const messageWordCount = selectedSubmission?.message
+    ? selectedSubmission.message.trim().split(/\s+/).filter(Boolean).length
+    : 0;
+  const isLongMessage = messageWordCount > 500;
+
   return (
-    <div className="contact-admin">
-      <header className="contact-admin__header">
-        <div>
+    <div className="contact-admin contact-admin__container">
+      <header className="contact-admin__page-header">
+        <div className="contact-admin__page-header-content">
           <h1>Contact Submissions</h1>
           <p>Review and manage incoming Contact Us requests.</p>
         </div>
         <button className="contact-admin__refresh" onClick={loadSubmissions}>
-          Refresh
+          🔄 Refresh
         </button>
       </header>
 
@@ -164,21 +169,27 @@ const ContactAdminPage = () => {
             <p>Loading submissions...</p>
           ) : submissions.length ? (
             <ul>
-              {submissions.map((submission) => (
-                <li
-                  key={submission.id}
-                  className={submission.id === selectedId ? "active" : ""}
-                  onClick={() => setSelectedId(submission.id)}
-                >
-                  <div>
-                    <h4>
-                      {submission.first_name} {submission.last_name}
-                    </h4>
+              {submissions.map((submission) => {
+                const isActive = submission.id === selectedId;
+
+                return (
+                  <li
+                    key={submission.id}
+                    className={isActive ? "active" : ""}
+                    onClick={() => setSelectedId(submission.id)}
+                  >
+                    <div>
+                      <h3>
+                        {submission.first_name} {submission.last_name}
+                      </h3>
                     <p>{submission.subject}</p>
                   </div>
-                  <span className={`badge badge--${submission.status}`}>{submission.status}</span>
-                </li>
-              ))}
+                  <span className={`badge badge--${submission.status}`}>
+                    {submission.status}
+                  </span>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p>No submissions yet.</p>
@@ -188,20 +199,59 @@ const ContactAdminPage = () => {
         <section className="contact-admin__detail">
           {selectedSubmission ? (
             <div className="contact-admin__card">
-              <div className="contact-admin__card-header">
-                <h2>{selectedSubmission.subject}</h2>
-                <span className={`badge badge--${selectedSubmission.status}`}>
-                  {selectedSubmission.status}
-                </span>
+              <div className="contact-admin__subject-header">
+                <div>
+                  <h2>{selectedSubmission.subject}</h2>
+                  <span className="contact-admin__subject-tag">
+                    {selectedSubmission.status}
+                  </span>
+                </div>
               </div>
-              <p className="contact-admin__meta">
-                {selectedSubmission.email} · {selectedSubmission.phone || "No phone"}
-              </p>
-              <p className="contact-admin__message-body">{selectedSubmission.message}</p>
 
-              <div className="contact-admin__controls">
-                <label>
-                  Status
+              <div className="contact-admin__contact-info">
+                <h3>Contact Information</h3>
+                <div className="contact-admin__info-grid">
+                  <div className="contact-admin__info-item">
+                    <span className="contact-admin__info-label">👤 Name</span>
+                    <span className="contact-admin__info-value">
+                      {selectedSubmission.first_name} {selectedSubmission.last_name}
+                    </span>
+                  </div>
+                  <div className="contact-admin__info-item">
+                    <span className="contact-admin__info-label">📧 Email</span>
+                    <span className="contact-admin__info-value">
+                      {selectedSubmission.email}
+                    </span>
+                  </div>
+                  <div className="contact-admin__info-item">
+                    <span className="contact-admin__info-label">📞 Phone</span>
+                    <span className="contact-admin__info-value">
+                      {selectedSubmission.phone || "Not provided"}
+                    </span>
+                  </div>
+                  <div className="contact-admin__info-item">
+                    <span className="contact-admin__info-label">🏢 Company</span>
+                    <span className="contact-admin__info-value">
+                      {selectedSubmission.company || "Not provided"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="contact-admin__message-section">
+                <h3>Message</h3>
+                <div
+                  className={`contact-admin__message-box${
+                    isLongMessage ? " contact-admin__message-box--scroll" : ""
+                  }`}
+                >
+                  {selectedSubmission.message}
+                </div>
+              </div>
+
+              <div className="contact-admin__actions">
+                <div className="contact-admin__form-group">
+                  <label>Status</label>
                   <select
                     value={selectedSubmission.status}
                     onChange={(event) => handleUpdate({ status: event.target.value })}
@@ -212,9 +262,9 @@ const ContactAdminPage = () => {
                       </option>
                     ))}
                   </select>
-                </label>
-                <label>
-                  Priority
+                </div>
+                <div className="contact-admin__form-group">
+                  <label>Priority</label>
                   <select
                     value={selectedSubmission.priority}
                     onChange={(event) => handleUpdate({ priority: event.target.value })}
@@ -225,59 +275,70 @@ const ContactAdminPage = () => {
                       </option>
                     ))}
                   </select>
-                </label>
+                </div>
+              </div>
+
+              <div className="contact-admin__action-buttons">
                 <button
                   className="contact-admin__assign"
                   onClick={() => handleUpdate({ assigned_to: user.id })}
                 >
-                  Assign to me
+                  ✅ Assign to me
                 </button>
                 <button className="contact-admin__delete" onClick={handleDelete}>
-                  Delete
+                  🗑️ Delete
                 </button>
               </div>
 
               <div className="contact-admin__notes">
                 <h3>Notes</h3>
-                <div className="contact-admin__note-form">
-                  <textarea
-                    value={noteText}
-                    onChange={(event) => setNoteText(event.target.value)}
-                    placeholder="Add an internal note"
-                  />
-                  <div className="contact-admin__note-actions">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={isInternal}
-                        onChange={(event) => setIsInternal(event.target.checked)}
-                      />
-                      Internal only
-                    </label>
-                    <button onClick={handleAddNote}>Add note</button>
-                  </div>
+                <textarea
+                  value={noteText}
+                  onChange={(event) => setNoteText(event.target.value)}
+                  placeholder="Add an internal note"
+                />
+                <div className="contact-admin__note-actions">
+                  <label className="contact-admin__internal-toggle">
+                    <input
+                      type="checkbox"
+                      checked={isInternal}
+                      onChange={(event) => setIsInternal(event.target.checked)}
+                    />
+                    Internal only
+                  </label>
+                  <button onClick={handleAddNote}>Add note</button>
                 </div>
-                <ul>
-                  {notes.map((note) => (
-                    <li key={note.id}>
-                      <p>{note.note}</p>
-                      <span>{new Date(note.created_at).toLocaleString()}</span>
-                    </li>
-                  ))}
-                </ul>
+              </div>
+
+              <div className="contact-admin__notes-list">
+                {notes.map((note) => (
+                  <div key={note.id} className="contact-admin__note-item">
+                    <h4>Note</h4>
+                    <p>{note.note}</p>
+                    <p className="contact-admin__timestamp">
+                      {new Date(note.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
               </div>
 
               <div className="contact-admin__history">
                 <h3>History</h3>
-                <ul>
-                  {history.map((entry) => (
-                    <li key={entry.id}>
-                      <strong>{entry.action}</strong>
-                      {entry.field_name ? ` · ${entry.field_name}` : ""}
-                      <span>{new Date(entry.created_at).toLocaleString()}</span>
-                    </li>
-                  ))}
-                </ul>
+                {history.map((entry) => (
+                  <div key={entry.id} className="contact-admin__history-item">
+                    <span className="contact-admin__history-badge">{entry.action}</span>
+                    <p>
+                      {entry.action === "note" && entry.new_value
+                        ? `Added note: \"${entry.new_value}\"`
+                        : entry.field_name
+                          ? `${entry.field_name} changed to: ${entry.new_value || "—"}`
+                          : "Submission updated"}
+                    </p>
+                    <p className="contact-admin__timestamp">
+                      {new Date(entry.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
