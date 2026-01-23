@@ -1,33 +1,49 @@
 .contact-admin {
   min-height: 100vh;
-  padding: 2rem 5%;
   background: #0a1628;
   color: #ffffff;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-x: hidden;
 }
 
-.contact-admin__header {
+.contact-admin__container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 2rem 3%;
+}
+
+.contact-admin__page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 2rem;
 }
 
-.contact-admin__header h1 {
-  margin: 0 0 0.25rem;
+.contact-admin__page-header-content h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
 }
 
-.contact-admin__header p {
-  margin: 0;
+.contact-admin__page-header-content p {
   color: #b0c4de;
+  font-size: 1rem;
 }
 
 .contact-admin__refresh {
-  background: rgba(64, 224, 208, 0.15);
-  border: 1px solid rgba(64, 224, 208, 0.4);
-  color: #40e0d0;
-  padding: 0.6rem 1rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  color: #ffffff;
+  border: none;
   border-radius: 10px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
+}
+
+.contact-admin__refresh:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(64, 224, 208, 0.5);
 }
 
 .contact-admin__error,
@@ -51,16 +67,16 @@
 
 .contact-admin__layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 1.5rem;
+  grid-template-columns: 350px 1fr;
+  gap: 2rem;
 }
 
 .contact-admin__list {
-  background: #0f1f38;
-  border-radius: 16px;
-  padding: 1rem;
-  border: 1px solid rgba(64, 224, 208, 0.15);
-  max-height: 70vh;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(64, 224, 208, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  max-height: calc(100vh - 160px);
   overflow-y: auto;
 }
 
@@ -70,158 +86,348 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .contact-admin__list li {
-  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(64, 224, 208, 0.1);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  padding: 1.25rem;
   cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
-  border: 1px solid transparent;
+}
+
+.contact-admin__list li:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #40e0d0;
+  transform: translateX(5px);
 }
 
 .contact-admin__list li.active {
+  background: rgba(64, 224, 208, 0.1);
   border-color: #40e0d0;
-  background: rgba(64, 224, 208, 0.12);
 }
 
-.contact-admin__list h4 {
-  margin: 0;
-  font-size: 0.95rem;
+.contact-admin__list h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.35rem;
 }
 
 .contact-admin__list p {
-  margin: 0.2rem 0 0;
-  font-size: 0.8rem;
   color: #b0c4de;
+  font-size: 0.9rem;
+}
+
+.badge {
+  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  color: #ffffff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.badge--in_progress {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+}
+
+.badge--resolved,
+.badge--closed {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
 .contact-admin__detail {
-  background: #0f1f38;
-  border-radius: 16px;
-  padding: 1.5rem;
-  border: 1px solid rgba(64, 224, 208, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(64, 224, 208, 0.1);
+  border-radius: 20px;
+  padding: 2rem;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
 }
 
-.contact-admin__card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
+.contact-admin__subject-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(64, 224, 208, 0.1);
 }
 
-.contact-admin__meta {
-  margin: 0.5rem 0 1rem;
-  color: #b0c4de;
+.contact-admin__subject-header h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
 }
 
-.contact-admin__message-body {
-  background: rgba(255, 255, 255, 0.04);
-  padding: 1rem;
+.contact-admin__subject-tag {
+  background: rgba(64, 224, 208, 0.1);
+  color: #40e0d0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: inline-block;
+  text-transform: capitalize;
+}
+
+.contact-admin__contact-info,
+.contact-admin__message-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(64, 224, 208, 0.1);
   border-radius: 12px;
-  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-.contact-admin__controls {
+.contact-admin__contact-info h3,
+.contact-admin__message-section h3,
+.contact-admin__notes h3,
+.contact-admin__history h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.contact-admin__info-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  margin-bottom: 1.5rem;
 }
 
-.contact-admin__controls label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+.contact-admin__info-item {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(64, 224, 208, 0.1);
+}
+
+.contact-admin__info-label {
   color: #b0c4de;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.contact-admin__controls select {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(64, 224, 208, 0.3);
-  border-radius: 10px;
-  padding: 0.5rem 0.75rem;
-  color: #fff;
+.contact-admin__info-value {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
-.contact-admin__assign,
-.contact-admin__delete {
-  border: none;
+.contact-admin__message-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(64, 224, 208, 0.1);
   border-radius: 10px;
-  padding: 0.6rem 1rem;
+  padding: 1.5rem;
+  color: #b0c4de;
+  line-height: 1.8;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.contact-admin__message-box--scroll {
+  height: 300px;
+  overflow-y: auto;
+}
+
+.contact-admin__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.contact-admin__form-group label {
+  display: block;
+  color: #b0c4de;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.contact-admin__form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(64, 224, 208, 0.2);
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 0.95rem;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.contact-admin__form-group select:focus {
+  outline: none;
+  border-color: #40e0d0;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.contact-admin__action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .contact-admin__assign {
-  background: rgba(64, 224, 208, 0.2);
-  color: #40e0d0;
+  padding: 1rem;
+  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
+}
+
+.contact-admin__assign:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(64, 224, 208, 0.5);
 }
 
 .contact-admin__delete {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fecaca;
+  padding: 1rem;
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
 }
 
-.contact-admin__notes,
-.contact-admin__history {
-  margin-top: 1.5rem;
+.contact-admin__delete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(220, 53, 69, 0.5);
 }
 
-.contact-admin__note-form textarea {
+.contact-admin__notes {
+  margin-bottom: 2rem;
+}
+
+.contact-admin__notes textarea {
   width: 100%;
-  min-height: 80px;
-  padding: 0.75rem;
-  border-radius: 12px;
-  border: 1px solid rgba(64, 224, 208, 0.3);
+  min-height: 120px;
+  padding: 1rem;
   background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  border: 2px solid rgba(64, 224, 208, 0.2);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+}
+
+.contact-admin__notes textarea::placeholder {
+  color: #6c7a8d;
+}
+
+.contact-admin__notes textarea:focus {
+  outline: none;
+  border-color: #40e0d0;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .contact-admin__note-actions {
-  margin-top: 0.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #b0c4de;
+  margin-top: 1rem;
 }
 
-.contact-admin__note-actions button {
-  background: #40e0d0;
-  border: none;
-  border-radius: 8px;
-  padding: 0.4rem 0.9rem;
+.contact-admin__internal-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #b0c4de;
+  font-size: 0.9rem;
+}
+
+.contact-admin__internal-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #40e0d0;
   cursor: pointer;
 }
 
-.contact-admin__notes ul,
-.contact-admin__history ul {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0 0;
-  display: grid;
-  gap: 0.75rem;
-}
-
-.contact-admin__notes li,
-.contact-admin__history li {
-  background: rgba(255, 255, 255, 0.04);
-  padding: 0.75rem;
+.contact-admin__note-actions button {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #40e0d0, #1e90ff);
+  color: #ffffff;
+  border: none;
   border-radius: 10px;
-  color: #b0c4de;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.contact-admin__notes li span,
-.contact-admin__history li span {
-  display: block;
-  margin-top: 0.4rem;
+.contact-admin__note-actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
+}
+
+.contact-admin__notes-list {
+  margin-bottom: 2rem;
+}
+
+.contact-admin__note-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(64, 224, 208, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.contact-admin__note-item h4 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.contact-admin__note-item p {
+  color: #b0c4de;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.contact-admin__timestamp {
+  color: #6c7a8d;
+  font-size: 0.85rem;
+}
+
+.contact-admin__history-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid #40e0d0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.contact-admin__history-badge {
+  display: inline-block;
+  background: rgba(64, 224, 208, 0.2);
+  color: #40e0d0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
   font-size: 0.75rem;
-  color: #7aa3c2;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.contact-admin__history-item p {
+  color: #b0c4de;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
 }
 
 .contact-admin__empty {
@@ -230,32 +436,38 @@
   color: #b0c4de;
 }
 
-.badge {
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  text-transform: capitalize;
-  background: rgba(255, 255, 255, 0.1);
+@media (max-width: 1200px) {
+  .contact-admin__layout {
+    grid-template-columns: 300px 1fr;
+  }
 }
 
-.badge--new {
-  background: rgba(59, 130, 246, 0.2);
-  color: #bfdbfe;
-}
-
-.badge--in_progress {
-  background: rgba(234, 179, 8, 0.2);
-  color: #fde68a;
-}
-
-.badge--resolved,
-.badge--closed {
-  background: rgba(34, 197, 94, 0.2);
-  color: #bbf7d0;
-}
-
-@media (max-width: 1024px) {
+@media (max-width: 968px) {
   .contact-admin__layout {
     grid-template-columns: 1fr;
+  }
+
+  .contact-admin__list {
+    max-height: 400px;
+  }
+
+  .contact-admin__info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-admin__actions,
+  .contact-admin__action-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .contact-admin__page-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .contact-admin__refresh {
+    width: 100%;
   }
 }
