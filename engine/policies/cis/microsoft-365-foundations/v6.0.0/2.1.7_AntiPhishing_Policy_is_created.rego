@@ -58,14 +58,20 @@ targeted_users := [user |
     user := p.TargetedUsersToProtect[_]
 ]
 
+global_compliant_policies := [p |
+    p := input.anti_phish_policies[_]
+    policy_compliant(p)
+    count(p.TargetedUsersToProtect) == 0
+]
+
 result := {
     "compliant": true,
     "message": sprintf(
-        "Found %d targeted user(s) protected by compliant anti-phishing policy",
-        [count(targeted_users)]
+        "Found %d user(s) protected by compliant anti-phishing policy (including global/default)",
+        [count(targeted_users) + count(global_compliant_policies)]
     )
 } if {
-    count(targeted_users) > 0
+    count(targeted_users) + count(global_compliant_policies) > 0
 }
 
 result := {
