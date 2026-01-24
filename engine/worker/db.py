@@ -247,6 +247,14 @@ def increment_scan_error_count(session: Session, scan_id: int) -> None:
     )
 
 
+def increment_scan_skipped_count(session: Session, scan_id: int, amount: int = 1) -> None:
+    """Increment the skipped count for a scan."""
+    session.execute(
+        text("UPDATE scan SET skipped_count = skipped_count + :amount WHERE id = :scan_id"),
+        {"scan_id": scan_id, "amount": amount},
+    )
+
+
 def update_scan_result(
     session: Session,
     result_id: int,

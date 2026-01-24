@@ -19,6 +19,8 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_9
 
+import rego.v1
+
 default result := {"compliant": false, "message": "Evaluation failed"}
 
 # Compute dkim_enabled from per-domain lists

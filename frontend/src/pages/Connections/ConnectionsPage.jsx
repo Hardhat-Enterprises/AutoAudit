@@ -1,0 +1,551 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, Link2, AlertCircle, Loader2, RefreshCw, Pencil, Trash2, CheckCircle2, XCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { APIError, getPlatforms, getConnections, createConnection, updateConnection, deleteConnection, testConnection } from '../../api/client';
+import './ConnectionsPage.css';
+
+const CLIENT_SECRET_MASK = '************';
+
+const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
+  const { token } = useAuth();
+  const [platforms, setPlatforms] = useState([]);
+  const [connections, setConnections] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    platform_id: '',
+    tenant_id: '',
+    client_id: '',
+    client_secret: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingConnection, setEditingConnection] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    tenant_id: '',
+    client_id: '',
+    client_secret: '',
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [testingId, setTestingId] = useState(null);
+  const [testResults, setTestResults] = useState({});
+
+  function getConnectionErrorMessage(err, fallbackMessage) {
+    // Backend returns 400 Bad Request when M365 auth cannot be established.
+    if (err instanceof APIError && err.status === 400) {
+      return 'Authentication not established. Please check your tenant ID, client ID, and client secret and try again.';
+    }
+    if (err?.status === 400) {
+      return 'Authentication not established. Please check your tenant ID, client ID, and client secret and try again.';
+    }
+    return err?.message || fallbackMessage;
+  }
+
+  useEffect(() => {
+    loadData();
+  }, [token]);
+
+  async function loadData() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [platformsData, connectionsData] = await Promise.all([
+        getPlatforms(token),
+        getConnections(token),
+      ]);
+      setPlatforms(platformsData);
+      setConnections(connectionsData);
+    } catch (err) {
+      setError(err.message || 'Failed to load data');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const newConnection = await createConnection(token, {
+        name: formData.name,
+        tenant_id: formData.tenant_id,
+        client_id: formData.client_id,
+        client_secret: formData.client_secret,
+      });
+      setConnections(prev => [...prev, newConnection]);
+      setFormData({
+        name: '',
+        platform_id: '',
+        tenant_id: '',
+        client_id: '',
+        client_secret: '',
+      });
+      setShowForm(false);
+    } catch (err) {
+      setError(getConnectionErrorMessage(err, 'Failed to create connection'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleTestConnection(connection) {
+    setTestingId(connection.id);
+    setError(null);
+    try {
+      const result = await testConnection(token, connection.id);
+      setTestResults(prev => ({ ...prev, [connection.id]: result }));
+      if (!result?.success) {
+        setError(result?.message || 'Connection test failed');
+      }
+    } catch (err) {
+      const message = getConnectionErrorMessage(err, 'Connection test failed');
+      setError(message);
+      setTestResults(prev => ({
+        ...prev,
+        [connection.id]: { success: false, message },
+      }));
+    } finally {
+      setTestingId(null);
+    }
+  }
+
+  function startEditing(connection) {
+    setEditingConnection(connection);
+    setEditFormData({
+      name: connection.name,
+      tenant_id: connection.tenant_id,
+      client_id: connection.client_id,
+      // Never expose the actual secret; show a mask so it doesn't look blank.
+      client_secret: CLIENT_SECRET_MASK,
+    });
+  }
+
+  function handleEditChange(e) {
+    const { name } = e.target;
+    let { value } = e.target;
+
+    // If the user starts typing while the masked placeholder is present,
+    // ensure we don't keep the mask characters in state.
+    if (
+      name === 'client_secret' &&
+      editFormData.client_secret === CLIENT_SECRET_MASK &&
+      value.startsWith(CLIENT_SECRET_MASK)
+    ) {
+      value = value.slice(CLIENT_SECRET_MASK.length);
+    }
+    setEditFormData(prev => ({ ...prev, [name]: value }));
+  }
+
+  async function handleEditSubmit(e) {
+    e.preventDefault();
+    setIsEditing(true);
+    setError(null);
+    try {
+      const updateData = {
+        name: editFormData.name,
+        tenant_id: editFormData.tenant_id,
+        client_id: editFormData.client_id,
+      };
+      // Only include client_secret if user entered a new one
+      if (editFormData.client_secret && editFormData.client_secret !== CLIENT_SECRET_MASK) {
+        updateData.client_secret = editFormData.client_secret;
+      }
+
+      const updatedConnection = await updateConnection(token, editingConnection.id, updateData);
+      setConnections(prev =>
+        prev.map(conn => (conn.id === editingConnection.id ? updatedConnection : conn))
+      );
+      setEditingConnection(null);
+    } catch (err) {
+      setError(getConnectionErrorMessage(err, 'Failed to update connection'));
+    } finally {
+      setIsEditing(false);
+    }
+  }
+
+  function cancelEditing() {
+    setEditingConnection(null);
+    setEditFormData({
+      name: '',
+      tenant_id: '',
+      client_id: '',
+      client_secret: '',
+    });
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm('Are you sure you want to delete this connection? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeletingId(id);
+    setError(null);
+
+    try {
+      await deleteConnection(token, id);
+      setConnections(prev => prev.filter(conn => conn.id !== id));
+    } catch (err) {
+      setError(err.message || 'Failed to delete connection');
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div
+        className={`connections-page ${isDarkMode ? 'dark' : 'light'}`}
+        style={{
+          marginLeft: `${sidebarWidth}px`,
+          width: `calc(100% - ${sidebarWidth}px)`,
+          transition: 'margin-left 0.4s ease, width 0.4s ease'
+        }}
+      >
+        <div className="connections-container">
+          <div className="loading-state">
+            <Loader2 size={32} className="spinning" />
+            <p>Loading connections...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`connections-page ${isDarkMode ? 'dark' : 'light'}`}
+      style={{
+        marginLeft: `${sidebarWidth}px`,
+        width: `calc(100% - ${sidebarWidth}px)`,
+        transition: 'margin-left 0.4s ease, width 0.4s ease'
+      }}
+    >
+      <div className="connections-container">
+        <div className="page-header">
+          <div className="header-content">
+            <Link2 size={24} />
+            <div className="header-text">
+              <h1>Cloud Platforms</h1>
+              <p>Manage your cloud platform connections</p>
+            </div>
+          </div>
+          <button
+            className="toolbar-button primary"
+            onClick={() => setShowForm(!showForm)}
+          >
+            <Plus size={16} />
+            <span>Add Connection</span>
+          </button>
+        </div>
+
+        {error && (
+          <div className="error-banner">
+            <AlertCircle size={18} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {showForm && (
+          <div className="connection-form-card">
+            <h3>New Connection</h3>
+            <form onSubmit={handleSubmit}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="name">Connection Name</label>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="My M365 Connection"
+                    required
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="platform_id">Platform</label>
+                  <select
+                    id="platform_id"
+                    name="platform_id"
+                    value={formData.platform_id}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                  >
+                    <option value="">Select a platform</option>
+                    {platforms.map(platform => (
+                      <option key={platform.id} value={platform.id}>
+                        {platform.display_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="tenant_id">Tenant ID</label>
+                <input
+                  id="tenant_id"
+                  name="tenant_id"
+                  type="text"
+                  value={formData.tenant_id}
+                  onChange={handleChange}
+                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="client_id">Client ID</label>
+                  <input
+                    id="client_id"
+                    name="client_id"
+                    type="text"
+                    value={formData.client_id}
+                    onChange={handleChange}
+                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                    required
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="client_secret">Client Secret</label>
+                  <input
+                    id="client_secret"
+                    name="client_secret"
+                    type="password"
+                    value={formData.client_secret}
+                    onChange={handleChange}
+                    placeholder="Enter client secret"
+                    required
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="toolbar-button secondary"
+                  onClick={() => setShowForm(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="toolbar-button primary"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="spinning" />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      <span>Create Connection</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {editingConnection && (
+          <div className="connection-form-card">
+            <h3>Edit Connection</h3>
+            <form onSubmit={handleEditSubmit}>
+              <div className="form-group">
+                <label htmlFor="edit_name">Connection Name</label>
+                <input
+                  id="edit_name"
+                  name="name"
+                  type="text"
+                  value={editFormData.name}
+                  onChange={handleEditChange}
+                  required
+                  disabled={isEditing}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="edit_tenant_id">Tenant ID</label>
+                <input
+                  id="edit_tenant_id"
+                  name="tenant_id"
+                  type="text"
+                  value={editFormData.tenant_id}
+                  onChange={handleEditChange}
+                  required
+                  disabled={isEditing}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="edit_client_id">Client ID</label>
+                <input
+                  id="edit_client_id"
+                  name="client_id"
+                  type="text"
+                  value={editFormData.client_id}
+                  onChange={handleEditChange}
+                  required
+                  disabled={isEditing}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="edit_client_secret">Client Secret</label>
+                <input
+                  id="edit_client_secret"
+                  name="client_secret"
+                  type="password"
+                  value={editFormData.client_secret}
+                  onChange={handleEditChange}
+                  placeholder="Enter a new client secret"
+                  onFocus={(e) => {
+                    if (e.target.value === CLIENT_SECRET_MASK) {
+                      e.target.select();
+                    }
+                  }}
+                  disabled={isEditing}
+                />
+              </div>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="toolbar-button secondary"
+                  onClick={cancelEditing}
+                  disabled={isEditing}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="toolbar-button primary"
+                  disabled={isEditing}
+                >
+                  {isEditing ? (
+                    <>
+                      <Loader2 size={16} className="spinning" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="connections-list">
+          {connections.length === 0 ? (
+            <div className="empty-state">
+              <Link2 size={48} />
+              <h3>No connections yet</h3>
+              <p>Add your first M365 connection to start scanning.</p>
+            </div>
+          ) : (
+            connections.map(connection => (
+              <div key={connection.id} className="connection-card">
+                <div className="connection-info">
+                  <div className="connection-header">
+                    <h4>{connection.name}</h4>
+                    {testingId === connection.id ? (
+                      <span className="status-badge pending">
+                        <Loader2 size={12} className="spinning status-icon pending" />
+                        <span>Testing</span>
+                      </span>
+                    ) : testResults[connection.id]?.success === true ? (
+                      <span className="status-badge connected">
+                        <CheckCircle2 size={12} className="status-icon success" />
+                        <span>Connected</span>
+                      </span>
+                    ) : testResults[connection.id]?.success === false ? (
+                      <span className="status-badge failed">
+                        <XCircle size={12} className="status-icon error" />
+                        <span>Failed</span>
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="connection-details">
+                    <span className="detail-item">
+                      <strong>Tenant ID:</strong> {connection.tenant_id}
+                    </span>
+                    <span className="detail-item">
+                      <strong>Client ID:</strong> {connection.client_id}
+                    </span>
+                    {testResults[connection.id]?.tenant_display_name ? (
+                      <span className="detail-item">
+                        <strong>Tenant:</strong> {testResults[connection.id].tenant_display_name}
+                      </span>
+                    ) : null}
+                    {testResults[connection.id]?.default_domain ? (
+                      <span className="detail-item">
+                        <strong>Default Domain:</strong> {testResults[connection.id].default_domain}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="connection-actions">
+                  <button
+                    className="toolbar-button secondary"
+                    onClick={() => handleTestConnection(connection)}
+                    disabled={testingId === connection.id}
+                  >
+                    {testingId === connection.id ? (
+                      <Loader2 size={14} className="spinning" />
+                    ) : (
+                      <RefreshCw size={14} />
+                    )}
+                    <span>{testingId === connection.id ? 'Testing...' : 'Test'}</span>
+                  </button>
+                  <button
+                    className="toolbar-button secondary"
+                    onClick={() => startEditing(connection)}
+                    disabled={editingConnection?.id === connection.id}
+                  >
+                    <Pencil size={14} />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    className="toolbar-button danger"
+                    onClick={() => handleDelete(connection.id)}
+                    disabled={deletingId === connection.id}
+                  >
+                    {deletingId === connection.id ? (
+                      <Loader2 size={14} className="spinning" />
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
+                    <span>{deletingId === connection.id ? 'Deleting...' : 'Delete'}</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ConnectionsPage;
