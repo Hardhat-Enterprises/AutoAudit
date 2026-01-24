@@ -124,6 +124,7 @@ async def list_scans(
     """List scans for the current user."""
     result = await db.execute(
         select(Scan)
+        .options(selectinload(Scan.m365_connection))
         .where(Scan.user_id == current_user.id)
         .order_by(Scan.started_at.desc())
         .limit(limit)
@@ -141,7 +142,7 @@ async def get_scan(
     """Get scan details by ID including results."""
     result = await db.execute(
         select(Scan)
-        .options(selectinload(Scan.results))
+        .options(selectinload(Scan.results), selectinload(Scan.m365_connection))
         .where(Scan.id == scan_id, Scan.user_id == current_user.id)
     )
     scan = result.scalar_one_or_none()

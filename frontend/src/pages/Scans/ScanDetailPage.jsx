@@ -13,7 +13,23 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getScan } from '../../api/client';
+import { formatDateAEST, formatTimeAEST } from '../../utils/helpers';
 import './ScanDetailPage.css';
+
+function compareControlIdAscending(a, b) {
+  const aId = (a?.control_id || '').toString();
+  const bId = (b?.control_id || '').toString();
+  const aParts = aId.split('.').map(s => Number.parseInt(s, 10));
+  const bParts = bId.split('.').map(s => Number.parseInt(s, 10));
+
+  const len = Math.max(aParts.length, bParts.length);
+  for (let i = 0; i < len; i++) {
+    const av = Number.isFinite(aParts[i]) ? aParts[i] : -1;
+    const bv = Number.isFinite(bParts[i]) ? bParts[i] : -1;
+    if (av !== bv) return av - bv;
+  }
+  return aId.localeCompare(bId);
+}
 
 const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const { scanId } = useParams();
@@ -86,8 +102,11 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   }
 
   function formatDate(dateString) {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleString();
+    return formatDateAEST(dateString);
+  }
+
+  function formatTime(dateString) {
+    return formatTimeAEST(dateString);
   }
 
   function getResultIcon(status) {
@@ -175,7 +194,15 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     errors: scan.error_count || 0,
     pending: (scan.total_controls || 0) - (scan.passed_count || 0) - (scan.failed_count || 0) - (scan.error_count || 0) - (scan.skipped_count || 0),
   };
-  const results = scan.results || [];
+  const done = summary.passed + summary.failed + summary.errors + (scan.skipped_count || 0);
+  const progressPercent =
+    summary.total > 0
+      ? Math.min(100, Math.round((done / summary.total) * 100))
+      : scan.status === 'completed' ? 100: 0;
+  const results = (scan.results || [])
+    .filter(r => (r?.status || '').toLowerCase() !== 'skipped')
+    .slice()
+    .sort(compareControlIdAscending);
 
   return (
     <div
@@ -212,15 +239,31 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
           <div className="scan-meta">
             <div className="meta-item">
               <span className="meta-label">Connection</span>
-              <span className="meta-value">{scan.connection_name || '-'}</span>
+              <span className="meta-value">
+                {scan.connection_name || (scan.m365_connection_id ? `Connection #${scan.m365_connection_id}` : '-')}
+              </span>
             </div>
             <div className="meta-item">
               <span className="meta-label">Started</span>
-              <span className="meta-value">{formatDate(scan.created_at)}</span>
+              <div className="meta-value">
+                <div className="meta-date">{formatDate(scan.started_at || scan.created_at)}</div>
+                <div className="meta-time">{formatTime(scan.started_at || scan.created_at)}</div>
+              </div>
             </div>
             <div className="meta-item">
               <span className="meta-label">Completed</span>
-              <span className="meta-value">{formatDate(scan.completed_at)}</span>
+              {scan.finished_at || scan.completed_at ? (
+                <div className="meta-value">
+                  <div className="meta-date">{formatDate(scan.finished_at || scan.completed_at)}</div>
+                  <div className="meta-time">{formatTime(scan.finished_at || scan.completed_at)}</div>
+                </div>
+              ) : (
+                <div className="meta-value">
+                  <div className="meta-date">
+                    {(scan.status === 'pending' || scan.status === 'running') ? 'In progress' : '-'}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -234,8 +277,22 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                 <p>
                   {scan.status === 'pending'
                     ? 'Waiting to start...'
-                    : `Evaluating controls... ${summary.passed + summary.failed + summary.errors} of ${summary.total} complete`}
+                    : `Evaluating controls... ${done} of ${summary.total} complete`}
                 </p>
+              </div>
+            </div>
+
+            <div className="scan-progress-bar">
+              <div className="scan-progress-track">
+                <div
+                  className={`scan-progress-fill ${scan.status || 'pending'}`}
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <div className="scan-progress-meta">
+                <span>{done}/{summary.total} controls</span>
+                <span className="scan-progress-sep">•</span>
+                <span>{progressPercent}%</span>
               </div>
             </div>
           </div>

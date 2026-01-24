@@ -15,6 +15,7 @@ from worker.db import (
     update_scan_status,
     increment_scan_progress,
     increment_scan_error_count,
+    increment_scan_skipped_count,
     update_scan_result,
     finalize_scan_if_complete,
 )
@@ -159,6 +160,7 @@ def run_scan(scan_id: int) -> dict:
                     status="skipped",
                     message=f"Control {status}: {control.get('notes') or 'Not yet automatable'}",
                 )
+                increment_scan_skipped_count(session, scan_id)
                 session.commit()
             skipped += 1
 
@@ -331,9 +333,13 @@ async def _evaluate_control_async(
     # Get collector
     collector = get_collector(collector_id)
 
-    # Determine client type based on collector_id prefix
-    # Exchange and Compliance collectors require PowerShell
-    if collector_id.startswith(("exchange.", "compliance.")):
+    # Determine client type based on collector_id prefix.
+    #
+    # Most Exchange and Compliance collectors require PowerShell, but a few Exchange
+    # collectors use Graph (e.g. domain metadata).
+    if collector_id.startswith(("exchange.", "compliance.")) and not collector_id.startswith(
+        "exchange.dns."
+    ):
         client = PowerShellClient(
             tenant_id=credentials["tenant_id"],
             client_id=credentials["client_id"],

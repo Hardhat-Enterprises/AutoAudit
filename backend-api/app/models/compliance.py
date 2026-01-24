@@ -68,3 +68,10 @@ class Scan(Base):
         back_populates="scans"
     )
     results: Mapped[list["ScanResult"]] = relationship(back_populates="scan")
+
+    @property
+    def connection_name(self) -> str | None:
+        """Convenience field for API/UI display."""
+        if self.m365_connection is not None:
+            return self.m365_connection.name
+        return None
