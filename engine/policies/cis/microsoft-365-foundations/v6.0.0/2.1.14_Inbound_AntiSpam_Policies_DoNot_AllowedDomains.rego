@@ -27,35 +27,27 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_14
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-allowed_sender_domains_undefined := true if {
-    input.AllowedSenderDomains == null
-}
+allowed_sender_domains := input.allowed_sender_domains
+allowed_sender_domains := [] if input.allowed_sender_domains == null
 
-allowed_sender_domains_undefined := true if {
-    input.AllowedSenderDomains != null
-    count(input.AllowedSenderDomains) == 0
-}
+allowed_sender_domains_undefined := true if count(allowed_sender_domains) == 0
+allowed_sender_domains_undefined := false if count(allowed_sender_domains) > 0
 
-allowed_sender_domains_undefined := false if {
-    input.AllowedSenderDomains != null
-    count(input.AllowedSenderDomains) > 0
-}
-
-result := output if {
-    compliant := allowed_sender_domains_undefined == true
-
-    output := {
-        "compliant": compliant,
-        "message": generate_message(allowed_sender_domains_undefined),
-        "affected_resources": generate_affected_resources(allowed_sender_domains_undefined),
-        "details": {
-            "AllowedSenderDomains": input.AllowedSenderDomains
-        }
+result := {
+    "compliant": allowed_sender_domains_undefined,
+    "message": messages[allowed_sender_domains_undefined],
+    "affected_resources": affected_resources[allowed_sender_domains_undefined],
+    "details": {
+        "allowed_sender_domains": allowed_sender_domains
     }
 }
 
-generate_message(true) := "AllowedSenderDomains is undefined or empty for the policy"
-generate_message(false) := "AllowedSenderDomains is defined for the policy"
+messages := {
+    true: "AllowedSenderDomains is undefined or empty for the policy",
+    false: "AllowedSenderDomains is defined for the policy"
+}
 
-generate_affected_resources(true) := []
-generate_affected_resources(false) := ["HostedContentFilterPolicy"]
+affected_resources := {
+    true: [],
+    false: ["HostedContentFilterPolicy"]
+}

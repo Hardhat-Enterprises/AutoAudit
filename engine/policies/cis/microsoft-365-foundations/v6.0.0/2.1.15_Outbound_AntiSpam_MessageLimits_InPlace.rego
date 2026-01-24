@@ -24,24 +24,23 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_15
 
-default result := {"compliant": false, "message": "Evaluation failed"}
-
+# Expected policy values
 required_policy_fields := {
-  "RecipientLimitExternalPerHour": 500,
-  "RecipientLimitInternalPerHour": 1000,
-  "RecipientLimitPerDay": 1000,
-  "ActionWhenThresholdReached": "BlockUser",
+    "RecipientLimitExternalPerHour": 500,
+    "RecipientLimitInternalPerHour": 1000,
+    "RecipientLimitPerDay": 1000,
 }
 
-limits_compliant if {
-  input != null
-  all k in required_policy_fields {
-    input[k] != null
-    input[k] == required_policy_fields[k]
-  }
+valid_actions := {"BlockUser", "RestrictUser", "Restrict"}
+
+limits_compliant if input != null {
+    all_keys_correct := {k | k in required_policy_fields; input[k] == required_policy_fields[k]}
+    count(all_keys_correct) == count(required_policy_fields)
+
+    # Action must match one of the valid options
+    input.ActionWhenThresholdReached in valid_actions
 }
 
-# Final compliance now only depends on limits/action
 compliant := limits_compliant
 
 compliant_message := "Outbound spam filter policy is correctly configured for message limits and over-limit action"
@@ -57,14 +56,15 @@ generate_affected_resources(false, _) := ["Outbound Spam Filter Policy"]
 generate_affected_resources(null, _) := ["Outbound Spam Filter Policy configuration status unknown"]
 
 result := {
-  "compliant": compliant,
-  "message": generate_message(compliant),
-  "affected_resources": generate_affected_resources(compliant, input),
-  "details": {
-    "RecipientLimitExternalPerHour": input.RecipientLimitExternalPerHour,
-    "RecipientLimitInternalPerHour": input.RecipientLimitInternalPerHour,
-    "RecipientLimitPerDay": input.RecipientLimitPerDay,
-    "ActionWhenThresholdReached": input.ActionWhenThresholdReached,
-    "required_policy_settings": required_policy_fields
-  }
+    "compliant": compliant,
+    "message": generate_message(compliant),
+    "affected_resources": generate_affected_resources(compliant, input),
+    "details": {
+        "RecipientLimitExternalPerHour": input.RecipientLimitExternalPerHour,
+        "RecipientLimitInternalPerHour": input.RecipientLimitInternalPerHour,
+        "RecipientLimitPerDay": input.RecipientLimitPerDay,
+        "ActionWhenThresholdReached": input.ActionWhenThresholdReached,
+        "required_policy_settings": required_policy_fields,
+        "valid_actions": valid_actions
+    }
 }

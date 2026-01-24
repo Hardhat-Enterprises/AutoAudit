@@ -2,12 +2,11 @@
 # title: Ensure the connection filter IP allow list is not used
 # description: |
 #   In Microsoft 365 organizations with Exchange Online mailboxes or standalone
-#   Exchange Online Protection organizations without Exchange Online mailboxes
+#   Exchange Online Protection organizations without Exchange Online mailboxes,
 #   connection filtering and the default connection filter policy identify good or
 #   bad source email servers by IP addresses. The key components of the default connection
 #   filter policy are IP Allow List, IP Block List and Safe list.
 #   The recommended state is IP Allow List empty or undefined.
-#  
 # related_resources:
 # - ref: https://www.cisecurity.org/benchmark/microsoft_365
 #   description: CIS Microsoft 365 Foundations Benchmark
@@ -25,40 +24,24 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_12
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-# Required IPAllowList setting
-required_fields := {
-    "IPAllowList": []
-}
+ip_allow_list_status := "empty" if input.ip_allow_list == []
+ip_allow_list_status := "not_empty" if input.ip_allow_list != []
 
-ip_allow_list_is_empty := true {
-    input.IPAllowList == []        # empty array
-} else := true {
-    input.IPAllowList == {}        # empty object
-} else := false {
-    input.IPAllowList != {}        # non-empty object
-} else := false {
-    input.IPAllowList != []        # non-empty array
-} else := null {
-    not input.IPAllowList          # field missing
-}
-
-result := output if {
-    compliant := ip_allow_list_is_empty == true
-
-    output := {
-        "compliant": compliant,
-        "message": generate_message(ip_allow_list_is_empty),
-        "affected_resources": generate_affected_resources(ip_allow_list_is_empty),
-        "details": {
-            "IPAllowList": input.IPAllowList
-        }
+result := {
+    "compliant": ip_allow_list_status == "empty",
+    "message": messages[ip_allow_list_status],
+    "affected_resources": affected_resources[ip_allow_list_status],
+    "details": {
+        "ip_allow_list": input.ip_allow_list
     }
 }
 
-generate_message(true) := "IPAllowList is empty or {} in Exchange Online Hosted Connection Filter"
-generate_message(false) := "IPAllowList is not empty or is not {} in Exchange Online Hosted Connection Filter"
-generate_message(null) := "Unable to determine the IPAllowList status in Exchange Online Hosted Connection Filter"
+messages := {
+    "empty": "IPAllowList is empty in Exchange Online Hosted Connection Filter",
+    "not_empty": "IPAllowList is not empty in Exchange Online Hosted Connection Filter"
+}
 
-generate_affected_resources(true) := []
-generate_affected_resources(false) := ["HostedConnectionFilterPolicy"]
-generate_affected_resources(null) := ["HostedConnectionFilterPolicy status unknown"]
+affected_resources := {
+    "empty": [],
+    "not_empty": ["HostedConnectionFilterPolicy"]
+}

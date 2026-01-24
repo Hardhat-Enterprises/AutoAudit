@@ -21,22 +21,12 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_4_4
 
-default result := {"compliant": false, "message": "Evaluation failed"}
-
-required_fields := {
-    "ZeroHourAutoPurgeEnabled": true
-}
-
 zero_hour_auto_purge_enabled := true if {
-    input.ZeroHourAutoPurgeEnabled == true
+    input.zap_enabled == true
 }
 
 zero_hour_auto_purge_enabled := false if {
-    input.ZeroHourAutoPurgeEnabled != true
-}
-
-zero_hour_auto_purge_enabled := null if {
-    not input.ZeroHourAutoPurgeEnabled
+    input.zap_enabled != true
 }
 
 result := output if {
@@ -47,15 +37,12 @@ result := output if {
         "message": generate_message(zero_hour_auto_purge_enabled),
         "affected_resources": generate_affected_resources(zero_hour_auto_purge_enabled),
         "details": {
-            "ZeroHourAutoPurgeEnabled": input.ZeroHourAutoPurgeEnabled
+            "zap_enabled": input.zap_enabled
         }
     }
 }
 
 generate_message(true) := "Zero-hour auto purge is enabled for Microsoft Teams"
 generate_message(false) := "Zero-hour auto purge is not enabled for Microsoft Teams"
-generate_message(null) := "Unable to determine if Zero-hour auto purge is enabled for Microsoft Teams"
-
-generate_affected_resources(true) := []
 generate_affected_resources(false) := ["TeamsProtectionPolicy"]
 generate_affected_resources(null) := ["TeamsProtectionPolicy status unknown"]

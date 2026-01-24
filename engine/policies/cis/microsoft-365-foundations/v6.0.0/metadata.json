@@ -258,7 +258,7 @@
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
       "data_collector_id": "exchange.protection.malware_filter_policy",
-      "policy_file": "2.1.2_Common_AttachmentTypes_Filter_Enabled.rego",
+      "policy_file": "2.1.2_Common_AttachmentTypes_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
     },

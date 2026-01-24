@@ -19,7 +19,7 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_4
 
-default result := {"compliant": false, "message": "Evaluation failed"}
+
 
 compliant if {
     input.data.enable == true

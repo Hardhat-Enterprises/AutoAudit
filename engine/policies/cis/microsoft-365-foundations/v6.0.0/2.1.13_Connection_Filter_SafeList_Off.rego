@@ -26,31 +26,23 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_13
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-# Compute compliance for EnableSafeList
-enable_safe_list_is_false = if input.EnableSafeList == null {
-    null  # Field missing → null
-} else {
-    !input.EnableSafeList  # Explicit value → invert: false means compliant
-}
+result := {
+    "compliant": true,
+    "message": "EnableSafeList is False for Exchange Online Hosted Connection Filter",
+    "affected_resources": [],
+    "details": {"EnableSafeList": input.enable_safe_list}
+} if input.enable_safe_list == false
 
-# Determine overall result
-result := output if {
-    compliant := enable_safe_list_is_false == true
+result := {
+    "compliant": false,
+    "message": "EnableSafeList is not False for Exchange Online Hosted Connection Filter",
+    "affected_resources": ["HostedConnectionFilterPolicy"],
+    "details": {"EnableSafeList": input.enable_safe_list}
+} if input.enable_safe_list == true
 
-    output := {
-        "compliant": compliant,
-        "message": generate_message(enable_safe_list_is_false),
-        "affected_resources": generate_affected_resources(enable_safe_list_is_false),
-        "details": {
-            "EnableSafeList": input.EnableSafeList
-        }
-    }
-}
-
-generate_message(true) := "EnableSafeList is False for Exchange Online Hosted Connection Filter"
-generate_message(false) := "EnableSafeList is not False for Exchange Online Hosted Connection Filter"
-generate_message(null) := "Unable to determine the EnableSafeList status in Exchange Online Hosted Connection Filter"
-
-generate_affected_resources(true) := []
-generate_affected_resources(false) := ["HostedConnectionFilterPolicy"]
-generate_affected_resources(null) := ["HostedConnectionFilterPolicy status unknown"]
+result := {
+    "compliant": false,
+    "message": "Unable to determine the EnableSafeList status in Exchange Online Hosted Connection Filter",
+    "affected_resources": ["HostedConnectionFilterPolicy status unknown"],
+    "details": {"EnableSafeList": input.enable_safe_list}
+} if input.enable_safe_list == null

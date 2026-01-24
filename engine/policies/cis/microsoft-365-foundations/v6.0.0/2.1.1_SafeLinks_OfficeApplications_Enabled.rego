@@ -23,40 +23,63 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_1
 default result := {"compliant": false, "message": "Evaluation failed"}
 
 required_fields := {
-    "EnableSafeLinksForOffice": true
+    "EnableSafeLinksForEmail": true,
+    "EnableSafeLinksForTeams": true,
+    "EnableSafeLinksForOffice": true,
+    "TrackClicks": true,
+    "AllowClickThrough": false,
+    "ScanUrls": true,
+    "EnableForInternalSenders": true,
+    "DeliverMessageAfterScan": true,
+    "DisableUrlRewrite": false
 }
 
-# Identify non-compliant fields in a policy
-non_compliant_fields(p) := {f |
-    f := "EnableSafeLinksForOffice"
-    not p[f] = required_fields[f]
+non_compliant_fields(p) := fields if {
+    fields := {f |
+        some f
+        required_fields[f]      # f is a key in required_fields
+        p[f] != required_fields[f]
+    }
 }
 
-# Check if a policy is compliant
-policy_compliant(p) := true if count(non_compliant_fields(p)) == 0
-policy_compliant(p) := false if count(non_compliant_fields(p)) > 0
+policy_compliant(p) := true if {
+    count(non_compliant_fields(p)) == 0
+}
+
+policy_compliant(p) := false if {
+    count(non_compliant_fields(p)) > 0
+}
 
 generate_message(true, _) := "All Safe Links policies for Office applications are compliant"
+
 generate_message(false, non_compliant) := sprintf(
     "%d Safe Links policy(ies) for Office applications are not compliant",
     [count(non_compliant)]
 )
 
-# Generate list of affected resources
+# Generate affected resources
 generate_affected_resources(true, _) := []
-generate_affected_resources(false, non_compliant) := [
-    {
-        "identity": p.identity,
-        "non_compliant_fields": [f | f := non_compliant_fields(p)[_]]
-    } | p := non_compliant[_]
-]
+
+generate_affected_resources(false, non_compliant) := resources if {
+    resources := [
+        {
+            "identity": p.identity,
+            "non_compliant_fields": [f | f := non_compliant_fields(p)[_]]
+        } |
+        p := non_compliant[_]
+    ]
+}
 
 # Main evaluation
 result := output if {
     policies := input.safe_links_policies
 
-    # Identify non-compliant policies
-    non_compliant := [p | p := policies[_]; not policy_compliant(p)]
+    non_compliant := [
+        p |
+        p := policies[_]
+        not policy_compliant(p)
+    ]
+
     compliant := count(non_compliant) == 0
 
     output := {

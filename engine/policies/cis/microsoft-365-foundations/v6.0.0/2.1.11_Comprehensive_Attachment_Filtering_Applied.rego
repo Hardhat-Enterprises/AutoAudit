@@ -20,8 +20,6 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_11
 
-default result := {"compliant": false, "message": "Evaluation failed"}
-
 attach_exts := [
     "7z","a3x","ace","ade","adp","ani","app","appinstaller","applescript","application",
     "appref-ms","appx","appxbundle","arj","asd","asx","bas","bat","bgi","bz2","cab",
@@ -42,7 +40,7 @@ attach_exts := [
 
 passing_value := 0.9
 
-missing_exts[policy_identity] = missing {
+missing_exts[policy_identity] = missing if {
     policy := input.malware_filter_policies[_]
     policy_identity := policy.Identity
 
@@ -52,7 +50,7 @@ missing_exts[policy_identity] = missing {
     ]
 }
 
-is_compliant[policy_identity] {
+is_compliant[policy_identity] if {
     policy := input.malware_filter_policies[_]
     policy_identity := policy.Identity
 
@@ -63,7 +61,7 @@ is_compliant[policy_identity] {
     policy.EnableFileFilter == true
 }
 
-any_policy_compliant {
+any_policy_compliant if {
     some i
     is_compliant[input.malware_filter_policies[i].Identity]
 }
@@ -72,6 +70,7 @@ generate_message(true) := "Attachment filtering policy is correctly configured a
 generate_message(false) := "Attachment filtering policy is misconfigured or not enforced"
 
 generate_affected_resources(true, _) := []
+
 generate_affected_resources(false, data_input) := [
     pol.Identity |
     pol := data_input.malware_filter_policies[_]
