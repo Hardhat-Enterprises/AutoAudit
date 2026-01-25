@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.evidence_validation import EvidenceValidation
     from app.models.m365_connection import M365Connection
     from app.models.oauth_account import OAuthAccount
+    from app.models.user_settings import UserSettings
 
 
 class Role(str, Enum):
@@ -45,6 +46,12 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     # Relationships
     oauth_accounts: Mapped[list["OAuthAccount"]] = relationship(
         back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    settings: Mapped["UserSettings"] = relationship(
+        back_populates="user",
+        uselist=False,
         cascade="all, delete-orphan",
         lazy="selectin",
     )
