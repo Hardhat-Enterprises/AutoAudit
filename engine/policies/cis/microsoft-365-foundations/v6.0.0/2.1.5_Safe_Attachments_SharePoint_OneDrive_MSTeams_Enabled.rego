@@ -42,7 +42,7 @@ field_non_compliant(p, f) if {
 policy_compliant(p) if {
     invalid_fields := {f |
         some f
-        required_values[f]
+        required_values[f] = _
         field_non_compliant(p, f)
     }
     count(invalid_fields) == 0
@@ -54,7 +54,7 @@ policies := [] if policy == null
 
 non_compliant_policies := [ {"policy": p.Name, "failed_fields": [f |
     some f
-    required_values[f]
+    required_values[f] = _
     field_non_compliant(p, f)
 ]} |
     p := policies[_]

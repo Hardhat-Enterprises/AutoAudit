@@ -50,7 +50,7 @@ field_non_compliant(p, f) if {
 non_compliant_fields(p) := fields if {
     fields := {f |
         some f
-        required_fields[f]      # f is a key in required_fields
+        required_fields[f] = _  # f is a key in required_fields (even if value is false)
         field_non_compliant(p, f)
     }
 }
