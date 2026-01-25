@@ -19,12 +19,18 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_6
 
+import rego.v1
+
+bcc_suspicious_outbound_mail := object.get(input, "bcc_suspicious_outbound_mail", false)
+notify_outbound_spam := object.get(input, "notify_outbound_spam", false)
+auto_forwarding_mode := object.get(input, "auto_forwarding_mode", null)
+
 missing_bcc if {
-    not input.default_policy.bcc_suspicious_outbound_mail
+    not bcc_suspicious_outbound_mail
 }
 
 missing_notify if {
-    not input.default_policy.notify_outbound_spam
+    not notify_outbound_spam
 }
 
 missing_settings := array.concat(
@@ -41,9 +47,9 @@ scan_result = {
     "message": "Outbound spam BCC and notification settings are enabled",
     "affected_resources": [],
     "details": {
-        "bcc_suspicious_outbound_mail": input.default_policy.bcc_suspicious_outbound_mail,
-        "notify_outbound_spam": input.default_policy.notify_outbound_spam,
-        "auto_forwarding_mode": input.default_policy.auto_forwarding_mode
+        "bcc_suspicious_outbound_mail": bcc_suspicious_outbound_mail,
+        "notify_outbound_spam": notify_outbound_spam,
+        "auto_forwarding_mode": auto_forwarding_mode
     }
 } if {
     outbound_spam_monitoring_enabled
@@ -54,22 +60,20 @@ scan_result = {
     "message": generate_message_missing,
     "affected_resources": ["HostedOutboundSpamFilterPolicy"],
     "details": {
-        "bcc_suspicious_outbound_mail": input.default_policy.bcc_suspicious_outbound_mail,
-        "notify_outbound_spam": input.default_policy.notify_outbound_spam,
-        "auto_forwarding_mode": input.default_policy.auto_forwarding_mode
+        "bcc_suspicious_outbound_mail": bcc_suspicious_outbound_mail,
+        "notify_outbound_spam": notify_outbound_spam,
+        "auto_forwarding_mode": auto_forwarding_mode
     }
 } if {
     not outbound_spam_monitoring_enabled
 }
 
+result := scan_result
+
 generate_message_missing := msg if {
     count(missing_settings) > 0
     msg := sprintf(
         "Outbound spam settings disabled or misconfigured: %v",
-        [missing_settings]
+        missing_settings
     )
-}
-
-generate_message_missing := "Unable to determine outbound spam BCC or notification configuration" if {
-    count(missing_settings) == 0
 }

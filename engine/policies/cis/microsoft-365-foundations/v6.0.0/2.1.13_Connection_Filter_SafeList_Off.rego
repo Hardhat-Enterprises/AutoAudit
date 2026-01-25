@@ -24,25 +24,22 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_13
 
+import rego.v1
+
 default result := {"compliant": false, "message": "Evaluation failed"}
+
+enable_safe_list := object.get(input, "enable_safe_list", false)
 
 result := {
     "compliant": true,
     "message": "EnableSafeList is False for Exchange Online Hosted Connection Filter",
     "affected_resources": [],
-    "details": {"EnableSafeList": input.enable_safe_list}
-} if input.enable_safe_list == false
+    "details": {"EnableSafeList": enable_safe_list}
+} if enable_safe_list == false
 
 result := {
     "compliant": false,
     "message": "EnableSafeList is not False for Exchange Online Hosted Connection Filter",
     "affected_resources": ["HostedConnectionFilterPolicy"],
-    "details": {"EnableSafeList": input.enable_safe_list}
-} if input.enable_safe_list == true
-
-result := {
-    "compliant": false,
-    "message": "Unable to determine the EnableSafeList status in Exchange Online Hosted Connection Filter",
-    "affected_resources": ["HostedConnectionFilterPolicy status unknown"],
-    "details": {"EnableSafeList": input.enable_safe_list}
-} if input.enable_safe_list == null
+    "details": {"EnableSafeList": enable_safe_list}
+} if enable_safe_list == true

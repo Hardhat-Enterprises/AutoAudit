@@ -22,17 +22,20 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_12
 
+import rego.v1
+
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-ip_allow_list_status := "empty" if input.ip_allow_list == []
-ip_allow_list_status := "not_empty" if input.ip_allow_list != []
+ip_allow_list := object.get(input, "ip_allow_list", [])
+ip_allow_list_status := "empty" if count(ip_allow_list) == 0
+ip_allow_list_status := "not_empty" if count(ip_allow_list) > 0
 
 result := {
     "compliant": ip_allow_list_status == "empty",
     "message": messages[ip_allow_list_status],
     "affected_resources": affected_resources[ip_allow_list_status],
     "details": {
-        "ip_allow_list": input.ip_allow_list
+        "ip_allow_list": ip_allow_list
     }
 }
 

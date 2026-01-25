@@ -20,6 +20,10 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_11
 
+import rego.v1
+
+default any_policy_compliant := false
+
 attach_exts := [
     "7z","a3x","ace","ade","adp","ani","app","appinstaller","applescript","application",
     "appref-ms","appx","appxbundle","arj","asd","asx","bas","bat","bgi","bz2","cab",
@@ -66,6 +70,7 @@ any_policy_compliant if {
     is_compliant[input.malware_filter_policies[i].Identity]
 }
 
+
 generate_message(true) := "Attachment filtering policy is correctly configured and enforced"
 generate_message(false) := "Attachment filtering policy is misconfigured or not enforced"
 
@@ -76,13 +81,31 @@ generate_affected_resources(false, data_input) := [
     pol := data_input.malware_filter_policies[_]
 ]
 
+policies := object.get(input, "malware_filter_policies", [])
+has_policies := count(policies) > 0
+
+result := {
+    "compliant": false,
+    "message": "No malware filter policies found",
+    "affected_resources": ["MalwareFilterPolicy"],
+    "details": {
+        "malware_filter_policies_evaluated": 0,
+        "passing_threshold": passing_value,
+        "total_known_extensions": count(attach_exts)
+    }
+} if {
+    not has_policies
+}
+
 result := {
     "compliant": any_policy_compliant,
     "message": generate_message(any_policy_compliant),
     "affected_resources": generate_affected_resources(any_policy_compliant, input),
     "details": {
-        "malware_filter_policies_evaluated": count(input.malware_filter_policies),
+        "malware_filter_policies_evaluated": count(policies),
         "passing_threshold": passing_value,
         "total_known_extensions": count(attach_exts)
     }
+} if {
+    has_policies
 }

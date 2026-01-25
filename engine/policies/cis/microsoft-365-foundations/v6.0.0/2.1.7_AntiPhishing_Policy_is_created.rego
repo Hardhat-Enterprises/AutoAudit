@@ -23,6 +23,8 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_7
 
+import rego.v1
+
 required_values := {
     "Enabled": true,
     "PhishThresholdLevel": 3,
@@ -41,37 +43,56 @@ required_values := {
     "HonorDmarcPolicy": true
 }
 
+missing_sentinel := "__missing__"
+
+field_non_compliant(p, f) if {
+    object.get(p, f, missing_sentinel) == missing_sentinel
+}
+
+field_non_compliant(p, f) if {
+    object.get(p, f, missing_sentinel) != missing_sentinel
+    p[f] != required_values[f]
+}
+
 policy_compliant(p) if {
-    invalid_fields := {f | required_values[f] != p[f]}
+    invalid_fields := {f |
+        some f
+        required_values[f]
+        field_non_compliant(p, f)
+    }
     count(invalid_fields) == 0
 }
 
+policies := object.get(input, "anti_phish_policies", [])
+
 non_compliant_policies := [
-    {"policy": p.Name, "failed_fields": [f | required_values[f] != p[f]]} |
-    p := input.anti_phish_policies[_]
+    {"policy": p.Name, "failed_fields": [f |
+        some f
+        required_values[f]
+        field_non_compliant(p, f)
+    ]} |
+    p := policies[_]
     not policy_compliant(p)
 ]
 
 targeted_users := [user |
-    p := input.anti_phish_policies[_]
+    p := policies[_]
     policy_compliant(p)
-    user := p.TargetedUsersToProtect[_]
+    users := object.get(p, "TargetedUsersToProtect", [])
+    user := users[_]
 ]
 
 global_compliant_policies := [p |
-    p := input.anti_phish_policies[_]
+    p := policies[_]
     policy_compliant(p)
-    count(p.TargetedUsersToProtect) == 0
+    count(object.get(p, "TargetedUsersToProtect", [])) == 0
 ]
 
 result := {
-    "compliant": true,
-    "message": sprintf(
-        "Found %d user(s) protected by compliant anti-phishing policy (including global/default)",
-        [count(targeted_users) + count(global_compliant_policies)]
-    )
+    "compliant": false,
+    "message": "No anti-phishing policies found"
 } if {
-    count(targeted_users) + count(global_compliant_policies) > 0
+    count(policies) == 0
 }
 
 result := {
@@ -81,5 +102,17 @@ result := {
         [non_compliant_policies]
     )
 } if {
+    count(policies) > 0
     count(non_compliant_policies) > 0
+}
+
+result := {
+    "compliant": true,
+    "message": sprintf(
+        "Found %d user(s) protected by compliant anti-phishing policy (including global/default)",
+        [count(targeted_users) + count(global_compliant_policies)]
+    )
+} if {
+    count(policies) > 0
+    count(non_compliant_policies) == 0
 }

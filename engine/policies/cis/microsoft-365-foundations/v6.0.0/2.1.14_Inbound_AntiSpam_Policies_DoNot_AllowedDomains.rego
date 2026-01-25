@@ -25,10 +25,11 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_14
 
+import rego.v1
+
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-allowed_sender_domains := input.allowed_sender_domains
-allowed_sender_domains := [] if input.allowed_sender_domains == null
+allowed_sender_domains := object.get(input, "allowed_sender_domains", [])
 
 allowed_sender_domains_undefined := true if count(allowed_sender_domains) == 0
 allowed_sender_domains_undefined := false if count(allowed_sender_domains) > 0
