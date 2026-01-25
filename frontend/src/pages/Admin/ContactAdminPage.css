@@ -29,22 +29,6 @@
   font-size: 1rem;
 }
 
-.contact-admin__refresh {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #40e0d0, #1e90ff);
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
-}
-
-.contact-admin__refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(64, 224, 208, 0.5);
-}
 
 .contact-admin__error,
 .contact-admin__message {
@@ -467,7 +451,4 @@
     gap: 1rem;
   }
 
-  .contact-admin__refresh {
-    width: 100%;
-  }
 }

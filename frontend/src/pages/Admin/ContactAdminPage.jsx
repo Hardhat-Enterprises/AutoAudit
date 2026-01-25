@@ -155,9 +155,6 @@ const ContactAdminPage = () => {
           <h1>Contact Submissions</h1>
           <p>Review and manage incoming Contact Us requests.</p>
         </div>
-        <button className="contact-admin__refresh" onClick={loadSubmissions}>
-          🔄 Refresh
-        </button>
       </header>
 
       {error && <div className="contact-admin__error">{error}</div>}
@@ -212,25 +209,25 @@ const ContactAdminPage = () => {
                 <h3>Contact Information</h3>
                 <div className="contact-admin__info-grid">
                   <div className="contact-admin__info-item">
-                    <span className="contact-admin__info-label">👤 Name</span>
+                    <span className="contact-admin__info-label">Name</span>
                     <span className="contact-admin__info-value">
                       {selectedSubmission.first_name} {selectedSubmission.last_name}
                     </span>
                   </div>
                   <div className="contact-admin__info-item">
-                    <span className="contact-admin__info-label">📧 Email</span>
+                    <span className="contact-admin__info-label">Email</span>
                     <span className="contact-admin__info-value">
                       {selectedSubmission.email}
                     </span>
                   </div>
                   <div className="contact-admin__info-item">
-                    <span className="contact-admin__info-label">📞 Phone</span>
+                    <span className="contact-admin__info-label">Phone</span>
                     <span className="contact-admin__info-value">
                       {selectedSubmission.phone || "Not provided"}
                     </span>
                   </div>
                   <div className="contact-admin__info-item">
-                    <span className="contact-admin__info-label">🏢 Company</span>
+                    <span className="contact-admin__info-label">Company</span>
                     <span className="contact-admin__info-value">
                       {selectedSubmission.company || "Not provided"}
                     </span>
@@ -283,10 +280,10 @@ const ContactAdminPage = () => {
                   className="contact-admin__assign"
                   onClick={() => handleUpdate({ assigned_to: user.id })}
                 >
-                  ✅ Assign to me
+                  Assign to me
                 </button>
                 <button className="contact-admin__delete" onClick={handleDelete}>
-                  🗑️ Delete
+                  Delete
                 </button>
               </div>
 
