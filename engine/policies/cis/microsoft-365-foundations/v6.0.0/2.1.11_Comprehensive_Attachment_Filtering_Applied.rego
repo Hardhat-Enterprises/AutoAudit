@@ -22,8 +22,6 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_11
 
 import rego.v1
 
-default any_policy_compliant := false
-
 attach_exts := [
     "7z","a3x","ace","ade","adp","ani","app","appinstaller","applescript","application",
     "appref-ms","appx","appxbundle","arj","asd","asx","bas","bat","bgi","bz2","cab",
@@ -65,12 +63,6 @@ is_compliant[policy_identity] if {
     policy.EnableFileFilter == true
 }
 
-any_policy_compliant if {
-    some i
-    is_compliant[input.malware_filter_policies[i].Identity]
-}
-
-
 generate_message(true) := "Attachment filtering policy is correctly configured and enforced"
 generate_message(false) := "Attachment filtering policy is misconfigured or not enforced"
 
@@ -83,6 +75,12 @@ generate_affected_resources(false, data_input) := [
 
 policies := object.get(input, "malware_filter_policies", [])
 has_policies := count(policies) > 0
+
+non_compliant_policies := [
+    pol.Identity |
+    pol := policies[_]
+    not is_compliant[pol.Identity]
+]
 
 result := {
     "compliant": false,
@@ -98,11 +96,12 @@ result := {
 }
 
 result := {
-    "compliant": any_policy_compliant,
-    "message": generate_message(any_policy_compliant),
-    "affected_resources": generate_affected_resources(any_policy_compliant, input),
+    "compliant": count(non_compliant_policies) == 0,
+    "message": generate_message(count(non_compliant_policies) == 0),
+    "affected_resources": generate_affected_resources(count(non_compliant_policies) == 0, input),
     "details": {
         "malware_filter_policies_evaluated": count(policies),
+        "non_compliant_policies": non_compliant_policies,
         "passing_threshold": passing_value,
         "total_known_extensions": count(attach_exts)
     }

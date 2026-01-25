@@ -26,25 +26,35 @@ import rego.v1
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-ip_allow_list := object.get(input, "ip_allow_list", [])
-ip_allow_list_status := "empty" if count(ip_allow_list) == 0
-ip_allow_list_status := "not_empty" if count(ip_allow_list) > 0
+policies := object.get(input, "connection_filter_policies", [])
+
+non_compliant_policies := [
+    {
+        "identity": object.get(p, "Identity", object.get(p, "Name", null)),
+        "ip_allow_list": object.get(p, "IPAllowList", [])
+    } |
+    p := policies[_]
+    count(object.get(p, "IPAllowList", [])) > 0
+]
+
+compliant := count(non_compliant_policies) == 0
 
 result := {
-    "compliant": ip_allow_list_status == "empty",
-    "message": messages[ip_allow_list_status],
-    "affected_resources": affected_resources[ip_allow_list_status],
+    "compliant": compliant,
+    "message": messages[compliant],
+    "affected_resources": affected_resources[compliant],
     "details": {
-        "ip_allow_list": ip_allow_list
+        "policies_evaluated": count(policies),
+        "non_compliant_policies": non_compliant_policies
     }
 }
 
 messages := {
-    "empty": "IPAllowList is empty in Exchange Online Hosted Connection Filter",
-    "not_empty": "IPAllowList is not empty in Exchange Online Hosted Connection Filter"
+    true: "IPAllowList is empty for all Exchange Online Hosted Connection Filter policies",
+    false: "IPAllowList is not empty for one or more Exchange Online Hosted Connection Filter policies"
 }
 
 affected_resources := {
-    "empty": [],
-    "not_empty": ["HostedConnectionFilterPolicy"]
+    true: [],
+    false: ["HostedConnectionFilterPolicy"]
 }
