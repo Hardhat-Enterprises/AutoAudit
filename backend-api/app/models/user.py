@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from app.models.oauth_account import OAuthAccount
     from app.models.user_settings import UserSettings
     from app.models.contact import ContactSubmission, SubmissionHistory, SubmissionNote
+    from app.models.user_settings import UserSettings
 
 
 class Role(str, Enum):
