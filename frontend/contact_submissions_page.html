@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Submissions - AutoAudit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a1628;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem 3%;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .page-header-content h1 {
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header-content p {
+            color: #b0c4de;
+            font-size: 1rem;
+        }
+
+        .btn-refresh {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #40e0d0, #1e90ff);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
+        }
+
+        .btn-refresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(64, 224, 208, 0.5);
+        }
+
+        /* Layout Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        /* Submissions List */
+        .submissions-list {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(64, 224, 208, 0.1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            max-height: calc(100vh - 160px);
+            overflow-y: auto;
+        }
+
+        .submission-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(64, 224, 208, 0.1);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .submission-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #40e0d0;
+            transform: translateX(5px);
+        }
+
+        .submission-item.active {
+            background: rgba(64, 224, 208, 0.1);
+            border-color: #40e0d0;
+        }
+
+        .submission-item h3 {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .submission-item p {
+            color: #b0c4de;
+            font-size: 0.9rem;
+        }
+
+        .badge-new {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, #40e0d0, #1e90ff);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Submission Details */
+        .submission-details {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(64, 224, 208, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            max-height: calc(100vh - 160px);
+            overflow-y: auto;
+        }
+
+        /* Subject Header */
+        .subject-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(64, 224, 208, 0.1);
+        }
+
+        .subject-header h2 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subject-tag {
+            background: rgba(64, 224, 208, 0.1);
+            color: #40e0d0;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+
+        /* Contact Information */
+        .contact-info-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(64, 224, 208, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .contact-info-section h3 {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(64, 224, 208, 0.1);
+        }
+
+        .info-label {
+            color: #b0c4de;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-value {
+            color: white;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Message Section */
+        .message-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(64, 224, 208, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .message-section h3 {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .message-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(64, 224, 208, 0.1);
+            border-radius: 10px;
+            padding: 1.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            color: #b0c4de;
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        /* Status & Priority */
+        .action-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #b0c4de;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(64, 224, 208, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #40e0d0;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-group select option {
+            background: #0a1628;
+            color: white;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-assign {
+            padding: 1rem;
+            background: linear-gradient(135deg, #40e0d0, #1e90ff);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
+        }
+
+        .btn-assign:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(64, 224, 208, 0.5);
+        }
+
+        .btn-delete {
+            padding: 1rem;
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(220, 53, 69, 0.5);
+        }
+
+        /* Notes Section */
+        .notes-section {
+            margin-bottom: 2rem;
+        }
+
+        .notes-section h3 {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .notes-section textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(64, 224, 208, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .notes-section textarea::placeholder {
+            color: #6c7a8d;
+        }
+
+        .notes-section textarea:focus {
+            outline: none;
+            border-color: #40e0d0;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .note-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #40e0d0;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper label {
+            color: #b0c4de;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .btn-add-note {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #40e0d0, #1e90ff);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add-note:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
+        }
+
+        /* Notes List */
+        .notes-list {
+            margin-bottom: 2rem;
+        }
+
+        .note-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(64, 224, 208, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .note-item h4 {
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .note-item p {
+            color: #b0c4de;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .note-item .timestamp {
+            color: #6c7a8d;
+            font-size: 0.85rem;
+        }
+
+        /* History Section */
+        .history-section h3 {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #40e0d0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .history-badge {
+            display: inline-block;
+            background: rgba(64, 224, 208, 0.2);
+            color: #40e0d0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .history-item p {
+            color: #b0c4de;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-item .timestamp {
+            color: #6c7a8d;
+            font-size: 0.85rem;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(64, 224, 208, 0.3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(64, 224, 208, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 300px 1fr;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .submissions-list {
+                max-height: 400px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-section,
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .btn-refresh {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-header-content">
+                <h1>Contact Submissions</h1>
+                <p>Review and manage incoming Contact Us requests.</p>
+            </div>
+            <button class="btn-refresh" onclick="refreshSubmissions()">🔄 Refresh</button>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Submissions List -->
+            <div class="submissions-list">
+                <div class="submission-item active" onclick="selectSubmission(1)">
+                    <span class="badge-new">New</span>
+                    <h3>Hardik Patel</h3>
+                    <p>General Inquiry</p>
+                </div>
+
+                <div class="submission-item" onclick="selectSubmission(2)">
+                    <span class="badge-new">New</span>
+                    <h3>Nick Johnson</h3>
+                    <p>Technical Support</p>
+                </div>
+
+                <div class="submission-item" onclick="selectSubmission(3)">
+                    <h3>Sarah Williams</h3>
+                    <p>Sales Question</p>
+                </div>
+
+                <div class="submission-item" onclick="selectSubmission(4)">
+                    <h3>Michael Chen</h3>
+                    <p>Partnership Opportunity</p>
+                </div>
+
+                <div class="submission-item" onclick="selectSubmission(5)">
+                    <h3>Emily Davis</h3>
+                    <p>Request a Demo</p>
+                </div>
+            </div>
+
+            <!-- Submission Details -->
+            <div class="submission-details">
+                <!-- Subject Header -->
+                <div class="subject-header">
+                    <h2>Support</h2>
+                    <span class="subject-tag">General Inquiry</span>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="contact-info-section">
+                    <h3>Contact Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">👤 Name</div>
+                            <div class="info-value">Hardik Patel</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">📧 Email</div>
+                            <div class="info-value">hardik@example.com</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">📞 Phone</div>
+                            <div class="info-value">0468414429</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">🏢 Company</div>
+                            <div class="info-value">Tech Solutions Inc.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Section -->
+                <div class="message-section">
+                    <h3>Message</h3>
+                    <div class="message-box">
+                        <p>Hello, I'm reaching out to learn more about AutoAudit's compliance monitoring capabilities for our Microsoft 365 environment. We're a mid-sized organization with approximately 500 users, and we're looking for an automated solution to help us maintain CIS benchmark compliance.</p>
+                        <p>Specifically, I'd like to understand:</p>
+                        <p>1. How frequently does AutoAudit perform compliance scans?</p>
+                        <p>2. What kind of reporting capabilities do you offer?</p>
+                        <p>3. Can we customize the compliance benchmarks to match our specific requirements?</p>
+                        <p>4. What's the typical implementation timeline?</p>
+                        <p>We have a compliance audit scheduled for next quarter, so we're looking to implement a solution as soon as possible. Would it be possible to schedule a demo to see the platform in action?</p>
+                        <p>Looking forward to hearing from you.</p>
+                    </div>
+                </div>
+
+                <!-- Status & Priority -->
+                <div class="action-section">
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status">
+                            <option value="new" selected>New</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priority">Priority</label>
+                        <select id="priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn-assign">✅ Assign to me</button>
+                    <button class="btn-delete">🗑️ Delete</button>
+                </div>
+
+                <!-- Notes Section -->
+                <div class="notes-section">
+                    <h3>Notes</h3>
+                    <textarea placeholder="Add an internal note"></textarea>
+                    <div class="note-options">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="internal-only" checked>
+                            <label for="internal-only">Internal only</label>
+                        </div>
+                        <button class="btn-add-note">Add note</button>
+                    </div>
+                </div>
+
+                <!-- Existing Notes -->
+                <div class="notes-list">
+                    <div class="note-item">
+                        <h4>Follow-up scheduled</h4>
+                        <p>Demo call scheduled for next Tuesday at 2 PM EST</p>
+                        <p class="timestamp">1/23/2026, 6:27:52 AM</p>
+                    </div>
+
+                    <div class="note-item">
+                        <h4>Initial contact</h4>
+                        <p>Customer seems very interested in compliance features</p>
+                        <p class="timestamp">1/22/2026, 6:48:38 AM</p>
+                    </div>
+                </div>
+
+                <!-- History Section -->
+                <div class="history-section">
+                    <h3>History</h3>
+
+                    <div class="history-item">
+                        <span class="history-badge">Note</span>
+                        <p>Added note: "Follow-up scheduled"</p>
+                        <p class="timestamp">1/23/2026, 6:27:52 AM</p>
+                    </div>
+
+                    <div class="history-item">
+                        <span class="history-badge">Update</span>
+                        <p>Status changed to: In Progress</p>
+                        <p class="timestamp">1/22/2026, 6:48:41 AM</p>
+                    </div>
+
+                    <div class="history-item">
+                        <span class="history-badge">Note</span>
+                        <p>Added note: "Initial contact"</p>
+                        <p class="timestamp">1/22/2026, 6:48:38 AM</p>
+                    </div>
+
+                    <div class="history-item">
+                        <span class="history-badge">Create</span>
+                        <p>Submission created</p>
+                        <p class="timestamp">1/22/2026, 6:48:07 AM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function refreshSubmissions() {
+            console.log('Refreshing submissions...');
+            // Add your refresh logic here
+        }
+
+        function selectSubmission(id) {
+            // Remove active class from all items
+            document.querySelectorAll('.submission-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            event.currentTarget.classList.add('active');
+            
+            console.log('Selected submission:', id);
+            // Add logic to load submission details
+        }
+
+        // Add note functionality
+        document.querySelector('.btn-add-note').addEventListener('click', () => {
+            const textarea = document.querySelector('.notes-section textarea');
+            const noteText = textarea.value.trim();
+            
+            if (noteText) {
+                console.log('Adding note:', noteText);
+                // Add your note saving logic here
+                textarea.value = '';
+            }
+        });
+
+        // Assign to me functionality
+        document.querySelector('.btn-assign').addEventListener('click', () => {
+            console.log('Assigning to current user...');
+            // Add your assignment logic here
+        });
+
+        // Delete functionality
+        document.querySelector('.btn-delete').addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete this submission?')) {
+                console.log('Deleting submission...');
+                // Add your delete logic here
+            }
+        });
+    </script>
+</body>
+</html>
