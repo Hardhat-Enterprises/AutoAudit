@@ -10,18 +10,28 @@ const initialState = {
   message: "",
 };
 
-const ContactForm = ({ submitted, onSuccess }) => {
+const ContactForm = ({ submitted, onSubmit }) => {
   const [formData, setFormData] = useState(initialState);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    onSuccess();
-    setFormData(initialState);
+    setError("");
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData);
+      setFormData(initialState);
+    } catch (err) {
+      setError(err?.message || "Unable to send message right now.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -115,10 +125,11 @@ const ContactForm = ({ submitted, onSuccess }) => {
           />
         </div>
 
-        <button type="submit" className="btn-primary submit-btn">
-          Send Message
+        <button type="submit" className="btn-primary submit-btn" disabled={isSubmitting}>
+          {isSubmitting ? "Sending..." : "Send Message"}
         </button>
 
+        {error && <div className="error-message">{error}</div>}
         <div className={`success-message ${submitted ? "show" : ""}`}>
           ✓ Thank you! Your message has been sent successfully. We&apos;ll get
           back to you soon.
