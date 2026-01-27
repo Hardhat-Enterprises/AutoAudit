@@ -1,143 +1,180 @@
 import React from "react";
-import "./LandingPage.css";
+import {Link} from "react-router-dom";
 
-const FeatureCard = ({ icon, title, desc }) => (
-  <article className="feature-card" tabIndex="0">
-    <div className="feature-icon" aria-hidden="true">{icon}</div>
-    <h3 className="feature-title">{title}</h3>
-    <p className="feature-desc">{desc}</p>
-  </article>
-);
-
-const LandingPage = ({ onSignInClick, onAboutClick }) => {
+export default function LandingPage() {
   return (
-    <div className="landing-page">
-      <div className="wrap">
-        <header className="nav">
-          <div className="brand">
-            <div className="logo">
-              <img src="/logo.png" alt="AutoAudit Logo" className="logo-img" />
-            </div>
-          </div>
-          <nav className="navlinks">
-            <button className="hide-sm nav-btn" onClick={onAboutClick}>About</button>
-          
-            <button className="signin" onClick={onSignInClick}>Sign In</button>
-          </nav>
-        </header>
+    <div className="min-h-screen bg-surface-1 text-text-strong font-body">
 
-        <section className="hero">
-          <div className="frame">
-            <h1>
-              Access your compliance <br />
-              dashboard and <br />
-              security insights.
-            </h1>
-            <p className="sub">
-              Compliance made easy for you. View your dashboards anytime, anywhere.
-            </p>
-            <div className="cta">
-              <button className="btn btn-primary" onClick={onSignInClick}>
-                Get Started
-              </button>
-              <a className="btn btn-outline" href="#learn-more">Learn More</a>
-            </div>
-          </div>
-        </section>
+      {/*Landing page*/}
+      <header className="relative p-6 flex items-center justify-between">
 
-        <section id="learn-more" className="features" aria-labelledby="features-title">
-          <h2 id="features-title" className="sr-only">Key Features</h2>
+        {/*Logo - Is unchanged, using hte png file from system*/}
+        <div className="absolute top-6 left-6">
+          <img
+            src="/logo.png"
+            alt="AutoAudit logo"
+            className="w-40 rounded-card shadow-elev-1"
+          />
+        </div>
 
-          <div className="feature-grid">
-            <FeatureCard
-              icon={
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-              }
-              title="Microsoft 365 Integration"
-              desc="Seamlessly connect to your Microsoft 365 tenant using secure Graph API integration. Monitor MFA enforcement, audit logging, and conditional access policies in real-time."
-            />
+        <nav className="ml-auto flex items-center gap-6">
+          <button className="text-text-strong font-semibold text-lg opacity-90 hover:bg-accent-navy hover:rounded-card px-4 py-2">
+            Features
+          </button>
 
-            <FeatureCard
-              icon={
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                  <path d="M9 17V7h2l4 10h-2l-1-2.5H9.5L8.5 17H9zm2.5-4h2l-1-2.5L11.5 13z M3 3h18v18H3V3z"/>
-                  <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M8 12h8M8 8h8M8 16h5" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-              }
-              title="CIS Benchmark Compliance"
-              desc="Automatically assess your cloud configurations against CIS Microsoft 365 Foundations Benchmark. Get instant visibility into compliance gaps and security posture."
-            />
+          <button className="text-text-strong font-semibold text-lg opacity-90 hover:bg-accent-navy hover:rounded-card px-4 py-2">
+            Pricing
+          </button>
 
-            <FeatureCard
-              icon={
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                </svg>
-              }
-              title="Automated Scanning"
-              desc="Continuous monitoring of security settings, external sharing permissions, and policy configurations. Detect misconfigurations before they become security risks."
-            />
+          <Link
+            to="/login"
+            className="px-4 py-2 bg-accent-teal text-surface-1 font-semibold rounded-card hover:bg-accent-teal/80"
+          >
+            Sign in
+          </Link>
+        </nav>
+      </header>
 
-            <FeatureCard
-              icon={
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
-                </svg>
-              }
-              title="Actionable Reports"
-              desc="Generate comprehensive compliance reports with risk assessments and remediation recommendations. Export audit-ready documentation for regulatory requirements."
-            />
-          </div>
-        </section>
+      {/*Hero Class*/}
+      <section className="min-h-[80vh] flex items-center pl-10 mt-20">
+        <div className="max-w-2xl">
 
-        <section className="insights">
-          <p className="insights-tagline">
-            <h2><b>Actionable insights at a glance </b></h2>
+          <p className="text-accent-teal font-bold uppercase text-sm mb-2">
+            Continuous Security Evidence
           </p>
 
-          <h2 className="why-title">Why Choose AutoAudit?</h2>
+          <h1 className="text-5xl font-extrabold leading-tight mb-4 font-header">
+            Audit-ready security
+            <br />
+            without the chaos
+          </h1>
 
-          <div className="why-grid">
-            <div className="why-card">
-              <div className="why-icon">
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-                  <path d="M12 2l7 4v6c0 5-3.5 9.5-7 10-3.5-.5-7-5-7-10V6l7-4z" />
-                </svg>
-              </div>
-              <h3>Enterprise-Grade Security</h3>
-              <p>Bank-level encrypted data handling</p>
-            </div>
+          <p className="text-text-muted text-lg leading-relaxed max-w-xl mb-6">
+            AutoAudit continuously collects, validates, and presents your
+            security evidence so audits become routine — not stressful.
+          </p>
 
-            <div className="why-card">
-              <div className="why-icon">
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-                  <path d="M13 2L3 14h7v8l11-12h-7z" />
-                </svg>
-              </div>
-              <h3>Fast & Automated</h3>
-              <p>Reports in minutes, not days</p>
-            </div>
+          <div className="flex gap-4 flex-wrap">
+            <Link
+              to="/signup"
+              className="px-5 py-3 bg-accent-teal text-surface-1 font-bold rounded-card shadow-elev-1 hover:bg-accent-teal/80"
+            >
+              Get started
+            </Link>
 
-            <div className="why-card">
-              <div className="why-icon">
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-                  <rect x="4" y="10" width="4" height="10" />
-                  <rect x="10" y="6" width="4" height="14" />
-                  <rect x="16" y="2" width="4" height="18" />
-                </svg>
-              </div>
-              <h3>Audit-Ready Reports</h3>
-              <p>Align with regulatory frameworks</p>
-            </div>
+            <Link
+              to="/demo"
+              className="px-5 py-3 border border-border-subtle text-text-strong rounded-card hover:bg-surface-2"
+            >
+              View demo
+            </Link>
           </div>
-        </section>
+        </div>
+      </section>
 
-      </div>
+    {/*Features Class*/}
+      <section className="py-20">
+        <div className="max-w-6xl mx-auto grid gap-6 sm:grid-cols-2 px-6">
+
+          <FeatureCard
+            title="Automated Evidence"
+            text="Evidence is collected continuously and mapped to controls automatically."
+          />
+
+          <FeatureCard
+            title="Audit Trails"
+            text="Every change is logged with timestamps and validation status."
+          />
+
+          <FeatureCard
+            title="Framework Mapping"
+            text="Supports ISO 27001, SOC 2, and more out of the box."
+          />
+
+          <FeatureCard
+            title="Export Ready"
+            text="Generate audit-ready reports in minutes, not weeks."
+          />
+
+        </div>
+      </section>
+
+      {/*Insights and Why classes*/}
+      <section className="py-16 text-center max-w-4xl mx-auto px-6">
+
+        <p className="text-text-strong text-lg font-medium mb-4">
+          Built for teams who want audits to feel boring
+        </p>
+
+        <h2 className="text-xl font-semibold mb-10">
+          Why teams choose AutoAudit
+        </h2>
+
+        <div className="grid gap-8 sm:grid-cols-3">
+          <WhyCard title="Less Manual Work" />
+          <WhyCard title="Faster Audits" />
+          <WhyCard title="Clear Evidence" />
+        </div>
+
+      </section>
+
     </div>
   );
-};
+}
 
-export default LandingPage;
+{/*Sub compentent class*/}
+
+function FeatureCard({ title, text }) {
+  return (
+    <div
+      className="
+        bg-surface-2
+        border border-border-subtle
+        rounded-card
+        p-6
+        shadow-elev-1
+        backdrop-blur
+        transition
+        hover:-translate-y-1
+        hover:shadow-elev-2
+      "
+    >
+      <div className="mb-3 text-accent-teal">
+       
+        ●
+      </div>
+
+      <h3 className="font-extrabold mb-2">
+        {title}
+      </h3>
+
+      <p className="text-text-muted text-sm leading-relaxed">
+        {text}
+      </p>
+    </div>
+  );
+}
+
+function WhyCard({ title }) {
+  return (
+    <div
+      className="
+        bg-surface-2
+        border border-border-subtle
+        rounded-card
+        p-6
+        shadow-elev-1
+        transition
+        hover:-translate-y-1
+      "
+    >
+      <h3 className="font-bold mb-2">
+        {title}
+      </h3>
+
+      <p className="text-text-muted text-sm">
+        Designed to reduce audit fatigue and improve clarity.
+      </p>
+    </div>
+  );
+}
