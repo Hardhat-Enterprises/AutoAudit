@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Plus, CheckCircle, XCircle, Clock, Loader2, AlertCircle, PlayCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getScans, getConnections, getBenchmarks, createScan } from '../../api/client';
+import { formatDateTimePartsAEST } from '../../utils/helpers';
 import './ScansPage.css';
 
 const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
@@ -122,8 +123,7 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   }
 
   function formatDate(dateString) {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleString();
+    return formatDateTimePartsAEST(dateString);
   }
 
   if (isLoading) {
@@ -303,8 +303,19 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                       </span>
                       <span className="benchmark-version">{scan.version || ''}</span>
                     </td>
-                    <td>{scan.connection_name || '-'}</td>
-                    <td>{formatDate(scan.created_at)}</td>
+                    <td>{scan.connection_name || (scan.m365_connection_id ? `Connection #${scan.m365_connection_id}` : '-')}</td>
+                    <td>
+                      {(() => {
+                        const dt = formatDate(scan.started_at || scan.created_at);
+                        if (dt === '-') return '-';
+                        return (
+                          <div className="datetime">
+                            <div className="date">{dt.date}</div>
+                            <div className="time">{dt.time}</div>
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td>
                       {scan.status === 'completed' || scan.status === 'running' ? (
                         <div className="results-summary">

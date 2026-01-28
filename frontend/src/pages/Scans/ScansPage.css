@@ -244,6 +244,24 @@
   font-size: 13px;
 }
 
+.datetime {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.2;
+}
+
+.datetime .date {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.datetime .time {
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
 .results-summary .passed {
   color: #10b981;
 }

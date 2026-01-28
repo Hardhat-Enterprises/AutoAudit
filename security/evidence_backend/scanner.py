@@ -4,14 +4,14 @@ from typing import List
 import sys
 from pathlib import Path
 
-# Ensure the monorepo root is importable when running this file directly.
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
-
+    
 from security.strategies import load_strategies
 
-#------------------------ Import core_ocr.py----------------
+#------------------------ Import core_ocr.py---------------
 from security.evidence_backend.core_ocr import extract_text_and_preview, SUPPORTED_ALL_EXTS
 
 # ------------------------ recent-scan logger (add-on) ----------------
@@ -156,7 +156,7 @@ def main():
 
             if not raw_text.strip():
                 print("   (no readable text found)\n")
-                # record a row so you see the file in the CSV
+                # record a row so you can see the file in the CSV
                 report_rows.append((
                     user_id, fpath.name, strat.name, "", "", "",
                     "NO_TEXT", "Low",
