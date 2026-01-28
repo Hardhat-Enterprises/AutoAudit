@@ -61,11 +61,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": null,
+      "automation_status": "ready",
+      "data_collector_id": "entra.users.admin_license_footprint",
       "policy_file": null,
-      "requires_permissions": null,
-      "notes": "Need to check user license assignments"
+      "requires_permissions": ["Directory.Read.All", "User.Read.All"],
+      "notes": "Collect admin users and their assigned licenses"
     },
     {
       "control_id": "1.2.1",
@@ -91,7 +91,7 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "exchange.mailbox.mailboxes",
       "policy_file": null,
       "requires_permissions": ["Exchange.Manage"],
@@ -811,11 +811,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": null,
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
       "policy_file": null,
-      "requires_permissions": null,
-      "notes": "Need LAPS configuration collector"
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
+      "notes": "Uses deviceRegistrationPolicy localAdminPassword.isEnabled for LAPS state"
     },
     {
       "control_id": "5.1.4.6",

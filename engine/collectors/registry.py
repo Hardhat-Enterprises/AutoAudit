@@ -71,6 +71,9 @@ from collectors.entra.policies.b2b_policy import B2BPolicyDataCollector
 from collectors.entra.roles.cloud_only_admins import CloudOnlyAdminsDataCollector
 from collectors.entra.roles.directory_roles import DirectoryRolesDataCollector
 from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
+from collectors.entra.users.admin_license_footprint import (
+    AdminLicenseFootprintDataCollector,
+)
 
 # Users
 from collectors.entra.users.users import UsersDataCollector
@@ -188,6 +191,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.roles.directory_roles": DirectoryRolesDataCollector,
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,
     # Users
+    "entra.users.admin_license_footprint": AdminLicenseFootprintDataCollector,
     "entra.users.users": UsersDataCollector,
     # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
