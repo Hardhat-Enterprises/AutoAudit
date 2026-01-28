@@ -36,8 +36,7 @@ required_policy_fields := {
 valid_actions := {"BlockUser", "RestrictUser", "Restrict"}
 missing_sentinel := "__missing__"
 
-limits_compliant if input != null {
-    policy := input.default_policy
+limits_compliant if {
     policy != null
 
     all_keys_correct := {k | k in required_policy_fields; policy[k] == required_policy_fields[k]}
@@ -48,7 +47,6 @@ limits_compliant if input != null {
 }
 
 limits_compliant := false if {
-    policy := input.default_policy
     policy != null
     some k
     required_policy_fields[k]
@@ -56,13 +54,11 @@ limits_compliant := false if {
 }
 
 limits_compliant := false if {
-    policy := input.default_policy
     policy != null
     object.get(policy, "ActionWhenThresholdReached", missing_sentinel) == missing_sentinel
 }
 
 limits_compliant := false if {
-    policy := input.default_policy
     policy != null
     some k
     required_policy_fields[k]
@@ -71,14 +67,52 @@ limits_compliant := false if {
 }
 
 limits_compliant := false if {
-    policy := input.default_policy
     policy != null
     object.get(policy, "ActionWhenThresholdReached", missing_sentinel) != missing_sentinel
     not policy.ActionWhenThresholdReached in valid_actions
 }
 
-policy := input.default_policy
+policy := value if {
+    input != null
+    value := object.get(input, "default_policy", null)
+} else = null
 has_policy := policy != null
+
+safe_get(obj, key) = value if {
+    obj != null
+    value := object.get(obj, key, null)
+} else = null
+
+policy_detail_fields := {
+    "RecipientLimitExternalPerHour",
+    "RecipientLimitInternalPerHour",
+    "RecipientLimitPerDay",
+    "ActionWhenThresholdReached",
+}
+
+add_if_not_null(obj, key, value) = out if {
+    value != null
+    out := object.union(obj, {key: value})
+} else = obj
+
+details := out if {
+    base := {
+        "required_policy_settings": required_policy_fields,
+        "valid_actions": valid_actions,
+    }
+
+    v_external := safe_get(policy, "RecipientLimitExternalPerHour")
+    d1 := add_if_not_null(base, "RecipientLimitExternalPerHour", v_external)
+
+    v_internal := safe_get(policy, "RecipientLimitInternalPerHour")
+    d2 := add_if_not_null(d1, "RecipientLimitInternalPerHour", v_internal)
+
+    v_day := safe_get(policy, "RecipientLimitPerDay")
+    d3 := add_if_not_null(d2, "RecipientLimitPerDay", v_day)
+
+    v_action := safe_get(policy, "ActionWhenThresholdReached")
+    out := add_if_not_null(d3, "ActionWhenThresholdReached", v_action)
+}
 
 compliant := true if {
     has_policy
@@ -106,12 +140,5 @@ result := {
     "compliant": compliant,
     "message": generate_message(compliant),
     "affected_resources": generate_affected_resources(compliant, input),
-    "details": {
-        "RecipientLimitExternalPerHour": object.get(policy, "RecipientLimitExternalPerHour", null),
-        "RecipientLimitInternalPerHour": object.get(policy, "RecipientLimitInternalPerHour", null),
-        "RecipientLimitPerDay": object.get(policy, "RecipientLimitPerDay", null),
-        "ActionWhenThresholdReached": object.get(policy, "ActionWhenThresholdReached", null),
-        "required_policy_settings": required_policy_fields,
-        "valid_actions": valid_actions
-    }
+    "details": details
 }
