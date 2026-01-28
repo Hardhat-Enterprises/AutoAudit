@@ -1,51 +1,50 @@
-# AutoAudit Monorepo - Dev Branch
+# AutoAudit Monorepo - Main/Deployment Branch
 
 ## Project Overview
-The dev branch is the active development and integration branch where all team members collaborate and contribute new features. Code here undergoes continuous testing, linting, and security analysis to ensure quality before promotion.
+AutoAudit is a M365 compliance automation platform built by several specialist teams. This monorepo centralizes all codebases—including backend services, APIs, compliance scanners, and frontends—enabling unified CI/CD, streamlined development, and rapid automated deployments to the cloud.
+
+## Documentation
+
+- [Getting Started](docs/GETTING_STARTED.md) - Set up your development environment
+- [Contributing Guide](docs/CONTRIBUTING.md) - Find where to contribute based on your skills
 
 ## Repository Structure
-The repo remains organized into top-level folders by team:
+The repo follows the established modular structure:  
+- `/backend-api`  
+- `/security`  
+- `/frontend`  
+- `/engine`  
+- `/infrastructure`  
+- `/tools`  
+- `/docs`  
+- `/.github/workflows`
 
-/backend-api
+Full commit history and traceability from team forks are preserved.
 
-/security
+## Branching Strategy  
+- Only trusted, verified releases from `staging` are merged into `main`.
+- Direct commits are prohibited via branch protection rules.
+- Changes in `main` trigger the production deployment workflows.
 
-/frontend
+## CI/CD Pipeline Overview  
+- Code scanning (CodeQL, Grype) and security validations run on every push or PR.
+- Docker images are built and tagged for the `prod` environment here.
+- **Production deployments to Google Cloud Platform (GCP) will be triggered from this branch once configured.**
+- Currently, GCP deployment automation is being set up;  
+  once complete, a GCP Cloud Build trigger will automatically build and deploy the `main` branch code and push images into the GCP Artifact Registry.
 
-/engine
+## Docker Builds  
+- Production Docker images from the `main` branch are tagged appropriately and pushed to:  
+  - [Docker Hub - AutoAudit Services](https://hub.docker.com/u/autoauditservices)  
+  - GCP Artifact Registry (once integration is complete)  
+- Individual service repos like Engine, Backend-API, Frontend, and Security have mirrored deployment artifacts.
 
-/.github/workflows (for CI/CD)
+## Contribution Guidelines  
+- Only merges from `staging` occur into `main`, following stringent review and testing.  
+- Emergency fixes require expedited team approval and follow strict policies.  
+- All merges are subject to passing full CI/CD and security gating.
 
-Full commit history and traceability from forks have been preserved.
-
-## Branching Strategy
-- dev is the main integration branch.
-- Feature branches are created off dev for individual teams.
-- Pull requests targeting dev must pass all checks before merging.
-- All changes are integrated through Pull Requests (PRs), with branch protections and CI checks enforced.
-
-## CI/CD Pipeline Overview
-- Linting & Code Quality: Runs on every PR using a path filter.
-- Security Scanning (CodeQL, Grype): Integrated to catch vulnerabilities early.
-- Docker Builds: Images are built and tagged with environment branch names here and pushed but not deployed.
-- No production deploys occur from this branch.
-
-## Docker Builds
-- Teams with Docker Builds can access their updated images after a PR at our Docker Hub.
-- Builds pushed are respective per enviornment, e.g; this dev branch will push to the :dev tag in the docker hub repo after the team name.
-- Docker Hub: https://hub.docker.com/u/autoauditservices
-- Engine Repo: https://hub.docker.com/r/autoauditservices/engine
-- Backend-API Repo: https://hub.docker.com/r/autoauditservices/backend-api
-- Frontend Repo: https://hub.docker.com/r/autoauditservices/frontend (not configured)
-- Security Repo: https://hub.docker.com/r/autoauditservices/security (not configured)
-
-## Contribution Guidelines
-- Work within your designated team folder, keeping code modular and isolated.
-- Follow project code style guides (enforced via automated linting/CI).
-- All PRs must target the correct integration branch and include a clear description and relevant issue/PR references.
-- Tag your team and relevant reviewers for all non-trivial work.
-
-## Contact & Support
-For support or questions, please:
-- Reach out to the DevOps lead for pipeline or environment questions.
-- Open issues with appropriate tags for tracking.
+## Contact & Support  
+For production deployment queries:  
+- Contact the DevOps lead managing GCP integration.  
+- Report critical issues with `main` branch deployments on GitHub with relevant tags.

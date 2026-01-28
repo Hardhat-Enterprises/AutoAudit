@@ -47,8 +47,8 @@ def main():
     os.environ["AUTOAUDIT_TEMPLATE"] = str(paths["TEMPLATE_PATH"])
 
     # Step 3: Run the respective python script 
-    scanner = str((here / "backend" / "scanner.py").resolve())
-    reportg = str((here / "backend" / "reportgenerator.py").resolve())
+    scanner = str((here / "evidence_backend" / "scanner.py").resolve())
+    reportg = str((here / "evidence_backend" / "reportgenerator.py").resolve())
 
     if choice == "1":
         print("\n▶ Running scanner.py ...")

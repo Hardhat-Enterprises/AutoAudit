@@ -5,5 +5,32 @@ env/
 **/.venv/
 **/venv/
 **/env/
-README.md
 .DS_Store
+
+# Python caches
+**/__pycache__/
+**/*.py[codz]
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+
+# Node / frontend artifacts
+**/node_modules/
+**/build/
+**/dist/
+**/coverage/
+
+# Editor / OS
+.idea/
+.vscode/
+
+# Environment files (keep examples)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Engine legacy generated outputs
+engine/legacy/engine/autoaudit_reports.json

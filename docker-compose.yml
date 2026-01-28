@@ -1,0 +1,192 @@
+# AutoAudit Development Docker Compose
+#
+# Usage with profiles:
+#   docker compose up                           # Start infrastructure only (db, redis, opa)
+#   docker compose --profile frontend-dev up   # For frontend devs (backend-api + infrastructure, run worker locally)
+#   docker compose --profile backend-dev up    # For backend devs (frontend + infrastructure)
+#   docker compose --profile worker up         # Add worker to any profile combination
+#   docker compose --profile powershell up     # Add PowerShell service for Exchange/Teams cmdlets
+#   docker compose --profile all up            # Start all services
+#
+# Common combinations:
+#   docker compose --profile frontend-dev up -d                  # Backend API + infra (worker runs locally)
+#   docker compose --profile frontend-dev --profile worker up -d # Backend API + worker + infra
+#   docker compose --profile frontend-dev --profile powershell up -d # Backend API + PowerShell service
+#
+# To run worker locally (for PowerShell/Exchange controls that need Docker access):
+#   cd engine && uv run celery -A worker.celery_app worker --loglevel=info
+#
+# To test collectors with PowerShell service:
+#   cd engine && uv run python -m scripts.test_collector -c exchange.organization.organization_config --use-service http://localhost:8001
+
+services:
+  # =============================================================================
+  # Infrastructure Services (always available)
+  # =============================================================================
+
+  db:
+    image: postgres:17
+    container_name: autoaudit-db
+    environment:
+      POSTGRES_USER: autoaudit
+      POSTGRES_PASSWORD: autoaudit_dev_password
+      POSTGRES_DB: autoaudit
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autoaudit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: autoaudit-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  opa:
+    image: openpolicyagent/opa:latest-debug
+    container_name: autoaudit-opa
+    command: ["run", "--server", "--addr=0.0.0.0:8181", "--log-level=info", "/policies"]
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./engine/policies:/policies:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8181/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # =============================================================================
+  # Application Services (profile-controlled)
+  # =============================================================================
+
+  backend-api:
+    profiles: ["frontend-dev", "all"]
+    build:
+      context: .
+      dockerfile: backend-api/Dockerfile
+    container_name: autoaudit-backend-api
+    environment:
+      # Application environment
+      - APP_ENV=dev
+
+      # Required: Database connection (PostgreSQL with asyncpg driver)
+      - DATABASE_URL=postgresql+asyncpg://autoaudit:autoaudit_dev_password@db:5432/autoaudit
+
+      # Required: JWT signing key (CHANGE IN PRODUCTION)
+      - SECRET_KEY=dev-secret-key-change-in-production
+
+      # Public URLs (used for OAuth redirects)
+      - BACKEND_PUBLIC_URL=http://localhost:8000
+      - FRONTEND_URL=http://localhost:3000
+
+      # Google OAuth (SSO) 
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID:-}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET:-}
+
+      # Required: Redis URL for Celery task queue
+      - REDIS_URL=redis://redis:6379
+
+      # Required: OPA server URL for policy evaluation
+      - OPA_URL=http://opa:8181
+
+      # Required: Fernet encryption key for M365 credentials at rest
+      # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      # This will be passed in with a secret provider in production. This is for local use only.
+      - ENCRYPTION_KEY=Ps-HiS3ww5QzQPc_Mdu5-JyA_jCNbdFHMdiwWSlAfgM=
+
+      # Optional: Path to policies directory (default: /app/policies)
+      - POLICIES_DIR=/app/policies
+    volumes:
+      # Mount policies directory for benchmark/control discovery API
+      - ./engine/policies:/app/policies:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opa:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    profiles: ["worker", "all"]
+    build:
+      context: ./engine
+      dockerfile: Dockerfile
+    container_name: autoaudit-worker
+    environment:
+      # Required: Database connection (PostgreSQL - worker uses sync driver)
+      - DATABASE_URL=postgresql+asyncpg://autoaudit:autoaudit_dev_password@db:5432/autoaudit
+
+      # Required: Redis URL for Celery broker
+      - REDIS_URL=redis://redis:6379
+
+      # Required: OPA server URL for policy evaluation
+      - OPA_URL=http://opa:8181
+
+      # Required: Must match ENCRYPTION_KEY in backend-api for credential decryption
+      - ENCRYPTION_KEY=Ps-HiS3ww5QzQPc_Mdu5-JyA_jCNbdFHMdiwWSlAfgM=
+
+      # Optional: PowerShell service URL for Exchange/Teams cmdlets
+      # When set, worker uses HTTP service instead of spawning Docker containers
+      - POWERSHELL_SERVICE_URL=http://powershell-service:8001
+    volumes:
+      - ./engine:/app/engine:ro
+      - ./engine/policies:/app/policies:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opa:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    profiles: ["backend-dev", "all"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: autoaudit-frontend
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  powershell-service:
+    profiles: ["powershell", "all"]
+    build:
+      context: ./engine/powershell
+      dockerfile: Dockerfile
+    container_name: autoaudit-powershell-service
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

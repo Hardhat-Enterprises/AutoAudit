@@ -1,0 +1,21 @@
+Database migrations using Alembic.
+
+Docs: https://alembic.sqlalchemy.org/en/latest/
+
+## Adding properties to database models
+
+1. Update your model in app/models/ (e.g. add a new field to User)
+2. Generate migration: `alembic revision --autogenerate -m "add field_name to user"`
+3. Review the generated migration in alembic/versions/
+4. Apply it: `alembic upgrade head`
+
+## Common commands
+
+- Create migration: `alembic revision -m "description"`
+- Auto-generate from models: `alembic revision --autogenerate -m "description"`
+- Apply migrations: `alembic upgrade head`
+- Rollback one: `alembic downgrade -1`
+- Check current version: `alembic current`
+- View history: `alembic history`
+
+Database URL is configured in app/core/config.py and loaded from .env

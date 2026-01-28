@@ -1,2 +1,4 @@
-Daily backup copied to immutable cloud storage (offsite).
-Retention Policy: 30 days
+backup_location=offsite
+immutability=enabled
+policy=enforced
+

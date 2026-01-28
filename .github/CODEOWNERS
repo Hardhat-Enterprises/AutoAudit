@@ -1,0 +1,10 @@
+# This file defines required reviewers for all PRs
+# Last updated: Dec 2025
+
+# Default reviewer(s) for everything
+# For T3 2025 the list is primarily du-dhartley and romil-bijarnia. Any repository or organisation admins can also review and merge, even if not explicitly listed.
+# Additional contributors can be easily added here.
+*    @du-dhartley @romil-bijarnia
+
+# You can add more specific rules later, e.g.:
+# /docs/    @docs-reviewer
