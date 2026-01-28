@@ -547,18 +547,18 @@
   }
 }
 .error-message {
-  margin: 12px 0;
-  padding: 10px 12px;
-  border: 1px solid rgba(255, 80, 80, 0.35);
-  background: rgba(255, 80, 80, 0.12);
-  color: #ffd6d6;
-  border-radius: 8px;
-  font-size: 14px;
+  margin: 8px 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 80, 80, 0.3);
+  background-color: rgba(255, 80, 80, 0.08);
+  color: #ff6b6b;
+  border-radius: 6px;
+  font-size: 13px;
 }
 
 .form-helper {
-  margin-top: 6px;
-  color: #94a3b8;
-  font-size: 13px;
+  margin-top: 4px;
+  color: #9aa3b2;
+  font-size: 12.5px;
   line-height: 1.4;
 }
