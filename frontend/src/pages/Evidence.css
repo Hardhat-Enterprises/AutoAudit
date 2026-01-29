@@ -959,13 +959,22 @@
 }
 
 @media (max-width: 480px) {
+  .brand-wrap {
+    padding-left: 0;
+  }
+
   .evidence-scanner {
-    padding: 16px;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
   
   .evidence-card,
   .results-card {
     padding: 16px;
+  }
+
+  .evidence-subtitle {
+    margin: 6px 0 25px 0;
   }
   
   .brand-title {

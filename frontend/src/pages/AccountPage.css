@@ -103,3 +103,9 @@
   line-height: 1.5;
 }
 
+@media (max-width: 480px) {
+  .account-page {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}

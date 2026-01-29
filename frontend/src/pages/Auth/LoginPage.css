@@ -8,7 +8,7 @@
   --border: rgba(59, 130, 246, 0.1);
 
   min-height: 100vh;
-  background: #0a1628;
+  background: var(--bg-dark);
   color: #ffffff;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   display: flex;
@@ -17,6 +17,9 @@
 }
 
 .auth-header {
+  position: fixed;
+  top: 0;
+  width: 100%;
   padding: 1.5rem 5%;
   display: flex;
   justify-content: space-between;
@@ -24,6 +27,7 @@
   background: rgba(10, 22, 40, 0.95);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px);
+  z-index: 999;
 }
 
 .auth-logo img {
@@ -69,13 +73,44 @@
   width: 100%;
 }
 
+/* Hamburger menu */
+.auth-hamburger {
+  display: none;
+  font-size: 1.75rem;
+  background: none;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+/* Mobile dropdown nav */
+.auth-mobile-nav {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem 5%;
+  z-index: 10;
+}
+
+.auth-mobile-nav a {
+  color: var(--text-main);
+}
+
 .login-main {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   min-height: calc(100vh - 120px);
   gap: 1.5rem;
-  padding: 1.5rem 5% 2.5rem;
+  padding: 10rem 5% 2.5rem;
+
 }
 
 .login-brand {
@@ -281,12 +316,15 @@
 }
 
 .login-form-header h2 {
-  font-size: 2rem;
+  font-size: 2.5rem;
+  font-weight: 700;
   margin-bottom: 0.5rem;
+  text-align: center;
 }
 
 .login-form-header p {
   color: #b0c4de;
+  text-align: center;
 }
 
 .login-form {
@@ -448,7 +486,7 @@
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease;
   width: 100%;
-  max-width: 280px;
+  max-width: 18.75rem;
 }
 
 .social-btn:focus-visible {
@@ -511,7 +549,8 @@
   color: var(--accent);
 }
 
-@media (max-width: 1024px) {
+
+@media (max-width: 1023px) {
   .login-main {
     grid-template-columns: 1fr;
   }
@@ -520,12 +559,17 @@
     min-height: 60vh;
   }
 
+  .login-form-card {
+    max-width: none;
+  }
+
   .brand-features {
     display: none;
   }
 }
 
-@media (max-width: 640px) {
+
+@media (max-width: 780px) {
   .auth-header {
     padding: 1rem 1.5rem;
   }
@@ -534,14 +578,34 @@
     gap: 1rem;
   }
 
+  .auth-nav {
+    display: none;
+  }
+
+  .auth-hamburger {
+    display: block;
+  }
+
   .login-brand {
     padding: 2.5rem 1.5rem;
   }
 
   .login-form-section {
-    padding: 2.5rem 1.5rem;
+    padding: 2.5rem 0;
   }
 
+  .login-form-header {
+    text-align: center;
+  }
+
+  .login-form-card {
+    padding: 3rem 1.55rem
+  }
+
+  .login-main {
+    padding: 8rem 1.5rem 2.5rem;
+  }
+  
   .social-login {
     grid-template-columns: 1fr;
   }

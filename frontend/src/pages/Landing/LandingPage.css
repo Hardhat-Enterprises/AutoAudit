@@ -1,20 +1,16 @@
+html {
+  scroll-behavior: smooth;
+}
+
 .landing-page {
   --bg-dark: #0a1628;
   --bg-darker: #0f1f38;
-  --bg-mid: #162a4a;
-  /* Section backgrounds: subtle, consistent gradients (avoid bright jumps) */
-  --bg-gradient: linear-gradient(
-    135deg,
-    var(--bg-dark) 0%,
-    var(--bg-darker) 55%,
-    var(--bg-mid) 100%
-  );
+  --bg-gradient: linear-gradient(135deg, #0a1628 0%, #162a4a 50%, #1e3a5f 100%);
   --text-main: #ffffff;
   --text-muted: #b0c4de;
-  /* Brand blues (less cyan/teal) */
-  --accent: #3b82f6;
-  --accent-strong: #2563eb;
-  --border: rgba(59, 130, 246, 0.1);
+  --accent: #40e0d0;
+  --accent-strong: #1e90ff;
+  --border: rgba(64, 224, 208, 0.1);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--text-main);
   background: var(--bg-dark);
@@ -34,8 +30,6 @@
 
 /* Shared section background treatment (except hero which has its own glow layers) */
 .landing-stats,
-.landing-features,
-.landing-benefits,
 .landing-cta,
 .landing-footer {
   background: var(--bg-gradient);
@@ -43,8 +37,6 @@
 }
 
 .landing-stats::before,
-.landing-features::before,
-.landing-benefits::before,
 .landing-cta::before,
 .landing-footer::before {
   content: "";
@@ -68,8 +60,10 @@
 
 /* Header */
 .landing-header {
-  position: sticky;
+  width: 100%;
+  position: fixed;
   top: 0;
+  z-index: 5;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -77,7 +71,6 @@
   background: rgba(10, 22, 40, 0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
-  z-index: 5;
 }
 
 .landing-logo img {
@@ -150,6 +143,7 @@
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 30px rgba(59, 130, 246, 0.5);
+  transition: all 0.7s ease;
 }
 
 .btn-secondary {
@@ -160,8 +154,49 @@
 
 .btn-secondary:hover {
   background: var(--accent);
-  color: var(--bg-dark);
+  color: var(--text-main);
   transform: translateY(-2px);
+}
+
+/* Hamburger button */
+.hamburger {
+  display: none;
+  font-size: 1.75rem;
+  background: none;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+/* Mobile dropdown nav */
+.mobile-nav {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  background: #0a1628;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem 5%;
+  z-index: 10;
+}
+
+.mobile-nav a {
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.mobile-nav a:hover {
+  color: var(--accent);
+}
+
+.mobile-nav .btn-primary {
+  width: fit-content;
 }
 
 /* LandingHeader overrides */
@@ -180,7 +215,7 @@
 /* Hero */
 .landing-hero {
   background: var(--bg-gradient);
-  padding: 6rem 5% 4rem;
+  padding: 10rem 5% 4rem;
   position: relative;
   isolation: isolate;
 }
@@ -235,6 +270,7 @@
 
 .hero-text h1 {
   font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: bold;
   margin-bottom: 1.5rem;
   line-height: 1.2;
   background-image: linear-gradient(
@@ -315,6 +351,7 @@
 
 /* Stats */
 .landing-stats {
+  background: linear-gradient(135deg, #0a1628, #1e3a5f);
   padding: 5rem 5%;
   text-align: left;
 }
@@ -328,7 +365,7 @@
 }
 
 .landing-stats .stat-card {
-  display: flex;
+  display: grid;
   align-items: center;
   justify-content: center;
   gap: 1.25rem;
@@ -355,6 +392,7 @@
   line-height: 1;
   text-align: center;
   flex-shrink: 0;
+  margin: auto;
 }
 
 .landing-stats .stat-card .stat-label {
@@ -363,12 +401,12 @@
   font-size: 0.875rem;
   margin: 0;
   text-align: center;
-  max-width: 14ch;
 }
 
 /* Features */
 .landing-features {
   padding: 6rem 5%;
+  background: var(--bg-darker);
 }
 
 .section-header {
@@ -380,15 +418,17 @@
 .section-header h2 {
   color: var(--accent);
   font-family: inherit;
-  text-transform: none;
-  letter-spacing: 0.5px;
-  font-size: clamp(1.5rem, 3vw, 2.2rem);
-  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 5px;
+  font-size: clamp(1rem, 3vw, 1.5rem);
   margin-bottom: 0.5rem;
+  margin-top: 3rem;
+
 }
 
 .landing-features h3 {
   font-size: clamp(2.25rem, 4vw, 2.8rem);
+  font-weight: bold;
   margin-bottom: 1rem;
   color: var(--text-main);
   font-family: inherit;
@@ -484,6 +524,7 @@
 /* Benefits */
 .landing-benefits {
   padding: 6rem 5%;
+  background: var(--bg-darker);
 }
 
 .benefits-container {
@@ -570,7 +611,9 @@
 
 .benefits-content h2 {
   font-size: 2.5rem;
+  font-weight: 700;
   margin-bottom: 1.75rem;
+  margin-top: 3rem;
 }
 
 .benefit-item {
@@ -626,12 +669,17 @@
 /* CTA */
 .landing-cta {
   padding: 6rem 5%;
+  background: linear-gradient(135deg, #1e3a5f, #0a1628);
   text-align: center;
 }
 
 .cta-content {
   max-width: 760px;
   margin: 0 auto;
+}
+
+.cta-content h2{
+  font-weight: 700;
 }
 
 .landing-cta h2 {
@@ -654,8 +702,9 @@
 
 /* Footer */
 .landing-footer {
+  background: var(--bg-dark);
   padding: 4rem 5% 2.5rem;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid v
 }
 
 .footer-content {
@@ -669,6 +718,7 @@
 .footer-section h3 {
   margin-bottom: 1rem;
   font-size: 1.1rem;
+  font-weight: 700;
 }
 
 .footer-section ul {
@@ -700,15 +750,18 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .landing-header {
-    flex-direction: column;
-    gap: 1rem;
+    flex-direction: row;
+    align-items: center;
   }
 
   .landing-nav {
-    flex-wrap: wrap;
-    justify-content: center;
+    display: none;
+  }
+
+  .hamburger {
+    display: block;
   }
 
   .hero-text {
@@ -723,16 +776,65 @@
     max-width: 420px;
     margin: 0 auto;
   }
+
+  .stat-card {
+    grid-template-rows: repeat(2, 1fr);
+  }
+
+  .floating-card {
+    text-align: center;
+    margin: auto;
+  }
+
+  .feature-card, .feature-icon {
+    margin: auto;
+    text-align: center;
+  }
+
+  .benefits-visual {
+    display: none;
+  }
+
+  .benefits-content h2 {
+    text-align: center;
+  }
+
+  .footer-content{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-inline: 1rem;
+    row-gap: 4rem;
+  }
+  
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1023px) {
+  .landing-nav {
+    display: none;
+  }
+
+  .hamburger {
+    display: block;
+  }
+
   .features-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footer-content {
+    row-gap: 4rem;
   }
 }
 
 @media (min-width: 1024px) {
+  .landing-stats .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .features-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  } 
+  
+  .footer-content {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

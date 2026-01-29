@@ -1,4 +1,6 @@
 .contact-page {
+  --bg-dark: #0a1628;
+  --bg-darker: #0f1f38;
   --accent: #3b82f6;
   --accent-strong: #2563eb;
   --border: rgba(59, 130, 246, 0.1);
@@ -16,7 +18,7 @@
 }
 
 .contact-hero {
-  padding: 10rem 5% 4rem;
+  padding: 12rem 5% 4rem;
   background: linear-gradient(135deg, #0a1628 0%, #162a4a 50%, #1e3a5f 100%);
   position: relative;
   overflow: hidden;
@@ -70,6 +72,7 @@
 
 .contact-hero h1 {
   font-size: clamp(2.5rem, 6vw, 3.5rem);
+  font-weight: 700;
   margin-bottom: 1rem;
   background: linear-gradient(135deg, #ffffff, var(--accent));
   -webkit-background-clip: text;
@@ -128,6 +131,7 @@
 
 .info-card h3 {
   font-size: 1.25rem;
+  font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
@@ -190,6 +194,9 @@
 
 .contact-form-wrapper h2 {
   margin-bottom: 1.5rem;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 3rem;
 }
 
 .form-group {
@@ -285,6 +292,7 @@
 
 .faq-header h2 {
   font-size: 2.4rem;
+  font-weight: 700;
   margin-bottom: 0.75rem;
 }
 
@@ -351,8 +359,12 @@
 }
 
 @media (max-width: 768px) {
+  .contact-form-wrapper h2 {
+    text-align: center;
+  }
+
   .contact-hero {
-    padding-top: 8rem;
+    padding-top: 12rem;
   }
 
   .form-row {
@@ -360,6 +372,6 @@
   }
 
   .contact-form-wrapper {
-    padding: 2rem;
+    padding: 2rem 1.5rem;
   }
 }

@@ -24,7 +24,6 @@ const HeroSection = ({ onSignInClick }) => {
     <section className="landing-hero">
       <div className="hero-content">
         <div className="hero-text">
-          <p className="section-tag">AutoAudit Platform</p>
           <h1>Access your compliance dashboard and security insights.</h1>
           <p>
             Compliance made easy for you. View your dashboards anytime,

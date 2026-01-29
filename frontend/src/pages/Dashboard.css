@@ -312,7 +312,7 @@ input:checked + .slider:before {
   justify-content: center;
   font-size: 12px;
   font-weight: bold;
-  margin-top: 2px;
+  margin: auto;
 }
 
 .stat-card.emerald .stat-icon {
@@ -522,17 +522,28 @@ input:checked + .slider:before {
     grid-column: 1 / -1;
     grid-row: auto;
   }
+
+  .stat-info {
+    flex-direction: column;
+  }
+
 }
  
-@media (max-width: 640px) {
+@media (max-width: 780px) {
   .main-grid {
     grid-template-columns: 1fr;
   }
+
   .dashboard-header {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
+
+  .stat-info {
+    flex-direction: row;
+  }
+
   .theme-toggle {
     align-self: flex-end;
   }
@@ -549,5 +560,28 @@ input:checked + .slider:before {
 
   .top-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .toolbar-button.secondary, .toolbar-button.primary {
+    width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 376px) { 
+  .issue-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .chart-dropdown {
+    margin: auto;
   }
 }

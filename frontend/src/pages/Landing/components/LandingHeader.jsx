@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -9,6 +9,13 @@ const navLinks = [
 ];
 
 const LandingHeader = ({ onSignInClick, hiddenLinks = [], showSignIn = true }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const visibleLinks = navLinks.filter(
+    (link) =>
+      !hiddenLinks.map((l) => l.toLowerCase()).includes(link.label.toLowerCase())
+  );
+
   return (
     <header className="landing-header">
       <a className="landing-logo" href="/" aria-label="AutoAudit home">
@@ -18,24 +25,56 @@ const LandingHeader = ({ onSignInClick, hiddenLinks = [], showSignIn = true }) =
         </picture>
       </a>
 
-      <nav className="landing-nav" aria-label="Primary navigation">
-        {navLinks
-          .filter((link) => !hiddenLinks.map((l) => l.toLowerCase()).includes(link.label.toLowerCase()))
-          .map((link) => (
-            <a key={link.label} href={link.href}>
-              {link.label}
-            </a>
-          ))}
+      {/* Desktop nav */}
+      <nav className="landing-nav desktop-nav" aria-label="Primary navigation">
+        {visibleLinks.map((link) => (
+          <a key={link.label} href={link.href}>
+            {link.label}
+          </a>
+        ))}
         {showSignIn && (
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={onSignInClick}
-          >
+          <button className="btn-primary" onClick={onSignInClick}>
             Sign In
           </button>
         )}
       </nav>
+
+      {/* Hamburger toggle */}
+      <button
+        className="hamburger"
+        aria-label="Toggle menu"
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        ☰
+      </button>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <nav className="mobile-nav" aria-label="Mobile navigation">
+          {visibleLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
+
+          {showSignIn && (
+            <button
+              className="btn-primary"
+              onClick={() => {
+                setMenuOpen(false);
+                onSignInClick?.();
+              }}
+            >
+              Sign In
+            </button>
+          )}
+        </nav>
+      )}
     </header>
   );
 };
