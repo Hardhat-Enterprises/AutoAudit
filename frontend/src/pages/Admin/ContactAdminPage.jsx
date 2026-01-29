@@ -248,8 +248,9 @@ const ContactAdminPage = () => {
 
               <div className="contact-admin__actions">
                 <div className="contact-admin__form-group">
-                  <label>Status</label>
+                  <label className="form-label">Status</label>
                   <select
+                    className="form-select"
                     value={selectedSubmission.status}
                     onChange={(event) => handleUpdate({ status: event.target.value })}
                   >
@@ -261,8 +262,9 @@ const ContactAdminPage = () => {
                   </select>
                 </div>
                 <div className="contact-admin__form-group">
-                  <label>Priority</label>
+                  <label className="form-label">Priority</label>
                   <select
+                    className="form-select"
                     value={selectedSubmission.priority}
                     onChange={(event) => handleUpdate({ priority: event.target.value })}
                   >
