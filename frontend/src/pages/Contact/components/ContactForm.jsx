@@ -10,31 +10,76 @@ const initialState = {
   message: "",
 };
 
-const ContactForm = ({ submitted, onSuccess }) => {
+const ContactForm = ({ submitted, onSubmit }) => {
   const [formData, setFormData] = useState(initialState);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (error) {
+      setError("");
+    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    onSuccess();
-    setFormData(initialState);
+    setError("");
+    const trimmed = {
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      email: formData.email.trim(),
+      subject: formData.subject.trim(),
+      message: formData.message.trim(),
+    };
+    if (!trimmed.firstName) {
+      setError("Please enter your first name.");
+      return;
+    }
+    if (!trimmed.lastName) {
+      setError("Please enter your last name.");
+      return;
+    }
+    if (!trimmed.email) {
+      setError("Please enter your email address.");
+      return;
+    }
+    const emailLooksValid =
+      /.+@.+\..+/.test(trimmed.email) && !/\s/.test(trimmed.email);
+    if (!emailLooksValid) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (!trimmed.subject) {
+      setError("Please select a subject.");
+      return;
+    }
+    if (!trimmed.message) {
+      setError("Please enter a message.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData);
+      setFormData(initialState);
+    } catch (err) {
+      setError(err?.message || "Unable to send message right now.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="contact-form-wrapper">
       <h2>Send us a Message</h2>
-      <form onSubmit={handleSubmit} className="contact-form">
+      <form onSubmit={handleSubmit} className="contact-form" noValidate>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="firstName">First Name *</label>
             <input
               id="firstName"
               name="firstName"
-              required
               value={formData.firstName}
               onChange={handleChange}
             />
@@ -44,7 +89,6 @@ const ContactForm = ({ submitted, onSuccess }) => {
             <input
               id="lastName"
               name="lastName"
-              required
               value={formData.lastName}
               onChange={handleChange}
             />
@@ -58,7 +102,6 @@ const ContactForm = ({ submitted, onSuccess }) => {
               id="email"
               name="email"
               type="email"
-              required
               value={formData.email}
               onChange={handleChange}
             />
@@ -90,7 +133,6 @@ const ContactForm = ({ submitted, onSuccess }) => {
           <select
             id="subject"
             name="subject"
-            required
             value={formData.subject}
             onChange={handleChange}
           >
@@ -109,16 +151,16 @@ const ContactForm = ({ submitted, onSuccess }) => {
           <textarea
             id="message"
             name="message"
-            required
             value={formData.message}
             onChange={handleChange}
           />
         </div>
 
-        <button type="submit" className="btn-primary submit-btn">
-          Send Message
+        <button type="submit" className="btn-primary submit-btn" disabled={isSubmitting}>
+          {isSubmitting ? "Sending..." : "Send Message"}
         </button>
 
+        {error && <div className="error-message">{error}</div>}
         <div className={`success-message ${submitted ? "show" : ""}`}>
           ✓ Thank you! Your message has been sent successfully. We&apos;ll get
           back to you soon.
