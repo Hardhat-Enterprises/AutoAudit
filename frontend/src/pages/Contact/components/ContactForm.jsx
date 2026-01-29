@@ -18,11 +18,47 @@ const ContactForm = ({ submitted, onSubmit }) => {
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (error) {
+      setError("");
+    }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+    const trimmed = {
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      email: formData.email.trim(),
+      subject: formData.subject.trim(),
+      message: formData.message.trim(),
+    };
+    if (!trimmed.firstName) {
+      setError("Please enter your first name.");
+      return;
+    }
+    if (!trimmed.lastName) {
+      setError("Please enter your last name.");
+      return;
+    }
+    if (!trimmed.email) {
+      setError("Please enter your email address.");
+      return;
+    }
+    const emailLooksValid =
+      /.+@.+\..+/.test(trimmed.email) && !/\s/.test(trimmed.email);
+    if (!emailLooksValid) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (!trimmed.subject) {
+      setError("Please select a subject.");
+      return;
+    }
+    if (!trimmed.message) {
+      setError("Please enter a message.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       await onSubmit(formData);
@@ -37,14 +73,13 @@ const ContactForm = ({ submitted, onSubmit }) => {
   return (
     <div className="contact-form-wrapper">
       <h2>Send us a Message</h2>
-      <form onSubmit={handleSubmit} className="contact-form">
+      <form onSubmit={handleSubmit} className="contact-form" noValidate>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="firstName">First Name *</label>
             <input
               id="firstName"
               name="firstName"
-              required
               value={formData.firstName}
               onChange={handleChange}
             />
@@ -54,7 +89,6 @@ const ContactForm = ({ submitted, onSubmit }) => {
             <input
               id="lastName"
               name="lastName"
-              required
               value={formData.lastName}
               onChange={handleChange}
             />
@@ -68,7 +102,6 @@ const ContactForm = ({ submitted, onSubmit }) => {
               id="email"
               name="email"
               type="email"
-              required
               value={formData.email}
               onChange={handleChange}
             />
@@ -100,7 +133,6 @@ const ContactForm = ({ submitted, onSubmit }) => {
           <select
             id="subject"
             name="subject"
-            required
             value={formData.subject}
             onChange={handleChange}
           >
@@ -119,7 +151,6 @@ const ContactForm = ({ submitted, onSubmit }) => {
           <textarea
             id="message"
             name="message"
-            required
             value={formData.message}
             onChange={handleChange}
           />
