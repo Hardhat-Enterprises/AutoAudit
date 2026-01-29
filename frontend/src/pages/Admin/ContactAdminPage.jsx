@@ -26,6 +26,14 @@ const ContactAdminPage = () => {
   const [actionMessage, setActionMessage] = useState("");
   const latestSelectionRef = useRef(null);
 
+  useEffect(() => {
+    if (!actionMessage) return;
+    const timeoutId = setTimeout(() => {
+      setActionMessage("");
+    }, 5000);
+    return () => clearTimeout(timeoutId);
+  }, [actionMessage]);
+
   const selectedSubmission = useMemo(
     () => submissions.find((item) => item.id === selectedId) || null,
     [submissions, selectedId]
