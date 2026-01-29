@@ -20,11 +20,9 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_11
 
-<<<<<<< HEAD
 import rego.v1
-=======
+
 default result := {"compliant": false, "message": "Evaluation failed"}
->>>>>>> c645864 (added all controls for section 2)
 
 attach_exts := [
     "7z","a3x","ace","ade","adp","ani","app","appinstaller","applescript","application",
@@ -46,131 +44,38 @@ attach_exts := [
 
 passing_value := 0.9
 
-missing_exts[policy_identity] = missing if {
-    policy := input.malware_filter_policies[_]
-<<<<<<< HEAD
-    policy_identity := policy.Identity
+policy := object.get(input, "default_policy", null)
+has_policy := policy != null
 
-    missing := [ext |
-        ext := attach_exts[_]
-        not ext in policy.FileTypes
-=======
-    policy_identity := policy.identity
+enable_file_filter := object.get(policy, "EnableFileFilter", object.get(input, "enable_file_filter", null))
+file_types := object.get(policy, "FileTypes", object.get(input, "file_types", []))
 
-    missing := [ext |
-        ext := attach_exts[_]
-        not ext in policy.file_types
->>>>>>> c645864 (added all controls for section 2)
-    ]
-}
+missing := [ext | ext := attach_exts[_]; not ext in file_types]
+fail_threshold := count(attach_exts) * (1 - passing_value)
+coverage_ok := count(missing) <= fail_threshold
 
-is_compliant[policy_identity] if {
-    policy := input.malware_filter_policies[_]
-<<<<<<< HEAD
-    policy_identity := policy.Identity
-=======
-    policy_identity := policy.identity
+compliant := true if {
+    has_policy
+    enable_file_filter == true
+    coverage_ok
+} else := false if { true }
 
-    rule := input.malware_filter_rules[_]
-    rule.malware_filter_policy == policy.id
->>>>>>> c645864 (added all controls for section 2)
-
-    missing := missing_exts[policy_identity]
-    fail_threshold := count(attach_exts) * (1 - passing_value)
-
-    count(missing) <= fail_threshold
-<<<<<<< HEAD
-    policy.EnableFileFilter == true
-=======
-    policy.enable_file_filter == true
-    rule.state == "Enabled"
-}
-
-policy_report[report] if {
-    policy := input.malware_filter_policies[_]
-    rule := input.malware_filter_rules[_]
-    rule.malware_filter_policy == policy.id
-
-    missing := missing_exts[policy.identity]
-    compliant := is_compliant[policy.identity]
-
-    report := {
-        "policy_name": policy.identity,
-        "is_cis_compliant": compliant,
-        "enable_file_filter": policy.enable_file_filter,
-        "state": rule.state,
+result := {
+    "compliant": compliant,
+    "message": generate_message(compliant, has_policy),
+    "affected_resources": generate_affected_resources(compliant, has_policy),
+    "details": {
+        "EnableFileFilter": enable_file_filter,
         "missing_count": count(missing),
         "missing_extensions": missing,
-        "extension_count": count(policy.file_types)
+        "passing_threshold": passing_value,
+        "known_extensions_count": count(attach_exts)
     }
 }
 
-any_policy_compliant if {
-    some i
-    compliant := is_compliant[input.malware_filter_policies[i].identity]
-    compliant == true
->>>>>>> c645864 (added all controls for section 2)
-}
-
-generate_message(true) := "Attachment filtering policy is correctly configured and enforced"
-generate_message(false) := "Attachment filtering policy is misconfigured or not enforced"
+generate_message(true, _) := "Comprehensive attachment filtering is applied and covers the expected set of extensions."
+generate_message(false, false) := "No malware filter policy (default_policy) was found to evaluate attachment filtering."
+generate_message(false, true) := "Comprehensive attachment filtering is not applied or does not cover enough extensions."
 
 generate_affected_resources(true, _) := []
-
-generate_affected_resources(false, data_input) := [
-<<<<<<< HEAD
-    pol.Identity |
-    pol := data_input.malware_filter_policies[_]
-]
-
-policies := object.get(input, "malware_filter_policies", [])
-has_policies := count(policies) > 0
-
-non_compliant_policies := [
-    pol.Identity |
-    pol := policies[_]
-    not is_compliant[pol.Identity]
-]
-
-result := {
-    "compliant": false,
-    "message": "No malware filter policies found",
-    "affected_resources": ["MalwareFilterPolicy"],
-    "details": {
-        "malware_filter_policies_evaluated": 0,
-        "passing_threshold": passing_value,
-        "total_known_extensions": count(attach_exts)
-    }
-} if {
-    not has_policies
-}
-
-result := {
-    "compliant": count(non_compliant_policies) == 0,
-    "message": generate_message(count(non_compliant_policies) == 0),
-    "affected_resources": generate_affected_resources(count(non_compliant_policies) == 0, input),
-    "details": {
-        "malware_filter_policies_evaluated": count(policies),
-        "non_compliant_policies": non_compliant_policies,
-        "passing_threshold": passing_value,
-        "total_known_extensions": count(attach_exts)
-    }
-} if {
-    has_policies
-=======
-    pol.identity |
-    pol := data_input.malware_filter_policies[_]
-]
-
-result := {
-    "compliant": any_policy_compliant,
-    "message": generate_message(any_policy_compliant),
-    "affected_resources": generate_affected_resources(any_policy_compliant, input),
-    "details": {
-        "malware_filter_policies_evaluated": count(input.malware_filter_policies),
-        "malware_filter_rules_evaluated": count(input.malware_filter_rules),
-        "passing_threshold": passing_value,
-        "total_known_extensions": count(attach_exts)
-    }
->>>>>>> c645864 (added all controls for section 2)
-}
+generate_affected_resources(false, _) := ["MalwareFilterPolicy"]

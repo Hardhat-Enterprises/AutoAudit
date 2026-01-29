@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const footerColumns = [
   {
@@ -49,7 +50,13 @@ const LandingFooter = () => {
             <ul>
               {column.links.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href}>{link.label}</a>
+                  {link.href.startsWith("/") ? (
+                    <Link to={link.href}>{link.label}</Link>
+                  ) : link.href.startsWith("#") ? (
+                    <Link to={`/${link.href}`}>{link.label}</Link>
+                  ) : (
+                    <a href={link.href}>{link.label}</a>
+                  )}
                 </li>
               ))}
             </ul>
