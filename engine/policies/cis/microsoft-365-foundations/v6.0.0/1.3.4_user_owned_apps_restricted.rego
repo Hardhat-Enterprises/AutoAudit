@@ -15,7 +15,7 @@
 #   severity: medium
 #   service: EntraID
 #   requires_permissions:
-#   - Policy.Read.All
+#   - OrgSettings-AppsAndServices.Read.All
 
 package cis.microsoft_365_foundations.v6_0_0.control_1_3_4
 
@@ -27,25 +27,45 @@ default result := {
   "details": {}
 }
 
+has_modern := true if {
+  input.is_office_store_enabled != null
+  input.is_app_and_services_trial_enabled != null
+} else := false if { true }
+
+unknown := true if { input.user_owned_apps_enabled == null; input.is_office_store_enabled == null } else := true if { input.user_owned_apps_enabled == null; input.is_app_and_services_trial_enabled == null } else := false if { true }
+
+compliant := true if {
+  has_modern
+  input.is_office_store_enabled == false
+  input.is_app_and_services_trial_enabled == false
+} else := true if {
+  not has_modern
+  input.user_owned_apps_enabled == false
+} else := false if { true }
+
 result := output if {
-  enabled := input.user_owned_apps_enabled
+  office := input.is_office_store_enabled
+  trial := input.is_app_and_services_trial_enabled
+  legacy_enabled := input.user_owned_apps_enabled
 
   output := {
     # CIS intent: restricted => disabled
-    "compliant": enabled == false,
-    "message": generate_message(enabled),
-    "affected_resources": generate_affected(enabled),
+    "compliant": compliant,
+    "message": generate_message(compliant, unknown),
+    "affected_resources": generate_affected(compliant, unknown),
     "details": {
-      "user_owned_apps_enabled": enabled,
-      "is_office_store_enabled": input.is_office_store_enabled
+      "is_office_store_enabled": office,
+      "is_app_and_services_trial_enabled": trial,
+      "user_owned_apps_enabled": legacy_enabled,
+      "collector_error": input.collector_error
     }
   }
 }
 
-generate_message(true) := "User owned apps and services are not restricted (enabled)"
-generate_message(false) := "User owned apps and services are restricted (disabled)"
-generate_message(null) := "Unable to determine whether user owned apps and services are restricted"
+generate_message(true, false) := "User owned apps and services are restricted (disabled)"
+generate_message(false, false) := "User owned apps and services are not restricted (enabled)"
+generate_message(_, true) := "Unable to determine whether user owned apps and services are restricted"
 
-generate_affected(false) := []
-generate_affected(true) := ["User owned apps and services are enabled"]
-generate_affected(null) := ["User owned apps and services setting unknown"]
+generate_affected(true, false) := []
+generate_affected(false, false) := ["User owned apps and services are enabled"]
+generate_affected(_, true) := ["User owned apps and services setting unknown"]

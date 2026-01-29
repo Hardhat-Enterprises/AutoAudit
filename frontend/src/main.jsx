@@ -3,6 +3,11 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 
+// Fonts (load once at app startup to reduce layout shifts)
+import '@fontsource/league-spartan/400.css';
+import '@fontsource/league-spartan/600.css';
+import '@fontsource/league-spartan/700.css';
+
 
 // Tailwind + tokens + base (includes tokens.css & components.css)
 import './styles/global.css';

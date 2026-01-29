@@ -31,9 +31,11 @@ class FormsSettingsDataCollector(BaseDataCollector):
             - external_sharing_enabled: External sharing status
         """
         # Get Microsoft Forms admin settings
+        collector_error: str | None = None
         try:
             settings = await client.get("/admin/forms/settings", beta=True)
-        except Exception:
+        except Exception as exc:
+            collector_error = str(exc)
             settings = {}
 
         return {
@@ -56,4 +58,5 @@ class FormsSettingsDataCollector(BaseDataCollector):
             "record_identity_by_default_enabled": settings.get(
                 "isRecordIdentityByDefaultEnabled"
             ),
+            "collector_error": collector_error,
         }

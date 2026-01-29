@@ -70,6 +70,20 @@
 
   html, body, #root { height: 100%; }
 
+  /* Prevent horizontal "jumps" between pages with/without a vertical scrollbar. */
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
+
+  /* Stop CSS transitions during viewport resizing (e.g., browser side panel opening).
+     This prevents the whole UI from "gliding" because computed widths change. */
+  body.is-resizing *,
+  body.is-resizing *::before,
+  body.is-resizing *::after {
+    transition: none !important;
+  }
+
   #root {
     border-radius: 999px;
     border-top-left-radius: 999px;
@@ -83,6 +97,10 @@
     color: rgb(var(--text-strong));
     font-family: ui-sans-serif, system-ui, "Segoe UI", Inter, Arial;
     line-height: 1.5;
+    /* Improve perceived sharpness across macOS browsers (esp. with thin weights / dark UI). */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
   }
 
   /* Visible keyboard focus (a11y) */

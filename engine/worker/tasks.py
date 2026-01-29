@@ -126,8 +126,28 @@ def run_scan(scan_id: int) -> dict:
 
         # Check automation_status before dispatching
         status = control.get("automation_status", "ready")
+        collector_id = control.get("data_collector_id") or ""
 
         if status == "ready":
+            # Optional fast-scan mode: allow skipping slow PowerShell-based controls only when
+            # explicitly disabled via ENABLE_POWERSHELL_CONTROLS=false.
+            if (
+                settings.ENABLE_POWERSHELL_CONTROLS is False
+                and collector_id.startswith(("exchange.", "compliance.", "teams."))
+                and not collector_id.startswith("exchange.dns.")
+            ):
+                with get_db_session() as session:
+                    update_scan_result(
+                        session,
+                        result_id=result["id"],
+                        status="skipped",
+                        message="Skipped (fast scan): PowerShell-based controls disabled (ENABLE_POWERSHELL_CONTROLS=false).",
+                    )
+                    increment_scan_skipped_count(session, scan_id)
+                    session.commit()
+                skipped += 1
+                continue
+
             # Verify collector exists before dispatching
             if not control.get("data_collector_id"):
                 with get_db_session() as session:

@@ -87,7 +87,6 @@ export const formatTimeAEST = (dateString) => {
     hour: 'numeric',
     minute: '2-digit',
     second: '2-digit',
-    fractionalSecondDigits: 3,
     hour12: true,
     timeZone: AEST_IANA_TZ,
   }).format(d);
