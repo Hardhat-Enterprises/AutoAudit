@@ -262,6 +262,7 @@
 .empty-state svg {
   color: var(--text-tertiary);
   margin-bottom: 16px;
+  margin: auto;
 }
 
 .empty-state h3 {
@@ -300,6 +301,16 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    padding-top: 1rem;
+  }
+  .connections-page {
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 }
 

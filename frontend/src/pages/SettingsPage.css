@@ -75,3 +75,9 @@
   line-height: 1.5;
 }
 
+@media (max-width: 480px) {
+  .settings-page {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}

@@ -1,7 +1,3 @@
-.signup-page .login-main {
-  padding-top: 1.5rem;
-}
-
 .signup-brand__content {
   max-width: 460px;
 }
@@ -66,6 +62,7 @@
 
 .signup-form-card {
   max-width: 480px;
+  width: 100%;
 }
 
 .signup-form-grid {
@@ -173,7 +170,6 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.85rem;
-
 }
 
 .social-login .social-btn svg {
@@ -200,6 +196,11 @@
 
   .signup-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .signup-form-card {
+    max-width: none;
+    width: 100%;
   }
 
   .social-login {

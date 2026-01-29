@@ -319,6 +319,14 @@
   }
 }
 
+@media (max-width: 480px) {
+  .scans-page {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+
 @media (max-width: 768px) {
   .form-row {
     grid-template-columns: 1fr;

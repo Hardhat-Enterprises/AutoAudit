@@ -1,3 +1,7 @@
+h1, h2 {
+  font-weight: 700;
+}
+
 .about-page {
   --accent: #3b82f6;
   --accent-strong: #2563eb;
@@ -17,7 +21,7 @@
 
 .about-hero {
   background: linear-gradient(135deg, #0a1628 0%, #1a3a4f 50%, #2a4a5f 100%);
-  padding: 6rem 5% 4rem;
+  padding: 10rem 5% 4rem;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -236,16 +240,13 @@
 }
 
 @media (max-width: 768px) {
-  .about-hero {
-    padding: 4rem 5% 3rem;
-  }
-
   .section {
     padding: 0 1.5rem;
   }
 
   .section-content {
     padding: 2rem;
+    text-align: center;
   }
 
   .cta-section {
