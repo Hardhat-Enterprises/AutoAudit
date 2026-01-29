@@ -22,8 +22,8 @@ class ContactSubmissionCreate(ContactSubmissionBase):
 
 
 class ContactSubmissionUpdate(BaseModel):
-    status: str | None = Field(None, min_length=1, max_length=20)
-    priority: str | None = Field(None, min_length=1, max_length=20)
+    status: str | None = Field(None, max_length=20)
+    priority: str | None = Field(None, max_length=20)
     assigned_to: int | None = None
     resolved_at: datetime | None = None
 

@@ -29,3 +29,6 @@ api_router.include_router(contact.router)
 
 # User settings routes
 api_router.include_router(settings.router)
+
+# Contact routes
+api_router.include_router(contact.router)

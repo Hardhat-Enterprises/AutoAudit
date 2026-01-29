@@ -20,6 +20,7 @@ import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
 import ContactAdminPage from './pages/Admin/ContactAdminPage.jsx';
 import GoogleCallbackPage from './pages/Auth/GoogleCallbackPage';
+import ContactAdminPage from './pages/Admin/ContactAdminPage';
 
 // Auth Context
 import { useAuth } from './context/AuthContext';
