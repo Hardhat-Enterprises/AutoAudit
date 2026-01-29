@@ -1,7 +1,7 @@
 """Scan API endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -184,3 +184,26 @@ async def get_scan_results(
 
     results = await db.execute(query)
     return list(results.scalars().all())
+
+
+@router.delete("/{scan_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_scan(
+    scan_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> None:
+    """Delete a scan (hard delete) and its results."""
+    result = await db.execute(
+        select(Scan).where(Scan.id == scan_id, Scan.user_id == current_user.id)
+    )
+    scan = result.scalar_one_or_none()
+    if not scan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Scan {scan_id} not found",
+        )
+
+    # Delete dependent results first (FK is not ON DELETE CASCADE).
+    await db.execute(delete(ScanResult).where(ScanResult.scan_id == scan_id))
+    await db.delete(scan)
+    await db.commit()
