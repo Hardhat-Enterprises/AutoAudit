@@ -1,7 +1,7 @@
 """add contact us tables
 
 Revision ID: j1k2l3m4n567
-Revises: h1i2j3k4l567
+Revises: j2k3l4m5n678
 Create Date: 2026-01-20
 
 """
@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "j1k2l3m4n567"
-down_revision: Union[str, Sequence[str], None] = "h1i2j3k4l567"
+down_revision: Union[str, Sequence[str], None] = "j2k3l4m5n678"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

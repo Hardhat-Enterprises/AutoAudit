@@ -30,6 +30,8 @@
   --border-color: #e2e8f0;
   background: #f8fafc;
   color: #1e293b;
+  /* Ensure native form controls render in light mode on macOS browsers. */
+  color-scheme: light;
 }
 
 .evidence-scanner.dark {
@@ -80,6 +82,11 @@
   font-size: clamp(28px, 7vw, 56px);
   letter-spacing: 0.5px;
   color: var(--teal);
+}
+
+/* Improve contrast for brand teal on light background. */
+.evidence-scanner.light .brand-title {
+  color: #0ea5e9; /* sky-500 */
 }
 
 .evidence-subtitle {
@@ -207,6 +214,15 @@
   border-radius: 10px;
 }
 
+/* Light mode: force readable text + neutral surface for native controls (Chrome/Safari can ignore vars). */
+.evidence-scanner.light .form-select,
+.evidence-scanner.light .form-input,
+.evidence-scanner.light .form-file {
+  background: var(--bg-secondary, #ffffff);
+  color: var(--text-primary, #1e293b);
+  border-color: var(--border-color, #e2e8f0);
+}
+
 .form-select {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -225,6 +241,11 @@
 .form-select option {
   background: var(--bg-secondary, #1e293b);
   color: var(--text-primary);
+}
+
+.evidence-scanner.light .form-select option {
+  background: #ffffff;
+  color: #1e293b;
 }
 
 .form-select:focus,

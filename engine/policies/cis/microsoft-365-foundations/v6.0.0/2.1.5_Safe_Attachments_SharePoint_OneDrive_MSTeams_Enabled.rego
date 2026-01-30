@@ -18,67 +18,43 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_5
 
-import rego.v1
-
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-required_values := {
-    "EnableATPForSPOTeamsODB": true,
-    "EnableSafeDocs": true,
-    "AllowSafeDocsOpen": false
-}
-
-missing_sentinel := "__missing__"
-
-field_non_compliant(p, f) if {
-    object.get(p, f, missing_sentinel) == missing_sentinel
-}
-
-field_non_compliant(p, f) if {
-    object.get(p, f, missing_sentinel) != missing_sentinel
-    p[f] != required_values[f]
-}
-
-policy_compliant(p) if {
-    invalid_fields := {f |
-        some f
-        required_values[f] = _
-        field_non_compliant(p, f)
-    }
-    count(invalid_fields) == 0
-}
-
-policy := input.atp_policy
-policies := [policy] if policy != null
-policies := [] if policy == null
-
-non_compliant_policies := [ {"policy": p.Name, "failed_fields": [f |
-    some f
-    required_values[f] = _
-    field_non_compliant(p, f)
-]} |
-    p := policies[_]
-    not policy_compliant(p)
+policies := [p |
+    p := object.get(input, "atp_policy", null)
+    p != null
 ]
 
-result := {
-    "compliant": true,
-    "message": sprintf("All %d Safe Attachments policies are compliant", [count(policies)])
-} if {
-    count(policies) > 0
-    count(non_compliant_policies) == 0
+non_compliant_policies = [policy.Name |
+    policy := policies[_]
+    policy.EnableATPForSPOTeamsODB == false
+    policy.EnableSafeDocs == false
+    policy.AllowSafeDocsOpen == true
+]
+
+compliant := count(non_compliant_policies) == 0
+
+message_text := "Safe Attachments for SharePoint, OneDrive, and Teams is configured securely" if {
+    compliant == true
+}
+
+message_text := "Safe Attachments for SharePoint, OneDrive, or Teams is not configured securely" if {
+    compliant == false
+}
+
+affected_list := [] if {
+    compliant == true
+}
+
+affected_list := non_compliant_policies if {
+    compliant == false
 }
 
 result := {
-    "compliant": false,
-    "message": sprintf("Non-compliant policies detected: %v", [non_compliant_policies])
-} if {
-    count(non_compliant_policies) > 0
-}
-
-result := {
-    "compliant": false,
-    "message": "No Safe Attachments policies found"
-} if {
-    count(policies) == 0
+    "compliant": compliant,
+    "message": message_text,
+    "affected_resources": affected_list,
+    "details": {
+        "policies_evaluated": policies
+    }
 }

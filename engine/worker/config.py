@@ -26,6 +26,10 @@ class WorkerSettings(BaseSettings):
     # PowerShell service URL (optional - if set, uses HTTP instead of Docker)
     POWERSHELL_SERVICE_URL: str | None = None
 
+    # Performance mode: PowerShell-based controls (Exchange/Compliance/Teams) are much slower
+    # than Graph-based controls. Default is True to preserve full scan coverage.
+    ENABLE_POWERSHELL_CONTROLS: bool = True
+
     class Config:
         env_file = ".env"
 

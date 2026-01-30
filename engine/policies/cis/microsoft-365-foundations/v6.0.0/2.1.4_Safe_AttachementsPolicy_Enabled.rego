@@ -19,49 +19,36 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_4
 
-import rego.v1
-
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-target_policy_candidate(p) if {
-    p.Identity == "Built-In Protection Policy"
-}
+safe_attachment_policies := object.get(input, "safe_attachment_policies", [])
 
-target_policy_candidate(p) if {
-    p.Name == "Built-In Protection Policy"
-}
+policy_name(p) := name if {
+    name := object.get(p, "Name", null)
+    name != null
+} else := identity if {
+    identity := object.get(p, "Identity", null)
+    identity != null
+} else := "Unknown policy"
 
-target_policies := [p |
-    p := input.safe_attachment_policies[_]
-    target_policy_candidate(p)
+built_in_policies := [p |
+    p := safe_attachment_policies[_]
+    policy_name(p) == "Built-In Protection Policy"
 ]
 
-target_policy := target_policies[0] if count(target_policies) > 0
+has_policy := count(built_in_policies) > 0
+policy := built_in_policies[0] if { has_policy }
 
-policy_identity := target_policy.Identity if target_policy.Identity
-policy_identity := target_policy.Name if target_policy.Name
+policy_identity := object.get(policy, "Identity", object.get(policy, "Name", "Unknown policy"))
+policy_enable := object.get(policy, "Enable", null)
+policy_action := object.get(policy, "Action", null)
+policy_quarantine_tag := object.get(policy, "QuarantineTag", null)
 
-has_policy := target_policy != null
-
-policy_matches if {
-    target_policy.Enable == true
-    target_policy.Action == "Block"
-    target_policy.QuarantineTag == "AdminOnlyAccessPolicy"
-    policy_identity == "Built-In Protection Policy"
-}
-
-compliant := true if {
+compliant if {
     has_policy
-    policy_matches
-}
-
-compliant := false if {
-    has_policy
-    not policy_matches
-}
-
-compliant := null if {
-    not has_policy
+    policy_enable == true
+    policy_action == "Block"
+    policy_quarantine_tag == "AdminOnlyAccessPolicy"
 }
 
 result := {
@@ -70,53 +57,44 @@ result := {
     "affected_resources": affected_resources,
     "details": {
         "identity": policy_identity,
-        "enable": target_policy.Enable,
-        "action": target_policy.Action,
-        "quarantine_tag": target_policy.QuarantineTag
+        "enable": policy_enable,
+        "action": policy_action,
+        "quarantine_tag": policy_quarantine_tag
     }
 } if {
+    true
+}
+
+message := "Safe Attachments Built-In Protection Policy is enabled, blocking threats, and correctly configured." if {
+    compliant
+} else := "Safe Attachments Built-In Protection Policy is disabled." if {
+    has_policy
+    policy_enable == false
+} else := "Safe Attachments policy action is not set to 'Block'." if {
+    has_policy
+    policy_enable == true
+    policy_action != "Block"
+} else := "Safe Attachments policy does not use the 'AdminOnlyAccessPolicy' quarantine tag." if {
+    has_policy
+    policy_enable == true
+    policy_action == "Block"
+    policy_quarantine_tag != "AdminOnlyAccessPolicy"
+} else := "Safe Attachments Built-In Protection Policy was not found." if {
+    not has_policy
+} else := "Unable to determine Safe Attachments policy configuration."
+
+affected_resources := [] if {
+    compliant
+}
+
+affected_resources := [
+    sprintf("Non-compliant Safe Attachments policy: %v", [policy_identity])
+] if {
+    not compliant
     has_policy
 }
 
-message := "Safe Attachments Built-In Protection Policy is enabled, blocking threats, and correctly configured." if compliant == true
-message := "Unable to determine Safe Attachments policy configuration." if compliant == null
-message := "Safe Attachments Built-In Protection Policy is disabled." if {
-    compliant == false
-    target_policy.Enable == false
-}
-message := "Safe Attachments policy action is not set to 'Block'." if {
-    compliant == false
-    target_policy.Enable == true
-    target_policy.Action != "Block"
-}
-message := "Safe Attachments policy does not use the 'AdminOnlyAccessPolicy' quarantine tag." if {
-    compliant == false
-    target_policy.Enable == true
-    target_policy.Action == "Block"
-    target_policy.QuarantineTag != "AdminOnlyAccessPolicy"
-}
-
-affected_resources := [] if compliant == true
-affected_resources := ["Safe Attachments policy status unknown"] if compliant == null
-affected_resources := [sprintf("Non-compliant Safe Attachments policy: %v", [policy_identity])] if {
-    compliant == false
-    policy_identity
-}
-affected_resources := ["Non-compliant Safe Attachments policy: Built-In Protection Policy"] if {
-    compliant == false
-    not policy_identity
-}
-
-result := {
-    "compliant": false,
-    "message": "Unable to determine Safe Attachments policy configuration.",
-    "affected_resources": ["Safe Attachments policy status unknown"],
-    "details": {
-        "identity": null,
-        "enable": null,
-        "action": null,
-        "quarantine_tag": null
-    }
-} if {
+affected_resources := ["Safe Attachments Built-In Protection Policy not found"] if {
+    not compliant
     not has_policy
 }

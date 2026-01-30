@@ -168,6 +168,23 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+.scans-table th.actions-header {
+  text-align: right;
+  width: 1%;
+  white-space: nowrap;
+}
+
+.scans-table td.actions-cell {
+  text-align: right;
+  width: 1%;
+  white-space: nowrap;
+}
+
+.scans-table td.actions-cell .toolbar-button {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
 .scan-row {
   cursor: pointer;
   transition: background-color 0.2s ease;

@@ -42,7 +42,8 @@ result := output if {
       "external_share_template_enabled": input.external_share_template_enabled,
       "external_share_result_enabled": input.external_share_result_enabled,
       "bing_search_enabled": input.bing_search_enabled,
-      "record_identity_by_default_enabled": input.record_identity_by_default_enabled
+      "record_identity_by_default_enabled": input.record_identity_by_default_enabled,
+      "collector_error": input.collector_error
     }
   }
 }

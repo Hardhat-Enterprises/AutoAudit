@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -11,16 +12,22 @@ const navLinks = [
 const LoginHeader = () => {
   return (
     <header className="auth-header">
-      <a className="auth-logo" href="/" aria-label="AutoAudit home">
+      <Link className="auth-logo" to="/" aria-label="AutoAudit home">
         <img src="/AutoAudit.png" alt="AutoAudit" />
-      </a>
+      </Link>
 
       <nav className="auth-nav" aria-label="Primary navigation">
-        {navLinks.map((link) => (
-          <a key={link.label} href={link.href}>
-            {link.label}
-          </a>
-        ))}
+        {navLinks.map((link) =>
+          link.href.startsWith("/") ? (
+            <Link key={link.label} to={link.href}>
+              {link.label}
+            </Link>
+          ) : (
+            <a key={link.label} href={link.href}>
+              {link.label}
+            </a>
+          )
+        )}
       </nav>
     </header>
   );
