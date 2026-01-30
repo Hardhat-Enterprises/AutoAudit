@@ -27,16 +27,24 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_14
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
+allowed_sender_domains := object.get(
+    input,
+    "allowed_sender_domains",
+    object.get(object.get(input, "default_policy", {}), "AllowedSenderDomains", null)
+)
+
 allowed_sender_domains_undefined := true if {
-    not input.AllowedSenderDomains  # AllowedSenderDomains is undefined
+    allowed_sender_domains != null
+    count(allowed_sender_domains) == 0
 }
 
 allowed_sender_domains_undefined := false if {
-    input.AllowedSenderDomains != null  # If AllowedSenderDomains is defined
+    allowed_sender_domains != null
+    count(allowed_sender_domains) > 0
 }
 
 allowed_sender_domains_undefined := null if {
-    not input.AllowedSenderDomains  # If AllowedSenderDomains is missing entirely
+    allowed_sender_domains == null
 }
 
 result := output if {
@@ -48,7 +56,7 @@ result := output if {
         "message": generate_message(allowed_sender_domains_undefined),
         "affected_resources": generate_affected_resources(allowed_sender_domains_undefined),
         "details": {
-            "AllowedSenderDomains": input.AllowedSenderDomains
+            "AllowedSenderDomains": allowed_sender_domains
         }
     }
 }

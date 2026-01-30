@@ -299,6 +299,145 @@ input:checked + .slider:before {
   grid-auto-rows: 1fr;
 }
 
+.summary-card {
+  border-radius: 16px;
+  padding: 18px 22px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.summary-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.summary-title p {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.summary-kpis {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.summary-chip svg {
+  width: 14px;
+  height: 14px;
+}
+
+.summary-chip.good {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--emerald);
+}
+
+.summary-chip.warn {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.3);
+  color: var(--orange);
+}
+
+.summary-chip.bad {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--red);
+}
+
+.summary-chip.neutral {
+  color: var(--text-primary);
+}
+
+.summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.summary-groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.summary-group {
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.summary-group-title {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.summary-group-list {
+  display: grid;
+  gap: 6px;
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.summary-row-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.summary-row-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
 .stat-card {
   border-radius: 16px;
   padding: 20px;
@@ -382,6 +521,7 @@ input:checked + .slider:before {
   font-weight: 700;
   margin: 0 0 2px 0;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-card.emerald .stat-value {
@@ -408,6 +548,28 @@ input:checked + .slider:before {
   font-weight: 400;
   line-height: 1.3;
   transition: color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 12px;
+  row-gap: 4px;
+}
+
+.stat-meta-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.stat-meta-value {
+  font-weight: 600;
 }
 
 .main-grid {
@@ -429,7 +591,6 @@ input:checked + .slider:before {
   border-radius: 12px;
   padding: 24px;
   border: 1px solid var(--border-color);
-  border-left: 4px solid var(--text-secondary);
   min-height: 0;
   max-height: 100% !important;
   overflow: visible;
@@ -452,6 +613,15 @@ input:checked + .slider:before {
   min-height: 300px;
   overflow: hidden;
   z-index: 1;
+}
+
+.compliance-chart .apexcharts-canvas,
+.compliance-chart .apexcharts-svg {
+  background: transparent !important;
+}
+
+.compliance-chart .apexcharts-inner {
+  background: transparent !important;
 }
 
 .compliance-graph-card .issue-icon {
@@ -831,6 +1001,9 @@ input:checked + .slider:before {
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .summary-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .main-grid {
     grid-template-columns: 1fr;
   }
@@ -842,6 +1015,9 @@ input:checked + .slider:before {
  
 @media (max-width: 640px) {
   .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .summary-groups {
     grid-template-columns: 1fr;
   }
   .main-grid {

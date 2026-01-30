@@ -20,8 +20,13 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_5
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
+policies := [p |
+    p := object.get(input, "atp_policy", null)
+    p != null
+]
+
 non_compliant_policies = [policy.Name |
-    policy := input.policies[_]
+    policy := policies[_]
     policy.EnableATPForSPOTeamsODB == false
     policy.EnableSafeDocs == false
     policy.AllowSafeDocsOpen == true
@@ -50,6 +55,6 @@ result := {
     "message": message_text,
     "affected_resources": affected_list,
     "details": {
-        "policies_evaluated": input.policies
+        "policies_evaluated": policies
     }
 }

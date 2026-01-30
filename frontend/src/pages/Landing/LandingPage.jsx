@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import "./LandingPage.css";
 import LandingHeader from "./components/LandingHeader";
 import HeroSection from "./components/HeroSection";
-import StatsSection from "./components/StatsSection";
 import FeaturesSection from "./components/FeaturesSection";
 import BenefitsSection from "./components/BenefitsSection";
 import CTASection from "./components/CTASection";
@@ -41,7 +40,6 @@ const LandingPage = ({ onSignInClick }) => {
        /> 
       <main>
         <HeroSection onSignInClick={onSignInClick} />
-        <StatsSection />
         <FeaturesSection />
         <BenefitsSection />
         <CTASection onSignInClick={onSignInClick} />

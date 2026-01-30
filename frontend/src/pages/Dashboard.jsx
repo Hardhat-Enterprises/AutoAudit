@@ -115,7 +115,6 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
     const errors = Number(s?.error_count || 0);
     const skipped = Number(s?.skipped_count || 0);
     const totalControls = Number(s?.total_controls || 0);
-    const issues = failed + errors;
 
     if (selectedChartType === 'bar') {
       const completed = (filteredScans || [])
@@ -129,20 +128,27 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
         const total = Number(x.total_controls || 0);
         const pass = Number(x.passed_count || 0);
         const fail = Number(x.failed_count || 0);
-        const err = Number(x.error_count || 0);
-        const skip = Number(x.skipped_count || 0);
-        // Prefer "evaluated" denominator to match the doughnut/pie.
-        const evaluated = Math.max(0, total - skip) || (pass + fail + err);
+        // Compliance is based on determinate outcomes only.
+        // Exclude errored/skipped controls from pass/fail denominator.
+        const evaluated = pass + fail;
         return evaluated > 0 ? Math.round((pass / evaluated) * 100) : 0;
       });
 
       return { chartType: 'bar', labels, values };
     }
 
-    // Default: issues vs pass (doughnut or pie)
-    // Prefer evaluated denominator (excludes skipped) when computing center % in ComplianceChart.
-    // We still feed the chart with Issues vs Pass slices; skipped controls are intentionally excluded.
-    return { chartType: selectedChartType, labels: ['Issues', 'Pass'], values: [issues, passed] };
+    // Default: Pass / Fail (+ optional Error / Skipped)
+    const labels = ['Pass', 'Fail'];
+    const values = [passed, failed];
+    if (errors > 0) {
+      labels.push('Error');
+      values.push(errors);
+    }
+    if (skipped > 0) {
+      labels.push('Skipped');
+      values.push(skipped);
+    }
+    return { chartType: selectedChartType, labels, values };
   }, [selectedChartType, latestRelevantScan, filteredScans]);
 
   const latestScanDetails = useMemo(() => {
@@ -173,58 +179,90 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, latestRelevantScan?.id]);
 
-  const stats = useMemo(() => {
+  const summary = useMemo(() => {
     const s = latestRelevantScan;
+    const hasScan = Boolean(s);
     const total = s ? Number(s.total_controls || 0) : 0;
     const passed = s ? Number(s.passed_count || 0) : 0;
     const failed = s ? Number(s.failed_count || 0) : 0;
     const errors = s ? Number(s.error_count || 0) : 0;
     const skipped = s ? Number(s.skipped_count || 0) : 0;
-    const issues = failed + errors;
-    // Use evaluated denominator (exclude skipped) to match doughnut/pie % and "issues vs pass" model.
-    const evaluated = Math.max(0, total - skipped) || (passed + failed + errors);
-    const pct = evaluated > 0 ? Math.round((passed / evaluated) * 100) : 0;
+    const evaluated = passed + failed;
+    const pending = Math.max(0, total - evaluated - errors - skipped);
+    const hasTotal = total > 0;
+    const formatCount = (value) => {
+      const num = Number(value);
+      return Number.isFinite(num) ? num.toLocaleString() : '—';
+    };
+
+    const compliancePct = evaluated > 0 ? Math.round((passed / evaluated) * 100) : null;
+    const complianceTone = compliancePct === null ? 'neutral' : compliancePct >= 85 ? 'good' : compliancePct >= 65 ? 'warn' : 'bad';
+    const failedTone = failed > 0 ? 'bad' : hasTotal ? 'good' : 'neutral';
 
     const connectionLabel = s?.connection_name || (s?.m365_connection_id ? `Connection #${s.m365_connection_id}` : '—');
     const isCompleted = String(s?.status || '').toLowerCase() === 'completed';
     const lastScanLabel = (isCompleted ? (s?.finished_at || s?.started_at) : (s?.started_at || s?.finished_at)) || null;
     const dt = lastScanLabel ? formatDateTimePartsAEST(lastScanLabel) : { date: '-', time: '-' };
-    // Avoid wrapping inside the small stat card: keep the primary value compact.
-    const lastPrimary = dt.time !== '-' ? dt.time : '—';
-    const lastSecondary = dt.date !== '-' ? dt.date : '—';
-    const benchmarkLabel = s?.benchmark && s?.version ? `${s.benchmark} ${s.version}` : '—';
-    const evalLabel = evaluated > 0 ? `${evaluated} evaluated` : '—';
+    const lastTime = dt.time !== '-' ? dt.time : '—';
+    const lastDate = dt.date !== '-' ? dt.date : '—';
 
-    return [
+    const subtitle = !hasScan
+      ? 'No scans yet'
+      : `${isCompleted ? 'Latest completed scan' : 'Latest scan'}${hasTotal ? ` • ${formatCount(evaluated)} evaluated` : ''}`;
+
+    const kpis = [
       {
-        label: "Compliance Score",
-        value: total > 0 ? `${pct}%` : '—',
-        className: "orange",
-        subtitle: isCompleted ? `Latest completed • ${evalLabel}` : `Latest scan • ${evalLabel}`,
+        label: compliancePct === null ? 'Compliance —' : `Compliance ${compliancePct}%`,
+        tone: complianceTone,
         icon: CheckCircle2,
       },
       {
-        label: "Failed Controls",
-        value: String(issues),
-        className: "orange",
-        subtitle: `Fail ${failed} • Err ${errors}`,
+        label: hasTotal ? `${formatCount(failed)} failed` : 'Failed —',
+        tone: failedTone,
         icon: AlertTriangle,
       },
       {
-        label: "Last Updated",
-        value: lastPrimary,
-        className: "gray",
-        subtitle: `${lastSecondary} • ${connectionLabel}`,
-        icon: Clock3,
-      },
-      {
-        label: "Total Controls",
-        value: total > 0 ? String(total) : '—',
-        className: "gray",
-        subtitle: benchmarkLabel !== '—' ? `${benchmarkLabel} • ${evalLabel}` : evalLabel,
+        label: hasTotal ? `${formatCount(total)} total` : 'Total —',
+        tone: 'neutral',
         icon: Shield,
       },
+      {
+        label: `Updated ${lastTime}`,
+        tone: 'neutral',
+        icon: Clock3,
+      },
     ];
+
+    const groups = [
+      {
+        title: 'Evaluation',
+        items: [
+          { label: 'Evaluated', value: hasTotal ? `${formatCount(evaluated)} of ${formatCount(total)}` : '—' },
+          { label: 'Passed', value: hasTotal ? formatCount(passed) : '—' },
+          { label: 'Failed', value: hasTotal ? formatCount(failed) : '—' },
+        ],
+      },
+      {
+        title: 'Quality',
+        items: [
+          { label: 'Errors', value: hasTotal ? formatCount(errors) : '—' },
+          { label: 'Skipped', value: hasTotal ? formatCount(skipped) : '—' },
+          { label: 'Pending', value: hasTotal ? formatCount(pending) : '—' },
+        ],
+      },
+      {
+        title: 'Context',
+        items: [
+          { label: 'Connection', value: hasScan ? connectionLabel : '—' },
+          { label: 'Date', value: hasScan ? lastDate : '—' },
+        ],
+      },
+    ].map(group => ({
+      ...group,
+      items: group.items.filter(item => item.value !== '—'),
+    })).filter(group => group.items.length > 0);
+
+    return { subtitle, kpis, groups };
   }, [latestRelevantScan]);
 
   const nextFixes = useMemo(() => {
@@ -361,26 +399,41 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
           </div>
         )}
 
-        <div className="stats-grid">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon; // uppercase component so React renders the imported icon
-            return (
-              <div key={index} className={`stat-card ${stat.className}`}>
-                <div className="stat-content">
-                  <div className="stat-info">
-                    <div className="stat-icon" aria-hidden="true">
-                      <Icon size={18} strokeWidth={2.2} />
-                    </div>
-                    <div className="stat-text">
-                      <p className="stat-label">{stat.label}</p>
-                      <p className="stat-value">{stat.value}</p>
-                      <p className="stat-subtitle">{stat.subtitle}</p>
-                    </div>
+        <div className="summary-card">
+          <div className="summary-header">
+            <div className="summary-title">
+              <h3>Scan Snapshot</h3>
+              <p>{summary.subtitle}</p>
+            </div>
+            <div className="summary-kpis">
+              {summary.kpis.map((kpi) => {
+                const Icon = kpi.icon;
+                return (
+                  <span key={kpi.label} className={`summary-chip ${kpi.tone}`}>
+                    <Icon size={14} strokeWidth={2} aria-hidden="true" />
+                    {kpi.label}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+          {summary.groups.length > 0 && (
+            <div className="summary-groups">
+              {summary.groups.map(group => (
+                <div className="summary-group" key={group.title}>
+                  <div className="summary-group-title">{group.title}</div>
+                  <div className="summary-group-list">
+                    {group.items.map(item => (
+                      <div className="summary-row" key={item.label}>
+                        <span className="summary-row-label">{item.label}</span>
+                        <span className="summary-row-value">{item.value}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="main-grid">

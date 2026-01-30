@@ -21,9 +21,15 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_2
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-file_filter_enabled := true if input.data.enable_file_filter == true
-file_filter_enabled := false if input.data.enable_file_filter != true
-file_filter_enabled := null if input.data.enable_file_filter == null
+enable_file_filter := object.get(
+    input,
+    "enable_file_filter",
+    object.get(object.get(input, "default_policy", {}), "EnableFileFilter", null)
+)
+
+file_filter_enabled := true if enable_file_filter == true
+file_filter_enabled := false if enable_file_filter != true
+file_filter_enabled := null if enable_file_filter == null
 
 result := output if {
     compliant := file_filter_enabled == true

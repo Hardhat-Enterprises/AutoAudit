@@ -21,11 +21,34 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_4
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
+safe_attachment_policies := object.get(input, "safe_attachment_policies", [])
+
+policy_name(p) := name if {
+    name := object.get(p, "Name", null)
+    name != null
+} else := identity if {
+    identity := object.get(p, "Identity", null)
+    identity != null
+} else := "Unknown policy"
+
+built_in_policies := [p |
+    p := safe_attachment_policies[_]
+    policy_name(p) == "Built-In Protection Policy"
+]
+
+has_policy := count(built_in_policies) > 0
+policy := built_in_policies[0] if { has_policy }
+
+policy_identity := object.get(policy, "Identity", object.get(policy, "Name", "Unknown policy"))
+policy_enable := object.get(policy, "Enable", null)
+policy_action := object.get(policy, "Action", null)
+policy_quarantine_tag := object.get(policy, "QuarantineTag", null)
+
 compliant if {
-    input.data.enable == true
-    input.data.action == "Block"
-    input.data.quarantine_tag == "AdminOnlyAccessPolicy"
-    input.data.identity == "Built-In Protection Policy"
+    has_policy
+    policy_enable == true
+    policy_action == "Block"
+    policy_quarantine_tag == "AdminOnlyAccessPolicy"
 }
 
 result := {
@@ -33,10 +56,10 @@ result := {
     "message": message,
     "affected_resources": affected_resources,
     "details": {
-        "identity": input.data.identity,
-        "enable": input.data.enable,
-        "action": input.data.action,
-        "quarantine_tag": input.data.quarantine_tag
+        "identity": policy_identity,
+        "enable": policy_enable,
+        "action": policy_action,
+        "quarantine_tag": policy_quarantine_tag
     }
 } if {
     true
@@ -44,41 +67,34 @@ result := {
 
 message := "Safe Attachments Built-In Protection Policy is enabled, blocking threats, and correctly configured." if {
     compliant
-}
-
-message := "Safe Attachments Built-In Protection Policy is disabled." if {
-    input.data.enable == false
-}
-
-message := "Safe Attachments policy action is not set to 'Block'." if {
-    input.data.enable == true
-    input.data.action != "Block"
-}
-
-message := "Safe Attachments policy does not use the 'AdminOnlyAccessPolicy' quarantine tag." if {
-    input.data.enable == true
-    input.data.quarantine_tag != "AdminOnlyAccessPolicy"
-}
-
-message := "Safe Attachments policy identity is not set to 'Built-In Protection Policy'." if {
-    input.data.identity != "Built-In Protection Policy"
-}
-
-message := "Unable to determine Safe Attachments policy configuration." if {
-    not input.data
-}
+} else := "Safe Attachments Built-In Protection Policy is disabled." if {
+    has_policy
+    policy_enable == false
+} else := "Safe Attachments policy action is not set to 'Block'." if {
+    has_policy
+    policy_enable == true
+    policy_action != "Block"
+} else := "Safe Attachments policy does not use the 'AdminOnlyAccessPolicy' quarantine tag." if {
+    has_policy
+    policy_enable == true
+    policy_action == "Block"
+    policy_quarantine_tag != "AdminOnlyAccessPolicy"
+} else := "Safe Attachments Built-In Protection Policy was not found." if {
+    not has_policy
+} else := "Unable to determine Safe Attachments policy configuration."
 
 affected_resources := [] if {
     compliant
 }
 
 affected_resources := [
-    sprintf("Non-compliant Safe Attachments policy: %v", [input.data.identity])
+    sprintf("Non-compliant Safe Attachments policy: %v", [policy_identity])
 ] if {
     not compliant
-    input.data.identity
+    has_policy
 }
 
-affected_resources := ["Safe Attachments policy status unknown"] if {
-    not input.data.identity
+affected_resources := ["Safe Attachments Built-In Protection Policy not found"] if {
+    not compliant
+    not has_policy
 }

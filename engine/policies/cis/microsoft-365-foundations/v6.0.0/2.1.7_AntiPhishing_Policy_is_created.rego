@@ -25,6 +25,9 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_7
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
+policies := object.get(input, "anti_phish_policies", object.get(input, "antiPhishPolicies", []))
+rules := object.get(input, "anti_phish_rules", object.get(input, "antiPhishRules", []))
+
 required_policy_fields := {
   "Enabled": true,
   "PhishThresholdLevel": 3,
@@ -44,8 +47,7 @@ required_policy_fields := {
 }
 
 matching_policy[policy_obj] if {
-  idx := input.antiPhishPolicies[_]
-  policy_obj := input.antiPhishPolicies[idx]
+  policy_obj := policies[_]
 
   # All required fields must match
   count({k | required_policy_fields[k] == policy_obj[k]}) == count(required_policy_fields)
@@ -56,8 +58,7 @@ matching_policy[policy_obj] if {
 }
 
 matching_rule[rule_obj] if {
-  j := input.antiPhishRules[_]
-  rule_obj := input.antiPhishRules[j]
+  rule_obj := rules[_]
   rule_obj.State == "Enabled"
 
   matching_policy[policy_obj]   # ✅ unique variable name
@@ -77,13 +78,13 @@ antiphish_configured if {
 
 # Non-compliant: policies exist but none match requirements
 antiphish_configured if {
-  count(input.antiPhishPolicies) > 0
+  count(policies) > 0
   count({p | matching_policy[p]}) == 0
 }
 
 antiphish_configured = null if {
-  count(input.antiPhishPolicies) == 0
-  count(input.antiPhishRules) == 0
+  count(policies) == 0
+  count(rules) == 0
 }
 
 generate_message(true) := "Anti-Phish policy and rules are correctly configured and enabled"
@@ -94,8 +95,7 @@ generate_affected_resources(true, _) := []
 
 generate_affected_resources(false, data_input) := [
   pol.Name |
-  idx := data_input.antiPhishPolicies[_]
-  pol := data_input.antiPhishPolicies[idx]
+  pol := data_input[_]
 ]
 
 generate_affected_resources(null, _) := ["Anti-Phish configuration status unknown"]
@@ -103,10 +103,10 @@ generate_affected_resources(null, _) := ["Anti-Phish configuration status unknow
 result := {
   "compliant": antiphish_configured == true,
   "message": generate_message(antiphish_configured),
-  "affected_resources": generate_affected_resources(antiphish_configured, input),
+  "affected_resources": generate_affected_resources(antiphish_configured, policies),
   "details": {
-    "anti_phish_policies_evaluated": count(input.antiPhishPolicies),
-    "anti_phish_rules_evaluated": count(input.antiPhishRules),
+    "anti_phish_policies_evaluated": count(policies),
+    "anti_phish_rules_evaluated": count(rules),
     "targeted_user_limit": 350,
     "required_policy_settings": required_policy_fields
   }

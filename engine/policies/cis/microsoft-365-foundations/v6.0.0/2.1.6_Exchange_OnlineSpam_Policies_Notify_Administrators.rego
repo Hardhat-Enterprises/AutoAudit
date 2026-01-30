@@ -22,28 +22,64 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_6
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
+bcc_suspicious_outbound_mail := object.get(
+    input,
+    "bcc_suspicious_outbound_mail",
+    object.get(object.get(input, "default_policy", {}), "BccSuspiciousOutboundMail", null)
+)
+
+notify_outbound_spam := object.get(
+    input,
+    "notify_outbound_spam",
+    object.get(object.get(input, "default_policy", {}), "NotifyOutboundSpam", null)
+)
+
+bcc_additional_recipients := object.get(
+    object.get(input, "default_policy", {}),
+    "BccSuspiciousOutboundAdditionalRecipients",
+    null
+)
+
+notify_outbound_spam_recipients := object.get(
+    object.get(input, "default_policy", {}),
+    "NotifyOutboundSpamRecipients",
+    null
+)
+
+bcc_recipients_count := count(bcc_additional_recipients) if {
+    bcc_additional_recipients != null
+} else := 0
+
+notify_recipients_count := count(notify_outbound_spam_recipients) if {
+    notify_outbound_spam_recipients != null
+} else := 0
+
 outbound_spam_monitoring_enabled := true if {
-    input.BccSuspiciousOutboundMail == true
-    input.NotifyOutboundSpam == true
-    count(input.BccSuspiciousOutboundAdditionalRecipients) > 0
-    count(input.NotifyOutboundSpamRecipients) > 0
+    bcc_suspicious_outbound_mail == true
+    notify_outbound_spam == true
+    bcc_additional_recipients != null
+    notify_outbound_spam_recipients != null
+    bcc_recipients_count > 0
+    notify_recipients_count > 0
 }
 
 outbound_spam_monitoring_enabled := false if {
-    input.BccSuspiciousOutboundMail != true
+    bcc_suspicious_outbound_mail != true
 } else := false if {
-    input.NotifyOutboundSpam != true
+    notify_outbound_spam != true
 } else := false if {
-    count(input.BccSuspiciousOutboundAdditionalRecipients) == 0
+    bcc_additional_recipients != null
+    bcc_recipients_count == 0
 } else := false if {
-    count(input.NotifyOutboundSpamRecipients) == 0
+    notify_outbound_spam_recipients != null
+    notify_recipients_count == 0
 }
 
 outbound_spam_monitoring_enabled := null if {
-    not input.BccSuspiciousOutboundMail
-    not input.NotifyOutboundSpam
-    not input.BccSuspiciousOutboundAdditionalRecipients
-    not input.NotifyOutboundSpamRecipients
+    bcc_suspicious_outbound_mail == null
+    notify_outbound_spam == null
+    bcc_additional_recipients == null
+    notify_outbound_spam_recipients == null
 }
 
 result := output if {
@@ -54,10 +90,10 @@ result := output if {
         "message": generate_message(outbound_spam_monitoring_enabled),
         "affected_resources": generate_affected_resources(outbound_spam_monitoring_enabled),
         "details": {
-            "bcc_suspicious_outbound_mail": input.BccSuspiciousOutboundMail,
-            "bcc_additional_recipients": input.BccSuspiciousOutboundAdditionalRecipients,
-            "notify_outbound_spam": input.NotifyOutboundSpam,
-            "notify_outbound_spam_recipients": input.NotifyOutboundSpamRecipients
+            "bcc_suspicious_outbound_mail": bcc_suspicious_outbound_mail,
+            "bcc_additional_recipients": bcc_additional_recipients,
+            "notify_outbound_spam": notify_outbound_spam,
+            "notify_outbound_spam_recipients": notify_outbound_spam_recipients
         }
     }
 }

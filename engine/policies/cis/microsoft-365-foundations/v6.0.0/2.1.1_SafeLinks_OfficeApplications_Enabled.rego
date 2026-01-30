@@ -22,59 +22,46 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_1
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-required_fields := {
-    "ZapEnabled": true,
-    "ExceptIfConditions": "valid_condition"
-}
+safe_links_policies := object.get(input, "safe_links_policies", [])
 
-# Identify non-compliant fields in a policy
-non_compliant_fields(p) := {f |
-    # Manually check each required field
-    f := "ZapEnabled"
-    not p[f] = required_fields[f]
-} 
-
-non_compliant_fields(p) := {f |
-    # Manually check each required field
-    f := "ExceptIfConditions"
-    not p[f] = required_fields[f]
-}
-
-# Check if a policy is compliant
-policy_compliant(p) := true if count(non_compliant_fields(p)) == 0
-policy_compliant(p) := false if count(non_compliant_fields(p)) > 0
-
-# Generate a message based on compliance status
-generate_message(true, _) := "All Teams Protection policies are configured according to CIS recommendations"
-generate_message(false, non_compliant) := sprintf(
-    "%d Teams Protection policy(ies) are not compliant with CIS recommendations",
-    [count(non_compliant)]
-)
-
-# Generate list of affected resources
-generate_affected_resources(true, _) := []
-generate_affected_resources(false, non_compliant) := [
-    {
-        "identity": p.identity,
-        "non_compliant_fields": [f | f := non_compliant_fields(p)[_]]
-    } | p := non_compliant[_]
+office_enabled_policies := [p |
+    p := safe_links_policies[_]
+    p.EnableSafeLinksForOffice == true
 ]
 
-# Main evaluation
-result := output if {
-    policies := input.teams_protection_policies
+non_compliant_policies := [p |
+    p := safe_links_policies[_]
+    p.EnableSafeLinksForOffice != true
+]
 
-    # Identify non-compliant policies
-    non_compliant := [p | p := policies[_]; not policy_compliant(p)]
-    compliant := count(non_compliant) == 0
+policy_name(p) := name if {
+    name := object.get(p, "Name", null)
+    name != null
+} else := identity if {
+    identity := object.get(p, "Identity", null)
+    identity != null
+} else := "Unknown policy"
+
+generate_message(true, _) := "Safe Links for Office applications is enabled in at least one policy."
+generate_message(false, false) := "No Safe Links policies were found to evaluate."
+generate_message(false, true) := "Safe Links for Office applications is not enabled in any policy."
+
+generate_affected_resources(true, _, _) := []
+generate_affected_resources(false, false, _) := ["SafeLinksPolicy"]
+generate_affected_resources(false, true, non_compliant) := [policy_name(p) | p := non_compliant[_]]
+
+result := output if {
+    has_policies := count(safe_links_policies) > 0
+    compliant := count(office_enabled_policies) > 0
 
     output := {
         "compliant": compliant,
-        "message": generate_message(compliant, non_compliant),
-        "affected_resources": generate_affected_resources(compliant, non_compliant),
+        "message": generate_message(compliant, has_policies),
+        "affected_resources": generate_affected_resources(compliant, has_policies, non_compliant_policies),
         "details": {
-            "policies_checked": [p.identity | p := policies[_]],
-            "required_fields": required_fields
+            "total_policies": count(safe_links_policies),
+            "office_enabled_count": count(office_enabled_policies),
+            "office_enabled_policies": [policy_name(p) | p := office_enabled_policies[_]]
         }
     }
 }

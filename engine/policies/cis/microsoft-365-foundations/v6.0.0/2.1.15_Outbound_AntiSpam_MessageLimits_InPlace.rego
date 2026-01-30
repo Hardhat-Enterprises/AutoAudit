@@ -26,6 +26,8 @@ package cis.microsoft_365_foundations.v6_0_0.control_2_1_15
 
 default result := {"compliant": false, "message": "Evaluation failed"}
 
+policy := object.get(input, "default_policy", {})
+
 required_policy_fields := {
   "RecipientLimitExternalPerHour": 500,
   "RecipientLimitInternalPerHour": 1000,
@@ -40,14 +42,14 @@ validate_policy_setting(setting_name, setting_value) if {
 }
 
 validate_notify_outbound_spam_recipients if {
-  count(input.NotifyOutboundSpamRecipients) > 0
+  count(policy.NotifyOutboundSpamRecipients) > 0
 }
 
 compliant if {
   # Validate that all required policy fields match
   count({
     k |
-      required_policy_fields[k] == input[k]
+      required_policy_fields[k] == policy[k]
   }) == count(required_policy_fields)
 }
 
@@ -74,11 +76,11 @@ result := {
   "message": generate_message(compliant),
   "affected_resources": generate_affected_resources(compliant, input),
   "details": {
-    "RecipientLimitExternalPerHour": input.RecipientLimitExternalPerHour,
-    "RecipientLimitInternalPerHour": input.RecipientLimitInternalPerHour,
-    "RecipientLimitPerDay": input.RecipientLimitPerDay,
-    "ActionWhenThresholdReached": input.ActionWhenThresholdReached,
-    "NotifyOutboundSpamRecipients": input.NotifyOutboundSpamRecipients,
+    "RecipientLimitExternalPerHour": policy.RecipientLimitExternalPerHour,
+    "RecipientLimitInternalPerHour": policy.RecipientLimitInternalPerHour,
+    "RecipientLimitPerDay": policy.RecipientLimitPerDay,
+    "ActionWhenThresholdReached": policy.ActionWhenThresholdReached,
+    "NotifyOutboundSpamRecipients": policy.NotifyOutboundSpamRecipients,
     "required_policy_settings": required_policy_fields
   }
 }

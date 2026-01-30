@@ -31,17 +31,19 @@ required_fields := {
     "EnableSafeList": false
 }
 
-enable_safe_list_is_false := true if {
-    input.EnableSafeList == false  # Ensure EnableSafeList is False
-}
-
-enable_safe_list_is_false := false if {
-    input.EnableSafeList == true  # If EnableSafeList is True, it's non-compliant
-}
+enable_safe_list := object.get(
+    input,
+    "enable_safe_list",
+    object.get(object.get(input, "default_policy", {}), "EnableSafeList", null)
+)
 
 enable_safe_list_is_false := null if {
-    not input.EnableSafeList  # If EnableSafeList is missing, return null
-}
+    enable_safe_list == null
+} else := true if {
+    enable_safe_list == false  # Ensure EnableSafeList is False
+} else := false if {
+    enable_safe_list == true  # If EnableSafeList is True, it's non-compliant
+} else := null
 
 result := output if {
     compliant := enable_safe_list_is_false == true
@@ -51,7 +53,7 @@ result := output if {
         "message": generate_message(enable_safe_list_is_false),
         "affected_resources": generate_affected_resources(enable_safe_list_is_false),
         "details": {
-            "EnableSafeList": input.EnableSafeList
+            "EnableSafeList": enable_safe_list
         }
     }
 }

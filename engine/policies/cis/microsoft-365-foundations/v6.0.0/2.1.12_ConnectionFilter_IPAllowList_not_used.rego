@@ -30,25 +30,19 @@ required_fields := {
     "IPAllowList": []
 }
 
-ip_allow_list_is_empty := true if {
-    input.IPAllowList == []  # empty array
-}
-
-ip_allow_list_is_empty := true if {
-    input.IPAllowList == {}  # empty object
-}
-
-ip_allow_list_is_empty := false if {
-    input.IPAllowList != []  # non-empty array
-}
-
-ip_allow_list_is_empty := false if {
-    input.IPAllowList != {}  # non-empty object
-}
+ip_allow_list := object.get(
+    input,
+    "ip_allow_list",
+    object.get(object.get(input, "default_policy", {}), "IPAllowList", null)
+)
 
 ip_allow_list_is_empty := null if {
-    not input.IPAllowList  # field is missing
-}
+    ip_allow_list == null
+} else := true if {
+    ip_allow_list == []  # empty array
+} else := true if {
+    ip_allow_list == {}  # empty object
+} else := false
 
 result := output if {
     compliant := ip_allow_list_is_empty == true
@@ -58,7 +52,7 @@ result := output if {
         "message": generate_message(ip_allow_list_is_empty),
         "affected_resources": generate_affected_resources(ip_allow_list_is_empty),
         "details": {
-            "IPAllowList": input.IPAllowList
+            "IPAllowList": ip_allow_list
         }
     }
 }

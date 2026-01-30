@@ -27,16 +27,22 @@ required_fields := {
     "ZeroHourAutoPurgeEnabled": true
 }
 
+zap_enabled := object.get(
+    input,
+    "zap_enabled",
+    object.get(object.get(input, "teams_protection_policy", {}), "ZapEnabled", null)
+)
+
 zero_hour_auto_purge_enabled := true if {
-    input.ZeroHourAutoPurgeEnabled == true
+    zap_enabled == true
 }
 
 zero_hour_auto_purge_enabled := false if {
-    input.ZeroHourAutoPurgeEnabled != true
+    zap_enabled != true
 }
 
 zero_hour_auto_purge_enabled := null if {
-    not input.ZeroHourAutoPurgeEnabled
+    not zap_enabled
 }
 
 result := output if {
@@ -47,7 +53,7 @@ result := output if {
         "message": generate_message(zero_hour_auto_purge_enabled),
         "affected_resources": generate_affected_resources(zero_hour_auto_purge_enabled),
         "details": {
-            "ZeroHourAutoPurgeEnabled": input.ZeroHourAutoPurgeEnabled
+            "ZeroHourAutoPurgeEnabled": zap_enabled
         }
     }
 }
