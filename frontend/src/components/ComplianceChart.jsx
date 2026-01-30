@@ -11,7 +11,7 @@
 //<ComplianceChart chartType={selectedChartType} dataInput = {[array of three numbers]}></ComplianceChart>
 //'doughnut' and 'pie' are current options for selectedChartType
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 // Imports only the minimum required components below
 import {
@@ -110,6 +110,30 @@ ChartJS.register(
 const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1], labelsInput = [], isDarkMode = true }) => {
   const chartRef = useRef(null);
   const chartInstanceRef = useRef(null);
+  const [devicePixelRatio, setDevicePixelRatio] = useState(() => {
+    if (typeof window === 'undefined') return 1;
+    return Math.max(1, window.devicePixelRatio || 1);
+  });
+  // Supersample slightly to reduce aliasing/seam artifacts when users zoom in.
+  // Cap to avoid excessive CPU/GPU usage.
+  const renderDevicePixelRatio = Math.min(3, devicePixelRatio * 1.5);
+
+  // Keep charts crisp on retina displays AND when the user changes browser zoom.
+  // On many browsers, zoom changes update window.devicePixelRatio but do not always
+  // trigger a full component remount — so we track DPR and re-render the chart.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setDevicePixelRatio(Math.max(1, window.devicePixelRatio || 1));
+
+    window.addEventListener('resize', update);
+    // visualViewport fires more reliably for zoom on some platforms.
+    window.visualViewport?.addEventListener('resize', update);
+
+    return () => {
+      window.removeEventListener('resize', update);
+      window.visualViewport?.removeEventListener('resize', update);
+    };
+  }, []);
 
   const getTextColor = (darkMode) => {
     return darkMode ? '#ffffff' : '#1e293b';
@@ -135,6 +159,7 @@ const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1], labelsInp
     // Doughnut / Pie (2 slices: Issues vs Pass)
     // -------------------------
     const pieLabels = ['Issues', 'Pass'];
+    // Solid, high-contrast colors (avoids gradients that can show banding/seams on canvas zoom).
     const pieColors = ['#ef4444', '#10b981'];
     const pieValues = normalized.length >= 2 ? [normalized[0], normalized[1]] : [1, 1];
 
@@ -160,12 +185,15 @@ const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1], labelsInp
       datasets: [{
         data: safePieValues,
         backgroundColor: safePieColors,
-        // Use a subtle border in the same color as the canvas background.
-        borderColor: canvasBg,
-        borderWidth: chartType === 'doughnut' ? 3 : 2,
+        // Zoom seam mitigation:
+        // - remove borders & spacing (these often create 1px “hairline” artifacts at high zoom)
+        // - use rounded joins for smoother edges
+        borderColor: 'rgba(0,0,0,0)',
+        borderWidth: 0,
         hoverOffset: 0,
-        spacing: chartType === 'doughnut' ? 2 : 0,
-        borderRadius: chartType === 'doughnut' ? 10 : 0,
+        spacing: 0,
+        borderRadius: chartType === 'doughnut' ? 12 : 0,
+        borderJoinStyle: 'round',
       }]
     };
 
@@ -226,7 +254,7 @@ const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1], labelsInp
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        devicePixelRatio: (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1,
+        devicePixelRatio: renderDevicePixelRatio,
         layout: {
           padding: { top: 18, bottom: 14, left: 18, right: 18 }
         },
@@ -253,7 +281,7 @@ const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1], labelsInp
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        devicePixelRatio: (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1,
+        devicePixelRatio: renderDevicePixelRatio,
         cutout: chartType === 'doughnut' ? '70%' : '0%',
         radius: '92%',
         layout: {
@@ -284,6 +312,12 @@ const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1], labelsInp
             }
           }
         },
+        // Additional arc rendering stability (helps reduce shimmering/seams on zoom).
+        elements: {
+          arc: {
+            borderAlign: 'inner',
+          },
+        },
         animation: {
           animateScale: true,
           animateRotate: true
@@ -296,6 +330,9 @@ const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1], labelsInp
 
     //Instantiate the chart
     chartInstanceRef.current = new ChartJS(ctx, config);
+    // Ensure Chart.js applies the latest DPR immediately (helps on zoom changes).
+    chartInstanceRef.current.resize();
+    chartInstanceRef.current.update('none');
 
     //Destroy the existing chart (if any) 
     return () => {
@@ -303,7 +340,7 @@ const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1], labelsInp
         chartInstanceRef.current.destroy();
       }
     };
-  }, [chartType, dataInput, labelsInput, isDarkMode]); //Re-render if the chartType or data is changed 
+  }, [chartType, dataInput, labelsInput, isDarkMode, renderDevicePixelRatio]); //Re-render if chartType/data/theme/DPR changes
 
   //Scale to fit the max size provided with the card
   return (

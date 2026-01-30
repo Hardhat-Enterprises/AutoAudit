@@ -67,6 +67,7 @@
 /* Global base defaults (not going to be visible just yet but setting defaults) */
 @layer base {
   :root { color-scheme: dark; } /* dark-first tokens */
+  :root.light { color-scheme: light; }
 
   html, body, #root { height: 100%; }
 

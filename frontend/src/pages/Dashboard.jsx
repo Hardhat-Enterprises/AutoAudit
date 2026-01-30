@@ -113,6 +113,8 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
     const passed = Number(s?.passed_count || 0);
     const failed = Number(s?.failed_count || 0);
     const errors = Number(s?.error_count || 0);
+    const skipped = Number(s?.skipped_count || 0);
+    const totalControls = Number(s?.total_controls || 0);
     const issues = failed + errors;
 
     if (selectedChartType === 'bar') {
@@ -126,13 +128,20 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
       const values = completed.map(x => {
         const total = Number(x.total_controls || 0);
         const pass = Number(x.passed_count || 0);
-        return total > 0 ? Math.round((pass / total) * 100) : 0;
+        const fail = Number(x.failed_count || 0);
+        const err = Number(x.error_count || 0);
+        const skip = Number(x.skipped_count || 0);
+        // Prefer "evaluated" denominator to match the doughnut/pie.
+        const evaluated = Math.max(0, total - skip) || (pass + fail + err);
+        return evaluated > 0 ? Math.round((pass / evaluated) * 100) : 0;
       });
 
       return { chartType: 'bar', labels, values };
     }
 
     // Default: issues vs pass (doughnut or pie)
+    // Prefer evaluated denominator (excludes skipped) when computing center % in ComplianceChart.
+    // We still feed the chart with Issues vs Pass slices; skipped controls are intentionally excluded.
     return { chartType: selectedChartType, labels: ['Issues', 'Pass'], values: [issues, passed] };
   }, [selectedChartType, latestRelevantScan, filteredScans]);
 
@@ -170,42 +179,49 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
     const passed = s ? Number(s.passed_count || 0) : 0;
     const failed = s ? Number(s.failed_count || 0) : 0;
     const errors = s ? Number(s.error_count || 0) : 0;
+    const skipped = s ? Number(s.skipped_count || 0) : 0;
     const issues = failed + errors;
-    const pct = total > 0 ? Math.round((passed / total) * 100) : 0;
+    // Use evaluated denominator (exclude skipped) to match doughnut/pie % and "issues vs pass" model.
+    const evaluated = Math.max(0, total - skipped) || (passed + failed + errors);
+    const pct = evaluated > 0 ? Math.round((passed / evaluated) * 100) : 0;
 
     const connectionLabel = s?.connection_name || (s?.m365_connection_id ? `Connection #${s.m365_connection_id}` : '—');
-    const lastScanLabel = s?.finished_at || s?.started_at || null;
+    const isCompleted = String(s?.status || '').toLowerCase() === 'completed';
+    const lastScanLabel = (isCompleted ? (s?.finished_at || s?.started_at) : (s?.started_at || s?.finished_at)) || null;
     const dt = lastScanLabel ? formatDateTimePartsAEST(lastScanLabel) : { date: '-', time: '-' };
-    const lastText = dt.date !== '-' ? `${dt.date}, ${dt.time}` : '—';
+    // Avoid wrapping inside the small stat card: keep the primary value compact.
+    const lastPrimary = dt.time !== '-' ? dt.time : '—';
+    const lastSecondary = dt.date !== '-' ? dt.date : '—';
     const benchmarkLabel = s?.benchmark && s?.version ? `${s.benchmark} ${s.version}` : '—';
+    const evalLabel = evaluated > 0 ? `${evaluated} evaluated` : '—';
 
     return [
       {
         label: "Compliance Score",
         value: total > 0 ? `${pct}%` : '—',
         className: "orange",
-        subtitle: "Latest completed scan",
+        subtitle: isCompleted ? `Latest completed • ${evalLabel}` : `Latest scan • ${evalLabel}`,
         icon: CheckCircle2,
       },
       {
         label: "Failed Controls",
         value: String(issues),
         className: "orange",
-        subtitle: "Failed + errors",
+        subtitle: `Fail ${failed} • Err ${errors}`,
         icon: AlertTriangle,
       },
       {
         label: "Last Updated",
-        value: lastText,
+        value: lastPrimary,
         className: "gray",
-        subtitle: connectionLabel,
+        subtitle: `${lastSecondary} • ${connectionLabel}`,
         icon: Clock3,
       },
       {
         label: "Total Controls",
         value: total > 0 ? String(total) : '—',
         className: "gray",
-        subtitle: benchmarkLabel,
+        subtitle: benchmarkLabel !== '—' ? `${benchmarkLabel} • ${evalLabel}` : evalLabel,
         icon: Shield,
       },
     ];
@@ -379,6 +395,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
                 value={selectedChartType}
                 onChange={setSelectedChartType}
                 options={chartTypeOptions}
+                isDarkMode={isDarkMode}
               />
               </div>
               <div className="chart-surface">

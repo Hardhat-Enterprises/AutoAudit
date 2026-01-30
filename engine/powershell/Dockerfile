@@ -1,7 +1,8 @@
-FROM mcr.microsoft.com/powershell:7.5-mariner-2.0
+ARG TARGETPLATFORM
+FROM --platform=$TARGETPLATFORM mcr.microsoft.com/powershell:7.5-mariner-2.0
 
-# Install Python, curl (for healthcheck), and tar (for uv installer)
-RUN tdnf install -y python3 curl tar && tdnf clean all
+# Install Python, curl (for healthcheck), tar (for uv installer), and awk (uv install script uses it)
+RUN tdnf install -y python3 curl tar gawk && tdnf clean all
 
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
