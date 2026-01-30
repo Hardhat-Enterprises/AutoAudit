@@ -244,7 +244,7 @@ const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1], labelsInp
 
   // Fill parent container (Dashboard controls height via CSS).
   return (
-    <div className="compliance-chart" style={{ width: '100%', height: '100%' }}>
+    <div className={`compliance-chart ${isBar ? 'chart-bar' : 'chart-pie'}`} style={{ width: '100%', height: '100%' }}>
       <ReactApexChart options={options} series={series} type={type} height={height} />
     </div>
   );

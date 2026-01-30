@@ -32,31 +32,113 @@ class FormsSettingsDataCollector(BaseDataCollector):
         """
         # Get Microsoft Forms admin settings
         collector_error: str | None = None
+        resp: dict[str, Any] = {}
+        entry: dict[str, Any] | None = None
         try:
-            settings = await client.get("/admin/forms/settings", beta=True)
+            resp = await client.get("/admin/forms/settings", beta=True)
+            raw_settings: dict[str, Any] | None = None
+
+            # Handle a few plausible response shapes defensively.
+            if isinstance(resp, dict):
+                if isinstance(resp.get("settings"), dict):
+                    raw_settings = resp.get("settings")
+                elif isinstance(resp.get("formsSettings"), dict):
+                    raw_settings = resp.get("formsSettings")
+                else:
+                    value = resp.get("value")
+                    if isinstance(value, dict):
+                        entry = value
+                        if isinstance(value.get("settings"), dict):
+                            raw_settings = value.get("settings")
+                        elif isinstance(value.get("formsSettings"), dict):
+                            raw_settings = value.get("formsSettings")
+                        else:
+                            raw_settings = value
+                    elif isinstance(value, list) and value and isinstance(value[0], dict):
+                        entry = value[0]
+                        if isinstance(entry.get("settings"), dict):
+                            raw_settings = entry.get("settings")
+                        elif isinstance(entry.get("formsSettings"), dict):
+                            raw_settings = entry.get("formsSettings")
+                        else:
+                            raw_settings = entry
+
+            settings = raw_settings if raw_settings is not None else (resp or {})
         except Exception as exc:
             collector_error = str(exc)
             settings = {}
 
+        def _get_setting_value(*keys: str) -> Any:
+            for source in (settings, entry, resp):
+                if isinstance(source, dict):
+                    for key in keys:
+                        if key in source:
+                            return source.get(key)
+            return None
+
+        def _normalize_bool(value: Any) -> bool | None:
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                normalized = value.strip().lower()
+                if normalized in {"on", "enabled", "true", "yes"}:
+                    return True
+                if normalized in {"off", "disabled", "false", "no"}:
+                    return False
+            return None
+
+        internal_phishing_protection_enabled = _normalize_bool(
+            _get_setting_value(
+                "isInternalPhishingProtectionEnabled",
+                "internalPhishingProtectionEnabled",
+                "isInOrgFormsPhishingScanEnabled",
+                "inOrgFormsPhishingScanEnabled",
+                "FormsPhishingProtection",
+                "formsPhishingProtection",
+                "phishingProtection",
+            )
+        )
+
         return {
             "forms_settings": settings,
-            "internal_phishing_protection_enabled": settings.get(
-                "isInternalPhishingProtectionEnabled"
+            "internal_phishing_protection_enabled": internal_phishing_protection_enabled,
+            "external_sharing_enabled": _normalize_bool(
+                _get_setting_value("isExternalSharingEnabled", "externalSharingEnabled")
             ),
-            "external_sharing_enabled": settings.get("isExternalSharingEnabled"),
-            "external_send_form_enabled": settings.get("isExternalSendFormEnabled"),
-            "external_share_collaborating_enabled": settings.get(
-                "isExternalShareCollaborationEnabled"
+            "external_send_form_enabled": _normalize_bool(
+                _get_setting_value("isExternalSendFormEnabled", "externalSendFormEnabled")
             ),
-            "external_share_template_enabled": settings.get(
-                "isExternalShareTemplateEnabled"
+            "external_share_collaborating_enabled": _normalize_bool(
+                _get_setting_value(
+                    "isExternalShareCollaborationEnabled",
+                    "isExternalShareCollaboratingEnabled",
+                    "externalShareCollaboratingEnabled",
+                )
             ),
-            "external_share_result_enabled": settings.get(
-                "isExternalShareResultEnabled"
+            "external_share_template_enabled": _normalize_bool(
+                _get_setting_value(
+                    "isExternalShareTemplateEnabled",
+                    "externalShareTemplateEnabled",
+                )
             ),
-            "bing_search_enabled": settings.get("isBingSearchEnabled"),
-            "record_identity_by_default_enabled": settings.get(
-                "isRecordIdentityByDefaultEnabled"
+            "external_share_result_enabled": _normalize_bool(
+                _get_setting_value(
+                    "isExternalShareResultEnabled",
+                    "externalShareResultEnabled",
+                )
+            ),
+            "bing_search_enabled": _normalize_bool(
+                _get_setting_value(
+                    "isBingSearchEnabled",
+                    "bingSearchEnabled",
+                    "isBingImageSearchEnabled",
+                )
+            ),
+            "record_identity_by_default_enabled": _normalize_bool(
+                _get_setting_value(
+                    "isRecordIdentityByDefaultEnabled",
+                    "recordIdentityByDefaultEnabled",
+                )
             ),
             "collector_error": collector_error,
         }

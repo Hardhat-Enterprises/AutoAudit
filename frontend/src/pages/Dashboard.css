@@ -319,14 +319,14 @@ input:checked + .slider:before {
 
 .summary-title h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .summary-title p {
   margin: 4px 0 0 0;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
@@ -346,15 +346,15 @@ input:checked + .slider:before {
   border: 1px solid var(--border-color);
   background: var(--bg-tertiary);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
 }
 
 .summary-chip svg {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
 }
 
 .summary-chip.good {
@@ -402,7 +402,7 @@ input:checked + .slider:before {
 
 .summary-group-title {
   color: var(--text-tertiary);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.6px;
   text-transform: uppercase;
@@ -418,7 +418,7 @@ input:checked + .slider:before {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .summary-row-label {
@@ -622,6 +622,10 @@ input:checked + .slider:before {
 
 .compliance-chart .apexcharts-inner {
   background: transparent !important;
+}
+
+clear.compliance-chart.chart-bar .apexcharts-tooltip {
+  transform: translateY(-12px);
 }
 
 .compliance-graph-card .issue-icon {

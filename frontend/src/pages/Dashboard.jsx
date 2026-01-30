@@ -196,7 +196,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
     };
 
     const compliancePct = evaluated > 0 ? Math.round((passed / evaluated) * 100) : null;
-    const complianceTone = compliancePct === null ? 'neutral' : compliancePct >= 85 ? 'good' : compliancePct >= 65 ? 'warn' : 'bad';
+    const complianceTone = hasScan ? 'good' : 'neutral';
     const failedTone = failed > 0 ? 'bad' : hasTotal ? 'good' : 'neutral';
 
     const connectionLabel = s?.connection_name || (s?.m365_connection_id ? `Connection #${s.m365_connection_id}` : '—');
