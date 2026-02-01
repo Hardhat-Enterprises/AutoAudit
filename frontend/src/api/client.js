@@ -104,6 +104,70 @@ export async function getCurrentUser(token) {
   return fetchWithAuth('/v1/auth/users/me', token);
 }
 
+// Contact submissions
+export async function createContactSubmission(payload) {
+  return fetchWithAuth('/v1/contact', null, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getContactSubmissions(token) {
+  return fetchWithAuth('/v1/contact/submissions', token);
+}
+
+export async function getContactSubmission(token, id) {
+  return fetchWithAuth(`/v1/contact/submissions/${id}`, token);
+}
+
+export async function updateContactSubmission(token, id, payload) {
+  return fetchWithAuth(`/v1/contact/submissions/${id}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteContactSubmission(token, id) {
+  const response = await fetch(`${API_BASE_URL}/v1/contact/submissions/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new APIError(error.detail || 'Failed to delete submission', response.status, error);
+  }
+}
+
+export async function getContactNotes(token, id) {
+  return fetchWithAuth(`/v1/contact/submissions/${id}/notes`, token);
+}
+
+export async function addContactNote(token, id, payload) {
+  return fetchWithAuth(`/v1/contact/submissions/${id}/notes`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getContactHistory(token, id) {
+  return fetchWithAuth(`/v1/contact/submissions/${id}/history`, token);
+}
+
+// Settings endpoints
+export async function getSettings(token) {
+  return fetchWithAuth('/v1/settings', token);
+}
+
+export async function updateSettings(token, data) {
+  return fetchWithAuth('/v1/settings', token, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
 // Platform endpoints
 export async function getPlatforms(token) {
   return fetchWithAuth('/v1/platforms', token);
@@ -170,6 +234,23 @@ export async function createScan(token, data) {
     method: 'POST',
     body: JSON.stringify(data),
   });
+}
+
+export async function deleteScan(token, id) {
+  const response = await fetch(`${API_BASE_URL}/v1/scans/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(error.detail || 'Failed to delete scan');
+  }
+
+  // DELETE returns 204 No Content, so don't try to parse JSON
+  return;
 }
 
 // Evidence scanner endpoints

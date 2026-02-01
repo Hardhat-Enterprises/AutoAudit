@@ -44,6 +44,7 @@ Updated with theme support while preserving original design */
   display: inline-block;
   min-width: 0;
   flex-shrink: 1;
+  isolation: isolate;
 }
 
 .chart-dropdown-trigger {
@@ -52,7 +53,7 @@ Updated with theme support while preserving original design */
   border-radius: 8px;
   color: var(--dropdown-text-primary);
   padding: 8px 12px;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
   cursor: pointer;
   display: flex;
@@ -108,12 +109,13 @@ Updated with theme support while preserving original design */
   right: 0;
   left: 0;
   margin-top: 4px;
-  background: var(--dropdown-bg-primary);
+  background-color: var(--dropdown-bg-primary);
   border: 1px solid var(--dropdown-border-color);
   border-radius: 8px;
   box-shadow: 0 10px 25px var(--dropdown-shadow);
-  z-index: 1000;
+  z-index: 1100;
   overflow: hidden;
+  opacity: 1;
   transition: all 0.3s ease;
 }
 

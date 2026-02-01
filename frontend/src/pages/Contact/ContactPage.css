@@ -241,6 +241,16 @@
   font-size: 1.1rem;
 }
 
+.error-message {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+  text-align: center;
+}
+
 .success-message {
   display: none;
   margin-top: 1rem;

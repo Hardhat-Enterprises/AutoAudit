@@ -6,6 +6,7 @@ import LandingFooter from "../Landing/components/LandingFooter";
 import ContactInfoGrid from "./components/ContactInfoGrid";
 import ContactForm from "./components/ContactForm";
 import FAQSection from "./components/FAQSection";
+import { createContactSubmission } from "../../api/client";
 
 const ContactHero = () => (
   <section className="contact-hero" id="home">
@@ -28,6 +29,20 @@ const ContactPage = ({ onSignIn }) => {
     setTimeout(() => setSubmitted(false), 5000);
   };
 
+  const handleSubmit = async (payload) => {
+    await createContactSubmission({
+      first_name: payload.firstName,
+      last_name: payload.lastName,
+      email: payload.email,
+      phone: payload.phone || null,
+      company: payload.company || null,
+      subject: payload.subject,
+      message: payload.message,
+      source: "website",
+    });
+    handleFormSuccess();
+  };
+
   return (
     <div className="contact-page">
       <LandingHeader onSignInClick={onSignIn} hiddenLinks={["Contact"]} />
@@ -37,7 +52,7 @@ const ContactPage = ({ onSignIn }) => {
         <section className="contact-section" id="features">
           <div className="contact-container">
             <ContactInfoGrid />
-            <ContactForm submitted={submitted} onSuccess={handleFormSuccess} />
+            <ContactForm submitted={submitted} onSubmit={handleSubmit} />
           </div>
         </section>
 

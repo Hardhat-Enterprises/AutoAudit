@@ -154,7 +154,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.applications.apps_and_services_settings",
       "policy_file": "1.3.4_user_owned_apps_restricted.rego",
-      "requires_permissions": ["Policy.Read.All"],
+      "requires_permissions": ["OrgSettings-AppsAndServices.Read.All"],
       "notes": null
     },
     {
@@ -169,7 +169,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.applications.forms_settings",
       "policy_file": "1.3.5_forms_internal_phishing_protection.rego",
-      "requires_permissions": ["Policy.Read.All"],
+      "requires_permissions": ["OrgSettings-Forms.Read.All"],
       "notes": null
     },
     {
@@ -258,7 +258,7 @@
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
       "data_collector_id": "exchange.protection.malware_filter_policy",
-      "policy_file": "2.1.2_Common_AttachmentTypes_Enabled.rego",
+      "policy_file": "2.1.2_Common_AttachmentTypes_Filter_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
     },

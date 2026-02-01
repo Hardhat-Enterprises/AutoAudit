@@ -11,7 +11,9 @@ if TYPE_CHECKING:
     from app.models.compliance import Scan
     from app.models.evidence_validation import EvidenceValidation
     from app.models.m365_connection import M365Connection
+    from app.models.contact import ContactSubmission, SubmissionHistory, SubmissionNote
     from app.models.oauth_account import OAuthAccount
+    from app.models.user_settings import UserSettings
 
 
 class Role(str, Enum):
@@ -48,10 +50,25 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+    settings: Mapped["UserSettings"] = relationship(
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
     m365_connections: Mapped[list["M365Connection"]] = relationship(
         back_populates="user"
     )
     scans: Mapped[list["Scan"]] = relationship(back_populates="user")
     evidence_validations: Mapped[list["EvidenceValidation"]] = relationship(
         back_populates="user"
+    )
+    assigned_submissions: Mapped[list["ContactSubmission"]] = relationship(
+        back_populates="assigned_user"
+    )
+    submission_notes: Mapped[list["SubmissionNote"]] = relationship(
+        back_populates="admin_user"
+    )
+    submission_history: Mapped[list["SubmissionHistory"]] = relationship(
+        back_populates="admin_user"
     )

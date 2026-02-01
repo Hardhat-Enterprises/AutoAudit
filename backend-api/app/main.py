@@ -5,7 +5,6 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.errors import not_found_handler, NotFound
-
 settings = get_settings()
 
 
