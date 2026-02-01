@@ -11,6 +11,8 @@ import './Dropdown.css';
 const Dropdown = ({ value, onChange, options, isDarkMode = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const safeOptions = Array.isArray(options) ? options : [];
+  const hasOptions = safeOptions.length > 0;
 
   useEffect(() => {
     // Closes dropdown if clicks anywhere outside of the dropdown
@@ -20,8 +22,18 @@ const Dropdown = ({ value, onChange, options, isDarkMode = true }) => {
       }
     };
 
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const handleSelect = (option) => {
@@ -30,28 +42,37 @@ const Dropdown = ({ value, onChange, options, isDarkMode = true }) => {
   };
 
   //Set option state to provided option from function call. Fall back to first possible option if any errors. 
-  const selectedOption = options.find(opt => opt.value === value) || options[0];
+  const selectedOption = safeOptions.find(opt => opt.value === value) || safeOptions[0];
+  const selectedLabel = selectedOption?.label ?? 'No options';
 
   return (
     <div className={`chart-dropdown ${isDarkMode ? 'dark' : 'light'}`} ref={dropdownRef}> {/* we use this ref to detect if we've clicked outside of the dropdown (to close it)*/}
       <button 
         type="button"
-        onClick={() => setIsOpen(!isOpen)} 
+        onClick={() => {
+          if (!hasOptions) return;
+          setIsOpen(!isOpen);
+        }}
         className="chart-dropdown-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        disabled={!hasOptions}
       >
-        <span className="chart-dropdown-text">{selectedOption.label}</span> {/* show the name of the current option in the box if the dropdown is closed */}
+        <span className="chart-dropdown-text">{selectedLabel}</span> {/* show the name of the current option in the box if the dropdown is closed */}
         <span className={`chart-dropdown-arrow ${isOpen ? 'open' : ''}`}>▼</span> {/* if we append open to the class name, we trigger a 180 degree rotation of the arrow (see css) */}
       </button>
       
       {/* render only if isOpen is true */}
-      {isOpen && (  
-        <div className="chart-dropdown-menu">
-          {options.map((option) => ( //loop through the array to map the options to the list
+      {isOpen && hasOptions && (  
+        <div className="chart-dropdown-menu" role="listbox">
+          {safeOptions.map((option) => ( //loop through the array to map the options to the list
             <button
               key={option.value} // assign key name for each list item to be the same as the value of the current item in the array (e.g. "pie")
               className={`chart-dropdown-option ${option.value === value ? 'selected' : ''}`} 
               onClick={() => handleSelect(option)}
               type="button"
+              role="option"
+              aria-selected={option.value === value}
             >
               {option.label}
             </button>

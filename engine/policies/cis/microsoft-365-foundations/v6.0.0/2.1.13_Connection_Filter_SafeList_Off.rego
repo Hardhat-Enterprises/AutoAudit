@@ -24,22 +24,44 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_13
 
-import rego.v1
-
 default result := {"compliant": false, "message": "Evaluation failed"}
 
-enable_safe_list := object.get(input, "enable_safe_list", false)
+# Required EnableSafeList setting
+required_fields := {
+    "EnableSafeList": false
+}
 
-result := {
-    "compliant": true,
-    "message": "EnableSafeList is False for Exchange Online Hosted Connection Filter",
-    "affected_resources": [],
-    "details": {"EnableSafeList": enable_safe_list}
-} if enable_safe_list == false
+enable_safe_list := object.get(
+    input,
+    "enable_safe_list",
+    object.get(object.get(input, "default_policy", {}), "EnableSafeList", null)
+)
 
-result := {
-    "compliant": false,
-    "message": "EnableSafeList is not False for Exchange Online Hosted Connection Filter",
-    "affected_resources": ["HostedConnectionFilterPolicy"],
-    "details": {"EnableSafeList": enable_safe_list}
-} if enable_safe_list == true
+enable_safe_list_is_false := null if {
+    enable_safe_list == null
+} else := true if {
+    enable_safe_list == false  # Ensure EnableSafeList is False
+} else := false if {
+    enable_safe_list == true  # If EnableSafeList is True, it's non-compliant
+} else := null
+
+result := output if {
+    compliant := enable_safe_list_is_false == true
+
+    output := {
+        "compliant": compliant,
+        "message": generate_message(enable_safe_list_is_false),
+        "affected_resources": generate_affected_resources(enable_safe_list_is_false),
+        "details": {
+            "EnableSafeList": enable_safe_list
+        }
+    }
+}
+
+generate_message(true) := "EnableSafeList is False for Exchange Online Hosted Connection Filter"
+generate_message(false) := "EnableSafeList is not False for Exchange Online Hosted Connection Filter"
+generate_message(null) := "Unable to determine the EnableSafeList status in Exchange Online Hosted Connection Filter"
+
+generate_affected_resources(true) := []
+generate_affected_resources(false) := ["HostedConnectionFilterPolicy"]
+generate_affected_resources(null) := ["HostedConnectionFilterPolicy status unknown"]

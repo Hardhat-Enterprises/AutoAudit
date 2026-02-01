@@ -1,25 +1,29 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, Plus, CheckCircle, XCircle, Clock, Loader2, AlertCircle, PlayCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Search, Plus, CheckCircle, XCircle, Clock, Loader2, AlertCircle, PlayCircle, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getScans, getConnections, getBenchmarks, createScan } from '../../api/client';
+import { getScans, getConnections, getBenchmarks, createScan, deleteScan, getSettings } from '../../api/client';
 import { formatDateTimePartsAEST } from '../../utils/helpers';
 import './ScansPage.css';
 
 const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { token } = useAuth();
   const [scans, setScans] = useState([]);
   const [connections, setConnections] = useState([]);
   const [benchmarks, setBenchmarks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteEnabled, setConfirmDeleteEnabled] = useState(true);
+  const [showForm, setShowForm] = useState(!!location?.state?.openNewScan);
   const [formData, setFormData] = useState({
-    m365_connection_id: '',
-    benchmark_key: '',
+    m365_connection_id: location?.state?.preselect?.m365_connection_id ? String(location.state.preselect.m365_connection_id) : '',
+    benchmark_key: location?.state?.preselect?.benchmark_key || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const appliedNavStateRef = useRef(false);
 
   const loadScans = useCallback(async () => {
     try {
@@ -51,6 +55,38 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
 
     loadData();
+  }, [token]);
+
+  // Allow Dashboard (or other pages) to deep-link into "/scans" with the "New Scan" form opened + preselected.
+  useEffect(() => {
+    if (appliedNavStateRef.current) {
+      return;
+    }
+    const nav = location?.state;
+    if (!nav?.openNewScan) {
+      return;
+    }
+    appliedNavStateRef.current = true;
+    setShowForm(true);
+    setFormData(prev => ({
+      ...prev,
+      m365_connection_id: nav?.preselect?.m365_connection_id ? String(nav.preselect.m365_connection_id) : prev.m365_connection_id,
+      benchmark_key: nav?.preselect?.benchmark_key || prev.benchmark_key,
+    }));
+  }, [location]);
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const settings = await getSettings(token);
+        setConfirmDeleteEnabled(settings?.confirm_delete_enabled ?? true);
+      } catch {
+        // Fail-safe: default to showing confirmations.
+        setConfirmDeleteEnabled(true);
+      }
+    }
+
+    loadSettings();
   }, [token]);
 
   // Poll for scan updates every 5 seconds
@@ -124,6 +160,26 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
 
   function formatDate(dateString) {
     return formatDateTimePartsAEST(dateString);
+  }
+
+  async function handleDelete(scanId) {
+    if (confirmDeleteEnabled) {
+      const ok = window.confirm(
+        'Are you sure you want to delete this scan? This action cannot be undone.'
+      );
+      if (!ok) return;
+    }
+
+    setDeletingId(scanId);
+    setError(null);
+    try {
+      await deleteScan(token, scanId);
+      setScans(prev => prev.filter(s => s.id !== scanId));
+    } catch (err) {
+      setError(err.message || 'Failed to delete scan');
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   if (isLoading) {
@@ -282,6 +338,7 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                   <th>Connection</th>
                   <th>Started</th>
                   <th>Results</th>
+                  <th className="actions-header">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -330,6 +387,20 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                       ) : (
                         '-'
                       )}
+                    </td>
+                    <td className="actions-cell" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        className="toolbar-button danger"
+                        onClick={() => handleDelete(scan.id)}
+                        disabled={deletingId === scan.id}
+                      >
+                        {deletingId === scan.id ? (
+                          <Loader2 size={14} className="spinning" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                        <span>{deletingId === scan.id ? 'Deleting...' : 'Delete'}</span>
+                      </button>
                     </td>
                   </tr>
                 ))}

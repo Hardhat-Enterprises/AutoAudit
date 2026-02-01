@@ -11,6 +11,7 @@ from app.models.scan_result import ScanResult
 from app.models.compliance import Scan
 from app.models.evidence_validation import EvidenceValidation
 from app.models.contact import ContactSubmission, SubmissionNote, SubmissionHistory
+from app.models.user_settings import UserSettings
 
 __all__ = [
     "User",
@@ -27,4 +28,5 @@ __all__ = [
     "ContactSubmission",
     "SubmissionNote",
     "SubmissionHistory",
+    "UserSettings",
 ]
