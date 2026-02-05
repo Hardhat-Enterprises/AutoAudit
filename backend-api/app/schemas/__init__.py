@@ -1,14 +1,16 @@
 """Pydantic schemas for request/response validation."""
 from app.schemas.user import UserRead, UserCreate, UserUpdate
-from app.schemas.audit import AuditLog
-from app.schemas.exports import ExportRequest, ExportResponse, ExportStatusResponse
+from app.schemas.evidence_validation import EvidenceValidationRead
+from app.schemas.validator_match import ValidatorMatch
+from app.schemas.validator_result import ValidatorResult
+from app.schemas.validator_summary import ValidatorSummary
 
 __all__ = [
     "UserRead",
     "UserCreate",
     "UserUpdate",
-    "AuditLog",
-    "ExportRequest",
-    "ExportResponse",
-    "ExportStatusResponse",
+    "EvidenceValidationRead",
+    "ValidatorMatch",
+    "ValidatorResult",
+    "ValidatorSummary",
 ]

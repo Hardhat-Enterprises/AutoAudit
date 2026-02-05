@@ -3,12 +3,20 @@
 ## Project Overview
 AutoAudit is a M365 compliance automation platform built by several specialist teams. This monorepo centralizes all codebases—including backend services, APIs, compliance scanners, and frontends—enabling unified CI/CD, streamlined development, and rapid automated deployments to the cloud.
 
+## Documentation
+
+- [Getting Started](docs/GETTING_STARTED.md) - Set up your development environment
+- [Contributing Guide](docs/CONTRIBUTING.md) - Find where to contribute based on your skills
+
 ## Repository Structure
 The repo follows the established modular structure:  
 - `/backend-api`  
 - `/security`  
 - `/frontend`  
 - `/engine`  
+- `/infrastructure`  
+- `/tools`  
+- `/docs`  
 - `/.github/workflows`
 
 Full commit history and traceability from team forks are preserved.

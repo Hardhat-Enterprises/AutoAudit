@@ -2,22 +2,23 @@
 NB 14 September 2025 - Currently in use for chart type selection but this has been made general-purpose and can be used for anything.  
 Updated with theme support while preserving original design */
 
-/* Dark theme (default) - preserving original colors */
+/* Dark theme (default) - aligned with Landing/Dashboard palette */
 .chart-dropdown {
-  --dropdown-bg-primary: #1e293b;
-  --dropdown-bg-secondary: #334155;
-  --dropdown-text-primary: #94a3b8;
-  --dropdown-text-secondary: #64748b;
-  --dropdown-text-hover: #e2e8f0;
-  --dropdown-border-color: #475569;
-  --dropdown-border-hover: #64748b;
-  --dropdown-border-focus: #94a3b8;
-  --dropdown-selected-bg: rgba(148, 163, 184, 0.15);
-  --dropdown-selected-hover: rgba(148, 163, 184, 0.2);
-  --dropdown-hover-bg: rgba(148, 163, 184, 0.1);
-  --dropdown-option-hover: #334155;
-  --dropdown-shadow: rgba(0, 0, 0, 0.3);
-  --dropdown-focus-shadow: rgba(148, 163, 184, 0.2);
+  /* Use a truly opaque surface for the open menu so options remain readable above any content. */
+  --dropdown-bg-primary: rgb(var(--surface-2, 30 41 59));
+  --dropdown-bg-secondary: var(--bg-tertiary, rgba(255, 255, 255, 0.05));
+  --dropdown-text-primary: var(--text-secondary, #b0c4de);
+  --dropdown-text-secondary: var(--text-tertiary, #94a3b8);
+  --dropdown-text-hover: var(--text-primary, #ffffff);
+  --dropdown-border-color: var(--border-color, rgba(59, 130, 246, 0.12));
+  --dropdown-border-hover: rgba(59, 130, 246, 0.35);
+  --dropdown-border-focus: rgba(59, 130, 246, 0.6);
+  --dropdown-selected-bg: rgba(59, 130, 246, 0.12);
+  --dropdown-selected-hover: rgba(59, 130, 246, 0.18);
+  --dropdown-hover-bg: rgba(255, 255, 255, 0.04);
+  --dropdown-option-hover: var(--dropdown-bg-secondary);
+  --dropdown-shadow: rgba(0, 0, 0, 0.35);
+  --dropdown-focus-shadow: rgba(59, 130, 246, 0.25);
 }
 
 /* Light theme overrides */
@@ -29,13 +30,13 @@ Updated with theme support while preserving original design */
   --dropdown-text-hover: #0f172a;
   --dropdown-border-color: #e2e8f0;
   --dropdown-border-hover: #cbd5e1;
-  --dropdown-border-focus: #64748b;
-  --dropdown-selected-bg: rgba(34, 211, 238, 0.15);
-  --dropdown-selected-hover: rgba(34, 211, 238, 0.25);
+  --dropdown-border-focus: #3b82f6;
+  --dropdown-selected-bg: rgba(59, 130, 246, 0.12);
+  --dropdown-selected-hover: rgba(59, 130, 246, 0.18);
   --dropdown-hover-bg: rgba(100, 116, 139, 0.1);
   --dropdown-option-hover: #f8fafc;
   --dropdown-shadow: rgba(0, 0, 0, 0.15);
-  --dropdown-focus-shadow: rgba(100, 116, 139, 0.2);
+  --dropdown-focus-shadow: rgba(59, 130, 246, 0.2);
 }
 
 .chart-dropdown {

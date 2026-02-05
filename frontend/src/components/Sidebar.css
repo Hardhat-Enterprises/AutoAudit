@@ -15,12 +15,12 @@
   outline: 1px solid #3F3F3F;
   
   /* Dark theme (default) */
-  background-color: #1E293B;
+  background-color: #0a1628;
 }
 
 /* Dark theme explicit */
 .sidebar.dark {
-  background-color: #1E293B;
+  background-color: #0a1628;
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2);
   outline: 1px solid #3F3F3F;
 }
@@ -99,7 +99,7 @@
   flex-direction: column;
   align-items: center;
   margin-top: auto;
-  border-top: 1px solid #334155;
+  border-top: 1px solid rgba(59, 130, 246, 0.12);
   padding-top: 30px;
   gap: 15px;
   transition: border-color 0.3s ease;
@@ -156,9 +156,9 @@
 
 /* Styling for currently selected nav item or setting */
 .nav-link.active {
-  background-color: #22D3EE;
-  color: #0F172A;
-  box-shadow: 0 4px 20px rgba(34, 211, 238, 0.4);
+  background-color: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
 }
 
 /* Hover effects on navigation items - Dark theme */
@@ -176,7 +176,7 @@
 
 /* Hover effect when the navigation item is also the currently selected item */
 .nav-link.active:hover {
-  background-color: #0891B2;
+  background-color: #2563eb;
   color: white;
 }
 

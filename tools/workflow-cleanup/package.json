@@ -1,0 +1,15 @@
+{
+  "name": "@autoaudit/workflow-cleanup",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "cleanup": "node cleanup-workflows.js",
+    "cleanup:dry": "node cleanup-workflows.js --dryRun=true"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.0"
+  }
+}

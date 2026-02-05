@@ -1,0 +1,77 @@
+/* Settings Page (dashboard protected) */
+.settings-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  padding: 24px;
+  transition: background-color 0.3s ease;
+}
+
+.settings-page.light {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e2e8f0;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+  --border-color: #e2e8f0;
+}
+
+.settings-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-header .header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-primary);
+}
+
+.page-header .header-content svg {
+  color: var(--teal, #64dfdf);
+}
+
+.page-header .header-text h1 {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.page-header .header-text p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
+.settings-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.settings-card h3 {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.settings-card p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.5;
+}
+

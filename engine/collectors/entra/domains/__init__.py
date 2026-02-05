@@ -1,0 +1,1 @@
+"""Entra ID domains collectors."""
