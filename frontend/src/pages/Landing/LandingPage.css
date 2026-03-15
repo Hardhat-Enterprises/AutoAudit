@@ -19,7 +19,6 @@
   color: var(--text-main);
   background: var(--bg-dark);
   min-height: 100vh;
-  overflow-x: hidden;
 }
 
 .landing-page * {
@@ -70,7 +69,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 5%;
+  padding: 0.5rem 5%;
   background: rgba(10, 22, 40, 0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -177,9 +176,10 @@
 /* Hero */
 .landing-hero {
   background: var(--bg-gradient);
-  padding: 6rem 5% 4rem;
+  padding: 1rem 5% 4rem;
   position: relative;
   isolation: isolate;
+  overflow: hidden;
 }
 
 .landing-hero::before,
@@ -189,6 +189,7 @@
   border-radius: 50%;
   opacity: 0.9;
   z-index: -1;
+  overflow: hidden;
 }
 
 .landing-hero::before {
