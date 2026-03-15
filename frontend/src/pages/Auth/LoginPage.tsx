@@ -1,7 +1,7 @@
 import React from "react";
 import "./LoginPage.css";
 import "../Landing/LandingPage.css";
-import LoginHeader from "./components/LoginHeader";
+import LandingHeader from "../Landing/components/LandingHeader";
 import BrandPanel from "./components/BrandPanel";
 import SignInPanel from "./components/SignInPanel";
 import LandingFooter from "../Landing/components/LandingFooter";
@@ -14,7 +14,7 @@ export interface LoginPageProps {
 const LoginPage = ({ onLogin, onSignUpClick }: LoginPageProps) => {
   return (
     <div className="login-page">
-      <LoginHeader />
+      <LandingHeader />
       <main className="login-main">
         <BrandPanel />
         <SignInPanel onLogin={onLogin} onSignUpClick={onSignUpClick} />
