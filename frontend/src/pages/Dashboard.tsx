@@ -16,29 +16,92 @@ import { useAuth } from "../context/AuthContext";
 import { getBenchmarks, getConnections, getScans, getScan } from "../api/client";
 import { formatDateTimePartsAEST } from "../utils/helpers";
 
-export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggle }) {
+type ChartType = "doughnut" | "pie" | "bar";
+
+type DashboardProps = {
+  sidebarWidth?: number;
+  isDarkMode: boolean;
+  onThemeToggle: React.ChangeEventHandler<HTMLInputElement>;
+};
+
+type ApiConnection = {
+  id: number | string;
+  name?: string | null;
+};
+
+type ApiBenchmark = {
+  platform?: string | null;
+  framework?: string | null;
+  slug?: string | null;
+  version?: string | null;
+  name?: string | null;
+};
+
+type ApiScanSummary = {
+  id: number;
+  status?: string | null;
+  started_at?: string | null;
+  finished_at?: string | null;
+  framework?: string | null;
+  benchmark?: string | null;
+  version?: string | null;
+  m365_connection_id?: number | string | null;
+  connection_name?: string | null;
+  passed_count?: number | string | null;
+  failed_count?: number | string | null;
+  error_count?: number | string | null;
+  skipped_count?: number | string | null;
+  total_controls?: number | string | null;
+};
+
+type ApiScanResultItem = {
+  control_id?: string | number | null;
+  status?: string | null;
+  message?: string | null;
+};
+
+type ApiScanDetail = {
+  id: number;
+  results?: ApiScanResultItem[] | null;
+};
+
+function getErrorMessage(err: unknown): string {
+  if (err && typeof err === "object" && "message" in err) {
+    const m = (err as { message?: unknown }).message;
+    if (typeof m === "string" && m.trim()) return m;
+  }
+  return "Unexpected error";
+}
+
+export default function Dashboard({
+  sidebarWidth = 220,
+  isDarkMode,
+  onThemeToggle,
+}: DashboardProps) {
   const navigate = useNavigate();
   const { token } = useAuth();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [scans, setScans] = useState([]);
-  const [connections, setConnections] = useState([]);
-  const [benchmarks, setBenchmarksState] = useState([]);
+  const [scans, setScans] = useState<ApiScanSummary[]>([]);
+  const [connections, setConnections] = useState<ApiConnection[]>([]);
+  const [benchmarks, setBenchmarksState] = useState<ApiBenchmark[]>([]);
 
-  const [scanDetailsById, setScanDetailsById] = useState({});
-  const [scanDetailsError, setScanDetailsError] = useState(null);
+  const [scanDetailsById, setScanDetailsById] = useState<Record<number, ApiScanDetail>>(
+    {}
+  );
+  const [scanDetailsError, setScanDetailsError] = useState<string | null>(null);
 
   const chartTypeOptions = [
-    { value: 'doughnut', label: 'Doughnut Chart' },
-    { value: 'pie', label: 'Pie Chart' },
-    { value: 'bar', label: 'Compliance Trend (Bar)' },
+    { value: "doughnut", label: "Doughnut Chart" },
+    { value: "pie", label: "Pie Chart" },
+    { value: "bar", label: "Compliance Trend (Bar)" },
   ];
-    
-  const [selectedChartType, setSelectedChartType] = useState('doughnut');
-  const [selectedConnectionId, setSelectedConnectionId] = useState('all');
-  const [selectedBenchmarkKey, setSelectedBenchmarkKey] = useState('all');
+
+  const [selectedChartType, setSelectedChartType] = useState<ChartType>("doughnut");
+  const [selectedConnectionId, setSelectedConnectionId] = useState<string>("all");
+  const [selectedBenchmarkKey, setSelectedBenchmarkKey] = useState<string>("all");
 
   useEffect(() => {
     async function loadDashboard() {
@@ -51,12 +114,14 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
           getConnections(token),
           getBenchmarks(token),
         ]);
-        setScans(scansData || []);
-        setConnections(connectionsData || []);
-        setBenchmarksState(benchmarksData || []);
+        setScans((scansData as ApiScanSummary[] | null | undefined) || []);
+        setConnections((connectionsData as ApiConnection[] | null | undefined) || []);
+        setBenchmarksState((benchmarksData as ApiBenchmark[] | null | undefined) || []);
 
         // Prefer the latest completed scan as the default context.
-        const completed = (scansData || []).filter(s => s.status === 'completed');
+        const completed = ((scansData as ApiScanSummary[] | null | undefined) || []).filter(
+          (s) => s.status === "completed"
+        );
         const latestCompleted = completed.length > 0 ? completed[0] : null; // API sorts started_at desc
         if (latestCompleted) {
           if (latestCompleted.m365_connection_id) {
@@ -66,8 +131,8 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
             setSelectedBenchmarkKey(`${latestCompleted.framework}|${latestCompleted.benchmark}|${latestCompleted.version}`);
           }
         }
-      } catch (err) {
-        setError(err?.message || 'Failed to load dashboard');
+      } catch (err: unknown) {
+        setError(getErrorMessage(err) || "Failed to load dashboard");
       } finally {
         setIsLoading(false);
       }
@@ -77,38 +142,47 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
   }, [token]);
 
   const benchmarkOptions = useMemo(() => {
-    const m365 = (benchmarks || []).filter(b => String(b.platform || '').toLowerCase() === 'm365');
-    const opts = m365.map(b => ({
-      value: `${b.framework}|${b.slug}|${b.version}`,
-      label: `${b.name} (${b.version})`,
+    const m365 = (benchmarks || []).filter(
+      (b) => String(b.platform || "").toLowerCase() === "m365"
+    );
+    const opts = m365.map((b) => ({
+      value: `${b.framework || ""}|${b.slug || ""}|${b.version || ""}`,
+      label: `${b.name || "Benchmark"} (${b.version || "—"})`,
     }));
-    return [{ value: 'all', label: 'All benchmarks' }, ...opts];
+    return [{ value: "all", label: "All benchmarks" }, ...opts];
   }, [benchmarks]);
 
   const connectionOptions = useMemo(() => {
-    const opts = (connections || []).map(c => ({ value: String(c.id), label: c.name || `Connection #${c.id}` }));
-    return [{ value: 'all', label: 'All connections' }, ...opts];
+    const opts = (connections || []).map((c) => ({
+      value: String(c.id),
+      label: c.name || `Connection #${c.id}`,
+    }));
+    return [{ value: "all", label: "All connections" }, ...opts];
   }, [connections]);
 
   const filteredScans = useMemo(() => {
     let out = scans || [];
-    if (selectedConnectionId !== 'all') {
-      out = out.filter(s => String(s.m365_connection_id || '') === selectedConnectionId);
+    if (selectedConnectionId !== "all") {
+      out = out.filter(
+        (s) => String(s.m365_connection_id || "") === selectedConnectionId
+      );
     }
-    if (selectedBenchmarkKey !== 'all') {
-      out = out.filter(s => `${s.framework}|${s.benchmark}|${s.version}` === selectedBenchmarkKey);
+    if (selectedBenchmarkKey !== "all") {
+      out = out.filter(
+        (s) => `${s.framework}|${s.benchmark}|${s.version}` === selectedBenchmarkKey
+      );
     }
     return out;
   }, [scans, selectedConnectionId, selectedBenchmarkKey]);
 
   const latestRelevantScan = useMemo(() => {
     if (!filteredScans || filteredScans.length === 0) return null;
-    const completed = filteredScans.filter(s => s.status === 'completed');
+    const completed = filteredScans.filter((s) => s.status === "completed");
     if (completed.length > 0) return completed[0];
     return filteredScans[0];
   }, [filteredScans]);
 
-  const chartModel = useMemo(() => {
+  const chartModel = useMemo<{ chartType: ChartType; labels: string[]; values: number[] }>(() => {
     const s = latestRelevantScan;
     const passed = Number(s?.passed_count || 0);
     const failed = Number(s?.failed_count || 0);
@@ -116,15 +190,15 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
     const skipped = Number(s?.skipped_count || 0);
     const totalControls = Number(s?.total_controls || 0);
 
-    if (selectedChartType === 'bar') {
+    if (selectedChartType === "bar") {
       const completed = (filteredScans || [])
-        .filter(x => String(x.status || '').toLowerCase() === 'completed')
+        .filter((x) => String(x.status || "").toLowerCase() === "completed")
         .slice(0, 8)
         .slice()
         .reverse();
 
-      const labels = completed.map(x => `#${x.id}`);
-      const values = completed.map(x => {
+      const labels = completed.map((x) => `#${x.id}`);
+      const values = completed.map((x) => {
         const total = Number(x.total_controls || 0);
         const pass = Number(x.passed_count || 0);
         const fail = Number(x.failed_count || 0);
@@ -134,7 +208,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
         return evaluated > 0 ? Math.round((pass / evaluated) * 100) : 0;
       });
 
-      return { chartType: 'bar', labels, values };
+      return { chartType: "bar", labels, values };
     }
 
     // Default: Pass / Fail (+ optional Error / Skipped)
@@ -168,10 +242,10 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
 
       setScanDetailsError(null);
       try {
-        const detail = await getScan(token, id);
-        setScanDetailsById(prev => ({ ...prev, [id]: detail }));
-      } catch (err) {
-        setScanDetailsError(err?.message || 'Failed to load scan details');
+        const detail = (await getScan(token, id)) as ApiScanDetail;
+        setScanDetailsById((prev) => ({ ...prev, [id]: detail }));
+      } catch (err: unknown) {
+        setScanDetailsError(getErrorMessage(err) || "Failed to load scan details");
       }
     }
 
@@ -190,17 +264,19 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
     const evaluated = passed + failed;
     const pending = Math.max(0, total - evaluated - errors - skipped);
     const hasTotal = total > 0;
-    const formatCount = (value) => {
+    const formatCount = (value: unknown) => {
       const num = Number(value);
-      return Number.isFinite(num) ? num.toLocaleString() : '—';
+      return Number.isFinite(num) ? num.toLocaleString() : "—";
     };
 
     const compliancePct = evaluated > 0 ? Math.round((passed / evaluated) * 100) : null;
-    const complianceTone = hasScan ? 'good' : 'neutral';
-    const failedTone = failed > 0 ? 'bad' : hasTotal ? 'good' : 'neutral';
+    const complianceTone = hasScan ? "good" : "neutral";
+    const failedTone = failed > 0 ? "bad" : hasTotal ? "good" : "neutral";
 
-    const connectionLabel = s?.connection_name || (s?.m365_connection_id ? `Connection #${s.m365_connection_id}` : '—');
-    const isCompleted = String(s?.status || '').toLowerCase() === 'completed';
+    const connectionLabel =
+      s?.connection_name ||
+      (s?.m365_connection_id ? `Connection #${s.m365_connection_id}` : "—");
+    const isCompleted = String(s?.status || "").toLowerCase() === "completed";
     const lastScanLabel = (isCompleted ? (s?.finished_at || s?.started_at) : (s?.started_at || s?.finished_at)) || null;
     const dt = lastScanLabel ? formatDateTimePartsAEST(lastScanLabel) : { date: '-', time: '-' };
     const lastTime = dt.time !== '-' ? dt.time : '—';
@@ -267,9 +343,12 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
 
   const nextFixes = useMemo(() => {
     const results = latestScanDetails?.results || [];
-    const failed = results.filter(r => (r?.status || '').toLowerCase() === 'failed');
-    const errors = results.filter(r => (r?.status || '').toLowerCase() === 'error');
-    const byControlId = (a, b) => String(a?.control_id || '').localeCompare(String(b?.control_id || ''), undefined, { numeric: true });
+    const failed = results.filter((r) => (r?.status || "").toLowerCase() === "failed");
+    const errors = results.filter((r) => (r?.status || "").toLowerCase() === "error");
+    const byControlId = (a: ApiScanResultItem, b: ApiScanResultItem) =>
+      String(a?.control_id || "").localeCompare(String(b?.control_id || ""), undefined, {
+        numeric: true,
+      });
     return {
       failedCount: failed.length,
       errorCount: errors.length,
@@ -281,7 +360,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
     return (filteredScans || []).slice(0, 6);
   }, [filteredScans]);
 
-  function statusTone(status) {
+  function statusTone(status: unknown) {
     switch (String(status || '').toLowerCase()) {
       case 'completed':
         return 'success';
@@ -296,8 +375,9 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
 
   const handleRunNewScan = () => {
     const preselect = {
-      m365_connection_id: selectedConnectionId !== 'all' ? Number(selectedConnectionId) : undefined,
-      benchmark_key: selectedBenchmarkKey !== 'all' ? selectedBenchmarkKey : undefined,
+      m365_connection_id:
+        selectedConnectionId !== "all" ? Number(selectedConnectionId) : undefined,
+      benchmark_key: selectedBenchmarkKey !== "all" ? selectedBenchmarkKey : undefined,
     };
     navigate('/scans', { state: { openNewScan: true, preselect } });
   };
@@ -454,7 +534,7 @@ export default function Dashboard({ sidebarWidth = 220, isDarkMode, onThemeToggl
               <div className="chart-surface">
                 <ComplianceChart
                   chartType={chartModel.chartType}
-                  labelsInput={chartModel.labels}
+                  labelsInput={chartModel.labels as unknown as never[]}
                   dataInput={chartModel.values}
                   isDarkMode={isDarkMode}
                 />
