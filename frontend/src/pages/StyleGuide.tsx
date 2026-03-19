@@ -1,40 +1,44 @@
-/* StyleGuide.js */
+/* StyleGuide.tsx */
 import React from "react";
 import "../index.css";
-import { TOKEN_META } from "../styles/tokens-meta"; // name, rbg, hex labels
+import { TOKEN_META } from "../styles/tokens-meta"; // name, rgb, hex labels
+
+type ThemeMode = "dark" | "light";
+type TokenKey = keyof typeof TOKEN_META;
+type TokenInfo = { name: string; rgb: string; hex: string; light?: TokenInfo };
 
 // Token keys
-const TOKENS = Object.keys(TOKEN_META);
+const TOKENS = Object.keys(TOKEN_META) as TokenKey[];
 
 // Pick a legible text color for swatch labels
 // (if swatch background is a text colour, use surface-1 for contrast)
 // If not, use text-strong
 // Parse "R G B" → [r,g,b] (split string and convert to numbers so we can math brr)
-function parseTriplet(rgb) {
-  const [r, g, b] = rgb.split(/\s+/).map(Number);
+function parseTriplet(rgb: string): [number, number, number] {
+  const parts = rgb.split(/\s+/).map(Number);
+  const [r = 0, g = 0, b = 0] = parts;
   return [r, g, b];
 }
 
 // WCAG relative luminance (0 = black, 1 = white)
 // formula from https://www.w3.org/TR/WCAG20/#relativeluminancedef
-function relLuminance([r, g, b]) {
-  const srgb = [r, g, b].map(v => v / 255); // convert RBG from 0-255 to 0-1
+function relLuminance([r, g, b]: [number, number, number]): number {
+  const srgb = [r, g, b].map(v => v / 255); // convert RGB from 0-255 to 0-1
   const lin = srgb.map(v => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
   return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
 }
 
 // For the current theme section, choose a token that is "light" or "dark"
-function textTokenForMode(mode, wantLightText) {
+function textTokenForMode(mode: ThemeMode, wantLightText: boolean): string {
   // In dark mode: light text = text-strong, dark text = surface-1
   // In light mode: light text = surface-1, dark text = text-strong
   if (mode === "dark") return wantLightText ? "var(--text-strong)" : "var(--surface-1)";
   return wantLightText ? "var(--surface-1)" : "var(--text-strong)";
 }
 
-
-function Swatch({ token, mode }) {
-  const meta = TOKEN_META[token];
-  const info = mode === "light" && meta.light ? meta.light : meta;
+function Swatch({ token, mode }: { token: TokenKey; mode: ThemeMode }) {
+  const meta = TOKEN_META[token] as TokenInfo;
+  const info: TokenInfo = mode === "light" && meta.light ? meta.light : meta;
   // If in light mode and there’s a meta.light override, use it. Otherwise use  default.
 
   // Compute background luminance from the token's RGB for this mode
