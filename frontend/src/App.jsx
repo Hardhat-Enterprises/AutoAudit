@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 
 // Dashboard Components
 import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/Dashboard.tsx';
 import Evidence from './pages/Evidence';
 import SettingsPage from './pages/SettingsPage';
 import AccountPage from './pages/AccountPage';
