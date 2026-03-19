@@ -5,13 +5,32 @@ import { logout as apiLogout } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import "./AccountPage.css";
 
-export default function AccountPage({ sidebarWidth = 220, isDarkMode = true }) {
+type AccountPageProps = {
+  sidebarWidth?: number;
+  isDarkMode?: boolean;
+  onThemeToggle?: () => void;
+};
+
+type AuthUser = {
+  email?: string | null;
+  username?: string | null;
+  name?: string | null;
+  id?: string | number | null;
+};
+
+type AuthContextValue = {
+  user: AuthUser | null;
+  token: string | null;
+  logout: () => void;
+};
+
+export default function AccountPage({ sidebarWidth = 220, isDarkMode = true }: AccountPageProps) {
   const navigate = useNavigate();
-  const { user, token, logout: clearAuth } = useAuth();
+  const { user, token, logout: clearAuth } = useAuth() as AuthContextValue;
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const primaryLabel =
-    user?.email || user?.username || user?.name || user?.id || "Signed in";
+    user?.email || user?.username || user?.name || (user?.id != null ? String(user.id) : null) || "Signed in";
 
   const handleLogout = async () => {
     if (isLoggingOut) return;

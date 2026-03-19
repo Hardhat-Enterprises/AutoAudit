@@ -4,13 +4,18 @@ import "./SettingsPage.css";
 import { useAuth } from "../context/AuthContext";
 import { getSettings, updateSettings } from "../api/client";
 
-export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }) {
+type SettingsPageProps = {
+  sidebarWidth?: number;
+  isDarkMode?: boolean;
+};
+
+export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: SettingsPageProps) {
   const { token } = useAuth();
   const [confirmDeleteEnabled, setConfirmDeleteEnabled] = useState(true);
   const [draftConfirmDeleteEnabled, setDraftConfirmDeleteEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -25,7 +30,7 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }) 
         // Fail-safe: default to showing confirmations.
         setConfirmDeleteEnabled(true);
         setDraftConfirmDeleteEnabled(true);
-        setError(err?.message || "Failed to load settings");
+        setError(err instanceof Error ? err.message : "Failed to load settings");
       } finally {
         setIsLoading(false);
       }
@@ -36,8 +41,8 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }) 
 
   const hasChanges = draftConfirmDeleteEnabled !== confirmDeleteEnabled;
 
-  function handleToggleConfirmDelete(e) {
-    setDraftConfirmDeleteEnabled(!!e.target.checked);
+  function handleToggleConfirmDelete(e: React.ChangeEvent<HTMLInputElement>) {
+    setDraftConfirmDeleteEnabled(e.target.checked);
   }
 
   async function handleSave() {
@@ -54,7 +59,7 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }) 
       setConfirmDeleteEnabled(enabled);
       setDraftConfirmDeleteEnabled(enabled);
     } catch (err) {
-      setError(err?.message || "Failed to update settings");
+      setError(err instanceof Error ? err.message : "Failed to update settings");
     } finally {
       setIsSaving(false);
     }
