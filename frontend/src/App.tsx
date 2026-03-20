@@ -3,11 +3,11 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 // Dashboard Components
 import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard.tsx';
-import Evidence from './pages/Evidence.tsx';
-import SettingsPage from './pages/SettingsPage.tsx';
-import AccountPage from './pages/AccountPage.tsx';
-import StyleGuide from './pages/StyleGuide.tsx';
+import Dashboard from './pages/Dashboard';
+import Evidence from './pages/Evidence';
+import SettingsPage from './pages/SettingsPage';
+import AccountPage from './pages/AccountPage';
+import StyleGuide from './pages/StyleGuide';
 import ConnectionsPage from './pages/Connections/ConnectionsPage';
 import ScansPage from './pages/Scans/ScansPage';
 import ScanDetailPage from './pages/Scans/ScanDetailPage';
@@ -18,7 +18,7 @@ import AboutUs from './pages/Landing/AboutUs';
 import ContactPage from './pages/Contact/ContactPage';
 import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
-import ContactAdminPage from './pages/Admin/ContactAdminPage.jsx';
+import ContactAdminPage from './pages/Admin/ContactAdminPage';
 import GoogleCallbackPage from './pages/Auth/GoogleCallbackPage';
 
 // Auth Context
@@ -29,7 +29,7 @@ import { register as apiRegister } from './api/client';
 import './styles/global.css';
 
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -43,11 +43,11 @@ const ProtectedRoute = ({ children }) => {
     return <div className="loading">Loading...</div>;
   }
 
-  return isAuthenticated ? children : null;
+  return isAuthenticated ? <>{children}</> : null;
 };
 
 // Admin-only Route Component
-const AdminRoute = ({ children }) => {
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, user } = useAuth();
 
@@ -66,11 +66,19 @@ const AdminRoute = ({ children }) => {
     return <div className="loading">Loading...</div>;
   }
 
-  return isAuthenticated && user?.role === 'admin' ? children : null;
+  return isAuthenticated && user?.role === 'admin' ? <>{children}</> : null;
 };
 
 // Dashboard Layout Component (with sidebar)
-const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle, onSidebarWidthChange }) => {
+interface DashboardLayoutProps {
+  children: React.ReactElement;
+  sidebarWidth: number;
+  isDarkMode: boolean;
+  onThemeToggle: () => void;
+  onSidebarWidthChange: (width: number) => void;
+}
+
+const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle, onSidebarWidthChange }: DashboardLayoutProps) => {
   return (
     <>
       <Sidebar onWidthChange={onSidebarWidthChange} isDarkMode={isDarkMode} />
@@ -79,16 +87,21 @@ const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle, on
   );
 };
 
+export interface SignUpData {
+  email?: string;
+  password?: string;
+}
+
 function App() {
   const auth = useAuth();
 
   // Dashboard state
-  const getInitialSidebarWidth = () => {
-    if (typeof window === "undefined") return 220;
+  const getInitialSidebarWidth = (): number => {
+    if (typeof window === 'undefined') return 220;
     try {
-      const stored = window.localStorage.getItem("sidebarExpanded");
+      const stored = window.localStorage.getItem('sidebarExpanded');
       if (stored === null) return 220;
-      return stored === "true" ? 220 : 80;
+      return stored === 'true' ? 220 : 80;
     } catch {
       return 220;
     }
@@ -112,17 +125,17 @@ function App() {
   }, [isDarkMode]);
 
   // Authentication handlers
-  const handleUserLogin = async (email, password, remember = true) => {
+  const handleUserLogin = async (email: string, password: string, remember = true): Promise<void> => {
     await auth.login(email, password, remember);
     navigate('/dashboard');
   };
 
-  const handleUserLogout = () => {
+  const handleUserLogout = (): void => {
     auth.logout();
     navigate('/');
   };
 
-  const handleSignUp = async (signUpData) => {
+  const handleSignUp = async (signUpData: SignUpData): Promise<void> => {
     const email = signUpData?.email;
     const password = signUpData?.password;
 
@@ -130,78 +143,60 @@ function App() {
       throw new Error('Email and password are required');
     }
 
-    // Create the user in the DB, then sign them in.
     await apiRegister(email, password);
     await auth.login(email, password, true);
     navigate('/dashboard');
   };
 
-  const handleThemeToggle = () => {
+  const handleThemeToggle = (): void => {
     setIsDarkMode(!isDarkMode);
   };
 
-  const handleSidebarWidthChange = (width) => {
+  const handleSidebarWidthChange = (width: number): void => {
     setSidebarWidth(width);
   };
-
-  // Check if current route should show sidebar
-  const isDashboardRoute = ['/dashboard', '/evidence-scanner', '/styleguide', '/cloud-platforms', '/scans', '/settings', '/account'].includes(location.pathname) || location.pathname.startsWith('/scans/');
 
   return (
     <div className="App">
       <Routes>
         {/* Public Routes */}
-        <Route 
-          path="/" 
-          element={
-            <LandingPage 
-              onSignInClick={() => navigate('/login')}
-            />
-          } 
-        />
-        
-        <Route 
-          path="/about" 
-          element={
-            <AboutUs 
-              onBack={() => navigate('/')} 
-              onSignInClick={() => navigate('/login')}
-            />
-          } 
-        />
-        
         <Route
-          path="/contact"
-          element={
-            <ContactPage
-              onSignIn={() => navigate('/login')}
-            />
-          }
-        />
-        
-        <Route 
-          path="/login" 
-          element={
-            <LoginPage 
-              onLogin={handleUserLogin}
-              onSignUpClick={() => navigate('/signup')}
-            />
-          } 
+          path="/"
+          element={<LandingPage onSignInClick={() => navigate('/login')} />}
         />
 
         <Route
-          path="/auth/google/callback"
-          element={<GoogleCallbackPage />}
-        />
-        
-        <Route 
-          path="/signup" 
+          path="/about"
           element={
-            <SignUpPage 
+            <AboutUs onBack={() => navigate('/')} onSignInClick={() => navigate('/login')} />
+          }
+        />
+
+        <Route
+          path="/contact"
+          element={<ContactPage onSignIn={() => navigate('/login')} />}
+        />
+
+        <Route
+          path="/login"
+          element={
+            <LoginPage
+              onLogin={handleUserLogin}
+              onSignUpClick={() => navigate('/signup')}
+            />
+          }
+        />
+
+        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+
+        <Route
+          path="/signup"
+          element={
+            <SignUpPage
               onSignUp={handleSignUp}
               onBackToLogin={() => navigate('/login')}
             />
-          } 
+          }
         />
 
         <Route
@@ -224,9 +219,7 @@ function App() {
                 onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
-                <Dashboard
-                  onThemeToggle={handleThemeToggle}
-                />
+                <Dashboard onThemeToggle={handleThemeToggle} />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -328,21 +321,18 @@ function App() {
           }
         />
 
-        <Route
-          path="/styleguide"
-          element={<StyleGuide />}
-        />
+        <Route path="/styleguide" element={<StyleGuide />} />
 
         {/* Fallback route */}
-        <Route 
-          path="*" 
+        <Route
+          path="*"
           element={
-            <LandingPage 
+            <LandingPage
               onSignInClick={() => navigate('/login')}
               onAboutClick={() => navigate('/about')}
               onContactClick={() => navigate('/contact')}
             />
-          } 
+          }
         />
       </Routes>
     </div>
