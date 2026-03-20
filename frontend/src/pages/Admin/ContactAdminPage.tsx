@@ -10,21 +10,51 @@ import {
   updateContactSubmission,
 } from "../../api/client";
 
-const statusOptions = ["new", "in_progress", "resolved", "closed"];
-const priorityOptions = ["low", "medium", "high", "urgent"];
+const statusOptions = ["new", "in_progress", "resolved", "closed"] as const;
+const priorityOptions = ["low", "medium", "high", "urgent"] as const;
 
-const ContactAdminPage = () => {
+export interface ContactSubmission {
+  id: number;
+  first_name: string;
+  last_name: string;
+  subject: string;
+  status: string;
+  priority: string;
+  message: string;
+  email: string;
+  phone?: string | null;
+  company?: string | null;
+  assigned_to?: number | null;
+  created_at?: string;
+}
+
+export interface ContactNote {
+  id: number;
+  note: string;
+  created_at: string;
+  is_internal?: boolean;
+}
+
+export interface ContactHistoryEntry {
+  id: number;
+  action: string;
+  field_name?: string | null;
+  new_value?: string | null;
+  created_at: string;
+}
+
+const ContactAdminPage: React.FC = () => {
   const { token, user } = useAuth();
-  const [submissions, setSubmissions] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
-  const [notes, setNotes] = useState([]);
-  const [history, setHistory] = useState([]);
+  const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [notes, setNotes] = useState<ContactNote[]>([]);
+  const [history, setHistory] = useState<ContactHistoryEntry[]>([]);
   const [noteText, setNoteText] = useState("");
   const [isInternal, setIsInternal] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
-  const latestSelectionRef = useRef(null);
+  const latestSelectionRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!actionMessage) return;
@@ -35,7 +65,7 @@ const ContactAdminPage = () => {
   }, [actionMessage]);
 
   const selectedSubmission = useMemo(
-    () => submissions.find((item) => item.id === selectedId) || null,
+    () => submissions.find((item) => item.id === selectedId) ?? null,
     [submissions, selectedId]
   );
 
@@ -49,7 +79,8 @@ const ContactAdminPage = () => {
         setSelectedId(data[0].id);
       }
     } catch (err) {
-      setError(err?.message || "Unable to load submissions.");
+      const message = err instanceof Error ? err.message : "Unable to load submissions.";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -78,14 +109,15 @@ const ContactAdminPage = () => {
         setNotes(noteData);
         setHistory(historyData);
       } catch (err) {
-        setError(err?.message || "Unable to load submission details.");
+        const message = err instanceof Error ? err.message : "Unable to load submission details.";
+        setError(message);
       }
     };
 
     loadDetail();
   }, [selectedId, token]);
 
-  const handleUpdate = async (updates) => {
+  const handleUpdate = async (updates: Partial<Pick<ContactSubmission, "status" | "priority" | "assigned_to">>) => {
     if (!selectedSubmission) return;
     const currentId = selectedSubmission.id;
     setActionMessage("");
@@ -100,7 +132,8 @@ const ContactAdminPage = () => {
       }
       setActionMessage("Submission updated.");
     } catch (err) {
-      setError(err?.message || "Unable to update submission.");
+      const message = err instanceof Error ? err.message : "Unable to update submission.";
+      setError(message);
     }
   };
 
@@ -121,7 +154,8 @@ const ContactAdminPage = () => {
       setNoteText("");
       setActionMessage("Note added.");
     } catch (err) {
-      setError(err?.message || "Unable to add note.");
+      const message = err instanceof Error ? err.message : "Unable to add note.";
+      setError(message);
     }
   };
 
@@ -136,7 +170,8 @@ const ContactAdminPage = () => {
       setHistory([]);
       setActionMessage("Submission deleted.");
     } catch (err) {
-      setError(err?.message || "Unable to delete submission.");
+      const message = err instanceof Error ? err.message : "Unable to delete submission.";
+      setError(message);
     }
   };
 
@@ -288,7 +323,7 @@ const ContactAdminPage = () => {
               <div className="contact-admin__action-buttons">
                 <button
                   className="contact-admin__assign"
-                  onClick={() => handleUpdate({ assigned_to: user.id })}
+                  onClick={() => handleUpdate({ assigned_to: user?.id ?? undefined })}
                 >
                   Assign to me
                 </button>
@@ -338,7 +373,7 @@ const ContactAdminPage = () => {
                       {entry.action === "note" && entry.new_value
                         ? `Added note: \"${entry.new_value}\"`
                         : entry.field_name
-                          ? `${entry.field_name} changed to: ${entry.new_value || "—"}`
+                          ? `${entry.field_name} changed to: ${entry.new_value ?? "—"}`
                           : "Submission updated"}
                     </p>
                     <p className="contact-admin__timestamp">

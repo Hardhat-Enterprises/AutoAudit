@@ -15,7 +15,7 @@ import './styles/global.css';
 // Legacy app styles (keeps current look intact)
 import './index.css';
 
-import App from './App.jsx';
+import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
