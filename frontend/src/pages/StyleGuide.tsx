@@ -108,7 +108,7 @@ export default function StyleGuide() {
       {/* Header font*/}
       <section>
         <h2 className="text-2xl font-header mb-2">Header Text</h2>
-        <p className="text-sm text-text-muted">
+        <p className="text-sm text-muted">
           This section demonstrates the <span className="font-header">League Spartan</span> header font stack.
         </p>
         <div className="mt-4 space-y-2">
@@ -121,7 +121,7 @@ export default function StyleGuide() {
       {/* Body Font */}
       <section>
         <h2 className="text-2xl font-header mb-2">Body Text</h2>
-        <p className="text-sm text-text-muted">
+        <p className="text-sm text-muted">
           This section demonstrates the <span className="font-body">Segoe UI</span> body font stack.
         </p>
         <div className="mt-4 space-y-4 font-body">
@@ -137,11 +137,11 @@ export default function StyleGuide() {
       {/* Code font demo */}
       <section>
         <h2 className="text-2xl font-header mb-2">Code Text</h2>
-        <p className="text-sm text-text-muted">
+        <p className="text-sm text-muted">
           Example PowerShell commands shown in a styled code block.
         </p>
         <div className="mt-4 space-y-4">
-          <pre className="font-mono text-base bg-surface-2 text-accent-teal p-4 rounded-card shadow-1 overflow-x-auto">
+          <pre className="font-mono text-base bg-surface-2 text-accent-teal p-4 rounded-lg shadow-1 overflow-x-auto">
       {`npm install my-package`}
           </pre>
         </div>
