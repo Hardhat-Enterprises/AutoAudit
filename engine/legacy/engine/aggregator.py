@@ -80,7 +80,11 @@ for rego, config in policy_map.items():
         str(RULES / rego),
         query,
     ]
-    proc = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+    except FileNotFoundError:
+        reports[pkg] = {"error": "opa CLI not found in PATH; install Open Policy Agent."}
+        continue
     if proc.returncode != 0:
         reports[pkg] = {"error": proc.stderr}
         continue
