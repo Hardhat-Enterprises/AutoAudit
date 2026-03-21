@@ -4,6 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SignupFormPanel from './SignupFormPanel';
 import type { SignUpFormData } from '../signUpTypes';
+import { expectedGoogleAuthorizeUrl } from '../../../test/oauthTestHelpers';
 
 const emptyForm: SignUpFormData = {
   firstName: '',
@@ -125,7 +126,7 @@ describe('SignupFormPanel', () => {
     renderPanel();
     await userEvent.click(screen.getByRole('button', { name: /^google$/i }));
 
-    expect(assignSpy).toHaveBeenCalledWith('https://api.test.local/v1/auth/google/authorize');
+    expect(assignSpy).toHaveBeenCalledWith(expectedGoogleAuthorizeUrl());
 
     Object.defineProperty(window, 'location', {
       configurable: true,
