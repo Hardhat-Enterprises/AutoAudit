@@ -1,10 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, type ChangeEvent, type FormEvent, type ReactElement } from "react";
 import { ArrowRight, Eye, EyeOff, Mail, Building, User, ShieldCheck } from "lucide-react";
+import type { SignUpFormData, SignUpSubmitPayload } from "../signUpTypes";
 
 const TERMS_ERROR_MESSAGE = "Please agree to the terms and privacy policy";
 const PASSWORD_MISMATCH_MESSAGE = "These passwords do not match";
 
-const inputFields = [
+type SignupInputFieldName = "firstName" | "lastName" | "email" | "organizationName";
+
+interface InputFieldConfig {
+  name: SignupInputFieldName;
+  label: string;
+  icon: React.ReactNode;
+  type: "text" | "email";
+  placeholder: string;
+}
+
+const inputFields: InputFieldConfig[] = [
   {
     name: "firstName",
     label: "First Name",
@@ -35,7 +46,14 @@ const inputFields = [
   },
 ];
 
-const socialButtons = [
+type SocialButtonConfig = {
+  label: string;
+  provider: string;
+  icon: ReactElement;
+  disabled?: boolean;
+};
+
+const socialButtons: SocialButtonConfig[] = [
   {
     label: "Google",
     provider: "google",
@@ -62,31 +80,43 @@ const socialButtons = [
   },
 ];
 
-const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, submitError }) => {
+export interface SignupFormPanelProps {
+  formData: SignUpFormData;
+  onFormChange: (field: keyof SignUpFormData, value: string) => void;
+  onSubmit: (payload: SignUpSubmitPayload) => void | Promise<void>;
+  onBackToLogin: () => void;
+  submitError: string;
+}
+
+const SignupFormPanel = ({
+  formData,
+  onFormChange,
+  onSubmit,
+  onBackToLogin,
+  submitError,
+}: SignupFormPanelProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
-  // Vite exposes env vars via import.meta.env (and they must be prefixed with VITE_)
   const apiBaseUrl = import.meta.env.VITE_API_URL;
 
-  const handleAgreeTermsChange = (event) => {
+  const handleAgreeTermsChange = (event: ChangeEvent<HTMLInputElement>) => {
     const checked = event.target.checked;
     setAgreeTerms(checked);
 
-    // Clear stale “agree to terms” error as soon as the user fixes it.
     if (checked && error === TERMS_ERROR_MESSAGE) {
       setError("");
     }
   };
 
-  const handleChange = (event) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    onFormChange(name, value);
+    onFormChange(name as keyof SignUpFormData, value);
     if (error) setError("");
   };
 
-  const validate = () => {
+  const validate = (): boolean => {
     if (!agreeTerms) {
       setError(TERMS_ERROR_MESSAGE);
       return false;
@@ -95,26 +125,23 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
       setError(PASSWORD_MISMATCH_MESSAGE);
       return false;
     }
-    // Ensure any previous validation error is cleared before a successful submit.
     if (error) setError("");
     return true;
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!validate()) return;
     await onSubmit({ ...formData, agreeTerms: true });
   };
 
-  const handleSocialSignUp = (provider) => {
+  const handleSocialSignUp = (provider: string) => {
     if (!apiBaseUrl) {
       setError("Missing API configuration. Please set VITE_API_URL.");
       return;
     }
 
     if (provider === "google") {
-      // Backend-driven OAuth redirect flow.
-      // The callback will land on: /auth/google/callback#access_token=...
       window.location.assign(`${apiBaseUrl}/v1/auth/google/authorize`);
       return;
     }
@@ -222,13 +249,10 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
           </label>
 
           <label className="checkbox-wrapper signup-checkbox">
-            <input
-              type="checkbox"
-              checked={agreeTerms}
-              onChange={handleAgreeTermsChange}
-            />
+            <input type="checkbox" checked={agreeTerms} onChange={handleAgreeTermsChange} />
             <span>
-              I agree to the <a href="/#terms">Terms & Conditions</a> and <a href="/#privacy">Privacy Policy</a>
+              I agree to the <a href="/#terms">Terms & Conditions</a> and{" "}
+              <a href="/#privacy">Privacy Policy</a>
             </span>
           </label>
 
@@ -255,7 +279,7 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
               type="button"
               className="social-btn"
               onClick={() => handleSocialSignUp(button.provider)}
-              disabled={button.disabled}
+              disabled={Boolean(button.disabled)}
               aria-disabled={button.disabled ? "true" : "false"}
               title={button.disabled ? "Coming soon" : `Continue with ${button.label}`}
             >
@@ -268,7 +292,10 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
         </div>
 
         <p className="signup-text">
-          Already have an account? <button type="button" onClick={onBackToLogin}>Sign In</button>
+          Already have an account?{" "}
+          <button type="button" onClick={onBackToLogin}>
+            Sign In
+          </button>
         </p>
       </div>
     </section>

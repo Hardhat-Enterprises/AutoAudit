@@ -1,7 +1,7 @@
 import React from "react";
-import { BarChart3, Lock, Zap } from "lucide-react";
+import { BarChart3, Lock, Zap, type LucideIcon } from "lucide-react";
 
-const featureItems = [
+const featureItems: { icon: LucideIcon; text: string }[] = [
   { icon: Zap, text: "Setup in minutes, not hours" },
   { icon: Lock, text: "Bank-level security & encryption" },
   { icon: BarChart3, text: "Real-time compliance monitoring" },
