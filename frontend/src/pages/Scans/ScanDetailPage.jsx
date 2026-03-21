@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { getScan } from '../../api/client';
 import { formatDateAEST, formatTimeAEST } from '../../utils/helpers';
+import { formatRelativeTime } from '../../utils/helpers';
 import './ScanDetailPage.css';
 
 function compareControlIdAscending(a, b) {
