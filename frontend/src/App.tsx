@@ -18,6 +18,7 @@ import AboutUs from './pages/Landing/AboutUs';
 import ContactPage from './pages/Contact/ContactPage';
 import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
+import type { SignUpSubmitPayload } from './pages/Auth/signUpTypes';
 import ContactAdminPage from './pages/Admin/ContactAdminPage';
 import GoogleCallbackPage from './pages/Auth/GoogleCallbackPage';
 
@@ -87,11 +88,6 @@ const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle, on
   );
 };
 
-export interface SignUpData {
-  email?: string;
-  password?: string;
-}
-
 function App() {
   const auth = useAuth();
 
@@ -135,9 +131,9 @@ function App() {
     navigate('/');
   };
 
-  const handleSignUp = async (signUpData: SignUpData): Promise<void> => {
-    const email = signUpData?.email;
-    const password = signUpData?.password;
+  const handleSignUp = async (signUpData: SignUpSubmitPayload): Promise<void> => {
+    const email = signUpData.email;
+    const password = signUpData.password;
 
     if (!email || !password) {
       throw new Error('Email and password are required');

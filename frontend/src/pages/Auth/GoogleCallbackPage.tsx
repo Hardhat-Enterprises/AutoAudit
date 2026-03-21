@@ -12,25 +12,36 @@ import { useAuth } from "../../context/AuthContext";
 
 const CALLBACK_CACHE_KEY = "autoaudit.oauth.google.callback.params";
 
-function safeJsonParse(value) {
+interface OAuthCallbackPayload {
+  access_token?: string | null;
+  token_type?: string | null;
+  error?: string | null;
+  error_description?: string | null;
+}
+
+function safeJsonParse(value: string | null): unknown {
   if (!value) return null;
   try {
-    return JSON.parse(value);
+    return JSON.parse(value) as unknown;
   } catch {
     return null;
   }
 }
 
-function readCachedCallbackParams() {
+function readCachedCallbackParams(): OAuthCallbackPayload | null {
   if (typeof window === "undefined") return null;
   try {
-    return safeJsonParse(window.sessionStorage.getItem(CALLBACK_CACHE_KEY));
+    const parsed = safeJsonParse(window.sessionStorage.getItem(CALLBACK_CACHE_KEY));
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as OAuthCallbackPayload;
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-function writeCachedCallbackParams(payload) {
+function writeCachedCallbackParams(payload: OAuthCallbackPayload): void {
   if (typeof window === "undefined") return;
   try {
     window.sessionStorage.setItem(CALLBACK_CACHE_KEY, JSON.stringify(payload));
@@ -39,7 +50,7 @@ function writeCachedCallbackParams(payload) {
   }
 }
 
-function clearCachedCallbackParams() {
+function clearCachedCallbackParams(): void {
   if (typeof window === "undefined") return;
   try {
     window.sessionStorage.removeItem(CALLBACK_CACHE_KEY);
@@ -48,12 +59,11 @@ function clearCachedCallbackParams() {
   }
 }
 
-function getOAuthParams() {
+function getOAuthParams(): URLSearchParams {
   const rawHash = typeof window !== "undefined" ? window.location.hash : "";
   const hash = rawHash.startsWith("#") ? rawHash.slice(1) : rawHash;
   const merged = new URLSearchParams(hash);
 
-  // Some environments/providers return parameters in the query string.
   const rawSearch = typeof window !== "undefined" ? window.location.search : "";
   const search = rawSearch.startsWith("?") ? rawSearch.slice(1) : rawSearch;
   const searchParams = new URLSearchParams(search);
@@ -68,7 +78,7 @@ const GoogleCallbackPage = () => {
   const navigate = useNavigate();
   const auth = useAuth();
 
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,10 +86,7 @@ const GoogleCallbackPage = () => {
     async function finish() {
       const params = getOAuthParams();
 
-      // Prefer params from the URL, but fall back to a cached copy.
-      // React 18 StrictMode intentionally mounts effects twice in development; the first
-      // run clears the hash, so the second run would otherwise see no token.
-      const urlPayload = {
+      const urlPayload: OAuthCallbackPayload = {
         access_token:
           params.get("access_token") || params.get("token") || params.get("accessToken"),
         token_type: params.get("token_type") || params.get("tokenType"),
@@ -112,7 +119,6 @@ const GoogleCallbackPage = () => {
         return;
       }
 
-      // Remove the token fragment from the URL as soon as possible.
       try {
         window.history.replaceState({}, document.title, window.location.pathname);
       } catch {
@@ -120,28 +126,26 @@ const GoogleCallbackPage = () => {
       }
 
       try {
-        // SSO sessions must use sessionStorage (remember=false).
         await auth.loginWithAccessToken(accessToken, false);
         clearCachedCallbackParams();
         if (!cancelled) {
-          // Hard redirect so we always leave the callback page after external OAuth.
           window.location.replace("/dashboard");
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err?.message || "Google sign-in failed. Please try again.");
+          const msg = err instanceof Error ? err.message : "Google sign-in failed. Please try again.";
+          setError(msg);
         }
         clearCachedCallbackParams();
       }
     }
 
-    finish();
+    void finish();
     return () => {
       cancelled = true;
     };
-    // We intentionally run this effect only once on initial load of the callback page.
-    // AuthContext updates after login would otherwise re-run the effect and the URL
-    // hash may already be cleared, leading to a false “missing access token” error.
+    // Intentionally run once on mount — see comment in original implementation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -210,4 +214,3 @@ const GoogleCallbackPage = () => {
 };
 
 export default GoogleCallbackPage;
-

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const navLinks = [
+const navLinks: { label: string; href: string }[] = [
   { label: "Home", href: "/" },
   { label: "Features", href: "/#features" },
   { label: "Benefits", href: "/#benefits" },

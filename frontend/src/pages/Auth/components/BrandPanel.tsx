@@ -1,7 +1,7 @@
 import React from "react";
-import { Lock, Zap, BarChart3 } from "lucide-react";
+import { Lock, Zap, BarChart3, type LucideIcon } from "lucide-react";
 
-const brandFeatures = [
+const brandFeatures: { icon: LucideIcon; text: string }[] = [
   { icon: Lock, text: "Enterprise-grade security & encryption" },
   { icon: Zap, text: "Real-time compliance monitoring" },
   { icon: BarChart3, text: "Actionable reporting & insights" },
@@ -11,10 +11,7 @@ const BrandPanel = () => {
   return (
     <section className="login-brand" aria-labelledby="brand-title">
       {Array.from({ length: 6 }).map((_, index) => (
-        <span
-          key={index}
-          className={`brand-particle brand-particle-${index + 1}`}
-        />
+        <span key={index} className={`brand-particle brand-particle-${index + 1}`} />
       ))}
 
       <div className="brand-content">
