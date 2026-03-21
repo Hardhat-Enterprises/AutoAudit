@@ -56,7 +56,7 @@ const standards = [
 const AboutUs = ({ onSignInClick = () => {} }) => {
   return (
     <div className="about-page">
-      <LandingHeader onSignInClick={onSignInClick} hiddenLinks={["About"]} />
+      <LandingHeader onSignInClick={onSignInClick} />
 
       <main>
         <section className="about-hero" id="home">

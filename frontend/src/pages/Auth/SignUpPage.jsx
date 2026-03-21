@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./LoginPage.css";
 import "./SignUpPage.css";
-import LoginHeader from "./components/LoginHeader";
+import LandingHeader from "../Landing/components/LandingHeader";
 import LandingFooter from "../Landing/components/LandingFooter";
 import SignupBrandPanel from "./components/SignupBrandPanel";
 import SignupFormPanel from "./components/SignupFormPanel";
@@ -50,7 +50,7 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
 
   return (
     <div className="login-page signup-page">
-      <LoginHeader />
+      <LandingHeader />
       <main className="login-main signup-main">
         <SignupBrandPanel />
         <SignupFormPanel
