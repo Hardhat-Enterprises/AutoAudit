@@ -4,6 +4,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SignInPanel from './SignInPanel';
 import { useAuth } from '../../../context/AuthContext';
+import { expectedGoogleAuthorizeUrl } from '../../../test/oauthTestHelpers';
 
 vi.mock('../../../context/AuthContext', () => ({
   useAuth: vi.fn(),
@@ -102,7 +103,7 @@ describe('SignInPanel', () => {
     render(<SignInPanel />);
     await userEvent.click(screen.getByRole('button', { name: /^google$/i }));
 
-    expect(assignSpy).toHaveBeenCalledWith('https://api.test.local/v1/auth/google/authorize');
+    expect(assignSpy).toHaveBeenCalledWith(expectedGoogleAuthorizeUrl());
 
     Object.defineProperty(window, 'location', {
       configurable: true,

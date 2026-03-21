@@ -109,8 +109,11 @@ describe('ContactAdminPage', () => {
       screen.getByRole('heading', { level: 2, name: /need compliance help/i })
     ).toBeInTheDocument();
 
-    expect(vi.mocked(getContactNotes)).toHaveBeenCalledWith('test-token', 42);
-    expect(vi.mocked(getContactHistory)).toHaveBeenCalledWith('test-token', 42);
+    // Detail fetches run in useEffect after the render that shows the list; wait for them.
+    await waitFor(() => {
+      expect(vi.mocked(getContactNotes)).toHaveBeenCalledWith('test-token', 42);
+      expect(vi.mocked(getContactHistory)).toHaveBeenCalledWith('test-token', 42);
+    });
   });
 
   test('shows error when loading submissions fails', async () => {
