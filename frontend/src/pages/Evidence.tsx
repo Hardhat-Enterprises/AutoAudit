@@ -18,7 +18,31 @@ import './Evidence.css';
 // treat the scan as "not readable / not relevant" and suppress findings in the UI.
 const MIN_VALIDATOR_MATCHED_TERMS = 1;
 
-const EvidenceExtract = ({ evidence }) => {
+// Types for backend payloads
+type EvidenceStrategy = {
+  name: string;
+  description?: string;
+  category?: string;
+  severity?: string;
+  evidence_types?: string[];
+};
+type EvidenceFinding = {
+  test_id?: string;
+  sub_strategy?: string;
+  pass_fail?: string;
+  recommendation?: string;
+  evidence?: unknown;
+};
+type ValidatorSummary = { totalTerms?: number; matchedCount?: number };
+type EvidenceResults = {
+  validator?: { summary?: ValidatorSummary };
+  findings?: EvidenceFinding[];
+  reports?: string[];
+  note?: string;
+};
+type EvidencePageProps = { sidebarWidth?: number; isDarkMode?: boolean };
+
+const EvidenceExtract = ({ evidence }: { evidence: unknown }) => {
   // Frontend helper to render the "Evidence Extract" cell.
   // The backend returns `finding.evidence` as an array of strings (or sometimes an object),
   // and we normalize that into display text for the <pre> block.
@@ -53,13 +77,13 @@ const EvidenceExtract = ({ evidence }) => {
   );
 };
 
-const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
+const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) => {
   // ------------------------------
   // Frontend UI state (React).
   // ------------------------------
   // Available strategies to show in the dropdown (fetched from backend).
 
-  const [observedSidebarWidth, setObservedSidebarWidth] = useState(sidebarWidth);
+  const [observedSidebarWidth, setObservedSidebarWidth] = useState<number>(sidebarWidth);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
@@ -89,7 +113,7 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
       typeof window !== 'undefined' ? window.location.origin : null,
       'http://localhost:8000',
     ]
-      .filter(Boolean)
+      .filter((r): r is string => typeof r === 'string' && r.length > 0)
       .map((root) => root.replace(/\/+$/, ''));
 
     const urls = roots.map((root) => `${root}/v1/evidence`);
@@ -97,24 +121,24 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
     return urls.filter((url, idx) => urls.indexOf(url) === idx);
   }, []);
 
-  const [apiBase, setApiBase] = useState(() => apiCandidates[0] || '');
-  const [strategies, setStrategies] = useState([]);
+  const [apiBase, setApiBase] = useState<string>(() => apiCandidates[0] || '');
+  const [strategies, setStrategies] = useState<EvidenceStrategy[]>([]);
   // Currently selected strategy name (used in scan request).
-  const [selectedStrategy, setSelectedStrategy] = useState('');
+  const [selectedStrategy, setSelectedStrategy] = useState<string>('');
   // The file chosen in the <input type="file"> (sent to backend).
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   // While a scan request is in-flight (used to disable button + show spinner).
   const [isScanning, setIsScanning] = useState(false);
   // User-facing error message for strategy load / scan errors.
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
   // Full JSON payload returned by the backend scan endpoint.
-  const [results, setResults] = useState(null);
+  const [results, setResults] = useState<EvidenceResults | null>(null);
   // While we're loading strategies for the dropdown.
   const [isLoadingStrategies, setIsLoadingStrategies] = useState(true);
 
   // File input is uncontrolled (browser-owned), so keep a ref to clear it when we reset state.
   // This prevents the UI from showing a filename while `selectedFile` is null (which disables the scan button).
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Auth token from AuthContext (frontend).
   // Used as Bearer token when calling POST /v1/evidence/scan.
@@ -172,9 +196,9 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
       setIsLoadingStrategies(true);
       try {
         const data = await getEvidenceStrategies();
-        setStrategies(Array.isArray(data) ? data : []);
+        setStrategies(Array.isArray(data) ? (data as EvidenceStrategy[]) : []);
       } catch (err) {
-        setError(err.message || 'Unable to load strategies.');
+        setError(err instanceof Error ? err.message : 'Unable to load strategies.');
       } finally {
         setIsLoadingStrategies(false);
       }
@@ -212,17 +236,17 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
       'htm',
       'html'
     ];
-    const list =
+    const list: string[] =
       selectedStrategyData?.evidence_types && selectedStrategyData.evidence_types.length > 0
         ? selectedStrategyData.evidence_types
         : fallback;
-    return list.map((ext) => (ext.startsWith('.') ? ext : `.${ext}`)).join(',');
+    return list.map((ext: string) => (ext.startsWith('.') ? ext : `.${ext}`)).join(',');
   }, [selectedStrategyData]);
 
   // When the user picks a different strategy:
   // - clear the selected file (since file requirements may change)
   // - clear previous results/errors to avoid confusion
-  const handleStrategyChange = (e) => {
+  const handleStrategyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedStrategy(e.target.value);
     setSelectedFile(null);
     // Also clear the native file input value so the browser UI matches our state.
@@ -236,9 +260,9 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
   // When the user selects a file:
   // - store the File object for upload
   // - clear any previous error
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    setSelectedFile(file || null);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setSelectedFile(file);
     setError('');
   };
 
@@ -275,15 +299,16 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
       // { ok: true, findings: [...], reports: [...], note?: string }
       setResults(data);
     } catch (err) {
-      setError(err.message || 'Scan failed. Please try again.');
+      setError(err instanceof Error ? err.message : 'Scan failed. Please try again.');
     } finally {
       setIsScanning(false);
     }
   };
 
   // Map PASS/FAIL/WARNING to CSS badge classes (frontend).
-  const getStatusClass = (status) => {
-    switch (status?.toUpperCase()) {
+  const getStatusClass = (status: unknown) => {
+    const s = typeof status === 'string' ? status.toUpperCase() : String(status ?? '').toUpperCase();
+    switch (s) {
       case 'PASS':
         return 'status-pass';
       case 'FAIL':
@@ -445,7 +470,7 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {findings.map((finding, index) => {
+                    {findings.map((finding: EvidenceFinding, index: number) => {
                       return (
                         <tr className="results-row" key={index}>
                           <td>
