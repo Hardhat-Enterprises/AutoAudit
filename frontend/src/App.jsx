@@ -146,10 +146,11 @@ function App() {
   };
 
   const handleThemeToggle = () => {
-    setIsDarkMode(!isDarkMode);
-    localStorage.setItem('theme', !isDarkMode ? 'dark' : 'light');
+    let newThemeIsDark = !isDarkMode;
+    setIsDarkMode(newThemeIsDark);
+    localStorage.setItem('theme', newThemeIsDark ? 'dark' : 'light');
     const root = document.documentElement;
-    if (!isDarkMode) {
+    if (newThemeIsDark) {
       root.classList.remove('light');
     } else {
       root.classList.add('light');
