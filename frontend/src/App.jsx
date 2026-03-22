@@ -102,14 +102,10 @@ function App() {
 
   // Theme management
   useEffect(() => {
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-    const root = document.documentElement;
-    if (isDarkMode) {
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-    }
-  }, [isDarkMode]);
+    let theme = localStorage.getItem('theme') ?? 'dark';
+    
+    setIsDarkMode(theme == 'dark');
+  }, []);
 
   // Authentication handlers
   const handleUserLogin = async (email, password, remember = true) => {
@@ -138,6 +134,13 @@ function App() {
 
   const handleThemeToggle = () => {
     setIsDarkMode(!isDarkMode);
+    localStorage.setItem('theme', !isDarkMode ? 'dark' : 'light');
+    const root = document.documentElement;
+    if (!isDarkMode) {
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+    }
   };
 
   const handleSidebarWidthChange = (width) => {
