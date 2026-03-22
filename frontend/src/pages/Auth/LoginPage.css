@@ -1,11 +1,11 @@
 .login-page {
   --bg-dark: #0a1628;
   --bg-darker: #0f1f38;
-  --text-main: #ffffff;
-  --text-muted: #b0c4de;
-  --accent: #3b82f6;
-  --accent-strong: #2563eb;
-  --border: rgba(59, 130, 246, 0.1);
+  --color-main: #ffffff;
+  --color-muted: #b0c4de;
+  --color-accent: #3b82f6;
+  --color-accent-strong: #2563eb;
+  --color-border: rgba(59, 130, 246, 0.1);
 
   min-height: 100vh;
   background: #0a1628;

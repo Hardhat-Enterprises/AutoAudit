@@ -5,8 +5,6 @@ id           := "CIS_GCP_2_6"
 title        := "Ensure That the Log Metric Filter and Alerts Exist for Custom Role Changes"
 policy_group := "Logging and Monitoring"
 
-<<<<<<< HEAD
-=======
 verification := `Ensure that the prescribed log metric is present:
 1. List the log metrics:
 gcloud logging metrics list --format json
@@ -31,7 +29,6 @@ remediation := `Create the prescribed Log Metric:
 Create the prescribed Alert Policy:
 • Use the command: gcloud alpha monitoring policies create`
 
->>>>>>> 99b403da (finished final group 2 policy tagging with verification and remediaton)
 deny := { v |
   not custom_role_metric_exists
   v := sprintf("Project %q: Missing logs-based metric for IAM custom role changes", [input.project_id])
@@ -58,8 +55,4 @@ alert_policy_referencing_user_metric_enabled {
   contains(filt, "logging.googleapis.com/user/")
 }
 
-<<<<<<< HEAD
-report := H.build_report(deny, id, title, policy_group)
-=======
 report := H.build_report(deny, id, title, policy_group, verification, remediation)
->>>>>>> 99b403da (finished final group 2 policy tagging with verification and remediaton)

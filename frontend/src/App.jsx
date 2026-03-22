@@ -3,11 +3,11 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 // Dashboard Components
 import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
-import Evidence from './pages/Evidence';
-import SettingsPage from './pages/SettingsPage';
-import AccountPage from './pages/AccountPage';
-import StyleGuide from './pages/StyleGuide';
+import Dashboard from './pages/Dashboard.tsx';
+import Evidence from './pages/Evidence.tsx';
+import SettingsPage from './pages/SettingsPage.tsx';
+import AccountPage from './pages/AccountPage.tsx';
+import StyleGuide from './pages/StyleGuide.tsx';
 import ConnectionsPage from './pages/Connections/ConnectionsPage';
 import ScansPage from './pages/Scans/ScansPage';
 import ScanDetailPage from './pages/Scans/ScanDetailPage';
@@ -18,6 +18,7 @@ import AboutUs from './pages/Landing/AboutUs';
 import ContactPage from './pages/Contact/ContactPage';
 import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
+import ContactAdminPage from './pages/Admin/ContactAdminPage.jsx';
 import GoogleCallbackPage from './pages/Auth/GoogleCallbackPage';
 
 // Auth Context
@@ -43,6 +44,29 @@ const ProtectedRoute = ({ children }) => {
   }
 
   return isAuthenticated ? children : null;
+};
+
+// Admin-only Route Component
+const AdminRoute = ({ children }) => {
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    if (user?.role !== 'admin') {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, isLoading, navigate, user]);
+
+  if (isLoading) {
+    return <div className="loading">Loading...</div>;
+  }
+
+  return isAuthenticated && user?.role === 'admin' ? children : null;
 };
 
 // Dashboard Layout Component (with sidebar)
@@ -178,6 +202,15 @@ function App() {
               onBackToLogin={() => navigate('/login')}
             />
           } 
+        />
+
+        <Route
+          path="/admin/contact-submissions"
+          element={
+            <AdminRoute>
+              <ContactAdminPage />
+            </AdminRoute>
+          }
         />
 
         {/* Protected Dashboard Routes */}

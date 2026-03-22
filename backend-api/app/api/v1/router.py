@@ -1,5 +1,15 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, test, evidence, m365_connections, scans, benchmarks, platforms
+from app.api.v1 import (
+    auth,
+    benchmarks,
+    contact,
+    evidence,
+    m365_connections,
+    platforms,
+    scans,
+    settings,
+    test,
+)
 
 api_router = APIRouter()
 
@@ -23,3 +33,9 @@ api_router.include_router(benchmarks.router)
 
 # Evidence routes
 api_router.include_router(evidence.router)
+
+# Contact routes
+api_router.include_router(contact.router)
+
+# User settings routes
+api_router.include_router(settings.router)

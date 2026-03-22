@@ -1,174 +1,251 @@
-//This component establishes a chart to display the number of scan items which returned as passed, requiring attention, or failed
-//Last updated 18 September 2025
-//Recomended next changes:
-//  -add a switch case for more chart types besides just pie and doughnot. Some of the chart types have slightly different syntax to each other so a little more work is needed on this. 
-// - the legend is functional but the text doesn't look amazing. Played around with font settings and layout but can't get it to look quite right. Worth reviewing!
+import React, { useMemo } from 'react';
+import ReactApexChart from 'react-apexcharts';
 
-//Note: no css for this component as this is purely javascript (no JSX) and the libary in use (charts.js) has its own parameters for styling  
+const normalizeNumbers = (arr, fallback = []) => {
+  if (!Array.isArray(arr)) return fallback;
+  return arr.map((n) => {
+    const num = Number(n);
+    return Number.isFinite(num) ? num : 0;
+  });
+};
 
-//To render this component:
-//import ComplianceChart from './components/ComplianceChart';
-//<ComplianceChart chartType={selectedChartType} dataInput = {[array of three numbers]}></ComplianceChart>
-//'doughnut' and 'pie' are current options for selectedChartType
+const colorForLabel = (label, isDarkMode) => {
+      const key = String(label || '').toLowerCase();
+      if (key.includes('pass')) return '#10b981';
+      if (key.includes('fail')) return '#ef4444';
+      if (key.includes('error') || key.includes('err')) return '#f59e0b';
+      if (key.includes('skip')) return isDarkMode ? 'rgba(148,163,184,0.55)' : 'rgba(71,85,105,0.45)';
+      return isDarkMode ? 'rgba(148,163,184,0.55)' : 'rgba(71,85,105,0.45)';
+    };
 
-import React, { useRef, useEffect } from 'react';
-import '@fontsource/league-spartan';
+// ApexCharts-backed replacement for the old Chart.js component.
+// Keeps the same props API used by Dashboard.jsx:
+// - chartType: 'doughnut' | 'pie' | 'bar'
+// - labelsInput: string[]
+// - dataInput: number[]
+// - isDarkMode: boolean
+const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1], labelsInput = [], isDarkMode = true }) => {
+  const isBar = chartType === 'bar';
 
-// Imports only the minimum required components below
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  Title,
-  DoughnutController,
-} from 'chart.js';
+  const {
+    series,
+    options,
+    height,
+  } = useMemo(() => {
+    const textColor = isDarkMode ? '#ffffff' : '#1e293b';
+    const mutedText = isDarkMode ? 'rgba(160,165,175,0.95)' : 'rgba(71,85,105,0.95)';
+    const grid = isDarkMode ? 'rgba(148,163,184,0.12)' : 'rgba(15,23,42,0.08)';
+    const tooltipTheme = isDarkMode ? 'dark' : 'light';
+    const fontFamily = '"League Spartan", "Inter", system-ui, -apple-system, "Segoe UI", Arial';
 
+    const normalized = normalizeNumbers(dataInput, [1, 1]);
 
-ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend,
-  DoughnutController,
-  Title
-);
+    if (isBar) {
+      const categories = Array.isArray(labelsInput) && labelsInput.length > 0
+        ? labelsInput.map((x) => String(x))
+      : normalized.map((_, i) => `#${i + 1}`);
 
-//Accepts chartType and dataInput as parameters. ChartType currently supports doughnut and pie chart, more to be added later.
-//Also needs to be provided with isDarkMode to copy theming from parent.
-//dataInput should be an array of 3 numbers, being, in order, number of High Priority Items, Medium Priority Items, and Passed Items.
-//This should be made more robust in future. For now, since the graph is only used for one very consistent thing, this is functional. 
-//Fallback to 1,1,1 as array if error in data.
-const ComplianceChart = ({ chartType = 'doughnut', dataInput = [1, 1, 1] , isDarkMode = true}) => {
-  const chartRef = useRef(null);
-  const chartInstanceRef = useRef(null);
+      const values = normalized;
+        const avg = values.length > 0 ? (values.reduce((a, b) => a + b, 0) / values.length) : 0;
 
- const getTextColor = (darkMode) => {
-    return darkMode ? '#ffffff' : '#1e293b';
-  };
-
-  useEffect(() => {
-    const ctx = chartRef.current.getContext('2d');
-    const textColor = getTextColor(isDarkMode);
-   
-    if (chartInstanceRef.current) {
-      chartInstanceRef.current.destroy();
+      return {
+        series: [
+          {
+            name: 'Compliance %',
+            type: 'column',
+            data: values,
+          },
+          {
+            name: 'Trend',
+            type: 'line',
+            data: values.map(() => Math.round(avg * 10) / 10),
+          },
+        ],
+        height: '100%',
+        options: {
+          chart: {
+            type: 'line',
+            stacked: false,
+            toolbar: { show: false },
+            zoom: { enabled: false },
+            background: 'transparent',
+            fontFamily,
+            animations: { enabled: true, easing: 'easeinout', speed: 650 },
+            foreColor: mutedText,
+          },
+          theme: { mode: isDarkMode ? 'dark' : 'light' },
+          grid: {
+            borderColor: grid,
+            strokeDashArray: 3,
+            padding: { top: 12, right: 14, bottom: 6, left: 12 },
+          },
+          xaxis: {
+            categories,
+            labels: { style: { colors: mutedText, fontWeight: 600 } },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+            tooltip: { enabled: false },
+          },
+          yaxis: {
+            min: 0,
+            max: 100,
+            tickAmount: 5,
+            labels: {
+              formatter: (v) => `${Math.round(v)}`,
+              style: { colors: mutedText, fontWeight: 600 },
+            },
+          },
+          legend: {
+            show: true,
+            position: 'bottom',
+            fontSize: '12px',
+            labels: { colors: mutedText },
+            markers: { radius: 12, width: 8, height: 8 },
+            itemMargin: { horizontal: 10, vertical: 6 },
+          },
+          tooltip: {
+            theme: tooltipTheme,
+            fillSeriesColor: false,
+            marker: { show: false },
+            style: { fontSize: '12px', fontFamily },
+            x: { show: true },
+            y: { formatter: (v) => `${Math.round(v)}%` },
+          },
+          stroke: {
+            width: [0, 2.5],
+            curve: 'straight',
+          },
+          markers: {
+            size: 0,
+            strokeWidth: 0,
+          },
+          colors: ['rgba(16,185,129,0.55)', 'rgba(16,185,129,0.95)'],
+          plotOptions: {
+            bar: {
+              borderRadius: 10,
+              columnWidth: '42%',
+            },
+          },
+          dataLabels: { enabled: false },
+        },
+      };
     }
 
-    // Data styling 
-    const data = {
-      labels: ['High Priority Issues', 'Medium Priority Issues', 'Pass'],
-      datasets: [{
-        data: dataInput,
-        backgroundColor: [
-          '#ef4444',
-          '#f97316',
-          '#10b981',
-        ],
-        borderColor: [
-          '#ef4444',
-          '#f97316',
-          '#10b981',
-        ],
-        borderWidth: 2,
-        hoverOffset: 20
-      }]
-    };
+    // Pie / Donut
+    const defaultLabels = ['Pass', 'Fail'];
+    const rawLabels = Array.isArray(labelsInput) && labelsInput.length > 0 ? labelsInput : defaultLabels;
+    const labels = rawLabels.map((x) => String(x));
+    const values = labels.map((_, i) => Number(normalized[i] || 0));
 
-    //CONFIG AREA
-    //Main chart area config
-    const config = {
-      type: 'doughnut',
-      data: data,
+    const sum = values.reduce((a, b) => a + b, 0);
+    const hasData = sum > 0;
+
+    const safeLabels = hasData ? labels : ['No data'];
+    const safeValues = hasData ? values : [1];
+    const colors = hasData
+      ? safeLabels.map((l) => colorForLabel(l, isDarkMode))
+      : [isDarkMode ? 'rgba(148,163,184,0.25)' : 'rgba(71,85,105,0.25)'];
+
+    const passIdx = safeLabels.findIndex((l) => String(l).toLowerCase().includes('pass'));
+    const failIdx = safeLabels.findIndex((l) => String(l).toLowerCase().includes('fail'));
+    const pass = passIdx >= 0 ? Number(safeValues[passIdx] || 0) : 0;
+    const fail = failIdx >= 0 ? Number(safeValues[failIdx] || 0) : 0;
+    const denom = pass + fail;
+    const compliancePct = denom > 0 ? Math.round((pass / denom) * 100) : null;
+    const centerText = hasData ? (compliancePct === null ? '—' : `${compliancePct}%`) : '—';
+    const centerSub = hasData ? 'COMPLIANCE' : 'NO RESULTS';
+
+    const apexType = chartType === 'pie' ? 'pie' : 'donut';
+
+    return {
+      series: safeValues,
+      height: '100%',
       options: {
-        responsive: true,
-        maintainAspectRatio: false, //Note: the graph will break the card system and expand the card even beyond !important limits if this is set to true!
-        
-        //This is a very placeholder chart switch system.
-        //If its a doughnut chart, cut out a 60% hole. If its a pie chart, don't cut a hole (so yes, technically the pie chart is a doughnut chart in disguise)
-        //This should definitely be replaced with a switch case in future to allow more diverse chart types like bar charts!
-        cutout: chartType === 'doughnut' ? '60%' : '0%', 
-
-        //This padding below is required so that the hovered section (which expands on hover) doesn't clip out of frame
-        //If you adjust the hover offset, increase this padding as well to give spare room
-        layout: {
-          padding: {
-            top: 25,
-            bottom: 25,
-            left: 25,
-            right: 25,
-          }
+        chart: {
+          type: apexType,
+          toolbar: { show: false },
+          background: 'transparent',
+          fontFamily,
+          animations: { enabled: true, easing: 'easeinout', speed: 650 },
+          foreColor: mutedText,
         },
-
-        plugins: {
-          
-          /* Code for a title. Re-enable title here if you want to use this independently. Currently the card system provides a title so we don't need it.
-          title: {
-            display: true,
-            text: 'Compliance Scan Results',
-            color: 'white',
-            font: {
-              size: 18,
-              weight: 'bold',
+        theme: { mode: isDarkMode ? 'dark' : 'light' },
+        labels: safeLabels,
+        colors,
+        legend: {
+          show: true,
+          position: 'bottom',
+          fontSize: '12px',
+          labels: { colors: mutedText },
+          markers: { radius: 12, width: 8, height: 8 },
+          itemMargin: { horizontal: 10, vertical: 6 },
+        },
+        stroke: {
+          show: false,
+          width: 0,
+        },
+        dataLabels: {
+          enabled: false,
+        },
+        tooltip: {
+          theme: tooltipTheme,
+          fillSeriesColor: false,
+          marker: { show: false },
+          style: { fontSize: '12px', fontFamily },
+          y: {
+            formatter: (value) => {
+              if (!hasData) return `${value}`;
+              const total = safeValues.reduce((a, b) => a + b, 0);
+              const pct = total > 0 ? ((Number(value || 0) / total) * 100).toFixed(1) : '0.0';
+              return `${value} (${pct}%)`;
             },
-            padding: 20
           },
-          */
-
-          //Legend configuration
-          legend: {
-            position: 'bottom',
-            labels: {
-              padding: 45,
-              color: textColor,
-              usePointStyle: true,
-              font: {
-                size: 16,
-                /*family: '"League Spartan", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',*/
-              },
-            }
-          },
-
-
-          //Tooltip configuration
-          //The tooltip will display when you hover over a section of the chart
-          tooltip: {
-            position: 'nearest',
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.parsed;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percentage = ((value / total) * 100).toFixed(1);
-                return ` ${label}: ${value} items (${percentage}%)`;
-              }
-            }
-          }
         },
-        animation: {
-          animateScale: true,
-          animateRotate: true
-        }
-      }
+        plotOptions: {
+          pie: {
+            expandOnClick: false,
+            donut: {
+              size: chartType === 'doughnut' ? '70%' : '0%',
+              labels: {
+                show: chartType === 'doughnut',
+                name: {
+                  show: true,
+                  offsetY: 22,
+                  color: mutedText,
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  formatter: () => centerSub,
+                },
+                value: {
+                  show: true,
+                  offsetY: -6,
+                  color: textColor,
+                  fontSize: '34px',
+                  fontWeight: 700,
+                  formatter: () => centerText,
+                },
+              },
+            },
+          },
+        },
+        responsive: [
+          {
+            breakpoint: 480,
+            options: {
+              legend: { fontSize: '11px' },
+            },
+          },
+        ],
+      },
     };
+  }, [chartType, dataInput, labelsInput, isDarkMode, isBar]);
 
+  const type = isBar ? 'line' : (chartType === 'pie' ? 'pie' : 'donut');
 
-
-
-    //Instantiate the chart
-    chartInstanceRef.current = new ChartJS(ctx, config);
-
-    //Destroy the existing chart (if any) 
-    return () => {
-      if (chartInstanceRef.current) {
-        chartInstanceRef.current.destroy();
-      }
-    };
-  }, [chartType, dataInput]); //Re-render if the chartType or data is changed 
-
-  //Scale to fit the max size provided with the card
+  // Fill parent container (Dashboard controls height via CSS).
   return (
-    <div style={{ width: '100%', height: '100%', padding: '0px' }}> 
-      <canvas ref={chartRef}></canvas>
+    <div className={`compliance-chart ${isBar ? 'chart-bar' : 'chart-pie'}`} style={{ width: '100%', height: '100%' }}>
+      <ReactApexChart options={options} series={series} type={type} height={height} />
     </div>
   );
 };
