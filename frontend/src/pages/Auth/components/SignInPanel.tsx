@@ -194,7 +194,11 @@ const SignInPanel = ({ onLogin, onSignUpClick }: SignInPanelProps) => {
             </a>
           </div>
 
-          <button type="submit" className="btn-signin" disabled={isLoading}>
+          <button
+  type="submit"
+  className="btn-signin"
+  disabled={isLoading}
+  >
             {isLoading ? (
               <>
                 <Loader2
