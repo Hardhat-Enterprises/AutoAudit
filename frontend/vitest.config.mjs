@@ -1,7 +1,7 @@
 /**
  * Vitest config (ESM). Used when running `npm run test`.
  * Kept as .mjs so Node loads it as ESM and avoids esbuild/CJS issues with plugins.
- * Setup and test files are TypeScript (.ts / .tsx).
+ * Setup file is JavaScript; tests may be .ts / .tsx.
  *
  * Env: same rules as Vite dev — `loadEnv(mode, cwd)` loads `.env`, `.env.local`, `.env.[mode]`, etc.
  * If `VITE_API_URL` is missing (e.g. no `.env` in CI), fall back to the value in committed `.env.example`
@@ -51,7 +51,7 @@ export default defineConfig(({ mode }) => {
     define,
     test: {
       environment: 'jsdom',
-      setupFiles: ['./vitest.setup.ts'],
+      setupFiles: ['./vitest.setup.js'],
       include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
       globals: false,
     },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 
 // Dashboard Components
 import Sidebar from './components/Sidebar';
@@ -18,7 +18,6 @@ import AboutUs from './pages/Landing/AboutUs';
 import ContactPage from './pages/Contact/ContactPage';
 import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
-import type { SignUpSubmitPayload } from './pages/Auth/signUpTypes';
 import ContactAdminPage from './pages/Admin/ContactAdminPage';
 import GoogleCallbackPage from './pages/Auth/GoogleCallbackPage';
 
@@ -30,7 +29,7 @@ import { register as apiRegister } from './api/client';
 import './styles/global.css';
 
 // Protected Route Component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -48,7 +47,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 // Admin-only Route Component
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+const AdminRoute = ({ children }) => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, user } = useAuth();
 
@@ -71,15 +70,13 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 // Dashboard Layout Component (with sidebar)
-interface DashboardLayoutProps {
-  children: React.ReactElement;
-  sidebarWidth: number;
-  isDarkMode: boolean;
-  onThemeToggle: () => void;
-  onSidebarWidthChange: (width: number) => void;
-}
-
-const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle, onSidebarWidthChange }: DashboardLayoutProps) => {
+const DashboardLayout = ({
+  children,
+  sidebarWidth,
+  isDarkMode,
+  onThemeToggle,
+  onSidebarWidthChange,
+}) => {
   return (
     <>
       <Sidebar onWidthChange={onSidebarWidthChange} isDarkMode={isDarkMode} />
@@ -92,7 +89,7 @@ function App() {
   const auth = useAuth();
 
   // Dashboard state
-  const getInitialSidebarWidth = (): number => {
+  const getInitialSidebarWidth = () => {
     if (typeof window === 'undefined') return 220;
     try {
       const stored = window.localStorage.getItem('sidebarExpanded');
@@ -106,7 +103,6 @@ function App() {
   const [sidebarWidth, setSidebarWidth] = useState(getInitialSidebarWidth);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  const location = useLocation();
   const navigate = useNavigate();
 
   // Theme management
@@ -121,17 +117,17 @@ function App() {
   }, [isDarkMode]);
 
   // Authentication handlers
-  const handleUserLogin = async (email: string, password: string, remember = true): Promise<void> => {
+  const handleUserLogin = async (email, password, remember = true) => {
     await auth.login(email, password, remember);
     navigate('/dashboard');
   };
 
-  const handleUserLogout = (): void => {
+  const handleUserLogout = () => {
     auth.logout();
     navigate('/');
   };
 
-  const handleSignUp = async (signUpData: SignUpSubmitPayload): Promise<void> => {
+  const handleSignUp = async (signUpData) => {
     const email = signUpData.email;
     const password = signUpData.password;
 
@@ -144,11 +140,11 @@ function App() {
     navigate('/dashboard');
   };
 
-  const handleThemeToggle = (): void => {
+  const handleThemeToggle = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  const handleSidebarWidthChange = (width: number): void => {
+  const handleSidebarWidthChange = (width) => {
     setSidebarWidth(width);
   };
 
