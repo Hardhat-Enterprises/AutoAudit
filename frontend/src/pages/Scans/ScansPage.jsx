@@ -375,7 +375,7 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                              <div className="date">{dt.date}</div>
                              <div className="time">{dt.time}</div>
 
-                             {/* ✅ NEW: Relative time */}
+                             {/* NEW: Relative time */}
                              <div className="relative-time">
                                {formatRelativeTime(timestamp)}
                              </div>
