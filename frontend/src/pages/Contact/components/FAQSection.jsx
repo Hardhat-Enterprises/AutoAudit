@@ -33,20 +33,66 @@ const faqItems = [
   },
 ];
 
-const FAQItem = ({ question, answer, isActive, onToggle }) => (
+const highlight = (text, query) => {
+  if (!query.trim()) return text;
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    regex.test(part) ? <mark key={i} className="faq-highlight">{part}</mark> : part
+  );
+};
+
+const FAQItem = ({ question, answer, isActive, onToggle, searchQuery, feedback, onFeedback }) => (
   <article className={`faq-item ${isActive ? "active" : ""}`}>
     <button className="faq-question" type="button" onClick={onToggle}>
-      <span>{question}</span>
+      <span>{highlight(question, searchQuery)}</span>
       <span className="faq-icon">+</span>
     </button>
     <div className="faq-answer">
-      <div className="faq-answer-content">{answer}</div>
+      <div className="faq-answer-content">
+        <p>{highlight(answer, searchQuery)}</p>
+        <div className="faq-feedback">
+          <span className="faq-feedback-label">Was this helpful?</span>
+          <button
+            className={`faq-feedback-btn ${feedback === "yes" ? "active" : ""}`}
+            onClick={() => onFeedback("yes")}
+            aria-label="Yes, this was helpful"
+          >
+            👍
+          </button>
+          <button
+            className={`faq-feedback-btn ${feedback === "no" ? "active" : ""}`}
+            onClick={() => onFeedback("no")}
+            aria-label="No, this was not helpful"
+          >
+            👎
+          </button>
+          {feedback && (
+            <span className="faq-feedback-thanks">
+              {feedback === "yes" ? "Glad it helped!" : "Thanks for the feedback!"}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   </article>
 );
 
 const FAQSection = () => {
   const [activeIndex, setActiveIndex] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  // feedback is session-only (in-memory), resets on page refresh
+  const [feedbacks, setFeedbacks] = useState({});
+
+  const filtered = faqItems.filter(
+    ({ question, answer }) =>
+      question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      answer.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleFeedback = (index, value) => {
+    setFeedbacks((prev) => ({ ...prev, [index]: value }));
+  };
 
   return (
     <section className="faq-section" id="benefits">
@@ -56,16 +102,43 @@ const FAQSection = () => {
           <p>Quick answers to common questions about AutoAudit</p>
         </div>
 
-        {faqItems.map((item, index) => (
-          <FAQItem
-            key={item.question}
-            {...item}
-            isActive={activeIndex === index}
-            onToggle={() =>
-              setActiveIndex(activeIndex === index ? null : index)
-            }
+        <div className="faq-search-wrapper">
+          <input
+            type="text"
+            className="faq-search"
+            placeholder="Search questions..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setActiveIndex(null);
+            }}
+            aria-label="Search frequently asked questions"
           />
-        ))}
+          {searchQuery && (
+            <button className="faq-search-clear" onClick={() => setSearchQuery("")} aria-label="Clear search">
+              ✕
+            </button>
+          )}
+        </div>
+
+        {filtered.length > 0 ? (
+          filtered.map((item, index) => {
+            const originalIndex = faqItems.indexOf(item);
+            return (
+              <FAQItem
+                key={item.question}
+                {...item}
+                searchQuery={searchQuery}
+                isActive={activeIndex === index}
+                onToggle={() => setActiveIndex(activeIndex === index ? null : index)}
+                feedback={feedbacks[originalIndex]}
+                onFeedback={(value) => handleFeedback(originalIndex, value)}
+              />
+            );
+          })
+        ) : (
+          <p className="faq-no-results">No results found for "{searchQuery}"</p>
+        )}
       </div>
     </section>
   );
