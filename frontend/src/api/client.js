@@ -25,8 +25,6 @@ async function fetchWithAuth(endpoint, token, options = {}) {
   }
 
 try {
-  console.log("API Request:", endpoint);
-
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
@@ -39,14 +37,12 @@ try {
 
   return await response.json();
 } catch (error) {
-  console.error("API call failed:", error);
-
   if (error instanceof APIError) {
     throw error;
   }
 
-  throw new APIError("Network error occurred", 500, error);
- }
+  throw new APIError("Request failed before receiving a response", 0, error);
+}
 }
 
 // Auth endpoints
