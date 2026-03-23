@@ -3,11 +3,11 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 
 // Dashboard Components
 import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
-import Evidence from './pages/Evidence';
-import SettingsPage from './pages/SettingsPage';
-import AccountPage from './pages/AccountPage';
-import StyleGuide from './pages/StyleGuide';
+import Dashboard from './pages/Dashboard.tsx';
+import Evidence from './pages/Evidence.tsx';
+import SettingsPage from './pages/SettingsPage.tsx';
+import AccountPage from './pages/AccountPage.tsx';
+import StyleGuide from './pages/StyleGuide.tsx';
 import ConnectionsPage from './pages/Connections/ConnectionsPage';
 import ScansPage from './pages/Scans/ScansPage';
 import ScanDetailPage from './pages/Scans/ScanDetailPage';

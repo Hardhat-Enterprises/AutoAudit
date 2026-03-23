@@ -11,9 +11,22 @@ type AccountPageProps = {
   onThemeToggle?: () => void;
 };
 
+type AuthUser = {
+  email?: string | null;
+  username?: string | null;
+  name?: string | null;
+  id?: string | number | null;
+};
+
+type AuthContextValue = {
+  user: AuthUser | null;
+  token: string | null;
+  logout: () => void;
+};
+
 export default function AccountPage({ sidebarWidth = 220, isDarkMode = true }: AccountPageProps) {
   const navigate = useNavigate();
-  const { user, token, logout: clearAuth } = useAuth();
+  const { user, token, logout: clearAuth } = useAuth() as AuthContextValue;
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const primaryLabel =
