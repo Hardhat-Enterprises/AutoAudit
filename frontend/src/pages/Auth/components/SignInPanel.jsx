@@ -182,7 +182,11 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
             </a>
           </div>
 
-          <button type="submit" className="btn-signin" disabled={isLoading}>
+          <button
+  type="submit"
+  className="btn-signin"
+  disabled={isLoading}
+  >
             {isLoading ? (
               <>
                 <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />

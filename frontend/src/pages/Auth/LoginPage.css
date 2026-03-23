@@ -382,8 +382,7 @@
   padding: 1rem;
   border-radius: 12px;
   border: none;
-  background-color: rgba(255, 255, 255, 1);
-  background-image: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+  background-image: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: #ffffff;
   font-size: 1rem;
   font-weight: 600;
@@ -545,4 +544,20 @@
   .social-login {
     grid-template-columns: 1fr;
   }
+}
+.error-message {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 80, 80, 0.3);
+  background-color: rgba(255, 80, 80, 0.08);
+  color: #ff6b6b;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.form-helper {
+  margin-top: 4px;
+  color: #9aa3b2;
+  font-size: 12.5px;
+  line-height: 1.4;
 }
