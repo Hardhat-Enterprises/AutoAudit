@@ -1,7 +1,14 @@
 import React from "react";
+import type { LucideIcon } from "lucide-react";
 import { Timer, Target, ShieldCheck, Lightbulb } from "lucide-react";
 
-const benefits = [
+type Benefit = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+};
+
+const benefits: Benefit[] = [
   {
     icon: Timer,
     title: "Save Time & Resources",

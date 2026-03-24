@@ -1,59 +1,92 @@
 import React from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  Link2,
+  ClipboardList,
+  Bolt,
+  BarChart3,
+  Shield,
+  Rocket,
+} from "lucide-react";
 import "./AboutUs.css";
 import "./LandingPage.css";
 import LandingHeader from "./components/LandingHeader";
 import LandingFooter from "./components/LandingFooter";
 
-const features = [
+type AboutFeature = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+};
+
+type SupportedStandard = {
+  title: string;
+  description: string;
+};
+
+type AboutUsProps = {
+  onSignInClick?: () => void;
+};
+
+const features: AboutFeature[] = [
   {
-    icon: "🔗",
+    icon: Link2,
     title: "Microsoft 365 Integration",
     description:
       "Secure Graph API integration monitors MFA enforcement, audit logging, and conditional access policies in real-time.",
   },
   {
-    icon: "📋",
+    icon: ClipboardList,
     title: "CIS Benchmark Compliance",
     description:
       "Automatically assess cloud configurations against CIS Microsoft 365 Foundations Benchmark and surface posture gaps.",
   },
   {
-    icon: "⚡",
+    icon: Bolt,
     title: "Automated Scanning",
     description:
       "Continuous monitoring of security settings, sharing permissions, and policies catches issues before they escalate.",
   },
   {
-    icon: "📊",
+    icon: BarChart3,
     title: "Actionable Reports",
     description:
       "Generate audit-ready compliance reports with risk assessments and remediation guidance in minutes.",
   },
   {
-    icon: "🛡️",
+    icon: Shield,
     title: "Enterprise-Grade Security",
     description:
       "Bank-level encrypted data handling with a zero-knowledge architecture keeps your sensitive data in your control.",
   },
   {
-    icon: "🚀",
+    icon: Rocket,
     title: "Fast & Automated",
     description:
       "Automated workflows reduce manual checks and cut audit preparation time by 80%.",
   },
 ];
 
-const standards = [
+const standards: SupportedStandard[] = [
   {
     title: "CIS Benchmarks",
     description: "Center for Internet Security Microsoft 365 Foundations",
   },
-  { title: "NIST Framework", description: "National Institute of Standards and Technology guidelines" },
-  { title: "ISO 27001", description: "International standard for information security management" },
-  { title: "ASD Essential Eight", description: "Australian Signals Directorate mitigation strategies" },
+  {
+    title: "NIST Framework",
+    description: "National Institute of Standards and Technology guidelines",
+  },
+  {
+    title: "ISO 27001",
+    description: "International standard for information security management",
+  },
+  {
+    title: "ASD Essential Eight",
+    description: "Australian Signals Directorate mitigation strategies",
+  },
 ];
 
-const AboutUs = ({ onSignInClick = () => {} }) => {
+const AboutUs = ({ onSignInClick = () => {} }: AboutUsProps) => {
   return (
     <div className="about-page">
       <LandingHeader onSignInClick={onSignInClick} />
@@ -83,13 +116,18 @@ const AboutUs = ({ onSignInClick = () => {} }) => {
         <section className="section" id="features">
           <h2 className="section-title">What We Do</h2>
           <div className="features-grid">
-            {features.map((feature) => (
-              <article key={feature.title} className="feature-card">
-                <div className="feature-icon">{feature.icon}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
-              </article>
-            ))}
+            {features.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <article key={feature.title} className="feature-card">
+                  <div className="feature-icon">
+                    <Icon size={28} strokeWidth={2.1} />
+                  </div>
+                  <h3>{feature.title}</h3>
+                  <p>{feature.description}</p>
+                </article>
+              );
+            })}
           </div>
         </section>
 

@@ -1,6 +1,11 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
-const CTASection = ({ onSignInClick }) => {
+type CTASectionProps = {
+  onSignInClick?: () => void;
+};
+
+const CTASection = ({ onSignInClick }: CTASectionProps) => {
   return (
     <section className="landing-cta">
       <div className="cta-content">
@@ -13,9 +18,9 @@ const CTASection = ({ onSignInClick }) => {
           <button type="button" className="btn-primary" onClick={onSignInClick}>
             Start Free Trial
           </button>
-          <a className="btn-secondary" href="#features">
+          <Link className="btn-secondary" to="/contact">
             Schedule Demo
-          </a>
+          </Link>
         </div>
       </div>
     </section>

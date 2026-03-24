@@ -8,7 +8,11 @@ import BenefitsSection from "./components/BenefitsSection";
 import CTASection from "./components/CTASection";
 import LandingFooter from "./components/LandingFooter";
 
-const LandingPage = ({ onSignInClick }) => {
+type LandingPageProps = {
+  onSignInClick?: () => void;
+};
+
+const LandingPage = ({ onSignInClick }: LandingPageProps) => {
   const location = useLocation();
 
   // Support "/#features" and "/#benefits" nav links without hard reload.
@@ -21,7 +25,10 @@ const LandingPage = ({ onSignInClick }) => {
     const tryScroll = () => {
       const el = document.getElementById(id);
       if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        const header = document.querySelector(".landing-header");
+        const headerOffset = header ? header.getBoundingClientRect().height + 12 : 0;
+        const targetY = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+        window.scrollTo({ top: targetY, behavior: "smooth" });
         return;
       }
       attempts += 1;
@@ -34,11 +41,11 @@ const LandingPage = ({ onSignInClick }) => {
 
   return (
     <div className="landing-page">
-  {/* this page should not do an entire call to a component here, we dont need a sign in button at this page - todo */}
-      <LandingHeader
-       onSignInClick={onSignInClick}
-       /> 
-      <main>
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
+      <LandingHeader onSignInClick={onSignInClick} />
+      <main id="main-content">
         <HeroSection onSignInClick={onSignInClick} />
         <FeaturesSection />
         <BenefitsSection />

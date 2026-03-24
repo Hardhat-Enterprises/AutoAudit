@@ -2,17 +2,29 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const navLinks = [
-  { label: "Home", href: "/" },
+  { label: "Home", href: "/#main-content" },
   { label: "Features", href: "/#features" },
   { label: "Benefits", href: "/#benefits" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
 
-const LandingHeader = ({ onSignInClick, hiddenLinks = [], showSignIn = true }) => {
+type LandingHeaderProps = {
+  onSignInClick?: () => void;
+  hiddenLinks?: string[];
+  showSignIn?: boolean;
+};
+
+const LandingHeader = ({
+  onSignInClick,
+  hiddenLinks = [],
+  showSignIn = true,
+}: LandingHeaderProps) => {
+  const hiddenLinkSet = new Set(hiddenLinks.map((link) => link.toLowerCase()));
+
   return (
     <header className="landing-header">
-      <Link className="landing-logo" to="/" aria-label="AutoAudit home">
+      <Link className="landing-logo" to="/#main-content" aria-label="AutoAudit home">
         <picture>
           <source srcSet="/AutoAudit.webp" type="image/webp" />
           <img src="/AutoAudit.png" alt="AutoAudit" loading="lazy" />
@@ -21,7 +33,7 @@ const LandingHeader = ({ onSignInClick, hiddenLinks = [], showSignIn = true }) =
 
       <nav className="landing-nav" aria-label="Primary navigation">
         {navLinks
-          .filter((link) => !hiddenLinks.map((l) => l.toLowerCase()).includes(link.label.toLowerCase()))
+          .filter((link) => !hiddenLinkSet.has(link.label.toLowerCase()))
           .map((link) => (
             link.href.startsWith("/") ? (
               <Link key={link.label} to={link.href}>
