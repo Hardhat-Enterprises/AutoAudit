@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const navLinks = [
-  { label: "Home", href: "/" },
+  { label: "Home", href: "/#main-content" },
   { label: "Features", href: "/#features" },
   { label: "Benefits", href: "/#benefits" },
   { label: "About", href: "/about" },
@@ -24,7 +24,7 @@ const LandingHeader = ({
 
   return (
     <header className="landing-header">
-      <Link className="landing-logo" to="/" aria-label="AutoAudit home">
+      <Link className="landing-logo" to="/#main-content" aria-label="AutoAudit home">
         <picture>
           <source srcSet="/AutoAudit.webp" type="image/webp" />
           <img src="/AutoAudit.png" alt="AutoAudit" loading="lazy" />

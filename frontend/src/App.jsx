@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 // Dashboard Components
 import Sidebar from './components/Sidebar';
@@ -87,6 +87,7 @@ const DashboardLayout = ({
 
 function App() {
   const auth = useAuth();
+  const location = useLocation();
 
   // Dashboard state
   const getInitialSidebarWidth = () => {
@@ -115,6 +116,14 @@ function App() {
       root.classList.add('light');
     }
   }, [isDarkMode]);
+
+  // Scroll restoration:
+  // - On route changes without hash, go to top.
+  // - Keep hash-based anchor behavior (e.g. /#features) intact.
+  useEffect(() => {
+    if (location.hash) return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname, location.hash]);
 
   // Authentication handlers
   const handleUserLogin = async (email, password, remember = true) => {
