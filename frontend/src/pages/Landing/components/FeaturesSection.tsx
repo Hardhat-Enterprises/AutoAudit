@@ -1,7 +1,7 @@
 import React from "react";
-import { landingFeatures } from "../featuresData";
+import { landingFeatures, type LandingFeature } from "../featuresData";
 
-const FeatureCard = ({ icon: Icon, title, description }) => (
+const FeatureCard = ({ icon: Icon, title, description }: LandingFeature) => (
   <article className="feature-card">
     <div className="feature-icon">
       <Icon size={18} strokeWidth={2.2} />

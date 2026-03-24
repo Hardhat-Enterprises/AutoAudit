@@ -32,6 +32,28 @@
   gap: 0;
 }
 
+.landing-page [id] {
+  scroll-margin-top: 100px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -120px;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus-visible {
+  top: 1rem;
+}
+
 /* Shared section background treatment (except hero which has its own glow layers) */
 .landing-features,
 .landing-benefits,
@@ -121,6 +143,14 @@
 .landing-nav a:hover::after,
 .landing-nav .link-button:hover::after {
   width: 100%;
+}
+
+.landing-nav a:focus-visible,
+.landing-nav .link-button:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .btn-primary,
@@ -667,6 +697,11 @@
 
 .footer-section a:hover {
   color: var(--accent);
+}
+
+.footer-link-disabled {
+  color: rgba(176, 196, 222, 0.45);
+  cursor: not-allowed;
 }
 
 .footer-bottom {

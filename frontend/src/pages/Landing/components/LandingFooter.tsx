@@ -1,7 +1,17 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const footerColumns = [
+type FooterLink = {
+  label: string;
+  href: string;
+};
+
+type FooterColumn = {
+  title: string;
+  links: FooterLink[];
+};
+
+const footerColumns: FooterColumn[] = [
   {
     title: "Product",
     links: [
@@ -50,7 +60,11 @@ const LandingFooter = () => {
             <ul>
               {column.links.map((link) => (
                 <li key={link.label}>
-                  {link.href.startsWith("/") ? (
+                  {link.href === "#" ? (
+                    <span className="footer-link-disabled" aria-disabled="true">
+                      {link.label}
+                    </span>
+                  ) : link.href.startsWith("/") ? (
                     <Link to={link.href}>{link.label}</Link>
                   ) : link.href.startsWith("#") ? (
                     <Link to={`/${link.href}`}>{link.label}</Link>

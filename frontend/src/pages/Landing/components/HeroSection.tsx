@@ -1,7 +1,14 @@
 import React from "react";
+import type { LucideIcon } from "lucide-react";
 import { Lock, Bolt, BarChart3 } from "lucide-react";
 
-const floatingCards = [
+type FloatingCard = {
+  icon: LucideIcon;
+  title: string;
+  subtitle: string;
+};
+
+const floatingCards: FloatingCard[] = [
   {
     icon: Lock,
     title: "99.9% Uptime",
@@ -19,7 +26,11 @@ const floatingCards = [
   },
 ];
 
-const HeroSection = ({ onSignInClick }) => {
+type HeroSectionProps = {
+  onSignInClick?: () => void;
+};
+
+const HeroSection = ({ onSignInClick }: HeroSectionProps) => {
   return (
     <section className="landing-hero">
       <div className="hero-content">

@@ -9,7 +9,19 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const LandingHeader = ({ onSignInClick, hiddenLinks = [], showSignIn = true }) => {
+type LandingHeaderProps = {
+  onSignInClick?: () => void;
+  hiddenLinks?: string[];
+  showSignIn?: boolean;
+};
+
+const LandingHeader = ({
+  onSignInClick,
+  hiddenLinks = [],
+  showSignIn = true,
+}: LandingHeaderProps) => {
+  const hiddenLinkSet = new Set(hiddenLinks.map((link) => link.toLowerCase()));
+
   return (
     <header className="landing-header">
       <Link className="landing-logo" to="/" aria-label="AutoAudit home">
@@ -21,7 +33,7 @@ const LandingHeader = ({ onSignInClick, hiddenLinks = [], showSignIn = true }) =
 
       <nav className="landing-nav" aria-label="Primary navigation">
         {navLinks
-          .filter((link) => !hiddenLinks.map((l) => l.toLowerCase()).includes(link.label.toLowerCase()))
+          .filter((link) => !hiddenLinkSet.has(link.label.toLowerCase()))
           .map((link) => (
             link.href.startsWith("/") ? (
               <Link key={link.label} to={link.href}>

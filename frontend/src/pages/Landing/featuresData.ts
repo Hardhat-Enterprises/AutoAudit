@@ -1,6 +1,13 @@
+import type { LucideIcon } from "lucide-react";
 import { Link2, ClipboardList, Bolt, BarChart3, Shield, Rocket } from "lucide-react";
 
-export const landingFeatures = [
+export type LandingFeature = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+};
+
+export const landingFeatures: LandingFeature[] = [
   {
     icon: Link2,
     title: "Microsoft 365 Integration",
