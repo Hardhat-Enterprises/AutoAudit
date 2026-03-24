@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 
 // Dashboard Components
 import Sidebar from './components/Sidebar';
@@ -18,7 +18,7 @@ import AboutUs from './pages/Landing/AboutUs';
 import ContactPage from './pages/Contact/ContactPage';
 import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
-import ContactAdminPage from './pages/Admin/ContactAdminPage.jsx';
+import ContactAdminPage from './pages/Admin/ContactAdminPage';
 import GoogleCallbackPage from './pages/Auth/GoogleCallbackPage';
 
 // Auth Context
@@ -43,7 +43,7 @@ const ProtectedRoute = ({ children }) => {
     return <div className="loading">Loading...</div>;
   }
 
-  return isAuthenticated ? children : null;
+  return isAuthenticated ? <>{children}</> : null;
 };
 
 // Admin-only Route Component
@@ -66,11 +66,17 @@ const AdminRoute = ({ children }) => {
     return <div className="loading">Loading...</div>;
   }
 
-  return isAuthenticated && user?.role === 'admin' ? children : null;
+  return isAuthenticated && user?.role === 'admin' ? <>{children}</> : null;
 };
 
 // Dashboard Layout Component (with sidebar)
-const DashboardLayout = ({ children, sidebarWidth, isDarkMode, onThemeToggle, onSidebarWidthChange }) => {
+const DashboardLayout = ({
+  children,
+  sidebarWidth,
+  isDarkMode,
+  onThemeToggle,
+  onSidebarWidthChange,
+}) => {
   return (
     <>
       <Sidebar onWidthChange={onSidebarWidthChange} isDarkMode={isDarkMode} />
@@ -84,11 +90,11 @@ function App() {
 
   // Dashboard state
   const getInitialSidebarWidth = () => {
-    if (typeof window === "undefined") return 220;
+    if (typeof window === 'undefined') return 220;
     try {
-      const stored = window.localStorage.getItem("sidebarExpanded");
+      const stored = window.localStorage.getItem('sidebarExpanded');
       if (stored === null) return 220;
-      return stored === "true" ? 220 : 80;
+      return stored === 'true' ? 220 : 80;
     } catch {
       return 220;
     }
@@ -97,7 +103,6 @@ function App() {
   const [sidebarWidth, setSidebarWidth] = useState(getInitialSidebarWidth);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  const location = useLocation();
   const navigate = useNavigate();
 
   // Theme management
@@ -123,14 +128,13 @@ function App() {
   };
 
   const handleSignUp = async (signUpData) => {
-    const email = signUpData?.email;
-    const password = signUpData?.password;
+    const email = signUpData.email;
+    const password = signUpData.password;
 
     if (!email || !password) {
       throw new Error('Email and password are required');
     }
 
-    // Create the user in the DB, then sign them in.
     await apiRegister(email, password);
     await auth.login(email, password, true);
     navigate('/dashboard');
@@ -144,64 +148,47 @@ function App() {
     setSidebarWidth(width);
   };
 
-  // Check if current route should show sidebar
-  const isDashboardRoute = ['/dashboard', '/evidence-scanner', '/styleguide', '/cloud-platforms', '/scans', '/settings', '/account'].includes(location.pathname) || location.pathname.startsWith('/scans/');
-
   return (
     <div className="App">
       <Routes>
         {/* Public Routes */}
-        <Route 
-          path="/" 
-          element={
-            <LandingPage 
-              onSignInClick={() => navigate('/login')}
-            />
-          } 
-        />
-        
-        <Route 
-          path="/about" 
-          element={
-            <AboutUs 
-              onBack={() => navigate('/')} 
-              onSignInClick={() => navigate('/login')}
-            />
-          } 
-        />
-        
         <Route
-          path="/contact"
-          element={
-            <ContactPage
-              onSignIn={() => navigate('/login')}
-            />
-          }
-        />
-        
-        <Route 
-          path="/login" 
-          element={
-            <LoginPage 
-              onLogin={handleUserLogin}
-              onSignUpClick={() => navigate('/signup')}
-            />
-          } 
+          path="/"
+          element={<LandingPage onSignInClick={() => navigate('/login')} />}
         />
 
         <Route
-          path="/auth/google/callback"
-          element={<GoogleCallbackPage />}
-        />
-        
-        <Route 
-          path="/signup" 
+          path="/about"
           element={
-            <SignUpPage 
+            <AboutUs onBack={() => navigate('/')} onSignInClick={() => navigate('/login')} />
+          }
+        />
+
+        <Route
+          path="/contact"
+          element={<ContactPage onSignIn={() => navigate('/login')} />}
+        />
+
+        <Route
+          path="/login"
+          element={
+            <LoginPage
+              onLogin={handleUserLogin}
+              onSignUpClick={() => navigate('/signup')}
+            />
+          }
+        />
+
+        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+
+        <Route
+          path="/signup"
+          element={
+            <SignUpPage
               onSignUp={handleSignUp}
               onBackToLogin={() => navigate('/login')}
             />
-          } 
+          }
         />
 
         <Route
@@ -224,9 +211,7 @@ function App() {
                 onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
-                <Dashboard
-                  onThemeToggle={handleThemeToggle}
-                />
+                <Dashboard onThemeToggle={handleThemeToggle} />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -328,21 +313,18 @@ function App() {
           }
         />
 
-        <Route
-          path="/styleguide"
-          element={<StyleGuide />}
-        />
+        <Route path="/styleguide" element={<StyleGuide />} />
 
         {/* Fallback route */}
-        <Route 
-          path="*" 
+        <Route
+          path="*"
           element={
-            <LandingPage 
+            <LandingPage
               onSignInClick={() => navigate('/login')}
               onAboutClick={() => navigate('/about')}
               onContactClick={() => navigate('/contact')}
             />
-          } 
+          }
         />
       </Routes>
     </div>

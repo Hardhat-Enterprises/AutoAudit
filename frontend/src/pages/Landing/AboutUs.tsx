@@ -89,7 +89,7 @@ const standards: SupportedStandard[] = [
 const AboutUs = ({ onSignInClick = () => {} }: AboutUsProps) => {
   return (
     <div className="about-page">
-      <LandingHeader onSignInClick={onSignInClick} hiddenLinks={["About"]} />
+      <LandingHeader onSignInClick={onSignInClick} />
 
       <main>
         <section className="about-hero" id="home">

@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import "./LoginPage.css";
 import "./SignUpPage.css";
-import LoginHeader from "./components/LoginHeader";
+import LandingHeader from "../Landing/components/LandingHeader";
 import LandingFooter from "../Landing/components/LandingFooter";
 import SignupBrandPanel from "./components/SignupBrandPanel";
 import SignupFormPanel from "./components/SignupFormPanel";
+import type { SignUpFormData, SignUpSubmitPayload } from "./signUpTypes";
 
-const emptyForm = {
+export type { SignUpFormData, SignUpSubmitPayload } from "./signUpTypes";
+
+const emptyForm: SignUpFormData = {
   firstName: "",
   lastName: "",
   email: "",
@@ -15,11 +18,16 @@ const emptyForm = {
   confirmPassword: "",
 };
 
-export default function SignUpPage({ onSignUp, onBackToLogin }) {
-  const [formData, setFormData] = useState(emptyForm);
+export interface SignUpPageProps {
+  onSignUp: (payload: SignUpSubmitPayload) => Promise<void>;
+  onBackToLogin: () => void;
+}
+
+export default function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
+  const [formData, setFormData] = useState<SignUpFormData>(emptyForm);
   const [submitError, setSubmitError] = useState("");
 
-  const handleFormChange = (field, value) => {
+  const handleFormChange = (field: keyof SignUpFormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -29,16 +37,16 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
     }
   };
 
-  const getSubmitErrorMessage = (error) => {
-    const message = error?.message || "Sign up failed. Please try again.";
+  const getSubmitErrorMessage = (error: unknown): string => {
+    const message =
+      error instanceof Error ? error.message : "Sign up failed. Please try again.";
     if (message === "REGISTER_USER_ALREADY_EXISTS") {
       return "An account with this email already exists.";
     }
     return message;
   };
 
-  const handleFormSubmit = async (payload) => {
-    if (!onSignUp) return;
+  const handleFormSubmit = async (payload: SignUpSubmitPayload) => {
     setSubmitError("");
     try {
       await onSignUp(payload);
@@ -50,7 +58,7 @@ export default function SignUpPage({ onSignUp, onBackToLogin }) {
 
   return (
     <div className="login-page signup-page">
-      <LoginHeader />
+      <LandingHeader />
       <main className="login-main signup-main">
         <SignupBrandPanel />
         <SignupFormPanel

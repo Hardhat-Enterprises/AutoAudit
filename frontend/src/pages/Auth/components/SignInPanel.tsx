@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, type ReactElement, type ChangeEvent, type FormEvent } from "react";
 import {
   ArrowRight,
   Eye,
@@ -10,7 +10,14 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 
-const socialButtons = [
+type SocialButtonConfig = {
+  label: string;
+  provider: string;
+  icon: ReactElement;
+  disabled?: boolean;
+};
+
+const socialButtons: SocialButtonConfig[] = [
   {
     label: "Google",
     provider: "google",
@@ -37,7 +44,12 @@ const socialButtons = [
   },
 ];
 
-const SignInPanel = ({ onLogin, onSignUpClick }) => {
+export interface SignInPanelProps {
+  onLogin?: (email: string, password: string, remember?: boolean) => Promise<void>;
+  onSignUpClick?: () => void;
+}
+
+const SignInPanel = ({ onLogin, onSignUpClick }: SignInPanelProps) => {
   const auth = useAuth();
   const [formData, setFormData] = useState({
     email: "",
@@ -45,23 +57,21 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
     remember: true,
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Vite exposes env vars via import.meta.env (and they must be prefixed with VITE_)
   const apiBaseUrl = import.meta.env.VITE_API_URL;
 
-  const handleChange = (event) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = event.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    // Clear error when user starts typing
     if (error) setError(null);
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setIsLoading(true);
@@ -73,13 +83,14 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
         await auth.login(formData.email, formData.password, formData.remember);
       }
     } catch (err) {
-      setError(err.message || "Login failed. Please check your credentials.");
+      const message = err instanceof Error ? err.message : "Login failed. Please check your credentials.";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSocialLogin = (provider) => {
+  const handleSocialLogin = (provider: string) => {
     if (isLoading) return;
     setError(null);
 
@@ -89,8 +100,6 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
     }
 
     if (provider === "google") {
-      // Backend-driven OAuth redirect flow.
-      // The callback will land on: /auth/google/callback#access_token=...
       window.location.assign(`${apiBaseUrl}/v1/auth/google/authorize`);
       return;
     }
@@ -108,17 +117,20 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
 
         <form className="login-form" onSubmit={handleSubmit}>
           {error && (
-            <div className="error-message" style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: '8px',
-              color: '#ef4444',
-              marginBottom: '16px'
-            }}>
+            <div
+              className="error-message"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "12px",
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+                borderRadius: "8px",
+                color: "#ef4444",
+                marginBottom: "16px",
+              }}
+            >
               <AlertCircle size={18} />
               <span>{error}</span>
             </div>
@@ -185,7 +197,11 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
           <button type="submit" className="btn-signin" disabled={isLoading}>
             {isLoading ? (
               <>
-                <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                <Loader2
+                  size={18}
+                  className="animate-spin"
+                  style={{ animation: "spin 1s linear infinite" }}
+                />
                 <span>Signing in...</span>
               </>
             ) : (
@@ -208,7 +224,7 @@ const SignInPanel = ({ onLogin, onSignUpClick }) => {
               type="button"
               className="social-btn"
               onClick={() => handleSocialLogin(button.provider)}
-              disabled={isLoading || button.disabled}
+              disabled={isLoading || Boolean(button.disabled)}
               aria-disabled={isLoading || button.disabled ? "true" : "false"}
               title={button.disabled ? "Coming soon" : `Continue with ${button.label}`}
             >
