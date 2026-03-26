@@ -62,6 +62,21 @@ const socialButtons = [
   },
 ];
 
+const getPasswordStrength = (password) => {
+  if (!password) return null;
+  // length is a hard gate — short passwords can't score high regardless of complexity
+  if (password.length < 6) return { label: "Weak", level: 1 };
+  let score = 0;
+  if (password.length >= 10) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  if (score <= 1) return { label: "Weak", level: 1 };
+  if (score === 2) return { label: "Fair", level: 2 };
+  if (score === 3) return { label: "Good", level: 3 };
+  return { label: "Strong", level: 4 };
+};
+
 const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, submitError }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -194,6 +209,25 @@ const SignupFormPanel = ({ formData, onFormChange, onSubmit, onBackToLogin, subm
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+            {(() => {
+              const strength = getPasswordStrength(formData.password);
+              if (!strength) return null;
+              return (
+                <div className="password-strength">
+                  <div className="password-strength-bars">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className={`password-strength-bar ${i <= strength.level ? `level-${strength.level}` : ""}`}
+                      />
+                    ))}
+                  </div>
+                  <span className={`password-strength-label level-${strength.level}`}>
+                    {strength.label}
+                  </span>
+                </div>
+              );
+            })()}
           </label>
 
           <label className="signup-field">
