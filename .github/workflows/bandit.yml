@@ -1,0 +1,26 @@
+name: Bandit Security Scan
+
+on:
+  push:
+    branches: [ main, staging ]
+  pull_request:
+    branches: [ main, staging ]
+
+jobs:
+  bandit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit scan on backend-api
+        run: bandit -r backend-api -f txt || true
