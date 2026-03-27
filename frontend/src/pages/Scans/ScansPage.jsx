@@ -4,6 +4,7 @@ import { Search, Plus, CheckCircle, XCircle, Clock, Loader2, AlertCircle, PlayCi
 import { useAuth } from '../../context/AuthContext';
 import { getScans, getConnections, getBenchmarks, createScan, deleteScan, getSettings } from '../../api/client';
 import { formatDateTimePartsAEST } from '../../utils/helpers';
+import { formatRelativeTime } from '../../utils/helpers';
 import './ScansPage.css';
 
 const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
@@ -363,13 +364,18 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                     <td>{scan.connection_name || (scan.m365_connection_id ? `Connection #${scan.m365_connection_id}` : '-')}</td>
                     <td>
                       {(() => {
-                        const dt = formatDate(scan.started_at || scan.created_at);
-                        if (dt === '-') return '-';
+                        const rawTimestamp = scan.started_at || scan.created_at;
+                        const dt = formatDate(rawTimestamp);
+
                         return (
-                          <div className="datetime">
-                            <div className="date">{dt.date}</div>
-                            <div className="time">{dt.time}</div>
-                          </div>
+                           <div className="datetime">
+                             <div className="date">{dt.date}</div>
+                             <div className="time">{dt.time}</div>
+                             <div style={{ fontSize: '12px', opacity: 0.7 }}>
+                                {formatRelativeTime(rawTimestamp)} {/* ✅ FIX */}
+                             </div>
+                           </div>
+
                         );
                       })()}
                     </td>
