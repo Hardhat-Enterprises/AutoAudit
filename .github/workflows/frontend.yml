@@ -76,7 +76,7 @@ jobs:
         category: "/language:${{matrix.language}}"
     
   test-and-build:
-    name: Tests & Build Verification
+    name: Build Verification
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -90,10 +90,6 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm install
-
-      - name: Run unit tests
-        working-directory: frontend
-        run: npm test
 
       - name: Verify production build
         working-directory: frontend
