@@ -23,4 +23,4 @@ jobs:
         run: pip install bandit
 
       - name: Run Bandit scan on backend-api
-        run: bandit -r backend-api -f txt || true
+        run: bandit -r backend-api -f txt
