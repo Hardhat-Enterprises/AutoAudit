@@ -6,6 +6,30 @@ export const validateEmail = (email) => {
   return re.test(email);
 };
 
+export function formatRelativeTime(timestamp) {
+  if (!timestamp) return '—';
+
+  // Use your existing safe parser
+  const date = parseDateAssumingUTC(timestamp);
+  if (!date) return '—';
+
+  const diff = Date.now() - date.getTime();
+  const seconds = Math.floor(diff / 1000);
+
+  if (seconds < 60) return `${seconds}s ago`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+
+  return formatDateAEST(timestamp); // 👈 better than localeDateString
+}
+
 export const formatDate = (date) => {
   const options = { year: 'numeric', month: 'short', day: 'numeric' };
   return new Date(date).toLocaleDateString(undefined, options);

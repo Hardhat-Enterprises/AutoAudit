@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { getScan } from '../../api/client';
 import { formatDateAEST, formatTimeAEST } from '../../utils/helpers';
+import { formatRelativeTime } from '../../utils/helpers';
 import './ScanDetailPage.css';
 
 function compareControlIdAscending(a, b) {
@@ -248,6 +249,9 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
               <div className="meta-value">
                 <div className="meta-date">{formatDate(scan.started_at || scan.created_at)}</div>
                 <div className="meta-time">{formatTime(scan.started_at || scan.created_at)}</div>
+                <div style={{ fontSize: '12px', opacity: 0.7 }}>
+                     {formatRelativeTime(scan.started_at || scan.created_at)} {/* ✅ ADD THIS */}
+                  </div>
               </div>
             </div>
             <div className="meta-item">
