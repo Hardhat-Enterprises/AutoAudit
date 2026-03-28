@@ -14,12 +14,12 @@ export const normalizeEvidenceItems = (evidence: string | string[] | null | unde
 
 export const formatEvidenceList = (evidence: string | string[] | null | undefined): string[] => normalizeEvidenceItems(evidence);
 
-interface ApiError {
+type ApiError = {
   message?: string;
   code?: string | number;
 }
 
-interface ApiResponse {
+type ApiResponse = {
   errors?: ApiError[];
   has_errors?: boolean;
   detail?: string;
@@ -27,7 +27,7 @@ interface ApiResponse {
   code?: string | number;
 }
 
-interface ParsedError {
+type ParsedError = {
   message: string;
   code: string | number | null;
   errors: ApiError[];

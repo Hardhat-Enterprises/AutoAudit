@@ -18,7 +18,7 @@ const emptyForm: SignUpFormData = {
   confirmPassword: "",
 };
 
-export interface SignUpPageProps {
+export type SignUpPageProps = {
   onSignUp: (payload: SignUpSubmitPayload) => Promise<void>;
   onBackToLogin: () => void;
 }

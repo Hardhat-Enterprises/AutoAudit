@@ -44,7 +44,7 @@ const socialButtons: SocialButtonConfig[] = [
   },
 ];
 
-export interface SignInPanelProps {
+export type SignInPanelProps = {
   onLogin?: (email: string, password: string, remember?: boolean) => Promise<void>;
   onSignUpClick?: () => void;
 }

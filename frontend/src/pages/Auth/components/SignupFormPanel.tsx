@@ -7,7 +7,7 @@ const PASSWORD_MISMATCH_MESSAGE = "These passwords do not match";
 
 type SignupInputFieldName = "firstName" | "lastName" | "email" | "organizationName";
 
-interface InputFieldConfig {
+type InputFieldConfig = {
   name: SignupInputFieldName;
   label: string;
   icon: React.ReactNode;
@@ -80,7 +80,7 @@ const socialButtons: SocialButtonConfig[] = [
   },
 ];
 
-export interface SignupFormPanelProps {
+export type SignupFormPanelProps = {
   formData: SignUpFormData;
   onFormChange: (field: keyof SignUpFormData, value: string) => void;
   onSubmit: (payload: SignUpSubmitPayload) => void | Promise<void>;

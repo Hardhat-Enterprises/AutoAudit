@@ -1,8 +1,7 @@
 
 import React, { useState, ChangeEvent, FormEvent } from "react";
 
-// Interface for form data
-interface ContactFormData {
+type ContactFormData = {
   firstName: string;
   lastName: string;
   email: string;
@@ -12,8 +11,7 @@ interface ContactFormData {
   message: string;
 }
 
-// Interface for props
-interface ContactFormProps {
+type ContactFormProps = {
   submitted: boolean;
   onSubmit: (data: ContactFormData) => Promise<void>;
 }

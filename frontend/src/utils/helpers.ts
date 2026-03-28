@@ -59,7 +59,7 @@ export const formatTimeGMT = (dateString: string | number | Date | null | undefi
   return `${timeCore} GMT`;
 };
 
-interface DateTimeParts {
+type DateTimeParts = {
   date: string;
   time: string;
 }

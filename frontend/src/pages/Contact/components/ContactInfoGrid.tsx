@@ -2,19 +2,19 @@
 import React from "react";
 import { Twitter, Linkedin, Facebook, Instagram, LucideIcon } from "lucide-react";
 
-// Interfaces for links and social icons
-interface ContactLink {
+// Type for links and social icons
+type ContactLink = {
   label: string;
   href: string;
 }
 
-interface SocialLink {
+type SocialLink = {
   label: string;
   icon: LucideIcon; // Lucide-react icon type
   href: string;
 }
 
-interface InfoCard {
+type InfoCard = {
   icon: string;
   title: string;
   description: string;

@@ -23,7 +23,7 @@ import "./Sidebar.css";
 //href - link reference
 //name - text to display in expanded view
 //icon - text to display in collapsed view
-interface NavButtonProps {
+type NavButtonProps = {
   href: string;
   name: string;
   icon: LucideIcon;
@@ -66,7 +66,7 @@ const NavButton: React.FC<NavButtonProps> = ({
 // Main sidebar component
 const SIDEBAR_EXPANDED_KEY = "sidebarExpanded";
 
-interface SidebarProps {
+type SidebarProps = {
   onWidthChange?: (width: number) => void;
   isDarkMode?: boolean;
 }

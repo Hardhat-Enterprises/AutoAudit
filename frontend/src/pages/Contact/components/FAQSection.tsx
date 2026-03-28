@@ -4,12 +4,12 @@
 import React, { useState } from "react";
 
 
-interface FAQ {
+type FAQ = {
   question: string;
   answer: string;
 }
 
-interface FAQItemProps extends FAQ {
+type FAQItemProps = FAQ & {
   isActive: boolean;
   onToggle: () => void;
 }

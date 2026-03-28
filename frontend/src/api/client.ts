@@ -138,7 +138,7 @@ export async function getCurrentUser(token: AuthToken): Promise<any> {
 }
 
 // Contact submissions
-export interface ContactSubmissionCreatePayload {
+export type ContactSubmissionCreatePayload = {
   first_name: string;
   last_name: string;
   email: string;
@@ -229,14 +229,14 @@ export async function getPlatforms(token: AuthToken): Promise<any> {
 }
 
 // M365 Connection endpoints
-export interface CreateConnectionPayload {
+export type CreateConnectionPayload = {
   name: string;
   tenant_id: string;
   client_id: string;
   client_secret: string;
 }
 
-export interface UpdateConnectionPayload {
+export type UpdateConnectionPayload = {
   name?: string;
   tenant_id?: string;
   client_id?: string;
@@ -297,7 +297,7 @@ export async function getBenchmarks(token: AuthToken): Promise<any> {
 }
 
 // Scan endpoints
-export interface CreateScanPayload {
+export type CreateScanPayload = {
   m365_connection_id: number;
   framework: string;
   benchmark: string;
@@ -350,7 +350,7 @@ export async function getEvidenceStrategies(): Promise<any> {
   return fetchWithAuth('/v1/evidence/strategies', null);
 }
 
-export interface ScanEvidenceParams {
+export type ScanEvidenceParams = {
   strategyName: string;
   file: File | Blob;
 }

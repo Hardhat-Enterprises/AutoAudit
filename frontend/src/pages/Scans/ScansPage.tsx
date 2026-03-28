@@ -6,12 +6,12 @@ import { getScans, getConnections, getBenchmarks, createScan, deleteScan, getSet
 import { formatDateTimePartsAEST } from '../../utils/helpers';
 import './ScansPage.css';
 
-interface ScansPageProps {
+type ScansPageProps = {
   sidebarWidth?: number;
   isDarkMode?: boolean;
 }
 
-interface Scan {
+type Scan = {
   id: number | string;
   status?: string;
   benchmark?: string;
@@ -26,24 +26,24 @@ interface Scan {
   total_controls?: number;
 }
 
-interface Connection {
+type Connection = {
   id: number | string;
   name: string;
 }
 
-interface Benchmark {
+type Benchmark = {
   framework: string;
   slug: string;
   version: string;
   name: string;
 }
 
-interface NewScanFormData {
+type NewScanFormData = {
   m365_connection_id: string;
   benchmark_key: string;
 }
 
-interface LocationState {
+type LocationState = {
   openNewScan?: boolean;
   preselect?: {
     m365_connection_id?: number | string;

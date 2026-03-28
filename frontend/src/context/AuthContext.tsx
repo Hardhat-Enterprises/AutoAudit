@@ -9,7 +9,7 @@ import React, {
 import { login as apiLogin, getCurrentUser, APIError } from "../api/client";
 
 /** User shape returned by `/users/me` and stored in local/session storage */
-export interface AuthUser {
+export type AuthUser = {
   id?: number | string | null;
   email?: string | null;
   username?: string | null;
@@ -18,7 +18,7 @@ export interface AuthUser {
   is_active?: boolean | null;
 }
 
-export interface AuthContextValue {
+export type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   isAuthenticated: boolean;
@@ -78,7 +78,7 @@ function persistAuth(accessToken: string, userData: AuthUser, remember: boolean)
   other.removeItem(USER_KEY);
 }
 
-interface AuthProviderProps {
+type AuthProviderProps = {
   children: ReactNode;
 }
 

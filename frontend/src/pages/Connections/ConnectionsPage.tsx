@@ -6,7 +6,7 @@ import './ConnectionsPage.css';
 
 const CLIENT_SECRET_MASK = '************';
 
-interface FormData {
+type FormData = {
   name: string;
   platform_id: string;
   tenant_id: string;
@@ -14,33 +14,33 @@ interface FormData {
   client_secret: string;
 }
 
-interface EditFormData {
+type EditFormData = {
   name: string;
   tenant_id: string;
   client_id: string;
   client_secret: string;
 }
 
-interface Connection {
+type Connection = {
   id: string;
   name: string;
   tenant_id: string;
   client_id: string;
 }
 
-interface Platform {
+type Platform = {
   id: string;
   display_name: string;
 }
 
-interface TestResult {
+type TestResult = {
   success: boolean;
   message?: string;
   tenant_display_name?: string;
   default_domain?: string;
 }
 
-interface ConnectionsPageProps {
+type ConnectionsPageProps = {
   sidebarWidth?: number;
   isDarkMode?: boolean;
 }

@@ -13,7 +13,7 @@ import {
 const statusOptions = ["new", "in_progress", "resolved", "closed"] as const;
 const priorityOptions = ["low", "medium", "high", "urgent"] as const;
 
-export interface ContactSubmission {
+export type ContactSubmission = {
   id: number;
   first_name: string;
   last_name: string;
@@ -28,14 +28,14 @@ export interface ContactSubmission {
   created_at?: string;
 }
 
-export interface ContactNote {
+export type ContactNote = {
   id: number;
   note: string;
   created_at: string;
   is_internal?: boolean;
 }
 
-export interface ContactHistoryEntry {
+export type ContactHistoryEntry = {
   id: number;
   action: string;
   field_name?: string | null;

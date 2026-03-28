@@ -10,7 +10,7 @@ import FAQSection from "./components/FAQSection";
 import { createContactSubmission } from "../../api/client";
 
 
-interface ContactFormPayload {
+type ContactFormPayload = {
   firstName: string;
   lastName: string;
   email: string;
@@ -20,7 +20,7 @@ interface ContactFormPayload {
   message: string;
 }
 
-interface ContactPageProps {
+type ContactPageProps = {
   onSignIn?: () => void;
 }
 

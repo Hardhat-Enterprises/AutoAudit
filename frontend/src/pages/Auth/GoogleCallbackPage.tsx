@@ -12,7 +12,7 @@ import { useAuth } from "../../context/AuthContext";
 
 const CALLBACK_CACHE_KEY = "autoaudit.oauth.google.callback.params";
 
-interface OAuthCallbackPayload {
+type OAuthCallbackPayload = {
   access_token?: string | null;
   token_type?: string | null;
   error?: string | null;

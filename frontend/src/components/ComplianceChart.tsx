@@ -15,12 +15,12 @@ import { useAuth } from '../context/AuthContext';
 import { getScan } from '../api/client';
 import { formatDateAEST, formatTimeAEST } from '../utils/helpers';
 
-interface ScanDetailPageProps {
+type ScanDetailPageProps = {
   sidebarWidth?: number;
   isDarkMode?: boolean;
 }
 
-interface ScanResult {
+type ScanResult = {
   control_id?: string | number;
   status?: string;
   title?: string;
@@ -28,7 +28,7 @@ interface ScanResult {
   message?: string;
 }
 
-interface ScanDetail {
+type ScanDetail = {
   id?: number | string;
   status?: string;
   benchmark?: string;

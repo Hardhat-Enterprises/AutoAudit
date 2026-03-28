@@ -6,7 +6,7 @@ import BrandPanel from "./components/BrandPanel";
 import SignInPanel from "./components/SignInPanel";
 import LandingFooter from "../Landing/components/LandingFooter";
 
-export interface LoginPageProps {
+export type LoginPageProps = {
   onLogin: (email: string, password: string, remember?: boolean) => Promise<void>;
   onSignUpClick: () => void;
 }

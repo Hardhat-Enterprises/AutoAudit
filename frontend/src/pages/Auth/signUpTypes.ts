@@ -1,4 +1,4 @@
-export interface SignUpFormData {
+export type SignUpFormData = {
   firstName: string;
   lastName: string;
   email: string;
@@ -7,6 +7,6 @@ export interface SignUpFormData {
   confirmPassword: string;
 }
 
-export interface SignUpSubmitPayload extends SignUpFormData {
+export type SignUpSubmitPayload = SignUpFormData & {
   agreeTerms: boolean;
 }

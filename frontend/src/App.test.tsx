@@ -3,9 +3,9 @@ import { test, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import App from './App.tsx';
+import App from './App';
 
-interface TestWrapperProps {
+type TestWrapperProps = {
   children: React.ReactNode;
   initialEntries?: string[];
 }

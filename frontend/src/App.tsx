@@ -28,17 +28,17 @@ import { register as apiRegister } from './api/client';
 // Styles
 import './styles/global.css';
 
-interface RouteWrapperProps {
+type RouteWrapperProps = {
   children: React.ReactNode;
 }
 
-interface DashboardChildProps {
+type DashboardChildProps = {
   sidebarWidth?: number;
   isDarkMode?: boolean;
   onThemeToggle?: () => void;
 }
 
-interface DashboardLayoutProps {
+type DashboardLayoutProps = {
   children: React.ReactElement<DashboardChildProps>;
   sidebarWidth: number;
   isDarkMode: boolean;
@@ -46,7 +46,7 @@ interface DashboardLayoutProps {
   onSidebarWidthChange: (width: number) => void;
 }
 
-interface SignUpData {
+type SignUpData = {
   email: string;
   password: string;
 }
