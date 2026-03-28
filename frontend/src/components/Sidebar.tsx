@@ -9,24 +9,38 @@ import {
   Cloud,
   FileSearch,
   ShieldCheck,
-  FileText,
   Settings,
   User,
   Menu,
   ArrowLeft,
   Search,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import "./Sidebar.css";
-
 
 //Button component that we use throughout the sidebar
 //Parameters:
 //href - link reference
 //name - text to display in expanded view
 //icon - text to display in collapsed view
+interface NavButtonProps {
+  href: string;
+  name: string;
+  icon: LucideIcon;
+  isExpanded: boolean;
+  isActive?: boolean;
+  onClick?: (clickEvent: React.MouseEvent<HTMLAnchorElement>) => void;
+}
 
-const NavButton = ({ href, name, icon: Icon, isExpanded, isActive = false, onClick }) => {
-  const handleClick = (clickEvent) => {
+const NavButton: React.FC<NavButtonProps> = ({
+  href,
+  name,
+  icon: Icon,
+  isExpanded,
+  isActive = false,
+  onClick,
+}) => {
+  const handleClick = (clickEvent: React.MouseEvent<HTMLAnchorElement>): void => {
     if (onClick) {
       clickEvent.preventDefault();
       onClick(clickEvent);
@@ -36,7 +50,7 @@ const NavButton = ({ href, name, icon: Icon, isExpanded, isActive = false, onCli
   return (
     <li className="nav-item">
       <a
-        className={`nav-link ${isExpanded ? 'expanded' : ''} ${isActive ? 'active' : ''}`}
+        className={`nav-link ${isExpanded ? "expanded" : ""} ${isActive ? "active" : ""}`}
         href={href}
         onClick={handleClick}
       >
@@ -52,10 +66,16 @@ const NavButton = ({ href, name, icon: Icon, isExpanded, isActive = false, onCli
 // Main sidebar component
 const SIDEBAR_EXPANDED_KEY = "sidebarExpanded";
 
-const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
+interface SidebarProps {
+  onWidthChange?: (width: number) => void;
+  isDarkMode?: boolean;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isExpanded, setIsExpanded] = useState(() => {
+
+  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     try {
       const stored = window.localStorage.getItem(SIDEBAR_EXPANDED_KEY);
@@ -65,25 +85,26 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
       return true;
     }
   }); // Track whether sidebar is expanded (persisted)
-  const [searchValue, setSearchValue] = useState(''); // Track search input value
+
+  const [searchValue, setSearchValue] = useState<string>(""); // Track search input value
 
   // Determine active item based on current route
-  const getActiveItem = () => {
+  const getActiveItem = (): "home" | "cloud-platforms" | "scans" | "tasks" | "reports" | "settings" | "account" => {
     const path = location.pathname;
-    if (path === '/dashboard') return 'home';
-    if (path === '/cloud-platforms') return 'cloud-platforms';
-    if (path.startsWith('/scans')) return 'scans';
-    if (path === '/evidence-scanner') return 'tasks';
-    if (path === '/reports') return 'reports';
-    if (path === '/settings') return 'settings';
-    if (path === '/account') return 'account';
-    return 'home';
+    if (path === "/dashboard") return "home";
+    if (path === "/cloud-platforms") return "cloud-platforms";
+    if (path.startsWith("/scans")) return "scans";
+    if (path === "/evidence-scanner") return "tasks";
+    if (path === "/reports") return "reports";
+    if (path === "/settings") return "settings";
+    if (path === "/account") return "account";
+    return "home";
   };
 
   const activeItem = getActiveItem();
 
   //Event to toggle collapsed state and notify parents that the width has changed
-  const toggleSidebar = () => {
+  const toggleSidebar = (): void => {
     const newExpanded = !isExpanded;
     setIsExpanded(newExpanded);
     onWidthChange(newExpanded ? 220 : 80);
@@ -97,18 +118,22 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
   };
 
   //Navigate to the specified route
-  const handleNavClick = (itemKey, route) => {
+  const handleNavClick = (route: string): void => {
     navigate(route);
   };
 
   //Once search is functional, this search value should be used as the search parameter. Just a placeholder for now, though.
-  const handleSearchChange = (typed) => {
+  const handleSearchChange = (typed: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchValue(typed.target.value);
   };
 
-  return (          
-    <nav className={`sidebar ${isDarkMode ? 'dark' : 'light'}`} style={{'--sidebar-width': isExpanded ? '220px' : '80px'}}>
-      <div className="sidebar-content">       
+  const sidebarStyle = {
+    "--sidebar-width": isExpanded ? "220px" : "80px",
+  } as React.CSSProperties;
+
+  return (
+    <nav className={`sidebar ${isDarkMode ? "dark" : "light"}`} style={sidebarStyle}>
+      <div className="sidebar-content">
         <div className="search-container">
           {/* only display when the navbar is expanded! */}
           {isExpanded ? (
@@ -142,7 +167,7 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
             icon={LayoutDashboard}
             isExpanded={isExpanded}
             isActive={activeItem === "home"}
-            onClick={() => handleNavClick("home", "/dashboard")}
+            onClick={() => handleNavClick("/dashboard")}
           />
           <NavButton
             href={"/cloud-platforms"}
@@ -150,7 +175,7 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
             icon={Cloud}
             isExpanded={isExpanded}
             isActive={activeItem === "cloud-platforms"}
-            onClick={() => handleNavClick("cloud-platforms", "/cloud-platforms")}
+            onClick={() => handleNavClick("/cloud-platforms")}
           />
           <NavButton
             href={"/scans"}
@@ -158,7 +183,7 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
             icon={FileSearch}
             isExpanded={isExpanded}
             isActive={activeItem === "scans"}
-            onClick={() => handleNavClick("scans", "/scans")}
+            onClick={() => handleNavClick("/scans")}
           />
           <NavButton
             href={"/evidence-scanner"}
@@ -166,7 +191,7 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
             icon={ShieldCheck}
             isExpanded={isExpanded}
             isActive={activeItem === "tasks"}
-            onClick={() => handleNavClick("tasks", "/evidence-scanner")}
+            onClick={() => handleNavClick("/evidence-scanner")}
           />
           {/* <NavButton
             href={"/reports"}
@@ -176,7 +201,7 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
             isActive={activeItem === "reports"}
           /> */}
         </ul>
-        
+
         {/* Settings section at bottom */}
         <ul className="nav-settings">
           <NavButton
@@ -185,7 +210,7 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
             icon={Settings}
             isExpanded={isExpanded}
             isActive={activeItem === "settings"}
-            onClick={() => handleNavClick("settings", "/settings")}
+            onClick={() => handleNavClick("/settings")}
           />
           <NavButton
             href={"/account"}
@@ -193,7 +218,7 @@ const Sidebar = ({ onWidthChange = () => {}, isDarkMode = true }) => {
             icon={User}
             isExpanded={isExpanded}
             isActive={activeItem === "account"}
-            onClick={() => handleNavClick("account", "/account")}
+            onClick={() => handleNavClick("/account")}
           />
         </ul>
       </div>

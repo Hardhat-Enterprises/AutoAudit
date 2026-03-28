@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, JSX } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -16,11 +16,50 @@ import { getScan } from '../../api/client';
 import { formatDateAEST, formatTimeAEST } from '../../utils/helpers';
 import './ScanDetailPage.css';
 
-function compareControlIdAscending(a, b) {
-  const aId = (a?.control_id || '').toString();
-  const bId = (b?.control_id || '').toString();
-  const aParts = aId.split('.').map(s => Number.parseInt(s, 10));
-  const bParts = bId.split('.').map(s => Number.parseInt(s, 10));
+interface ScanDetailPageProps {
+  sidebarWidth?: number;
+  isDarkMode?: boolean;
+}
+
+interface ScanResult {
+  control_id?: string | number;
+  status?: string;
+  title?: string;
+  description?: string;
+  message?: string;
+}
+
+interface ScanDetail {
+  id?: number | string;
+  status?: string;
+  benchmark?: string;
+  version?: string;
+  connection_name?: string;
+  m365_connection_id?: number | string;
+  started_at?: string | null;
+  created_at?: string | null;
+  finished_at?: string | null;
+  completed_at?: string | null;
+  total_controls?: number;
+  passed_count?: number;
+  failed_count?: number;
+  error_count?: number;
+  skipped_count?: number;
+  results?: ScanResult[];
+  error?: string;
+}
+
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message) return err.message;
+  if ((err as { message?: string })?.message) return (err as { message: string }).message;
+  return fallback;
+}
+
+function compareControlIdAscending(a: ScanResult, b: ScanResult): number {
+  const aId = (a?.control_id ?? '').toString();
+  const bId = (b?.control_id ?? '').toString();
+  const aParts = aId.split('.').map((s) => Number.parseInt(s, 10));
+  const bParts = bId.split('.').map((s) => Number.parseInt(s, 10));
 
   const len = Math.max(aParts.length, bParts.length);
   for (let i = 0; i < len; i++) {
@@ -31,27 +70,34 @@ function compareControlIdAscending(a, b) {
   return aId.localeCompare(bId);
 }
 
-const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
-  const { scanId } = useParams();
+const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isDarkMode = true }) => {
+  const { scanId } = useParams<{ scanId: string }>();
   const navigate = useNavigate();
   const { token } = useAuth();
-  const [scan, setScan] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  const loadScan = useCallback(async () => {
+  const [scan, setScan] = useState<ScanDetail | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadScan = useCallback(async (): Promise<ScanDetail | null> => {
+    if (!scanId) {
+      setError('Scan ID is missing');
+      return null;
+    }
+
     try {
       const scanData = await getScan(token, scanId);
-      setScan(scanData);
-      return scanData;
-    } catch (err) {
-      setError(err.message || 'Failed to load scan');
+      setScan(scanData as ScanDetail);
+      setError(null);
+      return scanData as ScanDetail;
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to load scan'));
       return null;
     }
   }, [token, scanId]);
 
   useEffect(() => {
-    async function initialLoad() {
+    async function initialLoad(): Promise<void> {
       setIsLoading(true);
       await loadScan();
       setIsLoading(false);
@@ -75,7 +121,7 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     return () => clearInterval(interval);
   }, [scan, loadScan]);
 
-  function getStatusIcon(status) {
+  function getStatusIcon(status?: string): JSX.Element {
     switch (status) {
       case 'completed':
         return <CheckCircle size={20} className="status-icon success" />;
@@ -88,7 +134,7 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   }
 
-  function getStatusText(status) {
+  function getStatusText(status?: string): string {
     switch (status) {
       case 'completed':
         return 'Completed';
@@ -101,15 +147,15 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   }
 
-  function formatDate(dateString) {
+  function formatDate(dateString?: string | null): string {
     return formatDateAEST(dateString);
   }
 
-  function formatTime(dateString) {
+  function formatTime(dateString?: string | null): string {
     return formatTimeAEST(dateString);
   }
 
-  function getResultIcon(status) {
+  function getResultIcon(status?: string): JSX.Element {
     switch (status) {
       case 'passed':
         return <CheckCircle size={16} className="result-icon pass" />;
@@ -124,7 +170,7 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   }
 
-  function getResultBadgeText(status) {
+  function getResultBadgeText(status?: string): string {
     switch (status) {
       case 'passed':
         return 'Pass';
@@ -192,15 +238,25 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     passed: scan.passed_count || 0,
     failed: scan.failed_count || 0,
     errors: scan.error_count || 0,
-    pending: (scan.total_controls || 0) - (scan.passed_count || 0) - (scan.failed_count || 0) - (scan.error_count || 0) - (scan.skipped_count || 0),
+    pending:
+      (scan.total_controls || 0) -
+      (scan.passed_count || 0) -
+      (scan.failed_count || 0) -
+      (scan.error_count || 0) -
+      (scan.skipped_count || 0),
   };
+
   const done = summary.passed + summary.failed + summary.errors + (scan.skipped_count || 0);
+
   const progressPercent =
     summary.total > 0
       ? Math.min(100, Math.round((done / summary.total) * 100))
-      : scan.status === 'completed' ? 100: 0;
+      : scan.status === 'completed'
+        ? 100
+        : 0;
+
   const results = (scan.results || [])
-    .filter(r => (r?.status || '').toLowerCase() !== 'skipped')
+    .filter((r) => (r?.status || '').toLowerCase() !== 'skipped')
     .slice()
     .sort(compareControlIdAscending);
 
@@ -260,7 +316,7 @@ const ScanDetailPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
               ) : (
                 <div className="meta-value">
                   <div className="meta-date">
-                    {(scan.status === 'pending' || scan.status === 'running') ? 'In progress' : '-'}
+                    {scan.status === 'pending' || scan.status === 'running' ? 'In progress' : '-'}
                   </div>
                 </div>
               )}

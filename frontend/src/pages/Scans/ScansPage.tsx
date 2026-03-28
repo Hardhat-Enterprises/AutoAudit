@@ -6,36 +6,85 @@ import { getScans, getConnections, getBenchmarks, createScan, deleteScan, getSet
 import { formatDateTimePartsAEST } from '../../utils/helpers';
 import './ScansPage.css';
 
-const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
+interface ScansPageProps {
+  sidebarWidth?: number;
+  isDarkMode?: boolean;
+}
+
+interface Scan {
+  id: number | string;
+  status?: string;
+  benchmark?: string;
+  version?: string;
+  connection_name?: string;
+  m365_connection_id?: number | string;
+  started_at?: string | null;
+  created_at?: string | null;
+  passed_count?: number;
+  failed_count?: number;
+  error_count?: number;
+  total_controls?: number;
+}
+
+interface Connection {
+  id: number | string;
+  name: string;
+}
+
+interface Benchmark {
+  framework: string;
+  slug: string;
+  version: string;
+  name: string;
+}
+
+interface NewScanFormData {
+  m365_connection_id: string;
+  benchmark_key: string;
+}
+
+interface LocationState {
+  openNewScan?: boolean;
+  preselect?: {
+    m365_connection_id?: number | string;
+    benchmark_key?: string;
+  };
+}
+
+const ScansPage: React.FC<ScansPageProps> = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { token } = useAuth();
-  const [scans, setScans] = useState([]);
-  const [connections, setConnections] = useState([]);
-  const [benchmarks, setBenchmarks] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
-  const [confirmDeleteEnabled, setConfirmDeleteEnabled] = useState(true);
-  const [showForm, setShowForm] = useState(!!location?.state?.openNewScan);
-  const [formData, setFormData] = useState({
-    m365_connection_id: location?.state?.preselect?.m365_connection_id ? String(location.state.preselect.m365_connection_id) : '',
-    benchmark_key: location?.state?.preselect?.benchmark_key || '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const appliedNavStateRef = useRef(false);
 
-  const loadScans = useCallback(async () => {
+  const [scans, setScans] = useState<Scan[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [benchmarks, setBenchmarks] = useState<Benchmark[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | string | null>(null);
+  const [confirmDeleteEnabled, setConfirmDeleteEnabled] = useState<boolean>(true);
+
+  const navState = (location.state as LocationState | null) ?? null;
+
+  const [showForm, setShowForm] = useState<boolean>(!!navState?.openNewScan);
+  const [formData, setFormData] = useState<NewScanFormData>({
+    m365_connection_id: navState?.preselect?.m365_connection_id ? String(navState.preselect.m365_connection_id) : '',
+    benchmark_key: navState?.preselect?.benchmark_key || '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const appliedNavStateRef = useRef<boolean>(false);
+
+  const loadScans = useCallback(async (): Promise<void> => {
     try {
       const scansData = await getScans(token);
       setScans(scansData);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to refresh scans:', err);
     }
   }, [token]);
 
   useEffect(() => {
-    async function loadData() {
+    async function loadData(): Promise<void> {
       setIsLoading(true);
       setError(null);
       try {
@@ -47,8 +96,8 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
         setScans(scansData);
         setConnections(connectionsData);
         setBenchmarks(benchmarksData);
-      } catch (err) {
-        setError(err.message || 'Failed to load data');
+      } catch (err: unknown) {
+        setError((err as any)?.message || 'Failed to load data');
       } finally {
         setIsLoading(false);
       }
@@ -62,7 +111,7 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     if (appliedNavStateRef.current) {
       return;
     }
-    const nav = location?.state;
+    const nav = (location.state as LocationState | null) ?? null;
     if (!nav?.openNewScan) {
       return;
     }
@@ -76,7 +125,7 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
   }, [location]);
 
   useEffect(() => {
-    async function loadSettings() {
+    async function loadSettings(): Promise<void> {
       try {
         const settings = await getSettings(token);
         setConfirmDeleteEnabled(settings?.confirm_delete_enabled ?? true);
@@ -101,12 +150,12 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     return () => clearInterval(interval);
   }, [scans, loadScans]);
 
-  function handleChange(e) {
+  function handleChange(e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   }
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
@@ -116,7 +165,7 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
       const [framework, benchmark, version] = formData.benchmark_key.split('|');
 
       const newScan = await createScan(token, {
-        m365_connection_id: parseInt(formData.m365_connection_id),
+        m365_connection_id: parseInt(formData.m365_connection_id, 10),
         framework,
         benchmark,
         version,
@@ -125,14 +174,14 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
       setScans(prev => [newScan, ...prev]);
       setFormData({ m365_connection_id: '', benchmark_key: '' });
       setShowForm(false);
-    } catch (err) {
-      setError(err.message || 'Failed to create scan');
+    } catch (err: unknown) {
+      setError((err as any)?.message || 'Failed to create scan');
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  function getStatusIcon(status) {
+  function getStatusIcon(status?: string): React.ReactNode {
     switch (status) {
       case 'completed':
         return <CheckCircle size={16} className="status-icon success" />;
@@ -145,7 +194,7 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   }
 
-  function getStatusText(status) {
+  function getStatusText(status?: string): string {
     switch (status) {
       case 'completed':
         return 'Completed';
@@ -158,11 +207,11 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   }
 
-  function formatDate(dateString) {
+  function formatDate(dateString?: string | null): ReturnType<typeof formatDateTimePartsAEST> {
     return formatDateTimePartsAEST(dateString);
   }
 
-  async function handleDelete(scanId) {
+  async function handleDelete(scanId: number | string): Promise<void> {
     if (confirmDeleteEnabled) {
       const ok = window.confirm(
         'Are you sure you want to delete this scan? This action cannot be undone.'
@@ -175,8 +224,8 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     try {
       await deleteScan(token, scanId);
       setScans(prev => prev.filter(s => s.id !== scanId));
-    } catch (err) {
-      setError(err.message || 'Failed to delete scan');
+    } catch (err: unknown) {
+      setError((err as any)?.message || 'Failed to delete scan');
     } finally {
       setDeletingId(null);
     }
@@ -363,8 +412,9 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                     <td>{scan.connection_name || (scan.m365_connection_id ? `Connection #${scan.m365_connection_id}` : '-')}</td>
                     <td>
                       {(() => {
-                        const dt = formatDate(scan.started_at || scan.created_at);
-                        if (dt === '-') return '-';
+                        const dateString = scan.started_at || scan.created_at;
+                        if (!dateString) return '-';
+                        const dt = formatDate(dateString);
                         return (
                           <div className="datetime">
                             <div className="date">{dt.date}</div>
@@ -378,9 +428,9 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                         <div className="results-summary">
                           <span className="passed">{scan.passed_count || 0} passed</span>
                           <span className="failed">{scan.failed_count || 0} failed</span>
-                          {scan.status === 'running' && scan.total_controls > 0 && (
+                          {scan.status === 'running' && (scan.total_controls || 0) > 0 && (
                             <span className="progress">
-                              ({scan.passed_count + scan.failed_count + scan.error_count || 0}/{scan.total_controls})
+                              ({(scan.passed_count || 0) + (scan.failed_count || 0) + (scan.error_count || 0)}/{scan.total_controls || 0})
                             </span>
                           )}
                         </div>
@@ -388,7 +438,7 @@ const ScansPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                         '-'
                       )}
                     </td>
-                    <td className="actions-cell" onClick={(e) => e.stopPropagation()}>
+                    <td className="actions-cell" onClick={(e: React.MouseEvent<HTMLTableCellElement>) => e.stopPropagation()}>
                       <button
                         className="toolbar-button danger"
                         onClick={() => handleDelete(scan.id)}
