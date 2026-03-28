@@ -24,24 +24,25 @@ async function fetchWithAuth(endpoint, token, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+try {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: response.statusText }));
-      throw new APIError(error.detail || 'Request failed', response.status, error);
-    }
-
-    return response.json();
-  } catch (error) {
-    if (error instanceof APIError) {
-      throw error;
-    }
-    throw new APIError(error?.message || 'Network error', 0);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new APIError(error.detail || "Request failed", response.status, error);
   }
+
+  return await response.json();
+} catch (error) {
+  if (error instanceof APIError) {
+    throw error;
+  }
+
+  throw new APIError("Request failed before receiving a response", 0, error);
+}
 }
 
 // Auth endpoints
