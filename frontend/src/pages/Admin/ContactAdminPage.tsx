@@ -56,6 +56,16 @@ const ContactAdminPage: React.FC = () => {
   const [actionMessage, setActionMessage] = useState("");
   const latestSelectionRef = useRef<number | null>(null);
 
+  const currentUserId: number | undefined = useMemo(() => {
+  const rawId = (user as { id?: string | number } | null | undefined)?.id;
+    if (typeof rawId === "number") return rawId;
+    if (typeof rawId === "string") {
+      const parsed = Number.parseInt(rawId, 10);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
+    return undefined;
+  }, [user]);
+
   useEffect(() => {
     if (!actionMessage) return;
     const timeoutId = setTimeout(() => {
@@ -323,7 +333,9 @@ const ContactAdminPage: React.FC = () => {
               <div className="contact-admin__action-buttons">
                 <button
                   className="contact-admin__assign"
-                  onClick={() => handleUpdate({ assigned_to: user?.id ?? undefined })}
+                  onClick={() => handleUpdate({ assigned_to: currentUserId })}
+                  disabled={currentUserId === undefined}
+                  title={currentUserId === undefined ? "Your user ID is not numeric." : undefined}
                 >
                   Assign to me
                 </button>

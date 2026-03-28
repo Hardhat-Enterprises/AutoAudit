@@ -14,7 +14,6 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { getScan } from '../api/client';
 import { formatDateAEST, formatTimeAEST } from '../utils/helpers';
-import './ScanDetailPage.css';
 
 interface ScanDetailPageProps {
   sidebarWidth?: number;

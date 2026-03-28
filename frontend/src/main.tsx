@@ -8,7 +8,6 @@ import '@fontsource/league-spartan/400.css';
 import '@fontsource/league-spartan/600.css';
 import '@fontsource/league-spartan/700.css';
 
-
 // Tailwind + tokens + base (includes tokens.css & components.css)
 import './styles/global.css';
 
@@ -17,7 +16,14 @@ import './index.css';
 
 import App from './App';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  throw new Error('Root element with id "root" was not found.');
+}
+
+const root = ReactDOM.createRoot(rootElement);
+
 root.render(
   <React.StrictMode>
     <Router>

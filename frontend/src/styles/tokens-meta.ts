@@ -1,10 +1,10 @@
-interface ColorVariant {
+type ColorVariant = {
   name: string;
   rgb: string;
   hex: string;
 }
 
-interface Token extends ColorVariant {
+type Token = ColorVariant & {
   light: ColorVariant;
 }
 

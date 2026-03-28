@@ -3,7 +3,7 @@ import { test, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import App from './App';
+import App from './App.tsx';
 
 interface TestWrapperProps {
   children: React.ReactNode;

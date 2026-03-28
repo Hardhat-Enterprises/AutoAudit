@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, JSX } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 // Dashboard Components
 import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard.tsx';
-import Evidence from './pages/Evidence.tsx';
-import SettingsPage from './pages/SettingsPage.tsx';
-import AccountPage from './pages/AccountPage.tsx';
-import StyleGuide from './pages/StyleGuide.tsx';
+import Dashboard from './pages/Dashboard';
+import Evidence from './pages/Evidence';
+import SettingsPage from './pages/SettingsPage';
+import AccountPage from './pages/AccountPage';
+import StyleGuide from './pages/StyleGuide';
 import ConnectionsPage from './pages/Connections/ConnectionsPage';
 import ScansPage from './pages/Scans/ScansPage';
 import ScanDetailPage from './pages/Scans/ScanDetailPage';
@@ -28,8 +28,31 @@ import { register as apiRegister } from './api/client';
 // Styles
 import './styles/global.css';
 
+interface RouteWrapperProps {
+  children: React.ReactNode;
+}
+
+interface DashboardChildProps {
+  sidebarWidth?: number;
+  isDarkMode?: boolean;
+  onThemeToggle?: () => void;
+}
+
+interface DashboardLayoutProps {
+  children: React.ReactElement<DashboardChildProps>;
+  sidebarWidth: number;
+  isDarkMode: boolean;
+  onThemeToggle: () => void;
+  onSidebarWidthChange: (width: number) => void;
+}
+
+interface SignUpData {
+  email: string;
+  password: string;
+}
+
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute: React.FC<RouteWrapperProps> = ({ children }) => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -47,7 +70,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // Admin-only Route Component
-const AdminRoute = ({ children }) => {
+const AdminRoute: React.FC<RouteWrapperProps> = ({ children }) => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, user } = useAuth();
 
@@ -57,7 +80,7 @@ const AdminRoute = ({ children }) => {
       navigate('/login');
       return;
     }
-    if (user?.role !== 'admin') {
+    if ((user as { role?: string } | null | undefined)?.role !== 'admin') {
       navigate('/dashboard');
     }
   }, [isAuthenticated, isLoading, navigate, user]);
@@ -66,11 +89,11 @@ const AdminRoute = ({ children }) => {
     return <div className="loading">Loading...</div>;
   }
 
-  return isAuthenticated && user?.role === 'admin' ? <>{children}</> : null;
+  return isAuthenticated && (user as { role?: string } | null | undefined)?.role === 'admin' ? <>{children}</> : null;
 };
 
 // Dashboard Layout Component (with sidebar)
-const DashboardLayout = ({
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   sidebarWidth,
   isDarkMode,
@@ -85,12 +108,13 @@ const DashboardLayout = ({
   );
 };
 
-function App() {
+function App(): JSX.Element {
   const auth = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Dashboard state
-  const getInitialSidebarWidth = () => {
+  const getInitialSidebarWidth = (): number => {
     if (typeof window === 'undefined') return 220;
     try {
       const stored = window.localStorage.getItem('sidebarExpanded');
@@ -101,16 +125,21 @@ function App() {
     }
   };
 
-  const [sidebarWidth, setSidebarWidth] = useState(getInitialSidebarWidth);
-  const [isDarkMode, setIsDarkMode] = useState(true);
-
-  const navigate = useNavigate();
+  const [sidebarWidth, setSidebarWidth] = useState<number>(getInitialSidebarWidth);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
   // Theme management
   useEffect(() => {
-    let theme = localStorage.getItem('theme') ?? 'dark';
-    
-    setIsDarkMode(theme == 'dark');
+    const theme = localStorage.getItem('theme') ?? 'dark';
+    const dark = theme === 'dark';
+    setIsDarkMode(dark);
+
+    const root = document.documentElement;
+    if (dark) {
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+    }
   }, []);
 
   // Scroll restoration:
@@ -122,17 +151,17 @@ function App() {
   }, [location.pathname, location.hash]);
 
   // Authentication handlers
-  const handleUserLogin = async (email, password, remember = true) => {
+  const handleUserLogin = async (email: string, password: string, remember: boolean = true): Promise<void> => {
     await auth.login(email, password, remember);
     navigate('/dashboard');
   };
 
-  const handleUserLogout = () => {
+  const handleUserLogout = (): void => {
     auth.logout();
     navigate('/');
   };
 
-  const handleSignUp = async (signUpData) => {
+  const handleSignUp = async (signUpData: SignUpData): Promise<void> => {
     const email = signUpData.email;
     const password = signUpData.password;
 
@@ -145,10 +174,11 @@ function App() {
     navigate('/dashboard');
   };
 
-  const handleThemeToggle = () => {
-    let newThemeIsDark = !isDarkMode;
+  const handleThemeToggle = (): void => {
+    const newThemeIsDark = !isDarkMode;
     setIsDarkMode(newThemeIsDark);
     localStorage.setItem('theme', newThemeIsDark ? 'dark' : 'light');
+
     const root = document.documentElement;
     if (newThemeIsDark) {
       root.classList.remove('light');
@@ -157,7 +187,7 @@ function App() {
     }
   };
 
-  const handleSidebarWidthChange = (width) => {
+  const handleSidebarWidthChange = (width: number): void => {
     setSidebarWidth(width);
   };
 
@@ -173,7 +203,7 @@ function App() {
         <Route
           path="/about"
           element={
-            <AboutUs onBack={() => navigate('/')} onSignInClick={() => navigate('/login')} />
+            <AboutUs onSignInClick={() => navigate('/login')} />
           }
         />
 
@@ -224,7 +254,7 @@ function App() {
                 onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
-                <Dashboard onThemeToggle={handleThemeToggle} />
+                <Dashboard isDarkMode={isDarkMode} onThemeToggle={handleThemeToggle} />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -334,8 +364,6 @@ function App() {
           element={
             <LandingPage
               onSignInClick={() => navigate('/login')}
-              onAboutClick={() => navigate('/about')}
-              onContactClick={() => navigate('/contact')}
             />
           }
         />
