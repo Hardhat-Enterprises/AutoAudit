@@ -526,17 +526,15 @@ export default function Dashboard({
                 </div>
               <Dropdown
                 value={selectedChartType}
-                onChange={setSelectedChartType}
+                onChange={(value) => setSelectedChartType(value as ChartType)}
                 options={chartTypeOptions}
                 isDarkMode={isDarkMode}
               />
               </div>
               <div className="chart-surface">
                 <ComplianceChart
-                  chartType={chartModel.chartType}
-                  labelsInput={chartModel.labels as unknown as never[]}
-                  dataInput={chartModel.values}
                   isDarkMode={isDarkMode}
+                  sidebarWidth={sidebarWidth}
                 />
               </div>
             </div>
