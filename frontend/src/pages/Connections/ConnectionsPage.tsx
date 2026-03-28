@@ -6,49 +6,88 @@ import './ConnectionsPage.css';
 
 const CLIENT_SECRET_MASK = '************';
 
-const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
+interface FormData {
+  name: string;
+  platform_id: string;
+  tenant_id: string;
+  client_id: string;
+  client_secret: string;
+}
+
+interface EditFormData {
+  name: string;
+  tenant_id: string;
+  client_id: string;
+  client_secret: string;
+}
+
+interface Connection {
+  id: string;
+  name: string;
+  tenant_id: string;
+  client_id: string;
+}
+
+interface Platform {
+  id: string;
+  display_name: string;
+}
+
+interface TestResult {
+  success: boolean;
+  message?: string;
+  tenant_display_name?: string;
+  default_domain?: string;
+}
+
+interface ConnectionsPageProps {
+  sidebarWidth?: number;
+  isDarkMode?: boolean;
+}
+
+const ConnectionsPage: React.FC<ConnectionsPageProps> = ({ sidebarWidth = 220, isDarkMode = true }) => {
   const { token } = useAuth();
-  const [platforms, setPlatforms] = useState([]);
-  const [connections, setConnections] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
+  const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState<boolean>(false);
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     platform_id: '',
     tenant_id: '',
     client_id: '',
     client_secret: '',
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingConnection, setEditingConnection] = useState(null);
-  const [editFormData, setEditFormData] = useState({
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [editingConnection, setEditingConnection] = useState<Connection | null>(null);
+  const [editFormData, setEditFormData] = useState<EditFormData>({
     name: '',
     tenant_id: '',
     client_id: '',
     client_secret: '',
   });
-  const [isEditing, setIsEditing] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
-  const [testingId, setTestingId] = useState(null);
-  const [testResults, setTestResults] = useState({});
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<Record<string, TestResult>>({});
 
-  function getConnectionErrorMessage(err, fallbackMessage) {
+  function getConnectionErrorMessage(err: unknown, fallbackMessage: string): string {
     // Backend returns 400 Bad Request when M365 auth cannot be established.
     if (err instanceof APIError && err.status === 400) {
       return 'Authentication not established. Please check your tenant ID, client ID, and client secret and try again.';
     }
-    if (err?.status === 400) {
+    if ((err as any)?.status === 400) {
       return 'Authentication not established. Please check your tenant ID, client ID, and client secret and try again.';
     }
-    return err?.message || fallbackMessage;
+    return (err as any)?.message || fallbackMessage;
   }
 
   useEffect(() => {
     loadData();
   }, [token]);
 
-  async function loadData() {
+  async function loadData(): Promise<void> {
     setIsLoading(true);
     setError(null);
     try {
@@ -59,18 +98,18 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
       setPlatforms(platformsData);
       setConnections(connectionsData);
     } catch (err) {
-      setError(err.message || 'Failed to load data');
+      setError((err as any).message || 'Failed to load data');
     } finally {
       setIsLoading(false);
     }
   }
 
-  function handleChange(e) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   }
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
@@ -98,7 +137,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   }
 
-  async function handleTestConnection(connection) {
+  async function handleTestConnection(connection: Connection): Promise<void> {
     setTestingId(connection.id);
     setError(null);
     try {
@@ -119,7 +158,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   }
 
-  function startEditing(connection) {
+  function startEditing(connection: Connection): void {
     setEditingConnection(connection);
     setEditFormData({
       name: connection.name,
@@ -130,7 +169,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     });
   }
 
-  function handleEditChange(e) {
+  function handleEditChange(e: React.ChangeEvent<HTMLInputElement>): void {
     const { name } = e.target;
     let { value } = e.target;
 
@@ -146,12 +185,12 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     setEditFormData(prev => ({ ...prev, [name]: value }));
   }
 
-  async function handleEditSubmit(e) {
+  async function handleEditSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     setIsEditing(true);
     setError(null);
     try {
-      const updateData = {
+      const updateData: Partial<EditFormData> = {
         name: editFormData.name,
         tenant_id: editFormData.tenant_id,
         client_id: editFormData.client_id,
@@ -161,9 +200,9 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
         updateData.client_secret = editFormData.client_secret;
       }
 
-      const updatedConnection = await updateConnection(token, editingConnection.id, updateData);
+      const updatedConnection = await updateConnection(token, editingConnection!.id, updateData);
       setConnections(prev =>
-        prev.map(conn => (conn.id === editingConnection.id ? updatedConnection : conn))
+        prev.map(conn => (conn.id === editingConnection!.id ? updatedConnection : conn))
       );
       setEditingConnection(null);
     } catch (err) {
@@ -173,7 +212,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     }
   }
 
-  function cancelEditing() {
+  function cancelEditing(): void {
     setEditingConnection(null);
     setEditFormData({
       name: '',
@@ -183,7 +222,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
     });
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(id: string): Promise<void> {
     if (!window.confirm('Are you sure you want to delete this connection? This action cannot be undone.')) {
       return;
     }
@@ -195,7 +234,7 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
       await deleteConnection(token, id);
       setConnections(prev => prev.filter(conn => conn.id !== id));
     } catch (err) {
-      setError(err.message || 'Failed to delete connection');
+      setError((err as any).message || 'Failed to delete connection');
     } finally {
       setDeletingId(null);
     }
@@ -420,8 +459,8 @@ const ConnectionsPage = ({ sidebarWidth = 220, isDarkMode = true }) => {
                   onChange={handleEditChange}
                   placeholder="Enter a new client secret"
                   onFocus={(e) => {
-                    if (e.target.value === CLIENT_SECRET_MASK) {
-                      e.target.select();
+                    if (e.currentTarget.value === CLIENT_SECRET_MASK) {
+                      e.currentTarget.select();
                     }
                   }}
                   disabled={isEditing}

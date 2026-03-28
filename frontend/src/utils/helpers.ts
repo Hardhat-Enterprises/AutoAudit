@@ -1,20 +1,20 @@
 // Helper functions for the app
 // Created on: Nov 2024
 
-export const validateEmail = (email) => {
+export const validateEmail = (email: string): boolean => {
   const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return re.test(email);
 };
 
-export const formatDate = (date) => {
-  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+export const formatDate = (date: string | number | Date): string => {
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
   return new Date(date).toLocaleDateString(undefined, options);
 };
 
 // Standardized GMT/UTC date+time formatting for consistent display across users/machines.
 // - Date: "DD Mon YYYY"
 // - Time: "h:mm:ss.SSS AM GMT"
-function parseDateAssumingUTC(value) {
+function parseDateAssumingUTC(value: string | number | Date | null | undefined): Date | null {
   if (!value) return null;
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
 
@@ -34,7 +34,7 @@ function parseDateAssumingUTC(value) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-export const formatDateGMT = (dateString) => {
+export const formatDateGMT = (dateString: string | number | Date | null | undefined): string => {
   const d = parseDateAssumingUTC(dateString);
   if (!d) return '-';
   return new Intl.DateTimeFormat('en-GB', {
@@ -45,7 +45,7 @@ export const formatDateGMT = (dateString) => {
   }).format(d);
 };
 
-export const formatTimeGMT = (dateString) => {
+export const formatTimeGMT = (dateString: string | number | Date | null | undefined): string => {
   const d = parseDateAssumingUTC(dateString);
   if (!d) return '-';
   const timeCore = new Intl.DateTimeFormat('en-GB', {
@@ -59,7 +59,12 @@ export const formatTimeGMT = (dateString) => {
   return `${timeCore} GMT`;
 };
 
-export const formatDateTimePartsGMT = (dateString) => {
+interface DateTimeParts {
+  date: string;
+  time: string;
+}
+
+export const formatDateTimePartsGMT = (dateString: string | number | Date | null | undefined): DateTimeParts => {
   const date = formatDateGMT(dateString);
   if (date === '-') return { date: '-', time: '-' };
   return { date, time: formatTimeGMT(dateString) };
@@ -69,7 +74,7 @@ export const formatDateTimePartsGMT = (dateString) => {
 // does not observe DST; label remains "AEST" year-round as requested.
 const AEST_IANA_TZ = 'Australia/Brisbane';
 
-export const formatDateAEST = (dateString) => {
+export const formatDateAEST = (dateString: string | number | Date | null | undefined): string => {
   const d = parseDateAssumingUTC(dateString);
   if (!d) return '-';
   return new Intl.DateTimeFormat('en-GB', {
@@ -80,7 +85,7 @@ export const formatDateAEST = (dateString) => {
   }).format(d);
 };
 
-export const formatTimeAEST = (dateString) => {
+export const formatTimeAEST = (dateString: string | number | Date | null | undefined): string => {
   const d = parseDateAssumingUTC(dateString);
   if (!d) return '-';
   const timeCore = new Intl.DateTimeFormat('en-GB', {
@@ -93,14 +98,14 @@ export const formatTimeAEST = (dateString) => {
   return `${timeCore} AEST`;
 };
 
-export const formatDateTimePartsAEST = (dateString) => {
+export const formatDateTimePartsAEST = (dateString: string | number | Date | null | undefined): DateTimeParts => {
   const date = formatDateAEST(dateString);
   if (date === '-') return { date: '-', time: '-' };
   return { date, time: formatTimeAEST(dateString) };
 };
 
 // Simple utility for string truncation
-export const truncateString = (str, maxLength) => {
+export const truncateString = (str: string, maxLength: number): string => {
   if (str.length <= maxLength) return str;
   return str.substring(0, maxLength) + '...';
 };

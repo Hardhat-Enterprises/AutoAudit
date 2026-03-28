@@ -1,4 +1,14 @@
-export const TOKEN_META = {
+interface ColorVariant {
+  name: string;
+  rgb: string;
+  hex: string;
+}
+
+interface Token extends ColorVariant {
+  light: ColorVariant;
+}
+
+export const TOKEN_META: Record<string, Token> = {
   'surface-1': {
     name: 'Oxford Blue',
     rgb: '15 23 42',
@@ -29,7 +39,7 @@ export const TOKEN_META = {
     hex: '#94a3b8',
     light: { name: "Payne's Grey", rgb: '71 85 105', hex: '#475569' }
   },
-    'accent-teal': {
+  'accent-teal': {
     name: 'Teal',
     rgb: '100 223 223',
     hex: '#64dfdf',
@@ -59,4 +69,4 @@ export const TOKEN_META = {
     hex: '#ef4444',
     light: { name: 'Imperial Red', rgb: '239 68 68', hex: '#ef4444' }
   }
-}
+};
