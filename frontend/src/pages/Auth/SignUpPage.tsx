@@ -60,7 +60,7 @@ export default function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps)
 
       <main className="flex flex-1 items-center justify-center px-6 py-12">
         <div className="grid w-full max-w-6xl gap-10 lg:grid-cols-2">
-          
+
           {/* Left side (branding) */}
           <div className="hidden lg:flex items-center justify-center">
             <SignupBrandPanel />
