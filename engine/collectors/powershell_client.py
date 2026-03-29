@@ -68,7 +68,7 @@ class PowerShellClient:
         self._msal_app = ConfidentialClientApplication(
             client_id=client_id,
             client_credential=client_secret,
-            authority=f"https://login.microsoftonline.com/{tenant_id}",
+            authority=f"https://login.microsoftonline.com/{self.tenant_id}",
         )
         self._image_checked = False
 
