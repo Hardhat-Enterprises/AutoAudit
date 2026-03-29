@@ -3,19 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 7.3.2
 
-Connection Method: SharePoint REST API
-Authentication: Client secret via MSAL (access token)
+Connection Method: Microsoft Graph
+Authentication: Client secret via MSAL application permissions
 
-CAVEAT: Access token authentication has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
-
-NOTE: This collector uses SharePoint REST API instead of PowerShell because
-SharePoint Online PowerShell does not support client secret authentication.
-If certificate authentication is adopted in the future, this collector should
-be updated to use the Get-SPOTenantSyncClientRestriction cmdlet instead.
-
-REST Endpoints: SharePoint Admin API for sync client restrictions
+Graph Endpoints: GET /admin/sharepoint/settings
 """
 
 from typing import Any
@@ -41,5 +32,13 @@ class SpoSyncClientRestrictionDataCollector(BaseDataCollector):
             - domain_guids_allowed: Allowed domain GUIDs for sync
             - excluded_file_extensions: File types excluded from sync
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        restrictions = await client.get_sync_client_restriction()
+
+        return {
+            "sync_client_restrictions": restrictions,
+            "tenant_restriction_enabled": restrictions.get("TenantRestrictionEnabled"),
+            "block_mac_sync": restrictions.get("BlockMacSync"),
+            "domain_guids_allowed": restrictions.get("AllowedDomainList", []),
+            "excluded_file_extensions": restrictions.get("ExcludedFileExtensions", []),
+            "groove_block_option": restrictions.get("GrooveBlockOption"),
+        }

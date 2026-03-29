@@ -152,6 +152,13 @@ from collectors.compliance.report_submission_policy import (
     ReportSubmissionPolicyDataCollector,
 )
 
+# SharePoint
+from collectors.sharepoint.spo_tenant import SpoTenantDataCollector
+from collectors.sharepoint.spo_site import SpoSiteDataCollector
+from collectors.sharepoint.spo_sync_client_restriction import (
+    SpoSyncClientRestrictionDataCollector,
+)
+
 # Registry mapping data_collector_id to collector class
 DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Applications
@@ -220,6 +227,10 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "exchange.transport.transport_rules": TransportRulesDataCollector,
     # Compliance
     "compliance.report_submission_policy": ReportSubmissionPolicyDataCollector,
+    # Sharepoint
+    "sharepoint.spo_tenant": SpoTenantDataCollector,
+    "sharepoint.spo_site": SpoSiteDataCollector,
+    "sharepoint.spo_sync_client_restriction": SpoSyncClientRestrictionDataCollector,
 }
 
 

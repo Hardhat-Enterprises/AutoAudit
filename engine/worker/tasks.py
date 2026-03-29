@@ -48,6 +48,33 @@ def get_control_metadata(metadata: dict, control_id: str) -> dict | None:
     return None
 
 
+def build_result_message(result: dict, control: dict, default_compliant: bool) -> str:
+    """Return a user-facing message for a control evaluation result.
+
+    Prefer the policy-provided message, but fall back to a control-aware message
+    so scan results do not degrade to a generic compliant/non-compliant label.
+    """
+    message = result.get("message")
+    if isinstance(message, str) and message.strip():
+        return message.strip()
+
+    title = control.get("title") or f"Control {control.get('control_id', 'unknown')}"
+    affected_resources = result.get("affected_resources")
+    if isinstance(affected_resources, list):
+        first_affected = next(
+            (item.strip() for item in affected_resources if isinstance(item, str) and item.strip()),
+            None,
+        )
+        if first_affected:
+            if default_compliant:
+                return f"{title} is compliant."
+            return f"{title} is non-compliant: {first_affected}"
+
+    if default_compliant:
+        return f"{title} is compliant."
+    return f"{title} is non-compliant."
+
+
 @celery_app.task(name="worker.tasks.run_scan")
 def run_scan(scan_id: int) -> dict:
     """Orchestrator task: Dispatches control evaluation tasks.
@@ -271,7 +298,7 @@ def evaluate_control(
                     session,
                     result_id=result_id,
                     status="passed",
-                    message=result.get("message", "Control is compliant"),
+                    message=build_result_message(result, control, default_compliant=True),
                     evidence=result.get("details"),
                 )
                 increment_scan_progress(session, scan_id, passed=True)
@@ -281,7 +308,7 @@ def evaluate_control(
                     session,
                     result_id=result_id,
                     status="failed",
-                    message=result.get("message", "Control is non-compliant"),
+                    message=build_result_message(result, control, default_compliant=False),
                     evidence=result.get("details"),
                 )
                 increment_scan_progress(session, scan_id, passed=False)
@@ -348,6 +375,7 @@ async def _evaluate_control_async(
     from collectors.registry import get_collector
     from collectors.graph_client import GraphClient
     from collectors.powershell_client import PowerShellClient
+    from collectors.sharepoint_client import SharePointClient
     from opa_client import opa_client
 
     # Get collector
@@ -365,6 +393,12 @@ async def _evaluate_control_async(
             client_id=credentials["client_id"],
             client_secret=credentials["client_secret"],
             service_url=settings.POWERSHELL_SERVICE_URL,
+        )
+    elif collector_id.startswith("sharepoint."):
+        client = SharePointClient(
+            tenant_id=credentials["tenant_id"],
+            client_id=credentials["client_id"],
+            client_secret=credentials["client_secret"],
         )
     else:
         # Entra and other collectors use Graph API
