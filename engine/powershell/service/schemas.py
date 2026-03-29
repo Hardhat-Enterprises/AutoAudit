@@ -2,7 +2,9 @@
 
 from typing import Any, Dict, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from executor import validate_tenant_id
 
 
 class ExecuteRequest(BaseModel):
@@ -18,7 +20,12 @@ class ExecuteRequest(BaseModel):
         default_factory=dict,
         description="Parameters to pass to the cmdlet",
     )
-    tenant_id: str = Field(description="Azure AD tenant ID")
+    tenant_id: str = Field(description="Azure AD tenant ID (GUID or verified domain)")
+
+    @field_validator("tenant_id")
+    @classmethod
+    def check_tenant_id_format(cls, v: str) -> str:
+        return validate_tenant_id(v)
     token: str = Field(description="Access token for Exchange/Compliance")
     graph_token: Optional[str] = Field(
         default=None,

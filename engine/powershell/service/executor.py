@@ -2,8 +2,42 @@
 
 import json
 import os
+import re
 import subprocess
 from typing import Any, Dict, Optional
+
+# NOTE: This validation function is duplicated in engine/worker/validators.py
+# because the powershell service is an isolated package. Keep both copies in sync.
+
+_TENANT_ID_GUID_RE = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    re.IGNORECASE,
+)
+
+# Labels allow alphanumeric + hyphens; TLD must be alpha-only (2+ chars)
+_TENANT_ID_DOMAIN_RE = re.compile(
+    r"^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?"
+    r"(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*"
+    r"\.[a-zA-Z]{2,}$"
+)
+
+
+def validate_tenant_id(value: str) -> str:
+    """Validate that a tenant_id is a GUID or domain name.
+
+    Prevents PowerShell command injection by ensuring the value contains
+    only characters that are structurally safe for interpolation.
+    """
+    stripped = value.strip()
+    if not stripped:
+        raise ValueError("tenant_id must not be empty")
+    if _TENANT_ID_GUID_RE.match(stripped) or _TENANT_ID_DOMAIN_RE.match(stripped):
+        return stripped
+    raise ValueError(
+        f"Invalid tenant_id format: {stripped!r}. "
+        "Must be a GUID (e.g. 12345678-1234-1234-1234-123456789abc) "
+        "or a domain name (e.g. contoso.onmicrosoft.com)."
+    )
 
 
 class PowerShellExecutionError(Exception):
@@ -51,6 +85,7 @@ def build_script(
     Returns:
         PowerShell script as a string
     """
+    tenant_id = validate_tenant_id(tenant_id)
     param_str = build_param_string(params)
 
     if module == "ExchangeOnline":

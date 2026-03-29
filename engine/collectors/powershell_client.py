@@ -26,6 +26,8 @@ from typing import Any
 import httpx
 from msal import ConfidentialClientApplication
 
+from worker.validators import validate_tenant_id
+
 
 class PowerShellExecutionError(Exception):
     """Raised when PowerShell execution fails."""
@@ -59,7 +61,7 @@ class PowerShellClient:
             service_url: Optional URL of PowerShell HTTP service (e.g., http://powershell-service:8001).
                          If provided, uses HTTP instead of spawning Docker containers.
         """
-        self.tenant_id = tenant_id
+        self.tenant_id = validate_tenant_id(tenant_id)
         self.client_id = client_id
         self.client_secret = client_secret
         self.service_url = service_url
