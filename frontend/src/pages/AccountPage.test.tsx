@@ -27,7 +27,7 @@ function setupAuth(user: Record<string, unknown> | null, token = 'test-token') {
     user,
     token,
     logout: vi.fn(),
-  } as ReturnType<typeof mockUseAuth>);
+  } as unknown as ReturnType<typeof mockUseAuth>);
 }
 
 function renderPage() {
@@ -96,7 +96,7 @@ describe('handleLogout', () => {
       user: { email: 'u@test.com' },
       token: 'tok',
       logout: clearAuth,
-    } as ReturnType<typeof mockUseAuth>);
+    } as unknown as ReturnType<typeof mockUseAuth>);
     vi.mocked(mockApiLogout).mockResolvedValue(undefined);
 
     renderPage();
@@ -114,7 +114,7 @@ describe('handleLogout', () => {
       user: { email: 'u@test.com' },
       token: 'tok',
       logout: clearAuth,
-    } as ReturnType<typeof mockUseAuth>);
+    } as unknown as ReturnType<typeof mockUseAuth>);
     vi.mocked(mockApiLogout).mockRejectedValue(new Error('Network error'));
 
     renderPage();
