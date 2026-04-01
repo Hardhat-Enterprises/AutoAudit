@@ -130,7 +130,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Run unit tests
-        run: npm test
+        run: npm test -- --reporter=verbose
         env:
           # .env.test is gitignored so cannot be committed. Vite exposes VITE_* process env
           # vars via import.meta.env, which client.ts reads at module load time.
