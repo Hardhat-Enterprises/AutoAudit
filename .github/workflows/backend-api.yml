@@ -16,7 +16,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      backend: ${{ steps.filter.outputs.backend }}
+  backend-api: ${{ steps.filter.outputs.backend-api }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -27,30 +27,37 @@ jobs:
               - 'backend-api/**'
           base: ${{ github.ref }} 
 
-  analyze:
-    name: Security Analysis on (${{ matrix.language }})
-    needs: changes
-    # Depend on changes job
-    if: github.event_name != 'push' || needs.changes.outputs.backend-api == 'true'  
-    # Run always for non-push events, or if engine changed on push
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
-    permissions:
-      security-events: write
-      packages: read
-      actions: read
-      contents: read
+analyze:
+  name: Security Analysis on (${{ matrix.language }})
+  needs: changes
+  if: github.event_name != 'push' || needs.changes.outputs.backend-api == 'true'
+  runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+  permissions:
+    security-events: write
+    packages: read
+    actions: read
+    contents: read
 
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript-typescript' ]
-        # 'actions'  'c-cpp' 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
+  strategy:
+    fail-fast: false
+    matrix:
+      language: [ 'python' ]
 
-    steps:
+  steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Initializes the CodeQL tools for scanning.
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Bandit
+      run: pip install bandit
+
+    - name: Run Bandit scan on backend-api
+      run: bandit -r backend-api -f txt
+
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
