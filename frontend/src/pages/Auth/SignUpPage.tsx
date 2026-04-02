@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import "./LoginPage.css";
-import "./SignUpPage.css";
 import LandingHeader from "../Landing/components/LandingHeader";
 import LandingFooter from "../Landing/components/LandingFooter";
 import SignupBrandPanel from "./components/SignupBrandPanel";
@@ -21,7 +19,7 @@ const emptyForm: SignUpFormData = {
 export type SignUpPageProps = {
   onSignUp: (payload: SignUpSubmitPayload) => Promise<void>;
   onBackToLogin: () => void;
-}
+};
 
 export default function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
   const [formData, setFormData] = useState<SignUpFormData>(emptyForm);
@@ -32,17 +30,17 @@ export default function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps)
       ...prev,
       [field]: value,
     }));
-    if (submitError) {
-      setSubmitError("");
-    }
+    if (submitError) setSubmitError("");
   };
 
   const getSubmitErrorMessage = (error: unknown): string => {
     const message =
       error instanceof Error ? error.message : "Sign up failed. Please try again.";
+
     if (message === "REGISTER_USER_ALREADY_EXISTS") {
       return "An account with this email already exists.";
     }
+
     return message;
   };
 
@@ -57,18 +55,31 @@ export default function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps)
   };
 
   return (
-    <div className="login-page signup-page">
+    <div className="min-h-screen flex flex-col bg-[#081b2e]">
       <LandingHeader />
-      <main className="login-main signup-main">
-        <SignupBrandPanel />
-        <SignupFormPanel
-          formData={formData}
-          onFormChange={handleFormChange}
-          onSubmit={handleFormSubmit}
-          onBackToLogin={onBackToLogin}
-          submitError={submitError}
-        />
+
+      <main className="flex flex-1 items-center justify-center px-6 py-12">
+        <div className="grid w-full max-w-6xl gap-10 lg:grid-cols-2">
+
+          {/* Left side (branding) */}
+          <div className="hidden lg:flex items-center justify-center">
+            <SignupBrandPanel />
+          </div>
+
+          {/* Right side (form) */}
+          <div className="flex items-center justify-center">
+            <SignupFormPanel
+              formData={formData}
+              onFormChange={handleFormChange}
+              onSubmit={handleFormSubmit}
+              onBackToLogin={onBackToLogin}
+              submitError={submitError}
+            />
+          </div>
+
+        </div>
       </main>
+
       <LandingFooter />
     </div>
   );

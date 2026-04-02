@@ -13,7 +13,7 @@ type InputFieldConfig = {
   icon: React.ReactNode;
   type: "text" | "email";
   placeholder: string;
-}
+};
 
 const inputFields: InputFieldConfig[] = [
   {
@@ -86,7 +86,7 @@ export type SignupFormPanelProps = {
   onSubmit: (payload: SignUpSubmitPayload) => void | Promise<void>;
   onBackToLogin: () => void;
   submitError: string;
-}
+};
 
 const SignupFormPanel = ({
   formData,
@@ -150,20 +150,27 @@ const SignupFormPanel = ({
   };
 
   return (
-    <section className="login-form-section signup-form-section" aria-labelledby="signup-form-heading">
-      <div className="login-form-card signup-form-card">
-        <header className="login-form-header">
-          <h2 id="signup-form-heading">Create Account</h2>
-          <p>Start your compliance journey with AutoAudit.</p>
+    <section
+      className="flex w-full items-center justify-center"
+      aria-labelledby="signup-form-heading"
+    >
+      <div className="w-full max-w-lg rounded-3xl bg-[#0d2746] p-8 shadow-2xl">
+        <header className="mb-8">
+          <h2 id="signup-form-heading" className="text-5xl font-semibold text-white">
+            Create Account
+          </h2>
+          <p className="mt-3 text-lg text-blue-100">
+            Start your compliance journey with AutoAudit.
+          </p>
         </header>
 
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="signup-form-grid">
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {inputFields.slice(0, 2).map((field) => (
-              <label key={field.name} className="signup-field">
-                <span>{field.label}</span>
-                <div className="input-wrapper">
-                  <span className="input-icon" aria-hidden="true">
+              <label key={field.name} className="flex flex-col gap-2">
+                <span className="text-base font-medium text-white">{field.label}</span>
+                <div className="flex items-center rounded-2xl border border-blue-800 bg-[#173454] px-4 py-3 focus-within:border-blue-500">
+                  <span className="mr-3 text-blue-200" aria-hidden="true">
                     {field.icon}
                   </span>
                   <input
@@ -173,6 +180,7 @@ const SignupFormPanel = ({
                     onChange={handleChange}
                     placeholder={field.placeholder}
                     required
+                    className="w-full bg-transparent text-white outline-none placeholder:text-blue-200"
                   />
                 </div>
               </label>
@@ -180,10 +188,10 @@ const SignupFormPanel = ({
           </div>
 
           {inputFields.slice(2).map((field) => (
-            <label key={field.name} className="signup-field">
-              <span>{field.label}</span>
-              <div className="input-wrapper">
-                <span className="input-icon" aria-hidden="true">
+            <label key={field.name} className="flex flex-col gap-2">
+              <span className="text-base font-medium text-white">{field.label}</span>
+              <div className="flex items-center rounded-2xl border border-blue-800 bg-[#173454] px-4 py-3 focus-within:border-blue-500">
+                <span className="mr-3 text-blue-200" aria-hidden="true">
                   {field.icon}
                 </span>
                 <input
@@ -193,15 +201,16 @@ const SignupFormPanel = ({
                   onChange={handleChange}
                   placeholder={field.placeholder}
                   required
+                  className="w-full bg-transparent text-white outline-none placeholder:text-blue-200"
                 />
               </div>
             </label>
           ))}
 
-          <label className="signup-field">
-            <span>Password</span>
-            <div className="input-wrapper">
-              <span className="input-icon" aria-hidden="true">
+          <label className="flex flex-col gap-2">
+            <span className="text-base font-medium text-white">Password</span>
+            <div className="flex items-center rounded-2xl border border-blue-800 bg-[#173454] px-4 py-3 focus-within:border-blue-500">
+              <span className="mr-3 text-blue-200" aria-hidden="true">
                 <ShieldCheck size={16} />
               </span>
               <input
@@ -211,10 +220,11 @@ const SignupFormPanel = ({
                 onChange={handleChange}
                 placeholder="Create a strong password"
                 required
+                className="w-full bg-transparent text-white outline-none placeholder:text-blue-200"
               />
               <button
                 type="button"
-                className="password-toggle"
+                className="ml-3 text-blue-200 hover:text-white"
                 onClick={() => setShowPassword((prev) => !prev)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
@@ -223,10 +233,10 @@ const SignupFormPanel = ({
             </div>
           </label>
 
-          <label className="signup-field">
-            <span>Confirm Password</span>
-            <div className="input-wrapper">
-              <span className="input-icon" aria-hidden="true">
+          <label className="flex flex-col gap-2">
+            <span className="text-base font-medium text-white">Confirm Password</span>
+            <div className="flex items-center rounded-2xl border border-blue-800 bg-[#173454] px-4 py-3 focus-within:border-blue-500">
+              <span className="mr-3 text-blue-200" aria-hidden="true">
                 <ShieldCheck size={16} />
               </span>
               <input
@@ -236,10 +246,11 @@ const SignupFormPanel = ({
                 onChange={handleChange}
                 placeholder="Confirm your password"
                 required
+                className="w-full bg-transparent text-white outline-none placeholder:text-blue-200"
               />
               <button
                 type="button"
-                className="password-toggle"
+                className="ml-3 text-blue-200 hover:text-white"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
                 aria-label={showConfirmPassword ? "Hide password" : "Show password"}
               >
@@ -248,52 +259,76 @@ const SignupFormPanel = ({
             </div>
           </label>
 
-          <label className="checkbox-wrapper signup-checkbox">
-            <input type="checkbox" checked={agreeTerms} onChange={handleAgreeTermsChange} />
+          <label className="flex items-start gap-3 text-sm text-blue-100">
+            <input
+              type="checkbox"
+              checked={agreeTerms}
+              onChange={handleAgreeTermsChange}
+              className="mt-1"
+            />
             <span>
-              I agree to the <a href="/#terms">Terms & Conditions</a> and{" "}
-              <a href="/#privacy">Privacy Policy</a>
+              I agree to the{" "}
+              <a href="/#terms" className="text-white underline">
+                Terms & Conditions
+              </a>{" "}
+              and{" "}
+              <a href="/#privacy" className="text-white underline">
+                Privacy Policy
+              </a>
             </span>
           </label>
 
           {(error || submitError) && (
-            <p className="signup-error" role="alert">
+            <p className="text-sm text-red-400" role="alert">
               {error || submitError}
             </p>
           )}
 
-          <button type="submit" className="btn-signin signup-submit">
+          <button
+            type="submit"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-500 py-4 text-lg font-semibold text-white transition hover:bg-blue-600"
+          >
             <span>Create Account</span>
             <ArrowRight size={18} />
           </button>
         </form>
 
-        <div className="divider">
-          <span>Or sign up with</span>
+        <div className="relative my-8 text-center">
+          <div className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-blue-800" />
+          <span className="relative bg-[#0d2746] px-4 text-sm uppercase tracking-widest text-blue-100">
+            Or sign up with
+          </span>
         </div>
 
-        <div className={`social-login ${socialButtons.length === 1 ? "single" : ""}`}>
+        <div className="flex justify-center">
           {socialButtons.map((button) => (
             <button
               key={button.label}
               type="button"
-              className="social-btn"
+              className="flex min-w-[230px] items-center justify-center gap-3 rounded-2xl border border-blue-800 bg-[#173454] px-6 py-3 text-white transition hover:bg-[#1d3d63]"
               onClick={() => handleSocialSignUp(button.provider)}
               disabled={Boolean(button.disabled)}
               aria-disabled={button.disabled ? "true" : "false"}
               title={button.disabled ? "Coming soon" : `Continue with ${button.label}`}
             >
-              <span className={`social-icon social-icon--${button.provider}`} aria-hidden="true">
+              <span
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#23476f]"
+                aria-hidden="true"
+              >
                 {button.icon}
               </span>
-              <span className="social-label">{button.label}</span>
+              <span className="font-medium text-white">{button.label}</span>
             </button>
           ))}
         </div>
 
-        <p className="signup-text">
+        <p className="mt-8 text-center text-sm text-blue-100">
           Already have an account?{" "}
-          <button type="button" onClick={onBackToLogin}>
+          <button
+            type="button"
+            onClick={onBackToLogin}
+            className="font-semibold text-white hover:underline"
+          >
             Sign In
           </button>
         </p>
