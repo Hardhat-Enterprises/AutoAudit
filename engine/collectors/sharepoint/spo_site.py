@@ -3,19 +3,10 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 7.2.4
 
-Connection Method: SharePoint REST API
-Authentication: Client secret via MSAL (access token)
+Connection Method: Microsoft Graph
+Authentication: Client secret via MSAL application permissions
 
-CAVEAT: Access token authentication has not been fully tested.
-    It should work, but needs verification during implementation. Certificate-based
-    authentication may be required instead of client secret authentication.
-
-NOTE: This collector uses SharePoint REST API instead of PowerShell because
-SharePoint Online PowerShell does not support client secret authentication.
-If certificate authentication is adopted in the future, this collector should
-be updated to use the Get-SPOSite cmdlet instead.
-
-REST Endpoints: /_api/site or SharePoint Admin API for site collections
+Graph Endpoints: GET /sites/getAllSites
 """
 
 from typing import Any
@@ -40,5 +31,29 @@ class SpoSiteDataCollector(BaseDataCollector):
             - onedrive_sites: OneDrive for Business sites
             - site_sharing_settings: Per-site sharing configurations
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        tenant_settings = await client.get_tenant_settings()
+        sites = await client.search_sites()
+
+        onedrive_sites = [
+            site for site in sites if "-my.sharepoint.com/" in str(site.get("url", ""))
+        ]
+
+        return {
+            "sites": sites,
+            "onedrive_sites": onedrive_sites,
+            "site_sharing_settings": {
+                "sharepoint_sharing_capability": tenant_settings.get(
+                    "CoreSharingCapability",
+                    tenant_settings.get("SharingCapability"),
+                ),
+                "onedrive_sharing_capability": tenant_settings.get(
+                    "OneDriveSharingCapability"
+                ),
+                "core_default_share_link_scope": tenant_settings.get(
+                    "CoreDefaultShareLinkScope"
+                ),
+                "onedrive_default_share_link_scope": tenant_settings.get(
+                    "OneDriveDefaultShareLinkScope"
+                ),
+            },
+        }

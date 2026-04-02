@@ -1486,11 +1486,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
-      "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "policy_file": "7.2.1_modern_authentication_sharepoint_applications_required.rego",
+      "requires_permissions": ["SharePointTenantSettings.Read.All"],
+      "notes": null
     },
     {
       "control_id": "7.2.2",
@@ -1499,13 +1499,13 @@
       "severity": "medium",
       "service": "SharePoint",
       "level": "L1",
-      "is_manual": false,
-      "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
+      "is_manual": true,
+      "benchmark_audit_type": "Manual",
+      "automation_status": "manual",
+      "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "requires_permissions": null,
+      "notes": "Not supported through Microsoft Graph sharePointSettings."
     },
     {
       "control_id": "7.2.3",
@@ -1516,9 +1516,9 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "policy_file": "7.2.3_external_content_sharing_restricted.rego",
       "requires_permissions": ["SharePoint.Admin"],
       "notes": "Collector raises NotImplementedError"
     },
@@ -1531,11 +1531,11 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
-      "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "policy_file": "7.2.4_onedrive_content_sharing_restricted.rego",
+      "requires_permissions": ["SharePointTenantSettings.Read.All"],
+      "notes": null
     },
     {
       "control_id": "7.2.5",
@@ -1546,11 +1546,11 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
-      "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "policy_file": "7.2.5_guest_users_cannot_share_items_not_owned.rego",
+      "requires_permissions": ["SharePointTenantSettings.Read.All"],
+      "notes": null
     },
     {
       "control_id": "7.2.6",

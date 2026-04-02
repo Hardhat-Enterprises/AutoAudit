@@ -30,6 +30,7 @@ from collectors.registry import DATA_COLLECTORS, get_collector
 from collectors.graph_client import GraphClient
 from collectors.powershell_base import BasePowerShellCollector
 from collectors.powershell_client import PowerShellClient, PowerShellExecutionError
+from collectors.sharepoint_client import SharePointClient
 
 
 def list_collectors() -> None:
@@ -177,6 +178,7 @@ async def test_all_collectors(
     tenant_id, client_id, client_secret = get_credentials()
     graph_client = GraphClient(tenant_id, client_id, client_secret)
     ps_client = None  # Lazy init PowerShell client
+    sharepoint_client = None
 
     results = []
     for collector_id in sorted(DATA_COLLECTORS.keys()):
@@ -188,6 +190,14 @@ async def test_all_collectors(
             if ps_client is None:
                 ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
             client = ps_client
+        elif collector_id.startswith("sharepoint."):
+            if sharepoint_client is None:
+                sharepoint_client = SharePointClient(
+                    tenant_id=tenant_id,
+                    client_id=client_id,
+                    client_secret=client_secret,
+                )
+            client = sharepoint_client
         else:
             client = graph_client
 
