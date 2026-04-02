@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, test, expect, vi, afterEach } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import SignUpPage from './SignUpPage';
@@ -84,7 +84,7 @@ describe('SignUpPage', () => {
         <SignUpPage onSignUp={vi.fn()} onBackToLogin={onBackToLogin} />
       </MemoryRouter>
     );
-    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    await userEvent.click(within(screen.getByRole('main')).getByRole('button', { name: /^sign in$/i }));
     expect(onBackToLogin).toHaveBeenCalledTimes(1);
   });
 });

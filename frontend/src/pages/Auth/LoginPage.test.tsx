@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import LoginPage from './LoginPage';
@@ -55,7 +55,7 @@ describe('LoginPage', () => {
 
     await userEvent.type(screen.getByLabelText(/email address/i), 'x@y.com');
     await userEvent.type(screen.getByLabelText(/^password$/i), 'secret');
-    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    await userEvent.click(within(screen.getByRole('main')).getByRole('button', { name: /^sign in$/i }));
 
     expect(onLogin).toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: /create one/i }));

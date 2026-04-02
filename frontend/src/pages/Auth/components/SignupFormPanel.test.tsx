@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, test, expect, vi, afterEach } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SignupFormPanel from './SignupFormPanel';
 import type { SignUpFormData } from '../signUpTypes';
@@ -109,6 +109,67 @@ describe('SignupFormPanel', () => {
     const { onBackToLogin } = renderPanel();
     await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
     expect(onBackToLogin).toHaveBeenCalledTimes(1);
+  });
+
+  test('displays submitError prop as an alert', () => {
+    render(
+      <SignupFormPanel
+        formData={emptyForm}
+        onFormChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onBackToLogin={vi.fn()}
+        submitError="Server error occurred"
+      />
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Server error occurred');
+  });
+
+  test('toggles password field visibility when the show/hide button is clicked', async () => {
+    renderPanel();
+    const passwordInput = screen.getByPlaceholderText(/create a strong password/i);
+    expect(passwordInput).toHaveAttribute('type', 'password');
+
+    // Both password fields have a toggle button — get the first one (for the password field)
+    const [passwordToggle] = screen.getAllByRole('button', { name: /show password/i });
+    await userEvent.click(passwordToggle);
+    expect(passwordInput).toHaveAttribute('type', 'text');
+
+    await userEvent.click(screen.getAllByRole('button', { name: /hide password/i })[0]);
+    expect(passwordInput).toHaveAttribute('type', 'password');
+  });
+
+  test('toggles confirm password field visibility independently', async () => {
+    renderPanel();
+    const confirmInput = screen.getByPlaceholderText(/confirm your password/i);
+    expect(confirmInput).toHaveAttribute('type', 'password');
+
+    // Second toggle button belongs to the confirm password field
+    const toggleButtons = screen.getAllByRole('button', { name: /show password/i });
+    await userEvent.click(toggleButtons[1]);
+    expect(confirmInput).toHaveAttribute('type', 'text');
+  });
+
+  test('clears the validation error when the user types after a mismatch', async () => {
+    // All required fields must be populated so HTML5 validation doesn't block the submit
+    renderPanel({
+      firstName: 'A',
+      lastName: 'B',
+      email: 'a@b.com',
+      organizationName: 'Org',
+      password: 'abc',
+      confirmPassword: 'xyz',
+    });
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /i agree to the/i }));
+    await userEvent.click(screen.getByRole('button', { name: /create account/i }));
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+
+    // fireEvent.change is used here because onFormChange is a mock (controlled component
+    // value does not update), so userEvent.type would not reliably trigger the onChange handler.
+    fireEvent.change(screen.getByPlaceholderText(/first name/i), {
+      target: { name: 'firstName', value: 'a' },
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   test('Google sign-up button assigns authorize URL', async () => {
