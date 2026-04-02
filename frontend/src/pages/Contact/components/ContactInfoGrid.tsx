@@ -1,18 +1,23 @@
-
 import React from "react";
-import { Twitter, Linkedin, Facebook, Instagram, LucideIcon } from "lucide-react";
+import {
+  Twitter,
+  Linkedin,
+  Facebook,
+  Instagram,
+  LucideIcon,
+} from "lucide-react";
 
 // Type for links and social icons
 type ContactLink = {
   label: string;
   href: string;
-}
+};
 
 type SocialLink = {
   label: string;
   icon: LucideIcon; // Lucide-react icon type
   href: string;
-}
+};
 
 type InfoCard = {
   icon: string;
@@ -20,7 +25,7 @@ type InfoCard = {
   description: string;
   links?: ContactLink[];
   social?: SocialLink[];
-}
+};
 
 // Data
 const infoCards: InfoCard[] = [
@@ -64,32 +69,43 @@ Australia`,
 
 const ContactInfoGrid: React.FC = () => {
   return (
-    <div className="contact-info">
+    <div className="flex flex-col gap-6">
       {infoCards.map((card) => (
-        <article key={card.title} className="info-card">
-          <div className="info-icon">{card.icon}</div>
-          <h3>{card.title}</h3>
-          <p>{card.description}</p>
+        <article
+          key={card.title}
+          className="rounded-[20px] border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.03)] p-8 transition-all duration-300 hover:border-[#3b82f6] hover:bg-[rgba(255,255,255,0.05)]"
+        >
+          <div className="mb-5 flex h-[56px] w-[56px] items-center justify-center rounded-[14px] bg-gradient-to-br from-[#3b82f6] to-[#2563eb] text-2xl">
+            {card.icon}
+          </div>
+
+          <h3 className="mb-2 text-xl font-semibold text-white">
+            {card.title}
+          </h3>
+
+          <p className="mb-2 whitespace-pre-line leading-[1.6] text-[#b0c4de]">
+            {card.description}
+          </p>
 
           {card.links &&
             card.links.map((link, index) => (
               <a
                 key={`${link.label}-${index}`}
                 href={link.href}
-                className="contact-link"
+                className="block text-[#3b82f6] transition hover:text-[#2563eb]"
               >
                 {link.label}
               </a>
             ))}
 
           {card.social && (
-            <div className="social-links">
+            <div className="mt-4 flex gap-4">
               {card.social.map(({ label, icon: Icon, href }) => (
                 <a
                   key={label}
                   href={href}
-                  className="social-link"
                   aria-label={label}
+                  className="flex h-[44px] w-[44px] items-center justify-center rounded-[12px] border border-[rgba(59,130,246,0.2)] bg-[rgba(59,130,246,0.12)] text-white transition hover:border-transparent hover:bg-gradient-to-br hover:from-[#3b82f6] hover:to-[#2563eb]"
                 >
                   <Icon size={18} strokeWidth={1.7} />
                 </a>
