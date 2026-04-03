@@ -11,9 +11,8 @@
 # The build also generates /policies/manifest.json listing every included
 # policy file with its SHA-256 checksum for traceability.
 
-FROM openpolicyagent/opa:latest-debug
+FROM alpine:3.21 AS build
 
-USER root
 COPY engine/policies /policies
 
 # Generate manifest listing all included policy files with SHA-256 checksums
@@ -21,4 +20,6 @@ RUN find /policies -type f \( -name "*.rego" -o -name "*.json" \) -exec sh -c \
     'echo "{\"path\": \"$1\", \"sha256\": \"$(sha256sum "$1" | cut -d" " -f1)\"}"' _ {} \; \
     | sort > /policies/manifest.json
 
-USER opa
+# Production OPA image. Runs as non-root (UID 1000:1000) by default.
+FROM openpolicyagent/opa:1.4.2
+COPY --from=build /policies /policies
