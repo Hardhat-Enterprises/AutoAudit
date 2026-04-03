@@ -19,7 +19,7 @@ spec:
       containers:
         - name: backend-api
           image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.backendApi.image.repository "tag" (.Values.backendApi.image.tag | default .Values.global.imageTag | default .Chart.AppVersion)) }}
-          imagePullPolicy: {{ .Values.backendApi.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.backendApi.image.pullPolicy | default .Values.global.imagePullPolicy | default "IfNotPresent" }}
           ports:
             - name: http
               containerPort: 8000

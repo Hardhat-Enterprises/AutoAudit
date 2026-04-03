@@ -12,6 +12,8 @@ global:
   imageRegistry: autoaudit.azurecr.io
   # -- Default image tag for all custom services
   imageTag: latest
+  # -- Always pull to pick up new images behind the :latest tag
+  imagePullPolicy: Always
 
 secrets:
   existingSecret: autoaudit-secrets

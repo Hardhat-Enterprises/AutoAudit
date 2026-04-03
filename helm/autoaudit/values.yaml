@@ -24,7 +24,7 @@ postgresql:
   image:
     repository: postgres
     tag: "17"
-    pullPolicy: IfNotPresent
+    pullPolicy: ""
   persistence:
     size: 10Gi
     # -- Storage class (leave empty for cluster default)
@@ -44,7 +44,7 @@ redis:
   image:
     repository: redis
     tag: alpine
-    pullPolicy: IfNotPresent
+    pullPolicy: ""
   persistence:
     # -- Enable persistent storage for Redis (recommended for production, not needed for PoC)
     enabled: false
@@ -65,7 +65,7 @@ backendApi:
     repository: autoaudit/backend-api
     # -- Defaults to Chart.appVersion if empty
     tag: ""
-    pullPolicy: IfNotPresent
+    pullPolicy: ""
   service:
     type: ClusterIP
     port: 8000
@@ -91,7 +91,7 @@ worker:
   image:
     repository: autoaudit/worker
     tag: ""
-    pullPolicy: IfNotPresent
+    pullPolicy: ""
   celery:
     concurrency: 4
     pool: prefork
@@ -110,7 +110,7 @@ frontend:
   image:
     repository: autoaudit/frontend
     tag: ""
-    pullPolicy: IfNotPresent
+    pullPolicy: ""
   service:
     type: ClusterIP
     port: 80
@@ -129,7 +129,7 @@ opa:
     # -- Custom OPA image with policies baked in
     repository: autoaudit/opa
     tag: ""
-    pullPolicy: IfNotPresent
+    pullPolicy: ""
   service:
     type: ClusterIP
     port: 8181
@@ -147,7 +147,7 @@ powershellService:
   image:
     repository: autoaudit/powershell-service
     tag: ""
-    pullPolicy: IfNotPresent
+    pullPolicy: ""
   service:
     type: ClusterIP
     port: 8001

@@ -18,7 +18,7 @@ spec:
       containers:
         - name: opa
           image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.opa.image.repository "tag" (.Values.opa.image.tag | default .Values.global.imageTag | default .Chart.AppVersion)) }}
-          imagePullPolicy: {{ .Values.opa.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.opa.image.pullPolicy | default .Values.global.imagePullPolicy | default "IfNotPresent" }}
           args:
             - run
             - --server

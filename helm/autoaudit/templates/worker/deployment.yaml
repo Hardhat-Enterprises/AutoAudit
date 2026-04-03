@@ -19,7 +19,7 @@ spec:
       containers:
         - name: worker
           image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.worker.image.repository "tag" (.Values.worker.image.tag | default .Values.global.imageTag | default .Chart.AppVersion)) }}
-          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy | default .Values.global.imagePullPolicy | default "IfNotPresent" }}
           command:
             - celery
             - -A
