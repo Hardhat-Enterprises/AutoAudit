@@ -124,6 +124,13 @@ jobs:
         run: |
           echo "backend-url=https://autoaudit-pr-${{ steps.pr.outputs.number }}.fly.dev" >> "$GITHUB_OUTPUT"
 
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
