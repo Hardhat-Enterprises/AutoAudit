@@ -18,15 +18,19 @@ spec:
       {{- include "autoaudit.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: backend-api
-          image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.backendApi.image.repository "tag" (.Values.backendApi.image.tag | default .Chart.AppVersion)) }}
+          image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.backendApi.image.repository "tag" (.Values.backendApi.image.tag | default .Values.global.imageTag | default .Chart.AppVersion)) }}
           imagePullPolicy: {{ .Values.backendApi.image.pullPolicy }}
-          command: ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
           ports:
             - name: http
               containerPort: 8000
               protocol: TCP
           env:
             {{- include "autoaudit.backendApi.env" . | nindent 12 }}
+            - name: INITIAL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "autoaudit.fullname" . }}-admin
+                  key: admin-password
           livenessProbe:
             httpGet:
               path: /

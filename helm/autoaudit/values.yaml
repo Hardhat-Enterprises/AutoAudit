@@ -172,11 +172,6 @@ gateway:
   # -- Hostname for the application (e.g., autoaudit.example.com)
   hostname: ""
 
-# -- Database migration job (Helm pre-install/pre-upgrade hook)
-migration:
-  enabled: true
-  backoffLimit: 3
-
 # -- Service account
 serviceAccount:
   create: true

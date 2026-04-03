@@ -17,7 +17,7 @@ spec:
       {{- include "autoaudit.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: frontend
-          image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.frontend.image.repository "tag" (.Values.frontend.image.tag | default .Chart.AppVersion)) }}
+          image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.frontend.image.repository "tag" (.Values.frontend.image.tag | default .Values.global.imageTag | default .Chart.AppVersion)) }}
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - name: http

@@ -9,14 +9,12 @@
 #   3. Container images pushed to a registry accessible by the cluster
 
 global:
-  # -- Your container registry (e.g., registry.example.com)
-  imageRegistry: ""
-  # imagePullSecrets:
-  #   - name: registry-pull-secret
+  imageRegistry: autoaudit.azurecr.io
+  # -- Default image tag for all custom services
+  imageTag: latest
 
-# -- Name of pre-existing Kubernetes Secret with application secrets
 secrets:
-  existingSecret: ""
+  existingSecret: autoaudit-secrets
 
 # -- Minimal resources for PoC
 postgresql:
@@ -88,7 +86,7 @@ opa:
       memory: 128Mi
 
 gateway:
-  enabled: true
+  enabled: false
   parentRef:
     name: ""
     # namespace: ""

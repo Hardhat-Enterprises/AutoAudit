@@ -21,17 +21,15 @@ Services deployed:
   - Redis (1 replica)
   - PowerShell Service ({{ .Values.powershellService.replicaCount }} replica(s))
 
-{{- if .Values.migration.enabled }}
+Database migrations run automatically when the backend-api container starts.
 
-Database migrations run automatically via a pre-install/pre-upgrade Job.
-Check migration status:
-  kubectl logs job/{{ include "autoaudit.fullname" . }}-migrate-{{ .Release.Revision }} -n {{ .Release.Namespace }}
-{{- end }}
-
+{{- if .Release.IsInstall }}
 Default admin credentials:
   Email: admin@example.com
-  Password: admin
-  WARNING: Change these immediately after first login.
+  Retrieve the generated password:
+    kubectl get secret {{ include "autoaudit.fullname" . }}-admin -n {{ .Release.Namespace }} -o jsonpath='{.data.admin-password}' | base64 -d
+  WARNING: Change this password immediately after first login.
+{{- end }}
 
 Secrets:
   The chart expects a Kubernetes Secret named "{{ include "autoaudit.secretName" . }}"

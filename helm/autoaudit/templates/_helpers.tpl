@@ -92,7 +92,8 @@ imagePullSecrets:
 
 {{/*
 Resolve a full image reference including registry prefix.
-Usage: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.backendApi.image.repository "tag" (.Values.backendApi.image.tag | default .Chart.AppVersion)) }}
+Tag priority: per-service tag > global.imageTag > Chart.AppVersion
+Usage: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.backendApi.image.repository "tag" (.Values.backendApi.image.tag | default .Values.global.imageTag | default .Chart.AppVersion)) }}
 */}}
 {{- define "autoaudit.image" -}}
 {{- if .registry }}
