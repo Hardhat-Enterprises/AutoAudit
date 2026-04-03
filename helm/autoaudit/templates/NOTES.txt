@@ -3,12 +3,14 @@ AutoAudit has been deployed!
 {{- if .Values.gateway.enabled }}
 
 Application URL:
-{{- if .Values.gateway.hostname }}
-  https://{{ .Values.gateway.hostname }}
-  API: https://{{ .Values.gateway.hostname }}/api/v1/
+{{- if .Values.gateway.hostnames }}
+  {{- range .Values.gateway.hostnames }}
+  https://{{ . }}
+  {{- end }}
+  API: https://{{ first .Values.gateway.hostnames }}/api/v1/
 {{- else }}
-  Gateway is enabled but no hostname is configured.
-  Set gateway.hostname in your values to access the application.
+  Gateway is enabled but no hostnames are configured.
+  Set gateway.hostnames in your values to access the application.
 {{- end }}
 {{- end }}
 

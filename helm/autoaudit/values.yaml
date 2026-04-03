@@ -169,8 +169,8 @@ gateway:
     name: ""
     # -- Namespace of the Gateway (if different from release namespace)
     namespace: ""
-  # -- Hostname for the application (e.g., autoaudit.example.com)
-  hostname: ""
+  # -- Hostnames for the application (e.g., [autoaudit.example.com, www.autoaudit.example.com])
+  hostnames: []
 
 # -- Service account
 serviceAccount:

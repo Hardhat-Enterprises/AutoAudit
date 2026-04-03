@@ -11,9 +11,9 @@ spec:
       {{- if .Values.gateway.parentRef.namespace }}
       namespace: {{ .Values.gateway.parentRef.namespace }}
       {{- end }}
-  {{- if .Values.gateway.hostname }}
+  {{- if .Values.gateway.hostnames }}
   hostnames:
-    - {{ .Values.gateway.hostname | quote }}
+    {{- toYaml .Values.gateway.hostnames | nindent 4 }}
   {{- end }}
   rules:
     # API route: /api/* -> backend-api (with /api prefix stripped)
