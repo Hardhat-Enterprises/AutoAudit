@@ -10,16 +10,18 @@ on:
     paths:
       - .github/workflows/autoaudit-azure-poc.yml
 
-env:
-  IMAGE_TAG: ${{ github.sha }}
-
 jobs:
   build-and-push:
     name: Build and push container images
     runs-on: ubuntu-latest
+    env:
+      IMAGE_TAG: placeholder
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set image tag
+        run: echo "IMAGE_TAG=$(date +%Y%m%d)-$(echo ${{ github.sha }} | cut -c1-7)" >> "$GITHUB_ENV"
 
       - name: Login to ACR
         uses: docker/login-action@v3
