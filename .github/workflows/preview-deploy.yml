@@ -8,7 +8,7 @@ on:
       pr_number:
         description: "PR number to simulate (for manual testing)"
         required: true
-        default: "1"
+        default: "140"
 
 permissions:
   contents: read
