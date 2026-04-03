@@ -51,7 +51,11 @@ const Dropdown = ({ value, onChange, options, isDarkMode = true }) => {
         if (!hasOptions) return;
         setIsOpen(!isOpen);
       }}
-      className="w-full flex items-center justify-between px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition"
+      className={`w-full flex items-center justify-between px-4 py-2 rounded-lg transition ${
+  isDarkMode
+    ? "bg-gray-800 text-white hover:bg-gray-700"
+    : "bg-white text-black hover:bg-gray-200"
+}`}
       aria-haspopup="listbox"
       aria-expanded={isOpen}
       disabled={!hasOptions}
@@ -62,7 +66,9 @@ const Dropdown = ({ value, onChange, options, isDarkMode = true }) => {
       </span>
     </button>
     {isOpen && hasOptions && (
-      <div className="absolute mt-2 w-full bg-white text-black rounded-lg shadow-lg z-10">
+      <div className={`absolute mt-2 w-full rounded-lg shadow-lg z-10 ${
+  isDarkMode ? "bg-gray-800 text-white" : "bg-white text-black"
+}`}>
         {safeOptions.map((option) => (
           <button
             key={option.value}
@@ -70,9 +76,15 @@ const Dropdown = ({ value, onChange, options, isDarkMode = true }) => {
             type="button"
             role="option"
             aria-selected={option.value === value}
-            className={`block w-full text-left px-4 py-2 hover:bg-gray-200 ${
-              option.value === value ? 'bg-gray-300 font-semibold' : ''
-            }`}
+            className={`block w-full text-left px-4 py-2 ${
+  isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"
+} ${
+  option.value === value
+    ? isDarkMode
+      ? "bg-gray-700 font-semibold"
+      : "bg-gray-300 font-semibold"
+    : ""
+}`}
           >
             {option.label}
           </button>
