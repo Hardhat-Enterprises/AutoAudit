@@ -1,0 +1,41 @@
+# fly.preview.toml — Fly.io app shape for per-PR preview environments.
+#
+# App name is set dynamically at deploy time via:
+#   flyctl deploy --app autoaudit-pr-<N> --config fly.preview.toml
+# This file intentionally omits [app] so the name is never hard-coded here.
+
+[env]
+  APP_ENV = "preview"
+  # All secrets (DATABASE_URL, SECRET_KEY, ENCRYPTION_KEY, REDIS_URL, etc.)
+  # are injected via `flyctl secrets set` in the workflow — not stored here.
+
+[[services]]
+  internal_port = 8000
+  protocol      = "tcp"
+  force_https   = true
+
+  [[services.ports]]
+    handlers = ["http"]
+    port     = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port     = 443
+
+  [[services.http_checks]]
+    interval      = 10000   # ms
+    timeout       = 5000    # ms
+    grace_period  = "30s"
+    method        = "GET"
+    path          = "/"
+
+[[vm]]
+  memory   = "512mb"
+  cpu_kind = "shared"
+  cpus     = 1
+
+[http_service]
+  internal_port       = 8000
+  force_https         = true
+  auto_stop_machines  = true
+  min_machines_running = 0
