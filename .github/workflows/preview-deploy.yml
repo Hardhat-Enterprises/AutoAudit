@@ -8,7 +8,7 @@ on:
       pr_number:
         description: "PR number to simulate (for manual testing)"
         required: true
-        default: "140"
+        default: "1"
 
 permissions:
   contents: read
@@ -101,11 +101,106 @@ jobs:
           docker push "${{ steps.meta.outputs.image-tag }}"
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Job 3 — Post / update PR comment with preview URL
+  # Job 3 — Deploy backend to Fly.io with Neon DB branch (needs job 2)
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy-backend-preview:
+    runs-on: ubuntu-latest
+    needs: build-push-backend-image
+    outputs:
+      backend-url: ${{ steps.urls.outputs.backend-url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve PR number
+        id: pr
+        run: |
+          echo "number=${{ github.event.number || inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Set URLs
+        id: urls
+        run: |
+          echo "backend-url=https://autoaudit-pr-${{ steps.pr.outputs.number }}.fly.dev" >> "$GITHUB_OUTPUT"
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Create Fly app (idempotent)
+        env:
+          FLY_API_TOKEN: ${{ secrets.PREVIEW_FLY_API_TOKEN }}
+        run: |
+          flyctl apps create autoaudit-pr-${{ steps.pr.outputs.number }} --org personal || true
+
+      - name: Create or reuse Neon DB branch
+        id: neon
+        env:
+          NEON_API_KEY: ${{ secrets.PREVIEW_NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.PREVIEW_NEON_PROJECT_ID }}
+        run: |
+          BRANCH_NAME="pr-${{ steps.pr.outputs.number }}"
+
+          EXISTING=$(curl -s \
+            -H "Authorization: Bearer ${NEON_API_KEY}" \
+            "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches" \
+          | jq -r --arg name "$BRANCH_NAME" '.branches[] | select(.name == $name) | .id')
+
+          if [ -n "$EXISTING" ]; then
+            echo "Reusing existing Neon branch: ${EXISTING}"
+            BRANCH_ID="$EXISTING"
+          else
+            RESPONSE=$(curl -s -X POST \
+              -H "Authorization: Bearer ${NEON_API_KEY}" \
+              -H "Content-Type: application/json" \
+              -d "{\"branch\": {\"name\": \"${BRANCH_NAME}\"}}" \
+              "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches")
+            BRANCH_ID=$(echo "$RESPONSE" | jq -r '.branch.id')
+            echo "Created Neon branch: ${BRANCH_ID}"
+          fi
+
+          CONN=$(curl -s \
+            -H "Authorization: Bearer ${NEON_API_KEY}" \
+            "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/connection_uri?branch_id=${BRANCH_ID}&database_name=neondb&role_name=neondb_owner")
+          DB_URL=$(echo "$CONN" | jq -r '.uri')
+
+          # asyncpg requires postgresql+asyncpg:// scheme
+          ASYNCPG_URL="${DB_URL/postgresql:\/\//postgresql+asyncpg:\/\/}"
+
+          echo "database-url=${ASYNCPG_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Set Fly secrets
+        env:
+          FLY_API_TOKEN: ${{ secrets.PREVIEW_FLY_API_TOKEN }}
+        run: |
+          flyctl secrets set \
+            SECRET_KEY="${{ secrets.PREVIEW_SECRET_KEY }}" \
+            ENCRYPTION_KEY="${{ secrets.PREVIEW_ENCRYPTION_KEY }}" \
+            DATABASE_URL="${{ steps.neon.outputs.database-url }}" \
+            REDIS_URL="${{ secrets.PREVIEW_UPSTASH_REDIS_URL }}" \
+            BACKEND_PUBLIC_URL="${{ steps.urls.outputs.backend-url }}" \
+            FRONTEND_URL="https://pr-${{ steps.pr.outputs.number }}--${{ vars.NETLIFY_SITE_NAME }}.netlify.app" \
+            OPA_URL="http://localhost:8181" \
+            APP_ENV="preview" \
+            --app autoaudit-pr-${{ steps.pr.outputs.number }} \
+            --stage
+
+      - name: Deploy backend to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.PREVIEW_FLY_API_TOKEN }}
+        run: |
+          flyctl deploy \
+            --app autoaudit-pr-${{ steps.pr.outputs.number }} \
+            --image "${{ needs.build-push-backend-image.outputs.image-tag }}" \
+            --config fly.preview.toml \
+            --strategy immediate \
+            --wait-timeout 120
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 4 — Post / update PR comment with preview URL
   # ─────────────────────────────────────────────────────────────────────────────
   post-preview-comment:
     runs-on: ubuntu-latest
-    needs: [build-frontend, build-push-backend-image]
+    needs: [build-frontend, deploy-backend-preview]
     if: always() && needs.build-frontend.result == 'success'
 
     steps:
