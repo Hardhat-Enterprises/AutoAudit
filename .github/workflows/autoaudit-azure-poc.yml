@@ -2,6 +2,13 @@ name: Build and Push to ACR
 
 on:
   workflow_dispatch:
+  # Temporary: trigger on push so the workflow can run from a non-default branch.
+  # Remove this once the workflow file exists on main.
+  push:
+    branches:
+      - feature/proof-of-concept-deployment-26t1-imp-dha-003
+    paths:
+      - .github/workflows/autoaudit-azure-poc.yml
 
 env:
   IMAGE_TAG: ${{ github.sha }}
