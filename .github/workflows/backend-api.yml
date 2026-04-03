@@ -16,7 +16,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-  backend-api: ${{ steps.filter.outputs.backend-api }}
+      backend-api: ${{ steps.filter.outputs.backend-api }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -25,65 +25,65 @@ jobs:
           filters: |
             backend-api:
               - 'backend-api/**'
-          base: ${{ github.ref }} 
+          base: ${{ github.ref }}
 
-analyze:
-  name: Security Analysis on (${{ matrix.language }})
-  needs: changes
-  if: github.event_name != 'push' || needs.changes.outputs.backend-api == 'true'
-  runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
-  permissions:
-    security-events: write
-    packages: read
-    actions: read
-    contents: read
+  analyze:
+    name: Security Analysis on (${{ matrix.language }})
+    needs: changes
+    if: github.event_name != 'push' || needs.changes.outputs.backend-api == 'true'
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
 
-  strategy:
-    fail-fast: false
-    matrix:
-      language: [ 'python' ]
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['python']
 
-  steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install Bandit
-      run: pip install bandit
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
-    - name: Run Bandit scan on backend-api
-      run: bandit -r backend-api -f txt
+      - if: matrix.build-mode == 'manual'
+        shell: bash
+        run: |
+          echo 'If you are using a "manual" build mode for one or more of the' \
+            'languages you are analyzing, replace this with the commands to build' \
+            'your code, for example:'
+          echo '  make bootstrap'
+          echo '  make release'
+          exit 1
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode }}
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
 
-    - if: matrix.build-mode == 'manual'
-      shell: bash
-      run: |
-        echo 'If you are using a "manual" build mode for one or more of the' \
-          'languages you are analyzing, replace this with the commands to build' \
-          'your code, for example:'
-        echo '  make bootstrap'
-        echo '  make release'
-        exit 1
+      - name: Install Bandit
+        run: pip install bandit
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
-    
+      - name: Run Bandit scan on backend-api
+        run: bandit -r backend-api -f txt
+
   run-lint:
     name: Linting Code
     runs-on: ubuntu-latest
     needs: [changes, analyze]
-    if: github.event_name != 'push' || needs.changes.outputs.backend-api == 'true'  
+    if: github.event_name != 'push' || needs.changes.outputs.backend-api == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -125,6 +125,7 @@ analyze:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
+
       - name: Set environment name
         id: set-env
         run: |
@@ -162,4 +163,3 @@ analyze:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: grype-report.sarif
-      
