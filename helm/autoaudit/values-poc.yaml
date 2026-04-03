@@ -1,0 +1,95 @@
+# PoC values for AutoAudit
+#
+# Usage:
+#   helm install autoaudit ./helm/autoaudit -f ./helm/autoaudit/values-poc.yaml
+#
+# Prerequisites:
+#   1. Kubernetes cluster with Gateway API support
+#   2. A Kubernetes Secret containing required keys (see docs/helm-chart-architecture-decisions.md)
+#   3. Container images pushed to a registry accessible by the cluster
+
+global:
+  # -- Your container registry (e.g., registry.example.com)
+  imageRegistry: ""
+  # imagePullSecrets:
+  #   - name: registry-pull-secret
+
+# -- Name of pre-existing Kubernetes Secret with application secrets
+secrets:
+  existingSecret: ""
+
+# -- Minimal resources for PoC
+postgresql:
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+redis:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+backendApi:
+  replicaCount: 1
+  env:
+    APP_ENV: dev
+    API_PREFIX: /v1
+    ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+    BACKEND_PUBLIC_URL: ""
+    FRONTEND_URL: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+worker:
+  replicaCount: 1
+  celery:
+    concurrency: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+frontend:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+opa:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+gateway:
+  enabled: true
+  parentRef:
+    name: ""
+    # namespace: ""
+  hostname: ""

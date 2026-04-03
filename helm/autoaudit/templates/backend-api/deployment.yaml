@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-backend-api
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "backend-api") | nindent 4 }}
+spec:
+  replicas: {{ .Values.backendApi.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "autoaudit.selectorLabels" (dict "context" . "component" "backend-api") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "autoaudit.componentLabels" (dict "context" . "component" "backend-api") | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "autoaudit.serviceAccountName" . }}
+      {{- include "autoaudit.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: backend-api
+          image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.backendApi.image.repository "tag" (.Values.backendApi.image.tag | default .Chart.AppVersion)) }}
+          imagePullPolicy: {{ .Values.backendApi.image.pullPolicy }}
+          command: ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            {{- include "autoaudit.backendApi.env" . | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+          {{- with .Values.backendApi.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

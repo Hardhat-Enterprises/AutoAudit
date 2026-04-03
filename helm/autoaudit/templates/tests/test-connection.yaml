@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-test-connection
+  labels:
+    {{- include "autoaudit.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: test-backend-api
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          echo "Testing backend-api connectivity..."
+          wget -q -O /dev/null --timeout=10 http://{{ include "autoaudit.fullname" . }}-backend-api:{{ .Values.backendApi.service.port }}/ && echo "backend-api: OK" || echo "backend-api: FAILED"
+          echo "Testing frontend connectivity..."
+          wget -q -O /dev/null --timeout=10 http://{{ include "autoaudit.fullname" . }}-frontend:{{ .Values.frontend.service.port }}/ && echo "frontend: OK" || echo "frontend: FAILED"
+          echo "Testing OPA connectivity..."
+          wget -q -O /dev/null --timeout=10 http://{{ include "autoaudit.fullname" . }}-opa:{{ .Values.opa.service.port }}/health && echo "opa: OK" || echo "opa: FAILED"
+  restartPolicy: Never

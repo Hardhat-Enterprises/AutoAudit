@@ -1,0 +1,186 @@
+# -- Global settings
+global:
+  # -- Container registry prefix (e.g., registry.example.com)
+  imageRegistry: ""
+  # -- Image pull secrets for private registries
+  imagePullSecrets: []
+
+# -- External Kubernetes Secret containing application secrets.
+# This secret must be created before installing the chart (e.g., via
+# a secrets operator (e.g., External Secrets Operator, Sealed Secrets),
+# Terraform, or manually with kubectl create secret).
+#
+# Required keys:
+#   postgresql-password  - PostgreSQL user password
+#   jwt-secret-key       - JWT signing key for authentication
+#   encryption-key       - Fernet key for encrypting M365 credentials at rest
+#   redis-password       - Redis AUTH password
+secrets:
+  # -- Name of the pre-existing Kubernetes Secret
+  existingSecret: ""
+
+# -- PostgreSQL configuration
+postgresql:
+  image:
+    repository: postgres
+    tag: "17"
+    pullPolicy: IfNotPresent
+  persistence:
+    size: 10Gi
+    # -- Storage class (leave empty for cluster default)
+    storageClass: ""
+  database: autoaudit
+  user: autoaudit
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# -- Redis configuration
+redis:
+  image:
+    repository: redis
+    tag: alpine
+    pullPolicy: IfNotPresent
+  persistence:
+    # -- Enable persistent storage for Redis (recommended for production, not needed for PoC)
+    enabled: false
+    size: 2Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+# -- Backend API (FastAPI)
+backendApi:
+  replicaCount: 1
+  image:
+    repository: autoaudit/backend-api
+    # -- Defaults to Chart.appVersion if empty
+    tag: ""
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  env:
+    APP_ENV: prod
+    API_PREFIX: /v1
+    ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+    # -- Public URL for OAuth redirects (set to https://{hostname}/api)
+    BACKEND_PUBLIC_URL: ""
+    # -- Frontend URL for CORS (set to https://{hostname})
+    FRONTEND_URL: ""
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# -- Celery worker
+worker:
+  replicaCount: 1
+  image:
+    repository: autoaudit/worker
+    tag: ""
+    pullPolicy: IfNotPresent
+  celery:
+    concurrency: 4
+    pool: prefork
+    logLevel: info
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+# -- Frontend (nginx serving static build)
+frontend:
+  replicaCount: 1
+  image:
+    repository: autoaudit/frontend
+    tag: ""
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# -- Open Policy Agent
+opa:
+  replicaCount: 1
+  image:
+    # -- Custom OPA image with policies baked in
+    repository: autoaudit/opa
+    tag: ""
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8181
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+# -- PowerShell service for M365 cmdlet execution
+powershellService:
+  replicaCount: 1
+  image:
+    repository: autoaudit/powershell-service
+    tag: ""
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8001
+  nodeSelector:
+    kubernetes.io/arch: amd64
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# -- Gateway API configuration
+gateway:
+  enabled: true
+  parentRef:
+    # -- Name of the existing Gateway resource
+    name: ""
+    # -- Namespace of the Gateway (if different from release namespace)
+    namespace: ""
+  # -- Hostname for the application (e.g., autoaudit.example.com)
+  hostname: ""
+
+# -- Database migration job (Helm pre-install/pre-upgrade hook)
+migration:
+  enabled: true
+  backoffLimit: 3
+
+# -- Service account
+serviceAccount:
+  create: true
+  # -- Override the service account name
+  name: ""
+  # -- Additional annotations (e.g., for workload identity on your platform)
+  annotations: {}

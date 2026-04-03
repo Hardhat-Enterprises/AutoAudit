@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-app
+  labels:
+    {{- include "autoaudit.labels" . | nindent 4 }}
+data:
+  APP_ENV: {{ .Values.backendApi.env.APP_ENV | quote }}
+  API_PREFIX: {{ .Values.backendApi.env.API_PREFIX | quote }}
+  ACCESS_TOKEN_EXPIRE_MINUTES: {{ .Values.backendApi.env.ACCESS_TOKEN_EXPIRE_MINUTES | quote }}
+  OPA_URL: {{ include "autoaudit.opa.url" . | quote }}
+  POLICIES_DIR: /app/policies

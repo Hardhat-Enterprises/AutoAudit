@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-worker
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "worker") | nindent 4 }}
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "autoaudit.selectorLabels" (dict "context" . "component" "worker") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "autoaudit.componentLabels" (dict "context" . "component" "worker") | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "autoaudit.serviceAccountName" . }}
+      {{- include "autoaudit.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: worker
+          image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.worker.image.repository "tag" (.Values.worker.image.tag | default .Chart.AppVersion)) }}
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+          command:
+            - celery
+            - -A
+            - worker.celery_app
+            - worker
+            - --pool={{ .Values.worker.celery.pool }}
+            - --concurrency={{ .Values.worker.celery.concurrency }}
+            - --loglevel={{ .Values.worker.celery.logLevel }}
+          env:
+            {{- include "autoaudit.worker.env" . | nindent 12 }}
+          livenessProbe:
+            exec:
+              command:
+                - celery
+                - -A
+                - worker.celery_app
+                - inspect
+                - ping
+                - --timeout
+                - "10"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 3
+          {{- with .Values.worker.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

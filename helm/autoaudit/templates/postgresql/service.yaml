@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-postgresql
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "postgresql") | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: tcp-postgresql
+      port: 5432
+      targetPort: tcp-postgresql
+      protocol: TCP
+  selector:
+    {{- include "autoaudit.selectorLabels" (dict "context" . "component" "postgresql") | nindent 4 }}

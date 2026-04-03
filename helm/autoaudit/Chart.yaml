@@ -1,0 +1,6 @@
+apiVersion: v2
+name: autoaudit
+description: AutoAudit M365 compliance automation platform
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

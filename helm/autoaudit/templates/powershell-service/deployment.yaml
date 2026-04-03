@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-powershell-service
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "powershell-service") | nindent 4 }}
+spec:
+  replicas: {{ .Values.powershellService.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "autoaudit.selectorLabels" (dict "context" . "component" "powershell-service") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "autoaudit.componentLabels" (dict "context" . "component" "powershell-service") | nindent 8 }}
+    spec:
+      {{- include "autoaudit.imagePullSecrets" . | nindent 6 }}
+      {{- with .Values.powershellService.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: powershell-service
+          image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.powershellService.image.repository "tag" (.Values.powershellService.image.tag | default .Chart.AppVersion)) }}
+          imagePullPolicy: {{ .Values.powershellService.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8001
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          {{- with .Values.powershellService.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
