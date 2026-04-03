@@ -13,9 +13,12 @@
 
 FROM openpolicyagent/opa:latest-debug
 
+USER root
 COPY engine/policies /policies
 
 # Generate manifest listing all included policy files with SHA-256 checksums
 RUN find /policies -type f \( -name "*.rego" -o -name "*.json" \) -exec sh -c \
     'echo "{\"path\": \"$1\", \"sha256\": \"$(sha256sum "$1" | cut -d" " -f1)\"}"' _ {} \; \
     | sort > /policies/manifest.json
+
+USER opa
