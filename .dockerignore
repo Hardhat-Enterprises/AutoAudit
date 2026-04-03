@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+.claude
+
+# Python
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+**/.venv
+**/venv
+**/env
+
+# Node
+**/node_modules
+**/coverage
+
+# Docs
+docs
+*.md
+!README.md
+
+# Windows reserved device names
+nul
+NUL
+con
+CON
+prn
+PRN
+aux
+AUX
+
+# OS files
+.DS_Store
+Thumbs.db
