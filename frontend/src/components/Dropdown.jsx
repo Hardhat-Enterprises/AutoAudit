@@ -2,7 +2,6 @@
 //This was built for selecting different types of charts but has been updated to be usable for anything.  
 
 import React, { useState, useRef, useEffect } from 'react';
-import './Dropdown.css';
 
 //This component takes the current value, the function that changes the current value, and the list of options (as an array) as parameters
 //List of options provided must at least include a "value" element for each option, and a "label" which is what will be displayed in the dropdown menu
@@ -44,43 +43,43 @@ const Dropdown = ({ value, onChange, options, isDarkMode = true }) => {
   //Set option state to provided option from function call. Fall back to first possible option if any errors. 
   const selectedOption = safeOptions.find(opt => opt.value === value) || safeOptions[0];
   const selectedLabel = selectedOption?.label ?? 'No options';
-
   return (
-    <div className={`chart-dropdown ${isDarkMode ? 'dark' : 'light'}`} ref={dropdownRef}> {/* we use this ref to detect if we've clicked outside of the dropdown (to close it)*/}
-      <button 
-        type="button"
-        onClick={() => {
-          if (!hasOptions) return;
-          setIsOpen(!isOpen);
-        }}
-        className="chart-dropdown-trigger"
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        disabled={!hasOptions}
-      >
-        <span className="chart-dropdown-text">{selectedLabel}</span> {/* show the name of the current option in the box if the dropdown is closed */}
-        <span className={`chart-dropdown-arrow ${isOpen ? 'open' : ''}`}>▼</span> {/* if we append open to the class name, we trigger a 180 degree rotation of the arrow (see css) */}
-      </button>
-      
-      {/* render only if isOpen is true */}
-      {isOpen && hasOptions && (  
-        <div className="chart-dropdown-menu" role="listbox">
-          {safeOptions.map((option) => ( //loop through the array to map the options to the list
-            <button
-              key={option.value} // assign key name for each list item to be the same as the value of the current item in the array (e.g. "pie")
-              className={`chart-dropdown-option ${option.value === value ? 'selected' : ''}`} 
-              onClick={() => handleSelect(option)}
-              type="button"
-              role="option"
-              aria-selected={option.value === value}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  <div ref={dropdownRef} className="relative w-full">
+    <button
+      type="button"
+      onClick={() => {
+        if (!hasOptions) return;
+        setIsOpen(!isOpen);
+      }}
+      className="w-full flex items-center justify-between px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition"
+      aria-haspopup="listbox"
+      aria-expanded={isOpen}
+      disabled={!hasOptions}
+    >
+      <span>{selectedLabel}</span>
+      <span className={`ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+        ▼
+      </span>
+    </button>
+    {isOpen && hasOptions && (
+      <div className="absolute mt-2 w-full bg-white text-black rounded-lg shadow-lg z-10">
+        {safeOptions.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => handleSelect(option)}
+            type="button"
+            role="option"
+            aria-selected={option.value === value}
+            className={`block w-full text-left px-4 py-2 hover:bg-gray-200 ${
+              option.value === value ? 'bg-gray-300 font-semibold' : ''
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+);
 };
-
 export default Dropdown;
