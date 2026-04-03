@@ -186,10 +186,13 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.PREVIEW_FLY_API_TOKEN }}
         run: |
+          # Inject the image into the toml so flyctl doesn't try to build from source
+          cat fly.preview.toml > /tmp/fly-preview.toml
+          echo -e "\n[build]\n  image = \"${{ needs.build-push-backend-image.outputs.image-tag }}\"" >> /tmp/fly-preview.toml
+
           flyctl deploy \
             --app autoaudit-pr-${{ steps.pr.outputs.number }} \
-            --image "${{ needs.build-push-backend-image.outputs.image-tag }}" \
-            --config fly.preview.toml \
+            --config /tmp/fly-preview.toml \
             --strategy immediate \
             --wait-timeout 120
 
