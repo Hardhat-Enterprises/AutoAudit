@@ -4,10 +4,6 @@
 #   flyctl deploy --app autoaudit-pr-<N> --config fly.preview.toml
 # This file intentionally omits [app] so the name is never hard-coded here.
 
-[build]
-  # Image is supplied by --image flag at deploy time (from GHCR).
-  # This section is required but left empty when using a pre-built image.
-
 [env]
   APP_ENV = "preview"
   # All secrets (DATABASE_URL, SECRET_KEY, ENCRYPTION_KEY, REDIS_URL, etc.)
