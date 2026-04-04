@@ -5,8 +5,6 @@ id           := "CIS_GCP_2_9"
 title        := "Ensure Log Metric Filter and Alerts Exist for VPC Network Changes"
 policy_group := "Logging and Monitoring"
 
-<<<<<<< HEAD
-=======
 verification := `1. List the log metrics:
 gcloud logging metrics list --format json
 2. Ensure that the output contains at least one metric with filter set to:
@@ -31,7 +29,6 @@ remediation := `Create the prescribed Log Metric:
 Create the prescribed alert policy:
 • Use the command: gcloud alpha monitoring policies create`
 
->>>>>>> 99b403da (finished final group 2 policy tagging with verification and remediaton)
 deny := { v |
   not vpc_network_metric_exists
   v := sprintf("Project %q: Missing logs-based metric for VPC network create/update/delete", [input.project_id])
@@ -54,8 +51,4 @@ alert_policy_referencing_user_metric_enabled {
   contains(c.conditionThreshold.filter, "logging.googleapis.com/user/")
 }
 
-<<<<<<< HEAD
-report := H.build_report(deny, id, title, policy_group)
-=======
 report := H.build_report(deny, id, title, policy_group, verification, remediation)
->>>>>>> 99b403da (finished final group 2 policy tagging with verification and remediaton)

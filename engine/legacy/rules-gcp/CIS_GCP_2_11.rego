@@ -5,8 +5,6 @@ id           := "CIS_GCP_2_11"
 title        := "Ensure That the Log Metric Filter and Alerts Exist for SQL Instance Configuration Changes"
 policy_group := "Logging and Monitoring"
 
-<<<<<<< HEAD
-=======
 verification := `1. List the log metrics:
 gcloud logging metrics list --format json
 2. Ensure that the output contains at least one metric with the filter set to
@@ -28,7 +26,6 @@ Create the prescribed alert policy:
 • Reference for command usage:
 https://cloud.google.com/sdk/gcloud/reference/alpha/monitoring/policies/create`
 
->>>>>>> 99b403da (finished final group 2 policy tagging with verification and remediaton)
 deny := { v |
   not cloudsql_metric_exists
   v := sprintf("Project %q: Missing metric for Cloud SQL instance updates", [input.project_id])
@@ -52,8 +49,4 @@ cloudsql_alert_enabled_for_user_metric {
   contains(filt, "logging.googleapis.com/user/")
 }
 
-<<<<<<< HEAD
-report := H.build_report(deny, id, title, policy_group)
-=======
 report := H.build_report(deny, id, title, policy_group, verification, remediation)
->>>>>>> 99b403da (finished final group 2 policy tagging with verification and remediaton)
