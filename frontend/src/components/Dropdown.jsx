@@ -60,7 +60,7 @@ const Dropdown = ({ value, onChange, options, isDarkMode = true }) => {
       aria-expanded={isOpen}
       disabled={!hasOptions}
     >
-      <span>{selectedLabel}</span>
+      <span className="min-w-0 truncate">{selectedLabel}</span>
       <span className={`ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
         ▼
       </span>
