@@ -1,0 +1,46 @@
+{
+  "collector_id": "entra.roles.admin_license_footprint",
+  "description": "Sample output from AdminLicenseFootprintDataCollector against a mock M365 tenant",
+  "data": {
+    "admin_accounts": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "userPrincipalName": "globaladmin@contoso.com",
+        "displayName": "Global Admin",
+        "admin_roles": ["Global Administrator"],
+        "sku_part_numbers": ["ENTERPRISEPREMIUM"],
+        "high_footprint_service_plans_enabled": ["EXCHANGE_S_ENTERPRISE", "OFFICESUBSCRIPTION"],
+        "uses_reduced_license_footprint": false
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "userPrincipalName": "secadmin@contoso.com",
+        "displayName": "Security Admin",
+        "admin_roles": ["Security Administrator"],
+        "sku_part_numbers": ["AAD_PREMIUM_P2"],
+        "high_footprint_service_plans_enabled": [],
+        "uses_reduced_license_footprint": true
+      }
+    ],
+    "total_admin_accounts": 2,
+    "admin_accounts_with_high_footprint_licenses": 1,
+    "admin_accounts_with_reduced_license_footprint": 1
+  },
+  "opa_result": {
+    "compliant": false,
+    "message": "1 of 2 administrative account(s) have high-footprint application licenses enabled",
+    "affected_resources": ["globaladmin@contoso.com"],
+    "details": {
+      "total_admin_accounts": 2,
+      "violating_admin_count": 1,
+      "violations": [
+        {
+          "userPrincipalName": "globaladmin@contoso.com",
+          "displayName": "Global Admin",
+          "high_footprint_service_plans_enabled": ["EXCHANGE_S_ENTERPRISE", "OFFICESUBSCRIPTION"],
+          "sku_part_numbers": ["ENTERPRISEPREMIUM"]
+        }
+      ]
+    }
+  }
+}
