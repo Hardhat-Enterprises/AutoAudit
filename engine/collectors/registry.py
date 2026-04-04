@@ -68,6 +68,9 @@ from collectors.entra.policies.authorization_policy import (
 from collectors.entra.policies.b2b_policy import B2BPolicyDataCollector
 
 # Roles
+from collectors.entra.roles.admin_license_footprint import (
+    AdminLicenseFootprintDataCollector,
+)
 from collectors.entra.roles.cloud_only_admins import CloudOnlyAdminsDataCollector
 from collectors.entra.roles.directory_roles import DirectoryRolesDataCollector
 from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
@@ -184,6 +187,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.policies.authorization_policy": AuthorizationPolicyDataCollector,
     "entra.policies.b2b_policy": B2BPolicyDataCollector,
     # Roles
+    "entra.roles.admin_license_footprint": AdminLicenseFootprintDataCollector,
     "entra.roles.cloud_only_admins": CloudOnlyAdminsDataCollector,
     "entra.roles.directory_roles": DirectoryRolesDataCollector,
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,

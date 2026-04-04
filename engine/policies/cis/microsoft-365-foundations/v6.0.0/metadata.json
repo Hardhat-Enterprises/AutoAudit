@@ -61,11 +61,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": null,
-      "policy_file": null,
-      "requires_permissions": null,
-      "notes": "Need to check user license assignments"
+      "automation_status": "ready",
+      "data_collector_id": "entra.roles.admin_license_footprint",
+      "policy_file": "1.1.4_admin_license_footprint.rego",
+      "requires_permissions": ["User.Read.All", "RoleManagement.Read.Directory"],
+      "notes": null
     },
     {
       "control_id": "1.2.1",
