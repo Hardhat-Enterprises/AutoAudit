@@ -21,7 +21,7 @@ class ManualVerification(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     scan_id: Mapped[int] = mapped_column(ForeignKey("scan.id"), nullable=False)
     control_id: Mapped[str] = mapped_column(String(50), nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     # Status: passed or failed
     status: Mapped[str] = mapped_column(String(20), nullable=False)  
     comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
