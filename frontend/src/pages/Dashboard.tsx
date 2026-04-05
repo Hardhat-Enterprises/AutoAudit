@@ -14,6 +14,7 @@ import {
 import { Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getBenchmarks, getConnections, getScans, getScan } from "../api/client";
+import { RelativeTime } from "../components/RelativeTime";
 import { formatDateTimePartsAEST } from "../utils/helpers";
 
 type ChartType = "doughnut" | "pie" | "bar";
@@ -288,22 +289,33 @@ export default function Dashboard({
 
     const kpis = [
       {
+        key: 'compliance',
         label: compliancePct === null ? 'Compliance —' : `Compliance ${compliancePct}%`,
         tone: complianceTone,
         icon: CheckCircle2,
       },
       {
+        key: 'failed',
         label: hasTotal ? `${formatCount(failed)} failed` : 'Failed —',
         tone: failedTone,
         icon: AlertTriangle,
       },
       {
+        key: 'total',
         label: hasTotal ? `${formatCount(total)} total` : 'Total —',
         tone: 'neutral',
         icon: Shield,
       },
       {
-        label: `Updated ${lastTime}`,
+        key: 'updated',
+        label:
+          hasScan && lastScanLabel ? (
+            <>
+              Updated <RelativeTime value={lastScanLabel} className="summary-relative-time" />
+            </>
+          ) : (
+            `Updated ${lastTime}`
+          ),
         tone: 'neutral',
         icon: Clock3,
       },
@@ -489,7 +501,7 @@ export default function Dashboard({
               {summary.kpis.map((kpi) => {
                 const Icon = kpi.icon;
                 return (
-                  <span key={kpi.label} className={`summary-chip ${kpi.tone}`}>
+                  <span key={kpi.key} className={`summary-chip ${kpi.tone}`}>
                     <Icon size={14} strokeWidth={2} aria-hidden="true" />
                     {kpi.label}
                   </span>
@@ -583,6 +595,7 @@ export default function Dashboard({
                             </td>
                             <td>
                               <div className="dt">
+                                <RelativeTime value={s.started_at || s.finished_at} className="dt-relative" />
                                 <div className="date">{dt.date}</div>
                                 <div className="time">{dt.time}</div>
                               </div>

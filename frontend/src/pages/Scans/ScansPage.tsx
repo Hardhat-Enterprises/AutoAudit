@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Plus, CheckCircle, XCircle, Clock, Loader2, AlertCircle, PlayCircle, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getScans, getConnections, getBenchmarks, createScan, deleteScan, getSettings } from '../../api/client';
+import { RelativeTime } from '../../components/RelativeTime';
 import { formatDateTimePartsAEST } from '../../utils/helpers';
 import './ScansPage.css';
 
@@ -417,8 +418,11 @@ const ScansPage: React.FC<ScansPageProps> = ({ sidebarWidth = 220, isDarkMode = 
                         const dt = formatDate(dateString);
                         return (
                           <div className="datetime">
-                            <div className="date">{dt.date}</div>
-                            <div className="time">{dt.time}</div>
+                            <RelativeTime value={dateString} className="datetime-relative" />
+                            <div className="datetime-absolute">
+                              <div className="date">{dt.date}</div>
+                              <div className="time">{dt.time}</div>
+                            </div>
                           </div>
                         );
                       })()}

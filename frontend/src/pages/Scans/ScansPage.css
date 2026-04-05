@@ -268,13 +268,19 @@
   line-height: 1.2;
 }
 
-.datetime .date {
-  color: var(--text-primary);
+.datetime-relative {
   font-weight: 600;
   font-size: 13px;
+  color: var(--text-primary);
 }
 
-.datetime .time {
+.datetime-absolute .date {
+  color: var(--text-tertiary);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.datetime-absolute .time {
   color: var(--text-tertiary);
   font-size: 12px;
 }

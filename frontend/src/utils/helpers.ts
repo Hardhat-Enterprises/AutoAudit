@@ -11,16 +11,13 @@ export const formatDate = (date: string | number | Date): string => {
   return new Date(date).toLocaleDateString(undefined, options);
 };
 
-// Standardized GMT/UTC date+time formatting for consistent display across users/machines.
 // - Date: "DD Mon YYYY"
 // - Time: "h:mm:ss.SSS AM GMT"
-function parseDateAssumingUTC(value: string | number | Date | null | undefined): Date | null {
+export function parseDateAssumingUTC(value: string | number | Date | null | undefined): Date | null {
   if (!value) return null;
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
 
-  // If backend returns an ISO string WITHOUT timezone (e.g. "2026-01-17T05:09:13"),
-  // browsers may treat it as local time. We treat such values as UTC to keep
-  // timestamps globally consistent.
+
   if (typeof value === 'string') {
     const s = value.trim();
     const hasTz = /([zZ]|[+-]\d{2}:\d{2})$/.test(s);
@@ -96,6 +93,15 @@ export const formatTimeAEST = (dateString: string | number | Date | null | undef
     timeZone: AEST_IANA_TZ,
   }).format(d);
   return `${timeCore} AEST`;
+};
+
+/** Single-line absolute time for tooltips (matches AEST display elsewhere). */
+export const formatAbsoluteTooltipAEST = (
+  dateString: string | number | Date | null | undefined
+): string => {
+  const date = formatDateAEST(dateString);
+  if (date === '-') return '';
+  return `${date} ${formatTimeAEST(dateString)}`;
 };
 
 export const formatDateTimePartsAEST = (dateString: string | number | Date | null | undefined): DateTimeParts => {

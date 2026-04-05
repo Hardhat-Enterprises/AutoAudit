@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getScan } from '../../api/client';
+import { RelativeTime } from '../../components/RelativeTime';
 import { formatDateAEST, formatTimeAEST } from '../../utils/helpers';
 import './ScanDetailPage.css';
 
@@ -302,6 +303,9 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
             <div className="meta-item">
               <span className="meta-label">Started</span>
               <div className="meta-value">
+                <div className="meta-relative">
+                  <RelativeTime value={scan.started_at || scan.created_at} />
+                </div>
                 <div className="meta-date">{formatDate(scan.started_at || scan.created_at)}</div>
                 <div className="meta-time">{formatTime(scan.started_at || scan.created_at)}</div>
               </div>
@@ -310,6 +314,9 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
               <span className="meta-label">Completed</span>
               {scan.finished_at || scan.completed_at ? (
                 <div className="meta-value">
+                  <div className="meta-relative">
+                    <RelativeTime value={scan.finished_at || scan.completed_at} />
+                  </div>
                   <div className="meta-date">{formatDate(scan.finished_at || scan.completed_at)}</div>
                   <div className="meta-time">{formatTime(scan.finished_at || scan.completed_at)}</div>
                 </div>
