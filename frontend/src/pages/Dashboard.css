@@ -8,13 +8,13 @@
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
   --border-color: #334155;
-  
+
   /* Accent colors */
   --emerald: #10b981;
   --orange: #f97316;
   --red: #ef4444;
   --gray: #64748b;
-  --teal: #64DFDF; /* AutoAudit teal */
+  --teal: #64dfdf; /* AutoAudit teal */
 }
 
 /* Light theme variables */
@@ -41,8 +41,16 @@
 
   min-height: 100vh;
   background:
-    radial-gradient(1200px 650px at 280px 0px, rgba(59, 130, 246, 0.22), transparent 60%),
-    radial-gradient(900px 540px at calc(100% - 260px) 80px, rgba(16, 185, 129, 0.14), transparent 65%),
+    radial-gradient(
+      1200px 650px at 280px 0px,
+      rgba(59, 130, 246, 0.22),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 540px at calc(100% - 260px) 80px,
+      rgba(16, 185, 129, 0.14),
+      transparent 65%
+    ),
     var(--bg-primary);
   padding: clamp(16px, 2vw, 28px);
   transition: background-color 0.3s ease;
@@ -195,8 +203,12 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Updated primary button to use teal */
@@ -615,6 +627,39 @@ input:checked + .slider:before {
   z-index: 1;
 }
 
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 24px;
+}
+
+.empty-state-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+
+.empty-state-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.empty-state-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
 .compliance-chart .apexcharts-canvas,
 .compliance-chart .apexcharts-svg {
   background: transparent !important;
@@ -728,7 +773,8 @@ clear.compliance-chart.chart-bar .apexcharts-tooltip {
   transition: color 0.3s ease;
 }
 
-.issue-count, .issue-status {
+.issue-count,
+.issue-status {
   font-size: 24px;
   font-weight: bold;
 }
@@ -910,19 +956,19 @@ clear.compliance-chart.chart-bar .apexcharts-tooltip {
 .pill.good {
   color: var(--emerald);
   border-color: rgba(16, 185, 129, 0.35);
-  background: rgba(16, 185, 129, 0.10);
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .pill.bad {
   color: var(--red);
   border-color: rgba(239, 68, 68, 0.35);
-  background: rgba(239, 68, 68, 0.10);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .pill.warn {
   color: var(--orange);
   border-color: rgba(249, 115, 22, 0.35);
-  background: rgba(249, 115, 22, 0.10);
+  background: rgba(249, 115, 22, 0.1);
 }
 
 .link-button {
@@ -937,7 +983,7 @@ clear.compliance-chart.chart-bar .apexcharts-tooltip {
 
 .link-button:hover {
   border-color: rgba(59, 130, 246, 0.45);
-  background: rgba(59, 130, 246, 0.10);
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .fix-list {
@@ -965,7 +1011,7 @@ clear.compliance-chart.chart-bar .apexcharts-tooltip {
 
 .fix-item:hover {
   border-color: rgba(59, 130, 246, 0.45);
-  background: rgba(59, 130, 246, 0.10);
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .fix-id {
@@ -1016,7 +1062,7 @@ clear.compliance-chart.chart-bar .apexcharts-tooltip {
     grid-row: auto;
   }
 }
- 
+
 @media (max-width: 640px) {
   .stats-grid {
     grid-template-columns: 1fr;
@@ -1041,7 +1087,7 @@ clear.compliance-chart.chart-bar .apexcharts-tooltip {
     gap: 8px;
     width: 100%;
   }
-  
+
   .toolbar-button {
     justify-content: center;
   }
