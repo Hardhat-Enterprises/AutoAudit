@@ -24,13 +24,20 @@ type AuthContextValue = {
   logout: () => void;
 };
 
-export default function AccountPage({ sidebarWidth = 220, isDarkMode = true }: AccountPageProps) {
+export default function AccountPage({
+  sidebarWidth = 220,
+  isDarkMode = true,
+}: AccountPageProps) {
   const navigate = useNavigate();
   const { user, token, logout: clearAuth } = useAuth() as AuthContextValue;
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const primaryLabel =
-    user?.email || user?.username || user?.name || (user?.id != null ? String(user.id) : null) || "Signed in";
+    user?.email ||
+    user?.username ||
+    user?.name ||
+    (user?.id != null ? String(user.id) : null) ||
+    "Signed in";
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -99,4 +106,3 @@ export default function AccountPage({ sidebarWidth = 220, isDarkMode = true }: A
     </div>
   );
 }
-
