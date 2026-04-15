@@ -1,19 +1,5 @@
 import { describe, it, expect } from "vitest";
-
-// Inline the function here to test it in isolation without importing JSX
-const getPasswordStrength = (password: string) => {
-  if (!password) return null;
-  if (password.length < 6) return { label: "Weak", level: 1 };
-  let score = 0;
-  if (password.length >= 10) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (score <= 1) return { label: "Weak", level: 1 };
-  if (score === 2) return { label: "Fair", level: 2 };
-  if (score === 3) return { label: "Good", level: 3 };
-  return { label: "Strong", level: 4 };
-};
+import { getPasswordStrength } from "./SignupFormPanel";
 
 describe("getPasswordStrength", () => {
   it("returns null for empty string", () => {

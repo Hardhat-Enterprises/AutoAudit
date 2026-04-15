@@ -93,7 +93,7 @@ type PasswordStrength = {
   level: 1 | 2 | 3 | 4;
 };
 
-const getPasswordStrength = (password: string): PasswordStrength | null => {
+export const getPasswordStrength = (password: string): PasswordStrength | null => {
   if (!password) return null;
   // length is a hard gate — short passwords can't score high regardless of complexity
   if (password.length < 6) return { label: "Weak", level: 1 };
