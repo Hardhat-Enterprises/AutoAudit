@@ -5,8 +5,16 @@ name: Grype Dependency Vulnerability Scan
 on:
   push:
     branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'backend-api/**'
+      - 'engine/**'
   pull_request:
     branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'backend-api/**'
+      - 'engine/**'
   schedule:
     - cron: '37 20 * * 4'
 
