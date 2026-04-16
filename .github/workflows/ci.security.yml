@@ -1,38 +1,24 @@
 name: "Security CI/CD"
 
-# The security/ module is holds the "TPRM Scanner" from T2 2025 and is no longer actively maintained.
-# This workflow is kept in place so any accidental changes to security/ are still scanned, but it is not expected to run under normal development.
+# The security/ module holds the TPRM Scanner from T2 2025 and is no longer actively maintained.
+# This workflow is kept so any accidental changes to security/ are still scanned,
+# but it is not expected to run under normal development.
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'security/**'
   pull_request:
     branches: [main]
+    paths:
+      - 'security/**'
   schedule:
     - cron: '32 23 * * 6'
 
 jobs:
-  changes:
-    name: Detect changed paths
-    runs-on: ubuntu-latest
-    if: github.event_name != 'schedule'
-    permissions:
-      pull-requests: read
-    outputs:
-      security: ${{ steps.filter.outputs.security }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            security:
-              - 'security/**'
-
   analyze:
     name: Security Analysis on (${{ matrix.language }})
-    needs: changes
-    if: github.event_name == 'schedule' || needs.changes.outputs.security == 'true'
     runs-on: ubuntu-latest
     permissions:
       security-events: write
@@ -60,8 +46,6 @@ jobs:
   run-lint:
     name: Linting Code
     runs-on: ubuntu-latest
-    needs: changes
-    if: github.event_name == 'schedule' || needs.changes.outputs.security == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -97,9 +81,6 @@ jobs:
           script: |
             const analyze = '${{ needs.analyze.result }}';
             const lint    = '${{ needs.run-lint.result }}';
-
-            // If both jobs were skipped then no relevant paths changed and there is nothing to post
-            if (analyze === 'skipped' && lint === 'skipped') return;
 
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
             const allPassed = [analyze, lint].every(r => ['success', 'skipped'].includes(r));
