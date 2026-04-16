@@ -3,45 +3,28 @@ name: "Backend + API CI/CD"
 on:
   push:
     branches: [main]
+    paths:
+      - 'backend-api/**'
   pull_request:
     branches: [main]
+    paths:
+      - 'backend-api/**'
   schedule:
     - cron: '32 23 * * 6'
 
 jobs:
-  changes:
-    name: Detect changed paths
-    runs-on: ubuntu-latest
-    if: github.event_name != 'schedule'
-    permissions:
-      pull-requests: read
-    outputs:
-      backend-api: ${{ steps.filter.outputs.backend-api }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            backend-api:
-              - 'backend-api/**'
-
   analyze:
     name: Security Analysis on (${{ matrix.language }})
-    needs: changes
-    if: github.event_name == 'schedule' || needs.changes.outputs.backend-api == 'true'
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
       security-events: write
       packages: read
       actions: read
       contents: read
-
     strategy:
       fail-fast: false
       matrix:
         language: ['python']
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -81,8 +64,6 @@ jobs:
   run-lint:
     name: Linting Code
     runs-on: ubuntu-latest
-    needs: changes
-    if: github.event_name == 'schedule' || needs.changes.outputs.backend-api == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -119,9 +100,6 @@ jobs:
           script: |
             const analyze = '${{ needs.analyze.result }}';
             const lint    = '${{ needs.run-lint.result }}';
-
-            // If both jobs were skipped then no relevant paths changed and there is nothing to post
-            if (analyze === 'skipped' && lint === 'skipped') return;
 
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
             const allPassed = [analyze, lint].every(r => ['success', 'skipped'].includes(r));
