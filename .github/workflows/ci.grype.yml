@@ -1,4 +1,4 @@
-name: Anchore Grype vulnerability scan
+name: Grype Dependency Vulnerability Scan
 
 # Scans dependency manifests across the repo for known vulnerabilities and uploads results to the GitHub Security tab.
 
