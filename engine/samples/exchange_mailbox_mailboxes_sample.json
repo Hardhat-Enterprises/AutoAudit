@@ -1,0 +1,39 @@
+{
+  "collector_id": "exchange.mailbox.mailboxes",
+  "description": "Sample output from MailboxesDataCollector against a mock M365 tenant",
+  "data": {
+    "shared_mailboxes": [
+      {
+        "UserPrincipalName": "finance@contoso.com",
+        "DisplayName": "Finance Team",
+        "PrimarySmtpAddress": "finance@contoso.com",
+        "SignInBlocked": true
+      },
+      {
+        "UserPrincipalName": "reception@contoso.com",
+        "DisplayName": "Reception",
+        "PrimarySmtpAddress": "reception@contoso.com",
+        "SignInBlocked": false
+      }
+    ],
+    "total_shared_mailboxes": 2,
+    "mailboxes_with_signin_blocked": 1,
+    "mailboxes_with_signin_allowed": 1
+  },
+  "opa_result": {
+    "compliant": false,
+    "message": "1 shared mailbox(es) do not have sign-in blocked",
+    "affected_resources": ["reception@contoso.com"],
+    "details": {
+      "total_shared_mailboxes": 2,
+      "violating_count": 1,
+      "violations": [
+        {
+          "UserPrincipalName": "reception@contoso.com",
+          "DisplayName": "Reception",
+          "SignInBlocked": false
+        }
+      ]
+    }
+  }
+}

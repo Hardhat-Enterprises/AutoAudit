@@ -3,9 +3,12 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 1.2.2
 
+Control Description:
+    1.2.2 - Ensure sign-in to shared mailboxes is blocked
+
 Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
-Required Cmdlets: Get-EXOMailbox
+Required Cmdlets: Get-EXOMailbox, Get-User
 Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
@@ -16,35 +19,39 @@ from collectors.powershell_client import PowerShellClient
 
 
 class MailboxesDataCollector(BasePowerShellCollector):
-    """Collects mailbox information for CIS compliance evaluation.
+    """Collects shared mailbox sign-in settings for CIS compliance evaluation.
 
-    This collector retrieves shared mailboxes to verify
-    shared mailboxes have appropriate sign-in settings.
+    This collector retrieves all shared mailboxes and checks whether direct
+    sign-in is blocked for each associated Entra account via Get-User
+    BlockCredentials property.
     """
 
     async def collect(self, client: PowerShellClient) -> dict[str, Any]:
-        """Collect mailbox data.
-
-        Returns:
-            Dict containing:
-            - shared_mailboxes: List of shared mailboxes
-            - total_shared_mailboxes: Count of shared mailboxes
-        """
-        # Get shared mailboxes only (RecipientTypeDetails -eq 'SharedMailbox')
-        mailboxes = await client.run_cmdlet(
-            "ExchangeOnline",
-            "Get-EXOMailbox",
-            RecipientTypeDetails="SharedMailbox",
-            ResultSize="Unlimited",
+        cmdlet = (
+            "Get-EXOMailbox -RecipientTypeDetails SharedMailbox -ResultSize Unlimited | "
+            "ForEach-Object { "
+            "$mbx = $_; "
+            "$user = Get-User -Identity $mbx.UserPrincipalName -ErrorAction SilentlyContinue; "
+            "[PSCustomObject]@{ "
+            "UserPrincipalName = $mbx.UserPrincipalName; "
+            "DisplayName = $mbx.DisplayName; "
+            "PrimarySmtpAddress = $mbx.PrimarySmtpAddress; "
+            "SignInBlocked = if ($user) { $user.BlockCredentials } else { $null } "
+            "} }"
         )
+        mailboxes = await client.run_cmdlet("ExchangeOnline", cmdlet)
 
-        # Handle None, single result, or list
         if mailboxes is None:
             mailboxes = []
         elif isinstance(mailboxes, dict):
             mailboxes = [mailboxes]
 
+        signin_blocked = [m for m in mailboxes if m.get("SignInBlocked") is True]
+        signin_allowed = [m for m in mailboxes if m.get("SignInBlocked") is not True]
+
         return {
             "shared_mailboxes": mailboxes,
             "total_shared_mailboxes": len(mailboxes),
+            "mailboxes_with_signin_blocked": len(signin_blocked),
+            "mailboxes_with_signin_allowed": len(signin_allowed),
         }
