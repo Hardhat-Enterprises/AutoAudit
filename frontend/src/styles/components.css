@@ -1,24 +1,89 @@
 /* src/styles/components.css */
-@tailwind utilities;
+
 @layer components {
-  .container-max { @apply max-w-300 mx-auto p-6; }
 
-  /* use built-in shadow for now; adding in token shadows later */
-  .card { @apply bg-surface-2/70 border border-subtle rounded-lg p-6 relative overflow-hidden shadow-lg; }
+  .container-max {
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 24px;
+  }
 
-  .stats-grid     { @apply grid gap-5 lg:grid-cols-2 xl:grid-cols-4 sm:grid-cols-1; }
-  .stat-label     { @apply text-muted text-sm mb-1 font-medium; }
-  .stat-value     { @apply text-[28px] font-bold leading-tight; }
-  .stat-subtitle  { @apply text-muted text-xs; }
+  .card {
+    background: rgb(var(--color-surface-2));
+    border: 1px solid rgb(var(--color-subtle));
+    border-radius: 8px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,.3);
+  }
 
-  .tone-good  { @apply border-l-4 border-accent-good; }
-  .tone-warn  { @apply border-l-4 border-accent-warn; }
-  .tone-bad   { @apply border-l-4 border-accent-bad;  }
-  .tone-muted { @apply border-l-4 border-subtle; }
+  .stats-grid {
+    display: grid;
+    gap: 20px;
+  }
 
-  .issue-title  { @apply flex items-center gap-2; }
-  .issue-header { @apply flex items-center justify-between mb-3; }
-  .issue-desc   { @apply text-muted text-sm; }
+  .stat-label {
+    color: rgb(var(--color-text-muted));
+    font-size: 14px;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
 
-  .issue-col { @apply flex flex-col gap-5 h-full; }
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .stat-subtitle {
+    color: rgb(var(--color-text-muted));
+    font-size: 12px;
+  }
+
+  .tone-good {
+    border-left: 4px solid rgb(var(--color-accent-good));
+  }
+
+  .tone-warn {
+    border-left: 4px solid rgb(var(--color-accent-warn));
+  }
+
+  .tone-bad {
+    border-left: 4px solid rgb(var(--color-accent-bad));
+  }
+
+  .tone-muted {
+    border-left: 4px solid rgb(var(--color-subtle));
+  }
+
+  .issue-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .issue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .issue-desc {
+    color: rgb(var(--color-text-muted));
+    font-size: 14px;
+  }
+
+  .issue-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+  }
+
+  /* SAFE STATE: no nesting, no @apply */
+  :disabled {
+  opacity: 0.5;
+}
 }
