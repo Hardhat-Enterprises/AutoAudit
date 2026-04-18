@@ -1,10 +1,37 @@
 # This file defines required reviewers for all PRs
-# Last updated: March 2026
+# Last updated: April 2026
 
 # Default reviewer(s) for everything
-# For T1 2026 the list is primarily du-dhartley and more will be added. Any repository or organisation admins can also review and merge, even if not explicitly listed.
-# Additional contributors can be easily added here.
 *    @du-dhartley @6igby @liyunze-coding
 
-# You can add more specific rules later, e.g.:
-# /docs/    @docs-reviewer
+# ── Security-sensitive files: require AppSec team review ──
+
+# Authentication and authorization
+backend-api/app/core/auth.py           @du-dhartley @liyunze-coding
+backend-api/app/core/users.py          @du-dhartley @liyunze-coding
+backend-api/app/core/permissions.py    @du-dhartley @liyunze-coding
+
+# Configuration and secrets
+backend-api/app/core/config.py         @du-dhartley @liyunze-coding
+backend-api/app/services/encryption.py @du-dhartley @liyunze-coding
+
+# CORS and middleware
+backend-api/app/main.py                @du-dhartley @liyunze-coding
+backend-api/app/core/middleware.py     @du-dhartley @liyunze-coding
+
+# PowerShell execution (command injection surface)
+engine/powershell/                     @du-dhartley @liyunze-coding
+engine/collectors/powershell_client.py @du-dhartley @liyunze-coding
+
+# Dockerfiles (container security)
+**/Dockerfile                          @du-dhartley @liyunze-coding
+
+# CI/CD pipelines
+.github/workflows/                     @du-dhartley @liyunze-coding
+
+# Security policy and CODEOWNERS itself
+.github/SECURITY.md                    @du-dhartley @liyunze-coding
+.github/CODEOWNERS                     @du-dhartley @liyunze-coding
+
+# Docker compose (infrastructure, secrets, ports)
+docker-compose.yml                     @du-dhartley @liyunze-coding
