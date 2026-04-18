@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getScan } from '../../api/client';
-import { formatDateAEST, formatTimeAEST } from '../../utils/helpers';
+import { RelativeTime } from '../../components/RelativeTime';
 import './ScanDetailPage.css';
 
 type ScanDetailPageProps = {
@@ -147,13 +147,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
     }
   }
 
-  function formatDate(dateString?: string | null): string {
-    return formatDateAEST(dateString);
-  }
-
-  function formatTime(dateString?: string | null): string {
-    return formatTimeAEST(dateString);
-  }
 
   function getResultIcon(status?: string): JSX.Element {
     switch (status) {
@@ -259,7 +252,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
     .filter((r) => (r?.status || '').toLowerCase() !== 'skipped')
     .slice()
     .sort(compareControlIdAscending);
-
   return (
     <div
       className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}
@@ -302,20 +294,18 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
             <div className="meta-item">
               <span className="meta-label">Started</span>
               <div className="meta-value">
-                <div className="meta-date">{formatDate(scan.started_at || scan.created_at)}</div>
-                <div className="meta-time">{formatTime(scan.started_at || scan.created_at)}</div>
+                <RelativeTime value={scan.started_at || scan.created_at} className="meta-relative" />
               </div>
             </div>
             <div className="meta-item">
               <span className="meta-label">Completed</span>
               {scan.finished_at || scan.completed_at ? (
                 <div className="meta-value">
-                  <div className="meta-date">{formatDate(scan.finished_at || scan.completed_at)}</div>
-                  <div className="meta-time">{formatTime(scan.finished_at || scan.completed_at)}</div>
+                  <RelativeTime value={scan.finished_at || scan.completed_at} className="meta-relative" />
                 </div>
               ) : (
                 <div className="meta-value">
-                  <div className="meta-date">
+                  <div className="meta-relative">
                     {scan.status === 'pending' || scan.status === 'running' ? 'In progress' : '-'}
                   </div>
                 </div>

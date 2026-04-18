@@ -881,14 +881,24 @@ clear.compliance-chart.chart-bar .apexcharts-tooltip {
   line-height: 1.2;
 }
 
-.dt .date {
+.dt-relative {
   font-weight: 700;
   font-size: 12px;
+}
+
+.dt .date {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-tertiary);
 }
 
 .dt .time {
   color: var(--text-tertiary);
   font-size: 12px;
+}
+
+.summary-relative-time {
+  font-weight: 600;
 }
 
 .result-pills {

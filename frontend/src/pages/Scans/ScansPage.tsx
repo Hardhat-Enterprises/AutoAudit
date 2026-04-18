@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Plus, CheckCircle, XCircle, Clock, Loader2, AlertCircle, PlayCircle, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getScans, getConnections, getBenchmarks, createScan, deleteScan, getSettings } from '../../api/client';
-import { formatDateTimePartsAEST } from '../../utils/helpers';
+import { RelativeTime } from '../../components/RelativeTime';
 import './ScansPage.css';
 
 type ScansPageProps = {
@@ -73,6 +73,7 @@ const ScansPage: React.FC<ScansPageProps> = ({ sidebarWidth = 220, isDarkMode = 
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const appliedNavStateRef = useRef<boolean>(false);
+  const stableStartedAtRef = useRef<Record<string, string>>({});
 
   const loadScans = useCallback(async (): Promise<void> => {
     try {
@@ -207,8 +208,35 @@ const ScansPage: React.FC<ScansPageProps> = ({ sidebarWidth = 220, isDarkMode = 
     }
   }
 
-  function formatDate(dateString?: string | null): ReturnType<typeof formatDateTimePartsAEST> {
-    return formatDateTimePartsAEST(dateString);
+  function getStableStartedAt(scan: Scan): string | null {
+    const candidate = scan.started_at || scan.created_at || null;
+    if (!candidate) return null;
+
+    const key = String(scan.id);
+    const existing = stableStartedAtRef.current[key];
+    if (!existing) {
+      stableStartedAtRef.current[key] = candidate;
+      return candidate;
+    }
+
+    const parseTimestampMs = (value: string): number => {
+      const direct = new Date(value).getTime();
+      if (!Number.isNaN(direct)) return direct;
+      const normalized = value.trim().replace(' ', 'T').replace(/(\.\d{3})\d+/, '$1');
+      return new Date(normalized).getTime();
+    };
+
+    const candidateMs = parseTimestampMs(candidate);
+    const existingMs = parseTimestampMs(existing);
+    if (Number.isNaN(existingMs)) {
+      stableStartedAtRef.current[key] = candidate;
+      return candidate;
+    }
+    if (!Number.isNaN(candidateMs) && candidateMs < existingMs) {
+      stableStartedAtRef.current[key] = candidate;
+      return candidate;
+    }
+    return existing;
   }
 
   async function handleDelete(scanId: number | string): Promise<void> {
@@ -412,13 +440,11 @@ const ScansPage: React.FC<ScansPageProps> = ({ sidebarWidth = 220, isDarkMode = 
                     <td>{scan.connection_name || (scan.m365_connection_id ? `Connection #${scan.m365_connection_id}` : '-')}</td>
                     <td>
                       {(() => {
-                        const dateString = scan.started_at || scan.created_at;
+                        const dateString = getStableStartedAt(scan);
                         if (!dateString) return '-';
-                        const dt = formatDate(dateString);
                         return (
                           <div className="datetime">
-                            <div className="date">{dt.date}</div>
-                            <div className="time">{dt.time}</div>
+                            <RelativeTime value={dateString} className="datetime-relative" />
                           </div>
                         );
                       })()}

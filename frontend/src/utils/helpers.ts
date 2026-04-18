@@ -14,7 +14,7 @@ export const formatDate = (date: string | number | Date): string => {
 // Standardized GMT/UTC date+time formatting for consistent display across users/machines.
 // - Date: "DD Mon YYYY"
 // - Time: "h:mm:ss.SSS AM GMT"
-function parseDateAssumingUTC(value: string | number | Date | null | undefined): Date | null {
+export function parseDateAssumingUTC(value: string | number | Date | null | undefined): Date | null {
   if (!value) return null;
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
 
@@ -32,6 +32,61 @@ function parseDateAssumingUTC(value: string | number | Date | null | undefined):
 
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function parseDateAssumingLocal(value: string | number | Date | null | undefined): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * For timezone-less ISO-like strings, multiple interpretations exist (UTC vs local vs AEST).
+ * Prefer the interpretation that is in the past relative to `nowMs` so relative labels match
+ * AEST wall-clock display and avoid spurious "in X hours" when the naive UTC parse is ahead of now.
+ */
+export function parseDateBestEffortForRelative(
+  value: string | number | Date | null | undefined,
+  nowMs: number
+): Date | null {
+  const utcDate = parseDateAssumingUTC(value);
+  if (!utcDate) return null;
+
+  if (typeof value !== 'string') return utcDate;
+
+  const raw = value.trim();
+  const hasTz = /([zZ]|[+-]\d{2}:\d{2})$/.test(raw);
+  if (hasTz) return utcDate;
+
+  const candidates: Date[] = [utcDate];
+  const localDate = parseDateAssumingLocal(raw);
+  if (localDate) candidates.push(localDate);
+
+  const looksIso = /^\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?$/.test(raw);
+  if (looksIso) {
+    const aestCandidate = new Date(`${raw.replace(' ', 'T')}+10:00`);
+    if (!Number.isNaN(aestCandidate.getTime())) candidates.push(aestCandidate);
+  }
+
+  let bestPast: Date | null = null;
+  let bestPastDiff = Number.POSITIVE_INFINITY;
+  let bestAny: Date = candidates[0];
+  let bestAnyAbsDiff = Math.abs(nowMs - candidates[0].getTime());
+
+  for (const candidate of candidates) {
+    const diff = nowMs - candidate.getTime();
+    const absDiff = Math.abs(diff);
+    if (diff >= 0 && diff < bestPastDiff) {
+      bestPast = candidate;
+      bestPastDiff = diff;
+    }
+    if (absDiff < bestAnyAbsDiff) {
+      bestAny = candidate;
+      bestAnyAbsDiff = absDiff;
+    }
+  }
+
+  return bestPast ?? bestAny;
 }
 
 export const formatDateGMT = (dateString: string | number | Date | null | undefined): string => {
@@ -96,6 +151,15 @@ export const formatTimeAEST = (dateString: string | number | Date | null | undef
     timeZone: AEST_IANA_TZ,
   }).format(d);
   return `${timeCore} AEST`;
+};
+
+/** Single-line absolute time for tooltips (matches AEST display elsewhere). */
+export const formatAbsoluteTooltipAEST = (
+  dateString: string | number | Date | null | undefined
+): string => {
+  const date = formatDateAEST(dateString);
+  if (date === '-') return '';
+  return `${date} ${formatTimeAEST(dateString)}`;
 };
 
 export const formatDateTimePartsAEST = (dateString: string | number | Date | null | undefined): DateTimeParts => {

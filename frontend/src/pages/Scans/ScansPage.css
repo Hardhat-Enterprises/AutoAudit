@@ -268,15 +268,10 @@
   line-height: 1.2;
 }
 
-.datetime .date {
-  color: var(--text-primary);
+.datetime-relative {
   font-weight: 600;
   font-size: 13px;
-}
-
-.datetime .time {
-  color: var(--text-tertiary);
-  font-size: 12px;
+  color: var(--text-primary);
 }
 
 .results-summary .passed {

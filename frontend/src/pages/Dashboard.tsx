@@ -14,7 +14,7 @@ import {
 import { Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getBenchmarks, getConnections, getScans, getScan } from "../api/client";
-import { formatDateTimePartsAEST } from "../utils/helpers";
+import { RelativeTime } from "../components/RelativeTime";
 
 type ChartType = "doughnut" | "pie" | "bar";
 
@@ -278,9 +278,6 @@ export default function Dashboard({
       (s?.m365_connection_id ? `Connection #${s.m365_connection_id}` : "—");
     const isCompleted = String(s?.status || "").toLowerCase() === "completed";
     const lastScanLabel = (isCompleted ? (s?.finished_at || s?.started_at) : (s?.started_at || s?.finished_at)) || null;
-    const dt = lastScanLabel ? formatDateTimePartsAEST(lastScanLabel) : { date: '-', time: '-' };
-    const lastTime = dt.time !== '-' ? dt.time : '—';
-    const lastDate = dt.date !== '-' ? dt.date : '—';
 
     const subtitle = !hasScan
       ? 'No scans yet'
@@ -288,22 +285,33 @@ export default function Dashboard({
 
     const kpis = [
       {
+        key: 'compliance',
         label: compliancePct === null ? 'Compliance —' : `Compliance ${compliancePct}%`,
         tone: complianceTone,
         icon: CheckCircle2,
       },
       {
+        key: 'failed',
         label: hasTotal ? `${formatCount(failed)} failed` : 'Failed —',
         tone: failedTone,
         icon: AlertTriangle,
       },
       {
+        key: 'total',
         label: hasTotal ? `${formatCount(total)} total` : 'Total —',
         tone: 'neutral',
         icon: Shield,
       },
       {
-        label: `Updated ${lastTime}`,
+        key: 'updated',
+        label:
+          hasScan && lastScanLabel ? (
+            <>
+              Updated <RelativeTime value={lastScanLabel} className="summary-relative-time" />
+            </>
+          ) : (
+            'Updated —'
+          ),
         tone: 'neutral',
         icon: Clock3,
       },
@@ -330,7 +338,6 @@ export default function Dashboard({
         title: 'Context',
         items: [
           { label: 'Connection', value: hasScan ? connectionLabel : '—' },
-          { label: 'Date', value: hasScan ? lastDate : '—' },
         ],
       },
     ].map(group => ({
@@ -489,7 +496,7 @@ export default function Dashboard({
               {summary.kpis.map((kpi) => {
                 const Icon = kpi.icon;
                 return (
-                  <span key={kpi.label} className={`summary-chip ${kpi.tone}`}>
+                  <span key={kpi.key} className={`summary-chip ${kpi.tone}`}>
                     <Icon size={14} strokeWidth={2} aria-hidden="true" />
                     {kpi.label}
                   </span>
@@ -570,7 +577,6 @@ export default function Dashboard({
                     </thead>
                     <tbody>
                       {recentScans.map(s => {
-                        const dt = formatDateTimePartsAEST(s.started_at || s.finished_at);
                         const passed = Number(s.passed_count || 0);
                         const failed = Number(s.failed_count || 0);
                         const errors = Number(s.error_count || 0);
@@ -583,8 +589,7 @@ export default function Dashboard({
                             </td>
                             <td>
                               <div className="dt">
-                                <div className="date">{dt.date}</div>
-                                <div className="time">{dt.time}</div>
+                                <RelativeTime value={s.started_at || s.finished_at} className="dt-relative" />
                               </div>
                             </td>
                             <td>
