@@ -1,9 +1,8 @@
 name: Database API Secrets
 
 on:
+  # Secrets are only available on push - removed pull_request trigger to prevent secret exposure to fork PRs
   push:
-    branches: [main, dev, staging]
-  pull_request:
     branches: [main, dev, staging]
   schedule:
     - cron: '32 23 * * 6'
@@ -17,7 +16,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      engine: ${{ steps.filter.outputs.database }}
+      database: ${{ steps.filter.outputs.database }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3

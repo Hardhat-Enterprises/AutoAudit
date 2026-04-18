@@ -145,7 +145,7 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/backend-api:${{ steps.set-env.outputs.ENV_NAME }} \
             --build-arg ENV=${{ steps.set-env.outputs.ENV_NAME }} \
-            -f backend-api/docker/backend.Dockerfile .
+            -f backend-api/Dockerfile .
 
       - name: Push Docker image
         run: |
@@ -155,7 +155,7 @@ jobs:
         uses: anchore/scan-action@v6
         with:
           image: ${{ secrets.DOCKER_USERNAME }}/backend-api:${{ steps.set-env.outputs.ENV_NAME }}
-          fail-build: false
+          fail-build: true
           output-format: sarif
           output-file: grype-report.sarif
 
