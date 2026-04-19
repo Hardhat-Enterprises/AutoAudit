@@ -293,14 +293,14 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
             <div className="meta-item">
               <span className="meta-label">Started</span>
               <div className="meta-value">
-                <RelativeTime value={scan.started_at || scan.created_at} className="meta-relative" />
+                <RelativeTime value={scan.started_at ?? scan.created_at} className="meta-relative" />
               </div>
             </div>
             <div className="meta-item">
               <span className="meta-label">Completed</span>
               {scan.finished_at || scan.completed_at ? (
                 <div className="meta-value">
-                  <RelativeTime value={scan.finished_at || scan.completed_at} className="meta-relative" />
+                  <RelativeTime value={scan.finished_at ?? scan.completed_at} className="meta-relative" />
                 </div>
               ) : (
                 <div className="meta-value">

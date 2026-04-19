@@ -24,10 +24,10 @@ describe('formatRelativeTime', () => {
     expect(formatRelativeTime(null, new Date('2026-04-05T12:00:00.000Z'))).toBe('-');
   });
 
-  it('uses future phrasing when the instant is after now', () => {
+  it('clamps to "now" when the instant is after now (avoids "in X" for future instants)', () => {
     const now = new Date('2026-04-18T10:00:00.000Z');
     const future = new Date('2026-04-18T11:00:00.000Z');
-    expect(formatRelativeTime(future, now, 'en')).toMatch(/^in\b/);
+    expect(formatRelativeTime(future, now, 'en')).toMatch(/^now$/i);
   });
 });
 
