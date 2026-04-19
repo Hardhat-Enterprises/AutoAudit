@@ -22,6 +22,14 @@ class SpoSiteDataCollector(BaseDataCollector):
     sharing settings for compliance evaluation.
     """
 
+    @staticmethod
+    def _first_present(data: dict[str, Any], *keys: str) -> Any:
+        """Return the first non-missing value from a set of possible keys."""
+        for key in keys:
+            if key in data:
+                return data[key]
+        return None
+
     async def collect(self, client: SharePointClient) -> dict[str, Any]:
         """Collect SPO site data.
 
@@ -42,18 +50,27 @@ class SpoSiteDataCollector(BaseDataCollector):
             "sites": sites,
             "onedrive_sites": onedrive_sites,
             "site_sharing_settings": {
-                "sharepoint_sharing_capability": tenant_settings.get(
+                "sharepoint_sharing_capability": self._first_present(
+                    tenant_settings,
+                    "sharingCapability",
+                    "coreSharingCapability",
+                    "SharingCapability",
                     "CoreSharingCapability",
-                    tenant_settings.get("SharingCapability"),
                 ),
-                "onedrive_sharing_capability": tenant_settings.get(
-                    "OneDriveSharingCapability"
+                "onedrive_sharing_capability": self._first_present(
+                    tenant_settings,
+                    "oneDriveSharingCapability",
+                    "OneDriveSharingCapability",
                 ),
-                "core_default_share_link_scope": tenant_settings.get(
-                    "CoreDefaultShareLinkScope"
+                "core_default_share_link_scope": self._first_present(
+                    tenant_settings,
+                    "coreDefaultShareLinkScope",
+                    "CoreDefaultShareLinkScope",
                 ),
-                "onedrive_default_share_link_scope": tenant_settings.get(
-                    "OneDriveDefaultShareLinkScope"
+                "onedrive_default_share_link_scope": self._first_present(
+                    tenant_settings,
+                    "oneDriveDefaultShareLinkScope",
+                    "OneDriveDefaultShareLinkScope",
                 ),
             },
         }

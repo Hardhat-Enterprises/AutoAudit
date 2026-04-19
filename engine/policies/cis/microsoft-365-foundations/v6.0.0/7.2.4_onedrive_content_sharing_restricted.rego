@@ -2,7 +2,7 @@
 # title: Ensure OneDrive content sharing is restricted
 # description: |
 #   This setting governs the global permissiveness of OneDrive content sharing in the organization.
-#   OneDrive content sharing can be restricted independent of SharePoint but can never be more 
+#   OneDrive content sharing can be restricted independent of SharePoint but can never be more
 #   permissive than the level established with SharePoint.
 #   The recommended state is Only people in your organization.
 # related_resources:
@@ -30,34 +30,33 @@ result := {
     },
 } if {
     sharing_capability := object.get(input, "onedrive_sharing_capability", null)
-    normalized := lower(sprintf("%v", [sharing_capability]))
-    compliant := restricted_value(sharing_capability, normalized)
+    normalized := lower(trim(sprintf("%v", [sharing_capability]), " \t\r\n"))
+    compliant := organization_only_value(sharing_capability, normalized)
     message := generate_message(sharing_capability, normalized, compliant)
     affected_resources := generate_affected_resources(sharing_capability, compliant)
 }
 
-is_restricted(sharing_capability, normalized) if {
-    sharing_capability != null
-    not contains(normalized, "anyone")
+organization_only_values := {
+    "disabled",
+    "only people in your organization",
+    "onlypeopleinyourorganization",
 }
 
-restricted_value(sharing_capability, normalized) := true if {
-    is_restricted(sharing_capability, normalized)
+is_organization_only(sharing_capability, normalized) if {
+    sharing_capability != null
+    organization_only_values[normalized]
+}
+
+organization_only_value(sharing_capability, normalized) := true if {
+    is_organization_only(sharing_capability, normalized)
 } else := false
 
-generate_message(sharing_capability, normalized, compliant) := "OneDrive content sharing is disabled" if {
+generate_message(sharing_capability, _, compliant) := "OneDrive content sharing is limited to people in your organization" if {
     sharing_capability != null
     compliant
-    normalized == "disabled"
 }
 
-generate_message(sharing_capability, normalized, compliant) := "OneDrive content sharing is restricted" if {
-    sharing_capability != null
-    compliant
-    normalized != "disabled"
-}
-
-generate_message(sharing_capability, _, compliant) := "OneDrive content sharing allows Anyone links" if {
+generate_message(sharing_capability, _, compliant) := "OneDrive content sharing allows external sharing" if {
     sharing_capability != null
     not compliant
 }
