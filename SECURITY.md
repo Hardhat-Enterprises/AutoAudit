@@ -34,6 +34,7 @@ If you discover a security vulnerability in AutoAudit, please report it responsi
 - We will investigate and aim to provide a resolution or mitigation plan within **14 days**
 - We will credit you in the fix if you wish
 
+
 ---
 
 ## Scope
