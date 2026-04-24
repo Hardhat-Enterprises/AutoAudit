@@ -27,6 +27,17 @@ dependencies = [
     "celery[redis]>=5.3.0",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "aiosqlite>=0.20.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
 [project.optional-dependencies]
 # Heavy OCR/reporting stack lives in the "evidence" extra so backend devs
 # aren't forced to install it unless they touch evidence scanning.
