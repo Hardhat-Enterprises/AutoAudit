@@ -87,9 +87,37 @@ jobs:
           VALIDATE_MARKDOWN_PRETTIER: false
           VALIDATE_NATURAL_LANGUAGE: false
 
+  build-and-test:
+    name: Build Backend and Unit Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-api
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Run tests
+        run: uv run pytest -v
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///./test.db
+          SECRET_KEY: test-secret-key-for-ci
+          ENCRYPTION_KEY: Ps-HiS3ww5QzQPc_Mdu5-JyA_jCNbdFHMdiwWSlAfgM=
+          # Not a real secret; dummy Fernet key required to satisfy app validation at import time
   report:
     name: Report PR status
-    needs: [analyze, run-lint]
+    needs: [analyze, run-lint, build-and-test]
     if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
@@ -98,11 +126,12 @@ jobs:
       - uses: actions/github-script@v7
         with:
           script: |
-            const analyze = '${{ needs.analyze.result }}';
-            const lint    = '${{ needs.run-lint.result }}';
+            const analyze     = '${{ needs.analyze.result }}';
+            const lint        = '${{ needs.run-lint.result }}';
+            const buildAndTest = '${{ needs.build-and-test.result }}';
 
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
-            const allPassed = [analyze, lint].every(r => ['success', 'skipped'].includes(r));
+            const allPassed = [analyze, lint, buildAndTest].every(r => ['success', 'skipped'].includes(r));
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const marker = '<!-- ci-report-backend-api -->'; // used to find and update the existing comment
 
@@ -114,6 +143,7 @@ jobs:
               `|---|---|`,
               `| Security analysis (CodeQL + Bandit) | ${icon(analyze)} \`${analyze}\` |`,
               `| Lint | ${icon(lint)} \`${lint}\` |`,
+              `| Build & test | ${icon(buildAndTest)} \`${buildAndTest}\` |`,
               ``,
               allPassed
                 ? `All checks passed.`
