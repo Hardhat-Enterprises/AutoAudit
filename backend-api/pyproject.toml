@@ -31,12 +31,12 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
-    "aiosqlite>=0.20.0",
+    "aiosqlite>=0.20.0",  # SQLite async driver for in-memory test DB
 ]
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
-testpaths = ["tests"]
+asyncio_mode = "auto"  # all async test functions run without explicit markers
+testpaths = ["tests"]  # restrict discovery to the tests directory
 
 [project.optional-dependencies]
 # Heavy OCR/reporting stack lives in the "evidence" extra so backend devs
