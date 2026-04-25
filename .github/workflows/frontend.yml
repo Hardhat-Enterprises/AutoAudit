@@ -18,7 +18,7 @@ jobs:
       # Required if adapting for pull requests later
       pull-requests: read
     outputs:
-      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -33,7 +33,7 @@ jobs:
   analyze:
     name: Security Analysis on (${{ matrix.language }})
     needs: changes
-    if: github.event_name != 'push' || needs.changes.outputs.backend == 'true'  
+    if: github.event_name != 'push' || needs.changes.outputs.frontend == 'true'  
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
       security-events: write
