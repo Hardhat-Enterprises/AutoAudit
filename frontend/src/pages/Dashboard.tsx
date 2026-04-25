@@ -250,7 +250,6 @@ export default function Dashboard({
     }
 
     loadScanDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, latestRelevantScan?.id]);
 
   const summary = useMemo(() => {

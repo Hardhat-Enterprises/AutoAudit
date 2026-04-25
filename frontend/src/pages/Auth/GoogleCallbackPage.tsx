@@ -145,7 +145,6 @@ const GoogleCallbackPage = () => {
       cancelled = true;
     };
     // Intentionally run once on mount — see comment in original implementation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
