@@ -30,15 +30,26 @@ result := {
     },
 } if {
     sharing_capability := object.get(input, "sharing_capability", null)
-    normalized := lower(sprintf("%v", [sharing_capability]))
+    normalized := lower(trim(sprintf("%v", [sharing_capability]), " \t\r\n"))
     compliant := is_restricted(sharing_capability, normalized)
     message := generate_message(sharing_capability, normalized, compliant)
     affected_resources := generate_affected_resources(sharing_capability, compliant)
 }
 
+restricted_sharing_values := {
+    "disabled",
+    "existingexternalusersharingonly",
+    "externalusersharingonly",
+    "existing external users sharing only",
+    "external users sharing only",
+    "existing guests",
+    "existing guests only",
+    "new and existing guests",
+}
+
 is_restricted(sharing_capability, normalized) if {
     sharing_capability != null
-    not contains(normalized, "anyone")
+    restricted_sharing_values[normalized]
 }
 
 generate_message(sharing_capability, normalized, compliant) := "SharePoint external content sharing is disabled" if {
