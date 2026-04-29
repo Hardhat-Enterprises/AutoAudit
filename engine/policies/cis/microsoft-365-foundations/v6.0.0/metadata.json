@@ -94,8 +94,8 @@
       "automation_status": "ready",
       "data_collector_id": "exchange.mailbox.mailboxes",
       "policy_file": "1.2.2_shared_mailbox_signin_blocked.rego",
-      "requires_permissions": ["Exchange.Manage"],
-      "notes": null
+      "requires_permissions": ["User.Read.All"],
+      "notes": "Graph-only: shared mailbox candidates are approximated (see collector detection_limitations); not equivalent to Exchange RecipientTypeDetails or BlockCredentials in all tenants."
     },
     {
       "control_id": "1.3.1",

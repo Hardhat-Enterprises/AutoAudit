@@ -15,7 +15,7 @@
 #   severity: medium
 #   service: Exchange
 #   requires_permissions:
-#   - Exchange.Manage
+#   - User.Read.All
 
 package cis.microsoft_365_foundations.v6_0_0.control_1_2_2
 

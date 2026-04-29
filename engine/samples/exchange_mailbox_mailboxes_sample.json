@@ -1,24 +1,28 @@
 {
   "collector_id": "exchange.mailbox.mailboxes",
-  "description": "Sample output from MailboxesDataCollector against a mock M365 tenant",
+  "description": "Sample Graph-based output for CIS 1.2.2 evaluation",
   "data": {
     "shared_mailboxes": [
       {
         "UserPrincipalName": "finance@contoso.com",
-        "DisplayName": "Finance Team",
+        "DisplayName": "Finance",
         "PrimarySmtpAddress": "finance@contoso.com",
+        "accountEnabled": false,
         "SignInBlocked": true
       },
       {
         "UserPrincipalName": "reception@contoso.com",
         "DisplayName": "Reception",
         "PrimarySmtpAddress": "reception@contoso.com",
+        "accountEnabled": true,
         "SignInBlocked": false
       }
     ],
     "total_shared_mailboxes": 2,
     "mailboxes_with_signin_blocked": 1,
-    "mailboxes_with_signin_allowed": 1
+    "mailboxes_with_signin_allowed": 1,
+    "detection_method": "graph_user_heuristic_unlicensed_mail_members",
+    "detection_limitations": "Shared mailbox identification is approximate without Exchange recipient metadata. Only member users with mail and no assignedLicenses are evaluated; licensed shared mailboxes may be omitted."
   },
   "opa_result": {
     "compliant": false,
