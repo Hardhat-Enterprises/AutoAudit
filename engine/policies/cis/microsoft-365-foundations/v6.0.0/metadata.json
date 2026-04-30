@@ -136,11 +136,11 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "exchange.organization.sharing_policy",
-      "policy_file": null,
+      "policy_file": "1.3.3_external_calendar_sharing.rego",
       "requires_permissions": ["Exchange.Manage"],
-      "notes": "Collector exists but control logic not defined"
+      "notes": "Flags Anonymous: or *: Domains entries with CalendarSharing capabilities on enabled policies; does not evaluate named external SMTP domains."
     },
     {
       "control_id": "1.3.4",
