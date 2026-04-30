@@ -39,7 +39,20 @@ class ExternalAccessPolicyDataCollector(BasePowerShellCollector):
             - external_access_policies: List of external access policies
             - global_policy: The global external access policy
         """
-        policies = await client.run_cmdlet("Teams", "Get-CsExternalAccessPolicy")
+        # Handle known MicrosoftTeams AccessToken authentication issue
+        # Returns structured failure output instead of breaking the collector
+        try:
+            policies = await client.run_cmdlet("Teams", "Get-CsExternalAccessPolicy")
+        except Exception as error:
+            return {
+                "external_access_policies": [],
+                "total_policies": 0,
+                "global_policy": None,
+                "status": "failed",
+                "reason": "MicrosoftTeams PowerShell AccessToken authentication not supported",
+                "error": str(error),
+                "recommendation": "Implement certificate-based authentication as described in _pending/README",
+            }
 
         # Handle single policy vs list
         if isinstance(policies, dict):
