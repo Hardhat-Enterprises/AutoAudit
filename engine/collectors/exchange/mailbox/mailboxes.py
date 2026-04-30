@@ -3,23 +3,18 @@
 CIS Microsoft 365 Foundations Benchmark Controls:
     v6.0.0: 1.2.2
 
-Control Description:
-    1.2.2 - Ensure sign-in to shared mailboxes is blocked
-
 Connection Method: Microsoft Graph API
 Required Application Permissions: User.Read.All
 Graph Endpoints:
     - GET /users (paginated)
 
 Implementation note:
-    Microsoft Graph does not expose Exchange RecipientTypeDetails on the user
-    resource, so shared mailboxes cannot be enumerated with the same fidelity
-    as Exchange Online PowerShell. This collector approximates candidates using
-    member users that have a mail address and no assigned licenses. Sign-in
-    posture is derived from accountEnabled (SignInBlocked is true when
-    accountEnabled is false). Licensed shared mailboxes and other edge cases
-    may be omitted; Exchange Online remains authoritative for exact recipient
-    typing and BlockCredentials semantics in hybrid scenarios.
+    Graph does not expose Exchange RecipientTypeDetails, so shared mailboxes
+    cannot be identified with the same fidelity as Exchange Online PowerShell.
+    Candidates are approximated as member users with a mail address and no
+    assigned licenses. SignInBlocked is derived from accountEnabled. Licensed
+    shared mailboxes and hybrid edge cases may be omitted; Exchange Online
+    remains authoritative for BlockCredentials semantics.
 """
 
 from typing import Any
@@ -50,7 +45,7 @@ class MailboxesDataCollector(BaseDataCollector):
             if not mail:
                 continue
             licenses = u.get("assignedLicenses") or []
-            if len(licenses) > 0:
+            if licenses:
                 continue
 
             ae = u.get("accountEnabled")

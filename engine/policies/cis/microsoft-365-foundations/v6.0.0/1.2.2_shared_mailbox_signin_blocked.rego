@@ -60,16 +60,8 @@ result := output if {
     }
 }
 
-get_array(obj, key) := value if {
-    value := obj[key]
-} else := []
+get_array(obj, key) := obj[key] if { obj[key] } else := []
 
-build_message(all_mailboxes, violating) := msg if {
+build_message(all_mailboxes, violating) := sprintf("All %d shared mailbox(es) have sign-in blocked", [count(all_mailboxes)]) if {
     count(violating) == 0
-    msg := sprintf("All %d shared mailbox(es) have sign-in blocked", [count(all_mailboxes)])
-}
-
-build_message(_, violating) := msg if {
-    count(violating) > 0
-    msg := sprintf("%d shared mailbox(es) do not have sign-in blocked", [count(violating)])
-}
+} else := sprintf("%d shared mailbox(es) do not have sign-in blocked", [count(violating)])
