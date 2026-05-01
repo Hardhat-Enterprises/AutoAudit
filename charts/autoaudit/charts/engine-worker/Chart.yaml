@@ -1,0 +1,5 @@
+apiVersion: v2
+name: engine-worker
+description: AutoAudit Celery worker
+type: application
+version: 0.1.0

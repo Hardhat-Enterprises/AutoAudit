@@ -1,0 +1,5 @@
+apiVersion: v2
+name: autoaudit
+description: AutoAudit umbrella Helm chart
+type: application
+version: 0.1.0

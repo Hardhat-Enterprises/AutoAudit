@@ -1,0 +1,41 @@
+global:
+  imageRegistry: australia-southeast2-docker.pkg.dev/autoaudit-prod/autoaudit
+  imagePullPolicy: Always
+  cloudSqlInstance: autoaudit-prod:australia-southeast2:autoaudit-db
+  imageTag: latest
+  ingress:
+    host: autoaudit.34.129.64.236.nip.io
+    tlsSecret: autoaudit-tls
+
+backend-api:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+frontend:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+engine-worker:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+opa:
+  replicaCount: 1
