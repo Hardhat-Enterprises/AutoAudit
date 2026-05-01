@@ -38,7 +38,7 @@ jobs:
       - name: Build image
         run: |
           IMAGE="${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}"
-          docker build -t "$IMAGE" ./${{ matrix.service }}
+          docker build -t "$IMAGE" -f ./${{ matrix.service }}/Dockerfile .
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
       - name: Scan image with Trivy
