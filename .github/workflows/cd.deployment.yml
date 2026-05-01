@@ -30,7 +30,7 @@ jobs:
             context: ./frontend
           - service: engine-worker
             dockerfile: ./engine/Dockerfile
-            context: .
+            context: ./engine
 
     steps:
       - uses: actions/checkout@v4
