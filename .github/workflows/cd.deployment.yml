@@ -1,0 +1,91 @@
+name: CD — Build, Scan, Push, Deploy
+
+on:
+  push:
+    branches: [main, chore/gke-cd-test]  # test branch to validate 
+  workflow_dispatch:                       # keep for manual redeploys
+
+permissions:
+  id-token: write   # required for WIF
+  contents: read
+
+env:
+  REGISTRY: australia-southeast2-docker.pkg.dev/autoaudit-prod/autoaudit
+  GKE_CLUSTER: autoaudit-cluster
+  GKE_REGION: australia-southeast2
+  NAMESPACE: production
+
+jobs:
+  build-scan-push:
+    name: Build, scan, and push ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [backend-api, frontend, engine-worker]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.POC_GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.POC_GCP_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker australia-southeast2-docker.pkg.dev --quiet
+
+      - name: Build image
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}"
+          docker build -t "$IMAGE" ./${{ matrix.service }}
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE }}
+          severity: CRITICAL
+          exit-code: 1 
+
+      - name: Push to Artifact Registry
+        run: docker push "${{ env.IMAGE }}"
+
+  deploy:
+    name: Helm deploy to production
+    needs: build-scan-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.POC_GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.POC_GCP_SERVICE_ACCOUNT }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_REGION }}
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Deploy
+        run: |
+          helm upgrade --install autoaudit ./charts/autoaudit \
+            --namespace "${{ env.NAMESPACE }}" \
+            --set global.imageTag=${{ github.sha }} \
+            --set "frontend.ingress.host=${{ secrets.POC_PRODUCTION_DOMAIN }}" \
+            --wait \
+            --timeout 5m \
+            --atomic
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/backend-api -n "${{ env.NAMESPACE }}" --timeout=120s
+          kubectl rollout status deployment/frontend -n "${{ env.NAMESPACE }}" --timeout=120s
+          kubectl rollout status deployment/engine-worker -n "${{ env.NAMESPACE }}" --timeout=120s
