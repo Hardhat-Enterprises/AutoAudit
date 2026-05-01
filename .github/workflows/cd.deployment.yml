@@ -95,7 +95,9 @@ jobs:
             --set "frontend.ingress.host=${{ secrets.POC_PRODUCTION_DOMAIN }}" \
             --wait \
             --timeout 5m \
-            --atomic
+            --rollback-on-failure \
+            --server-side \
+            --force-conflicts
 
       - name: Verify rollout
         run: |
