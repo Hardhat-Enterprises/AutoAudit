@@ -21,7 +21,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend-api, frontend, engine-worker]
+        include:
+          - service: backend-api
+            dockerfile: ./backend-api/Dockerfile
+            context: .
+          - service: frontend
+            dockerfile: ./frontend/Dockerfile
+            context: ./frontend
+          - service: engine-worker
+            dockerfile: ./engine/Dockerfile
+            context: .
 
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +47,7 @@ jobs:
       - name: Build image
         run: |
           IMAGE="${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}"
-          docker build -t "$IMAGE" -f ./${{ matrix.service }}/Dockerfile .
+          docker build -t "$IMAGE" -f ${{ matrix.dockerfile }} ${{ matrix.context }}
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
       - name: Scan image with Trivy
