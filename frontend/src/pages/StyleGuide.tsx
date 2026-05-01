@@ -1,4 +1,3 @@
-import "../index.css";
 import { TOKEN_META } from "../styles/tokens-meta"; // name, rgb, hex labels
 
 type ThemeMode = "dark" | "light";

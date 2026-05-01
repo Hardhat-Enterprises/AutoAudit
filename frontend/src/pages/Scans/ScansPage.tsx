@@ -274,7 +274,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 		return (
 			<div
 				className={`min-h-screen p-6 transition-colors duration-300 ${
-					isDarkMode ? "bg-(--bg-primary)" : "bg-slate-50"
+					isDarkMode ? "bg-primary" : "bg-slate-50"
 				}`}
 				style={{
 					marginLeft: `${sidebarWidth}px`,
@@ -295,7 +295,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 	return (
 		<div
 			className={`min-h-screen p-6 transition-colors duration-300 ${
-				isDarkMode ? "bg-(--bg-primary)" : "bg-slate-50"
+				isDarkMode ? "bg-primary" : "bg-slate-50"
 			}`}
 			style={{
 				marginLeft: `${sidebarWidth}px`,
@@ -319,7 +319,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 						</div>
 					</div>
 					<button
-						className="toolbar-button primary"
+						className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
 						onClick={() => setShowForm(!showForm)}
 						disabled={connections.length === 0}
 					>
@@ -349,7 +349,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 
 				{/* New Scan Form */}
 				{showForm && (
-					<div className="bg-(--bg-secondary) border border-(--border-color) rounded-xl p-6 mb-6">
+					<div className="bg-secondary border border-(--border-color) rounded-xl p-6 mb-6">
 						<h3 className="text-(--text-primary) text-lg font-semibold mb-5">
 							New Compliance Scan
 						</h3>
@@ -371,13 +371,14 @@ const ScansPage: React.FC<ScansPageProps> = ({
 										disabled={isSubmitting}
 										className="w-full px-3.5 py-2.5 bg-(--bg-tertiary) border border-(--border-color) rounded-lg text-(--text-primary) text-sm transition-colors duration-200 cursor-pointer focus:outline-none focus:border-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
 									>
-										<option value="">
+										<option value="" className="bg-primary">
 											Select a cloud platform
 										</option>
 										{connections.map((conn) => (
 											<option
 												key={conn.id}
 												value={conn.id}
+												className="bg-primary"
 											>
 												{conn.name}
 											</option>
@@ -401,13 +402,14 @@ const ScansPage: React.FC<ScansPageProps> = ({
 										disabled={isSubmitting}
 										className="w-full px-3.5 py-2.5 bg-(--bg-tertiary) border border-(--border-color) rounded-lg text-(--text-primary) text-sm transition-colors duration-200 cursor-pointer focus:outline-none focus:border-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
 									>
-										<option value="">
+										<option value="" className="bg-primary">
 											Select a benchmark
 										</option>
 										{benchmarks.map((bench) => (
 											<option
 												key={`${bench.framework}|${bench.slug}|${bench.version}`}
 												value={`${bench.framework}|${bench.slug}|${bench.version}`}
+												className="bg-primary"
 											>
 												{bench.name} ({bench.version})
 											</option>
@@ -419,7 +421,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 							<div className="flex justify-end gap-3 mt-2">
 								<button
 									type="button"
-									className="toolbar-button secondary"
+									className="flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium cursor-pointer [transition:all_0.3s_ease] border-none outline-none bg-secondary"
 									onClick={() => setShowForm(false)}
 									disabled={isSubmitting}
 								>
@@ -427,7 +429,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 								</button>
 								<button
 									type="submit"
-									className="toolbar-button primary"
+									className="flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium cursor-pointer [transition:all_0.3s_ease] border-none outline-none bg-primary"
 									disabled={isSubmitting}
 								>
 									{isSubmitting ? (
@@ -451,7 +453,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 				)}
 
 				{/* Scans List */}
-				<div className="bg-(--bg-secondary) border border-(--border-color) rounded-xl overflow-hidden">
+				<div className="bg-secondary border border-dashed border-slate-600 rounded-xl overflow-hidden">
 					{scans.length === 0 ? (
 						<div className="text-center py-16 px-5">
 							<Search
@@ -585,7 +587,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 											) => e.stopPropagation()}
 										>
 											<button
-												className="toolbar-button danger px-2.5 py-1.5 text-[13px]"
+												className="flex items-center gap-2 rounded-lg font-medium cursor-pointer [transition:all_0.3s_ease] border-none outline-none text-[#ef4444] px-2.5 py-1.5 text-[13px]"
 												onClick={() =>
 													handleDelete(scan.id)
 												}

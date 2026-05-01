@@ -76,10 +76,10 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
         transition: "margin-left 0.4s ease, width 0.4s ease",
       }}
     >
-      <div className="mx-auto flex max-w-[1000px] flex-col gap-6">
+      <div className="mx-auto flex max-w-250 flex-col gap-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-text-strong">
-            <Settings size={24} className="shrink-0 text-[rgb(var(--accent-teal))]" aria-hidden />
+            <Settings size={24} className="shrink-0 text-accent-teal" aria-hidden />
             <div>
               <h1 className="font-header text-2xl font-bold">Settings</h1>
               <p className="mt-0 text-sm text-muted">Workspace preferences and application settings.</p>
@@ -89,7 +89,7 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
 
         {error ? (
           <div
-            className="flex items-center gap-2 rounded-lg border border-[rgb(var(--accent-bad)/0.35)] bg-[rgb(var(--accent-bad)/0.1)] px-4 py-3 text-sm text-[rgb(var(--accent-bad))]"
+            className="flex items-center gap-2 rounded-lg border border-[rgb(var(--accent-bad)/0.35)] bg-[rgb(var(--accent-bad)/0.1)] px-4 py-3 text-sm text-accent-bad"
             role="alert"
           >
             <AlertCircle size={18} className="shrink-0" aria-hidden />
@@ -103,7 +103,7 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
             <p className="mt-4 text-sm">Loading settings...</p>
           </div>
         ) : (
-          <div className="card">
+          <div className="card bg-secondary">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 flex-col gap-1">
                 <div className="text-sm font-semibold text-text-strong">Confirm before delete</div>
@@ -112,7 +112,7 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
                 </div>
               </div>
               <label
-                className="relative inline-block h-[26px] w-[50px] shrink-0 cursor-pointer has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
+                className="relative inline-block h-6.5 w-12.5 shrink-0 cursor-pointer has-disabled:cursor-not-allowed has-disabled:opacity-50"
                 aria-label="Confirm before delete"
               >
                 <input
@@ -123,11 +123,11 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
                   disabled={isSaving}
                 />
                 <span
-                  className="absolute inset-0 rounded-[26px] bg-[rgb(var(--text-muted)/0.45)] transition-colors peer-checked:bg-[rgb(var(--accent-teal))]"
+                  className="absolute inset-0 rounded-[26px] bg-[rgb(var(--text-muted)/0.45)] transition-colors peer-checked:bg-accent-teal"
                   aria-hidden
                 />
                 <span
-                  className="absolute left-[3px] top-[3px] h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-[24px]"
+                  className="absolute left-0.75 top-0.75 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-6"
                   aria-hidden
                 />
               </label>
@@ -136,7 +136,7 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
             <div className="mt-4 flex flex-wrap justify-end gap-3">
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[rgb(var(--border-subtle))] bg-surface-2 px-4 py-2 text-sm font-medium text-text-strong transition-all duration-300 hover:-translate-y-px hover:bg-[rgb(var(--border-subtle))] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border-subtle bg-surface-2 px-4 py-2 text-sm font-medium text-text-strong transition-all duration-300 hover:-translate-y-px hover:bg-border-subtle disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                 onClick={handleReset}
                 disabled={!hasChanges || isSaving}
               >
@@ -144,7 +144,7 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
               </button>
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[rgb(var(--accent-teal)/0.4)] bg-[rgb(var(--accent-teal))] px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-px hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[rgb(var(--accent-teal)/0.4)] bg-accent-teal px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-px hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                 onClick={handleSave}
                 disabled={!hasChanges || isSaving}
               >

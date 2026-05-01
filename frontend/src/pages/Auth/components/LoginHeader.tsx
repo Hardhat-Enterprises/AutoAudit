@@ -16,7 +16,7 @@ const LoginHeader = () => {
         <img
           src="/AutoAudit.png"
           alt="AutoAudit"
-          className="h-[70px] w-auto transition-transform duration-300 hover:scale-[1.04]"
+          className="h-17.5 w-auto transition-transform duration-300 hover:scale-[1.04]"
         />
       </Link>
 

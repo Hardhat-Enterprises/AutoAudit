@@ -19,7 +19,7 @@ const particles = [
 const SignupBrandPanel = () => {
   return (
     <section
-      className="relative flex items-center justify-center overflow-hidden rounded-[24px] px-12 py-10 text-white max-lg:min-h-[60vh] max-sm:px-6"
+      className="relative flex items-center justify-center overflow-hidden rounded-3xl px-12 py-10 text-white max-lg:min-h-[60vh] max-sm:px-6"
       aria-labelledby="signup-brand-title"
     >
       <style>{`
@@ -47,11 +47,11 @@ const SignupBrandPanel = () => {
       `}</style>
 
       <span
-        className="pointer-events-none absolute right-[-160px] top-[-160px] h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.15)_0%,transparent_70%)] opacity-60 animate-[brandPulse_8s_ease-in-out_infinite]"
+        className="pointer-events-none absolute -right-40 -top-40 h-120 w-120 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.15)_0%,transparent_70%)] opacity-60 animate-[brandPulse_8s_ease-in-out_infinite]"
         aria-hidden="true"
       />
       <span
-        className="pointer-events-none absolute bottom-[-120px] left-[-120px] h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.15)_0%,transparent_70%)] opacity-60 [animation-delay:2s] animate-[brandPulse_8s_ease-in-out_infinite]"
+        className="pointer-events-none absolute -bottom-30 -left-30 h-90 w-90 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.15)_0%,transparent_70%)] opacity-60 [animation-delay:2s] animate-[brandPulse_8s_ease-in-out_infinite]"
         aria-hidden="true"
       />
 
@@ -63,13 +63,13 @@ const SignupBrandPanel = () => {
         />
       ))}
 
-      <div className="relative z-10 flex max-w-[420px] flex-col items-center gap-6 text-center">
+      <div className="relative z-10 flex max-w-105 flex-col items-center gap-6 text-center">
         <picture>
           <source srcSet="/AutoAudit.webp" type="image/webp" />
           <img
             src="/AutoAudit.png"
             alt="AutoAudit"
-            className="mb-4 h-auto w-[180px] drop-shadow-[0_10px_25px_rgba(59,130,246,0.3)]"
+            className="mb-4 h-auto w-45 drop-shadow-[0_10px_25px_rgba(59,130,246,0.3)]"
             loading="lazy"
           />
         </picture>
@@ -90,7 +90,7 @@ const SignupBrandPanel = () => {
             return (
               <article
                 key={item.text}
-                className="flex items-center gap-4 rounded-[12px] border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.03)] p-4 text-left"
+                className="flex items-center gap-4 rounded-xl border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.03)] p-4 text-left"
               >
                 <span
                   className="grid h-10 w-10 place-items-center rounded-[10px] bg-[linear-gradient(135deg,#3b82f6,#2563eb)]"

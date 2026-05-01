@@ -280,7 +280,6 @@ export default function Dashboard({
     }
 
     loadScanDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, latestRelevantScan?.id]);
 
   const summary = useMemo(() => {
@@ -544,18 +543,18 @@ export default function Dashboard({
           : undefined,
       }}
     >
-      <div className="mx-auto flex max-w-[1320px] flex-col gap-6">
+      <div className="mx-auto flex max-w-330 flex-col gap-6">
         <div className="mb-0 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div className="flex items-center gap-4">
             <div
-              className={`flex h-[56px] w-[56px] items-center justify-center rounded-[14px] ${panelBase}`}
+              className={`flex h-14 w-14 items-center justify-center rounded-[14px] ${panelBase}`}
             >
               <picture>
                 <source srcSet="/AutoAudit.webp" type="image/webp" />
                 <img
                   src="/AutoAudit.png"
                   alt="AutoAudit Logo"
-                  className="h-[56px] w-[56px] rounded-[12px] object-contain"
+                  className="h-14 w-14 rounded-xl object-contain"
                   loading="lazy"
                   width="56"
                   height="56"
@@ -580,7 +579,7 @@ export default function Dashboard({
           >
             <Sun size={18} className={textTertiary} />
 
-            <label className="relative inline-block h-[26px] w-[50px]">
+            <label className="relative inline-block h-6.5 w-12.5">
               <input
                 type="checkbox"
                 checked={isDarkMode}
@@ -591,7 +590,7 @@ export default function Dashboard({
               <span
                 className={`absolute inset-0 cursor-pointer rounded-[26px] transition duration-300 ${
                   isDarkMode ? "bg-[#3b82f6]" : "bg-[#ccc]"
-                } after:absolute after:bottom-[3px] after:left-[3px] after:h-[20px] after:w-[20px] after:rounded-full after:bg-white after:transition after:duration-300 after:content-[''] peer-checked:after:translate-x-[24px]`}
+                } after:absolute after:bottom-0.75 after:left-0.75 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition after:duration-300 after:content-[''] peer-checked:after:translate-x-6`}
               />
             </label>
 
@@ -600,7 +599,7 @@ export default function Dashboard({
         </div>
 
         <div
-          className={`relative z-50 grid items-center gap-4 overflow-visible rounded-[12px] px-6 py-4 shadow-[0_0_0_1px_rgba(59,130,246,0.06)] md:grid-cols-[minmax(0,1fr)_auto] ${panelBase}`}
+          className={`relative z-50 grid items-center gap-4 overflow-visible rounded-xl px-6 py-4 shadow-[0_0_0_1px_rgba(59,130,246,0.06)] md:grid-cols-[minmax(0,1fr)_auto] ${panelBase}`}
         >
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3 overflow-visible">
             <span className={`text-[14px] font-medium ${textPrimary}`}>
@@ -626,7 +625,7 @@ export default function Dashboard({
 
           <div className="flex flex-wrap items-center justify-end gap-3 max-sm:w-full max-sm:flex-col">
             <button
-              className={`flex items-center gap-2 rounded-[8px] px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
               onClick={handleExportReport}
               disabled={!latestRelevantScan?.id}
             >
@@ -634,14 +633,14 @@ export default function Dashboard({
             </button>
 
             <button
-              className={`flex items-center gap-2 rounded-[8px] px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
               onClick={handleEvidenceScanner}
             >
               Evidence Scanner
             </button>
 
             <button
-              className={`flex items-center gap-2 rounded-[8px] px-4 py-2 text-[14px] font-semibold transition ${primaryButton}`}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-semibold transition ${primaryButton}`}
               onClick={handleRunNewScan}
             >
               Run New Scan
@@ -651,7 +650,7 @@ export default function Dashboard({
 
         {isLoading && (
           <div
-            className={`flex items-center gap-[10px] rounded-[12px] px-4 py-3 ${panelBase}`}
+            className={`flex items-center gap-2.5 rounded-xl px-4 py-3 ${panelBase}`}
           >
             <Loader2 size={18} className="animate-spin" />
             <span>Loading latest results…</span>
@@ -660,7 +659,7 @@ export default function Dashboard({
 
         {error && !isLoading && (
           <div
-            className={`flex items-center gap-[10px] rounded-[12px] border-l-4 px-4 py-3 ${
+            className={`flex items-center gap-2.5 rounded-xl border-l-4 px-4 py-3 ${
               isDarkMode
                 ? "border border-[rgba(59,130,246,0.16)] border-l-[#ef4444] bg-[rgba(15,23,42,0.72)] text-white"
                 : "border border-[#e2e8f0] border-l-[#ef4444] bg-white text-[#1e293b]"
@@ -672,7 +671,7 @@ export default function Dashboard({
         )}
 
         <div
-          className={`flex flex-col gap-3 rounded-[16px] px-[22px] py-[18px] shadow-[0_0_0_1px_rgba(59,130,246,0.05)] ${panelBase}`}
+          className={`flex flex-col gap-3 rounded-2xl px-5.5 py-4.5 shadow-[0_0_0_1px_rgba(59,130,246,0.05)] ${panelBase}`}
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -705,7 +704,7 @@ export default function Dashboard({
               {summary.groups.map((group) => (
                 <div
                   key={group.title}
-                  className={`grid gap-2 rounded-[12px] border px-3 py-[10px] ${mutedPanel}`}
+                  className={`grid gap-2 rounded-xl border px-3 py-2.5 ${mutedPanel}`}
                 >
                   <div
                     className={`text-[11px] font-bold uppercase tracking-[0.6px] ${textTertiary}`}
@@ -713,11 +712,11 @@ export default function Dashboard({
                     {group.title}
                   </div>
 
-                  <div className="grid gap-[6px]">
+                  <div className="grid gap-1.5">
                     {group.items.map((item) => (
                       <div
                         key={item.label}
-                        className="flex items-center justify-between gap-[10px] text-[13px]"
+                        className="flex items-center justify-between gap-2.5 text-[13px]"
                       >
                         <span
                           className={`whitespace-nowrap font-medium ${textSecondary}`}
@@ -725,7 +724,7 @@ export default function Dashboard({
                           {item.label}
                         </span>
                         <span
-                          className={`max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap text-right font-semibold tabular-nums ${textPrimary}`}
+                          className={`max-w-45 overflow-hidden text-ellipsis whitespace-nowrap text-right font-semibold tabular-nums ${textPrimary}`}
                         >
                           {item.value}
                         </span>
@@ -741,12 +740,12 @@ export default function Dashboard({
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <div className="flex min-w-0 flex-col gap-6">
             <div
-              className={`relative flex min-h-0 flex-col gap-4 overflow-visible rounded-[12px] p-6 shadow-[0_0_0_1px_rgba(59,130,246,0.05)] ${panelBase}`}
+              className={`relative flex min-h-0 flex-col gap-4 overflow-visible rounded-xl p-6 shadow-[0_0_0_1px_rgba(59,130,246,0.05)] ${panelBase}`}
             >
-              <div className="relative z-[5] flex items-center justify-between">
+              <div className="relative z-5 flex items-center justify-between">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <span
-                    className={`inline-flex h-6 w-6 items-center justify-center rounded-[6px] ${
+                    className={`inline-flex h-6 w-6 items-center justify-center rounded-md ${
                       isDarkMode
                         ? "bg-[rgba(100,116,139,0.2)] text-[#94a3b8]"
                         : "bg-[#e2e8f0] text-[#64748b]"
@@ -766,7 +765,7 @@ export default function Dashboard({
                 />
               </div>
 
-              <div className="relative z-[1] h-[clamp(300px,34vh,380px)] min-h-[300px] w-full overflow-hidden">
+              <div className="flex justify-center items-center relative z-1 min-h-75 w-full overflow-hidden">
                 <ComplianceChart
                   isDarkMode={isDarkMode}
                   sidebarWidth={sidebarWidth}
@@ -774,7 +773,7 @@ export default function Dashboard({
               </div>
             </div>
 
-            <div className={`rounded-[12px] p-[18px] ${panelBase}`}>
+            <div className={`rounded-xl p-4.5 ${panelBase}`}>
               <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className={`m-0 text-[16px] font-bold ${textPrimary}`}>
@@ -786,7 +785,7 @@ export default function Dashboard({
                 </div>
 
                 <button
-                  className={`flex items-center gap-2 rounded-[8px] px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
+                  className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
                   onClick={() => navigate("/scans")}
                 >
                   Open Scans
@@ -795,14 +794,14 @@ export default function Dashboard({
 
               {recentScans.length === 0 ? (
                 <div
-                  className={`flex flex-col items-start justify-between gap-3 rounded-[10px] border px-3 py-[14px] sm:flex-row sm:items-center ${mutedPanel}`}
+                  className={`flex flex-col items-start justify-between gap-3 rounded-[10px] border px-3 py-3.5 sm:flex-row sm:items-center ${mutedPanel}`}
                 >
                   <p className={`m-0 text-[13px] ${textSecondary}`}>
                     No scans found for the current filters.
                   </p>
 
                   <button
-                    className={`flex items-center gap-2 rounded-[8px] px-4 py-2 text-[14px] font-semibold transition ${primaryButton}`}
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-semibold transition ${primaryButton}`}
                     onClick={handleRunNewScan}
                   >
                     Run a Scan
@@ -821,7 +820,7 @@ export default function Dashboard({
                       <thead>
                         <tr className={tertiaryPanel}>
                           <th
-                            className={`border-b px-[14px] py-3 text-left text-[12px] font-bold ${
+                            className={`border-b px-3.5 py-3 text-left text-[12px] font-bold ${
                               isDarkMode
                                 ? "border-[rgba(59,130,246,0.16)] text-[#cbd5e1]"
                                 : "border-[#e2e8f0] text-[#64748b]"
@@ -830,7 +829,7 @@ export default function Dashboard({
                             Status
                           </th>
                           <th
-                            className={`border-b px-[14px] py-3 text-left text-[12px] font-bold ${
+                            className={`border-b px-3.5 py-3 text-left text-[12px] font-bold ${
                               isDarkMode
                                 ? "border-[rgba(59,130,246,0.16)] text-[#cbd5e1]"
                                 : "border-[#e2e8f0] text-[#64748b]"
@@ -839,7 +838,7 @@ export default function Dashboard({
                             Started
                           </th>
                           <th
-                            className={`border-b px-[14px] py-3 text-left text-[12px] font-bold ${
+                            className={`border-b px-3.5 py-3 text-left text-[12px] font-bold ${
                               isDarkMode
                                 ? "border-[rgba(59,130,246,0.16)] text-[#cbd5e1]"
                                 : "border-[#e2e8f0] text-[#64748b]"
@@ -848,7 +847,7 @@ export default function Dashboard({
                             Results
                           </th>
                           <th
-                            className={`border-b px-[14px] py-3 text-right text-[12px] font-bold ${
+                            className={`border-b px-3.5 py-3 text-right text-[12px] font-bold ${
                               isDarkMode
                                 ? "border-[rgba(59,130,246,0.16)] text-[#cbd5e1]"
                                 : "border-[#e2e8f0] text-[#64748b]"
@@ -871,7 +870,7 @@ export default function Dashboard({
                           return (
                             <tr key={s.id} className={hoverRow}>
                               <td
-                                className={`border-b px-[14px] py-3 text-[13px] ${
+                                className={`border-b px-3.5 py-3 text-[13px] ${
                                   isDarkMode
                                     ? "border-[rgba(59,130,246,0.16)] text-white"
                                     : "border-[#e2e8f0] text-[#1e293b]"
@@ -883,13 +882,13 @@ export default function Dashboard({
                               </td>
 
                               <td
-                                className={`border-b px-[14px] py-3 text-[13px] ${
+                                className={`border-b px-3.5 py-3 text-[13px] ${
                                   isDarkMode
                                     ? "border-[rgba(59,130,246,0.16)] text-white"
                                     : "border-[#e2e8f0] text-[#1e293b]"
                                 }`}
                               >
-                                <div className="flex flex-col gap-[2px] leading-[1.2]">
+                                <div className="flex flex-col gap-0.5 leading-[1.2]">
                                   <div className="text-[12px] font-bold">
                                     {dt.date}
                                   </div>
@@ -902,7 +901,7 @@ export default function Dashboard({
                               </td>
 
                               <td
-                                className={`border-b px-[14px] py-3 text-[13px] ${
+                                className={`border-b px-3.5 py-3 text-[13px] ${
                                   isDarkMode
                                     ? "border-[rgba(59,130,246,0.16)] text-white"
                                     : "border-[#e2e8f0] text-[#1e293b]"
@@ -924,14 +923,14 @@ export default function Dashboard({
                               </td>
 
                               <td
-                                className={`border-b px-[14px] py-3 text-right text-[13px] ${
+                                className={`border-b px-3.5 py-3 text-right text-[13px] ${
                                   isDarkMode
                                     ? "border-[rgba(59,130,246,0.16)] text-white"
                                     : "border-[#e2e8f0] text-[#1e293b]"
                                 }`}
                               >
                                 <button
-                                  className={`rounded-[8px] border px-[10px] py-[6px] font-semibold transition ${
+                                  className={`rounded-lg border px-2.5 py-1.5 font-semibold transition ${
                                     isDarkMode
                                       ? "border-[rgba(59,130,246,0.16)] bg-transparent text-white hover:border-[rgba(59,130,246,0.45)] hover:bg-[rgba(59,130,246,0.10)]"
                                       : "border-[#e2e8f0] bg-transparent text-[#1e293b] hover:border-[#93c5fd] hover:bg-[#eff6ff]"
@@ -955,13 +954,13 @@ export default function Dashboard({
 
           <div className="flex flex-col gap-6">
             <div
-              className={`rounded-[12px] border-l-4 p-6 ${
+              className={`rounded-xl border-l-4 p-6 ${
                 isDarkMode
                   ? "border border-[rgba(59,130,246,0.16)] border-l-[rgba(59,130,246,0.4)] bg-[rgba(15,23,42,0.72)]"
                   : "border border-[#e2e8f0] border-l-[rgba(59,130,246,0.4)] bg-white"
               }`}
             >
-              <div className="mb-[14px] flex min-w-0 items-center justify-between">
+              <div className="mb-3.5 flex min-w-0 items-center justify-between">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <span
                     className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${
@@ -1030,11 +1029,11 @@ export default function Dashboard({
                   </p>
                 </div>
               ) : (
-                <div className="mt-3 flex flex-col gap-[10px]">
+                <div className="mt-3 flex flex-col gap-2.5">
                   {nextFixes.topItems.map((r, idx) => (
                     <button
                       key={`${r.control_id || idx}`}
-                      className={`grid w-full grid-cols-[72px_minmax(0,1fr)] items-start gap-[10px] rounded-[12px] border px-3 py-[10px] text-left transition ${
+                      className={`grid w-full grid-cols-[72px_minmax(0,1fr)] items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition ${
                         isDarkMode
                           ? "border-[rgba(59,130,246,0.16)] bg-[rgba(30,41,59,0.78)] text-white hover:border-[rgba(59,130,246,0.45)] hover:bg-[rgba(59,130,246,0.10)]"
                           : "border-[#e2e8f0] bg-[#e2e8f0] text-[#1e293b] hover:border-[#93c5fd] hover:bg-[#eff6ff]"

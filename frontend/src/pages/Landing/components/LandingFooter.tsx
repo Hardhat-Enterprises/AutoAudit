@@ -52,9 +52,9 @@ const footerColumns: FooterColumn[] = [
 
 const LandingFooter = () => {
   return (
-    <footer className="relative overflow-hidden border-t border-[rgba(59,130,246,0.1)] bg-gradient-to-br from-[#0a1628] via-[#0f1f38] to-[#162a4a] px-[5%] pb-10 pt-16">
+    <footer className="relative overflow-hidden border-t border-[rgba(59,130,246,0.1)] bg-linear-to-br from-[#0a1628] via-[#0f1f38] to-[#162a4a] px-[5%] pb-10 pt-16">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(59,130,246,0.08),transparent_62%),radial-gradient(circle_at_88%_22%,rgba(37,99,235,0.06),transparent_60%)]" />
-      <div className="relative mx-auto mb-8 grid max-w-[1200px] grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-8">
+      <div className="relative mx-auto mb-8 grid max-w-300 grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-8">
         {footerColumns.map((column) => (
           <section key={column.title}>
             <h3 className="mb-4 text-lg font-semibold text-white">{column.title}</h3>

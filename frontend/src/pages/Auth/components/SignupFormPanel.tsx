@@ -171,40 +171,40 @@ const SignupFormPanel = ({
   const strength = getPasswordStrength(formData.password);
 
   const strengthBarColor: Record<number, string> = {
-    1: "bg-red-500",
-    2: "bg-orange-400",
-    3: "bg-yellow-400",
-    4: "bg-green-500",
+    1: "bg-accent-bad",
+    2: "bg-accent-warn",
+    3: "bg-brand-cyan",
+    4: "bg-accent-good",
   };
 
   const strengthLabelColor: Record<number, string> = {
-    1: "text-red-500",
-    2: "text-orange-400",
-    3: "text-yellow-400",
-    4: "text-green-500",
+    1: "text-accent-bad",
+    2: "text-accent-warn",
+    3: "text-brand-cyan",
+    4: "text-accent-good",
   };
 
   return (
     <section
-      className="flex items-stretch justify-center rounded-[24px]"
+      className="flex items-stretch justify-center rounded-3xl"
       aria-labelledby="signup-form-heading"
     >
-      <div className="h-full w-full max-w-[480px] rounded-[18px] bg-[rgba(15,35,56,0.9)] p-9 shadow-[0_30px_60px_rgba(5,9,20,0.45)]">
+      <div className="h-full w-full max-w-120 rounded-[18px] bg-surface-1/90 p-9 shadow-[0_30px_60px_rgb(5_9_20/0.45)]">
         <header className="mb-8">
-          <h2 id="signup-form-heading" className="mb-2 text-[2rem] leading-tight text-white">
+          <h2 id="signup-form-heading" className="mb-2 text-[2rem] leading-tight text-text-strong">
             Create Account
           </h2>
-          <p className="text-[#b0c4de]">Start your compliance journey with AutoAudit.</p>
+          <p className="text-text-muted">Start your compliance journey with AutoAudit.</p>
         </header>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {inputFields.slice(0, 2).map((field) => (
               <label key={field.name} className="flex flex-col">
-                <span className="mb-[0.4rem] text-[#b0c4de]">{field.label}</span>
+                <span className="mb-[0.4rem] text-text-muted">{field.label}</span>
                 <div className="relative">
                   <span
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3b82f6]"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-blue"
                     aria-hidden="true"
                   >
                     {field.icon}
@@ -216,7 +216,7 @@ const SignupFormPanel = ({
                     onChange={handleChange}
                     placeholder={field.placeholder}
                     required
-                    className="w-full rounded-[12px] border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.05)] px-4 py-4 pl-12 text-[1rem] text-white outline-none transition placeholder:text-[#6c7a8d] focus:border-[#3b82f6] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)]"
+                    className="w-full rounded-xl border-2 border-brand-blue/20 bg-surface-2/30 px-4 py-4 pl-12 text-[1rem] text-text-strong outline-none transition placeholder:text-text-muted/70 focus:border-brand-blue focus:bg-surface-2/40 focus:shadow-[0_0_0_4px_rgb(var(--brand-blue)/0.12)]"
                   />
                 </div>
               </label>
@@ -225,10 +225,10 @@ const SignupFormPanel = ({
 
           {inputFields.slice(2).map((field) => (
             <label key={field.name} className="flex flex-col">
-              <span className="mb-[0.4rem] text-[#b0c4de]">{field.label}</span>
+              <span className="mb-[0.4rem] text-text-muted">{field.label}</span>
               <div className="relative">
                 <span
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3b82f6]"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-blue"
                   aria-hidden="true"
                 >
                   {field.icon}
@@ -240,17 +240,17 @@ const SignupFormPanel = ({
                   onChange={handleChange}
                   placeholder={field.placeholder}
                   required
-                  className="w-full rounded-[12px] border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.05)] px-4 py-4 pl-12 text-[1rem] text-white outline-none transition placeholder:text-[#6c7a8d] focus:border-[#3b82f6] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)]"
+                  className="w-full rounded-xl border-2 border-brand-blue/20 bg-surface-2/30 px-4 py-4 pl-12 text-[1rem] text-text-strong outline-none transition placeholder:text-text-muted/70 focus:border-brand-blue focus:bg-surface-2/40 focus:shadow-[0_0_0_4px_rgb(var(--brand-blue)/0.12)]"
                 />
               </div>
             </label>
           ))}
 
           <label className="flex flex-col">
-            <span className="mb-[0.4rem] text-[#b0c4de]">Password</span>
+            <span className="mb-[0.4rem] text-text-muted">Password</span>
             <div className="relative">
               <span
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3b82f6]"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-blue"
                 aria-hidden="true"
               >
                 <ShieldCheck size={16} />
@@ -262,11 +262,11 @@ const SignupFormPanel = ({
                 onChange={handleChange}
                 placeholder="Create a strong password"
                 required
-                className="w-full rounded-[12px] border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.05)] px-4 py-4 pl-12 pr-12 text-[1rem] text-white outline-none transition placeholder:text-[#6c7a8d] focus:border-[#3b82f6] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)]"
+                className="w-full rounded-xl border-2 border-brand-blue/20 bg-surface-2/30 px-4 py-4 pl-12 pr-12 text-[1rem] text-text-strong outline-none transition placeholder:text-text-muted/70 focus:border-brand-blue focus:bg-surface-2/40 focus:shadow-[0_0_0_4px_rgb(var(--brand-blue)/0.12)]"
               />
               <button
                 type="button"
-                className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent text-[#b0c4de] transition hover:text-[#3b82f6]"
+                className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent text-text-muted transition hover:text-brand-blue"
                 onClick={() => setShowPassword((prev) => !prev)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
@@ -279,7 +279,7 @@ const SignupFormPanel = ({
                   {([1, 2, 3, 4] as const).map((i) => (
                     <div
                       key={i}
-                      className={`h-1 flex-1 rounded ${i <= strength.level ? strengthBarColor[strength.level] : "bg-white/10"}`}
+                      className={`h-1 flex-1 rounded ${i <= strength.level ? strengthBarColor[strength.level] : "bg-text-strong/10"}`}
                     />
                   ))}
                 </div>
@@ -291,10 +291,10 @@ const SignupFormPanel = ({
           </label>
 
           <label className="flex flex-col">
-            <span className="mb-[0.4rem] text-[#b0c4de]">Confirm Password</span>
+            <span className="mb-[0.4rem] text-text-muted">Confirm Password</span>
             <div className="relative">
               <span
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3b82f6]"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-blue"
                 aria-hidden="true"
               >
                 <ShieldCheck size={16} />
@@ -306,11 +306,11 @@ const SignupFormPanel = ({
                 onChange={handleChange}
                 placeholder="Confirm your password"
                 required
-                className="w-full rounded-[12px] border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.05)] px-4 py-4 pl-12 pr-12 text-[1rem] text-white outline-none transition placeholder:text-[#6c7a8d] focus:border-[#3b82f6] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)]"
+                className="w-full rounded-xl border-2 border-brand-blue/20 bg-surface-2/30 px-4 py-4 pl-12 pr-12 text-[1rem] text-text-strong outline-none transition placeholder:text-text-muted/70 focus:border-brand-blue focus:bg-surface-2/40 focus:shadow-[0_0_0_4px_rgb(var(--brand-blue)/0.12)]"
               />
               <button
                 type="button"
-                className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent text-[#b0c4de] transition hover:text-[#3b82f6]"
+                className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent text-text-muted transition hover:text-brand-blue"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
                 aria-label={showConfirmPassword ? "Hide password" : "Show password"}
               >
@@ -319,20 +319,20 @@ const SignupFormPanel = ({
             </div>
           </label>
 
-          <label className="flex cursor-pointer items-start gap-2 text-[#b0c4de]">
+          <label className="flex cursor-pointer items-start gap-2 text-text-muted">
             <input
               type="checkbox"
               checked={agreeTerms}
               onChange={handleAgreeTermsChange}
-              className="mt-[2px] h-[18px] w-[18px] accent-[#3b82f6]"
+              className="mt-0.5 h-4.5 w-4.5 accent-brand-blue"
             />
             <span>
               I agree to the{" "}
-              <a href="/#terms" className="text-[#3b82f6] no-underline">
+              <a href="/#terms" className="text-brand-blue no-underline">
                 Terms & Conditions
               </a>{" "}
               and{" "}
-              <a href="/#privacy" className="text-[#3b82f6] no-underline">
+              <a href="/#privacy" className="text-brand-blue no-underline">
                 Privacy Policy
               </a>
             </span>
@@ -340,7 +340,7 @@ const SignupFormPanel = ({
 
           {(error || submitError) && (
             <p
-              className="rounded-[6px] border border-[rgba(255,80,80,0.3)] bg-[rgba(255,80,80,0.08)] px-[10px] py-2 text-[13px] text-[#ff6b6b]"
+              className="rounded-md border border-accent-bad/30 bg-accent-bad/8 px-2.5 py-2 text-[13px] text-accent-bad"
               role="alert"
             >
               {error || submitError}
@@ -349,14 +349,14 @@ const SignupFormPanel = ({
 
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(135deg,#3b82f6_0%,#2563eb_100%)] px-4 py-4 text-[1rem] font-semibold text-white transition hover:-translate-y-[2px] hover:shadow-[0_6px_20px_rgba(59,130,246,0.4)]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,rgb(var(--brand-blue))_0%,rgb(var(--brand-blue-deep))_100%)] px-4 py-4 text-[1rem] font-semibold text-text-strong transition hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgb(var(--brand-blue)/0.4)]"
           >
             <span>Create Account</span>
             <ArrowRight size={18} />
           </button>
         </form>
 
-        <div className="my-8 flex items-center text-[0.8rem] uppercase tracking-[1px] text-[#b0c4de] before:h-px before:flex-1 before:bg-[rgba(59,130,246,0.2)] before:content-[''] after:h-px after:flex-1 after:bg-[rgba(59,130,246,0.2)] after:content-['']">
+        <div className="my-8 flex items-center text-[0.8rem] uppercase tracking-[1px] text-text-muted before:h-px before:flex-1 before:bg-brand-blue/20 before:content-[''] after:h-px after:flex-1 after:bg-brand-blue/20 after:content-['']">
           <span className="px-4">Or sign up with</span>
         </div>
 
@@ -369,14 +369,14 @@ const SignupFormPanel = ({
             <button
               key={button.label}
               type="button"
-              className="flex w-full max-w-[280px] items-center justify-center gap-2 rounded-[12px] border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.04)] px-4 py-[0.9rem] font-semibold text-white transition hover:-translate-y-[2px] hover:border-[#3b82f6]"
+              className="flex w-full max-w-70 items-center justify-center gap-2 rounded-xl border-2 border-brand-blue/20 bg-surface-2/25 px-4 py-[0.9rem] font-semibold text-text-strong transition hover:-translate-y-0.5 hover:border-brand-blue"
               onClick={() => handleSocialSignUp(button.provider)}
               disabled={Boolean(button.disabled)}
               aria-disabled={button.disabled ? "true" : "false"}
               title={button.disabled ? "Coming soon" : `Continue with ${button.label}`}
             >
               <span
-                className="grid h-8 w-8 place-items-center rounded-[10px] bg-[rgba(255,255,255,0.08)]"
+                className="grid h-8 w-8 place-items-center rounded-[10px] bg-surface-2/40"
                 aria-hidden="true"
               >
                 {button.icon}
@@ -386,12 +386,13 @@ const SignupFormPanel = ({
           ))}
         </div>
 
-        <p className="text-center text-[0.95rem] text-[#b0c4de]">
+        <p className="text-center text-[0.95rem] text-text-muted">
           Already have an account?{" "}
           <button
             type="button"
+            data-testid="back-sign-in"
             onClick={onBackToLogin}
-            className="border-none bg-transparent font-semibold text-[#3b82f6]"
+            className="border-none bg-transparent font-semibold text-brand-blue"
           >
             Sign In
           </button>

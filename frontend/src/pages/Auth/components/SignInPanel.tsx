@@ -109,8 +109,8 @@ const SignInPanel = ({ onLogin, onSignUpClick }: SignInPanelProps) => {
   };
 
   return (
-    <section className="flex items-stretch justify-center rounded-[24px]">
-      <div className="h-full w-full max-w-[480px] rounded-[18px] bg-[rgba(15,35,56,0.9)] p-9 shadow-[0_30px_60px_rgba(5,9,20,0.45)]">
+    <section className="flex items-stretch justify-center rounded-3xl">
+      <div className="h-full w-full max-w-120 rounded-[18px] bg-[rgba(15,35,56,0.9)] p-9 shadow-[0_30px_60px_rgba(5,9,20,0.45)]">
         <div>
           <h2 className="mb-2 text-[2rem] leading-tight text-white">Welcome Back</h2>
           <p className="text-[#b0c4de]">
@@ -120,7 +120,7 @@ const SignInPanel = ({ onLogin, onSignUpClick }: SignInPanelProps) => {
 
         <form className="mt-8 flex flex-col gap-5" onSubmit={handleSubmit}>
           {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-[8px] border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.1)] px-3 py-3 text-[#ef4444]">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.1)] px-3 py-3 text-[#ef4444]">
               <AlertCircle size={18} />
               <span>{error}</span>
             </div>
@@ -141,7 +141,7 @@ const SignInPanel = ({ onLogin, onSignUpClick }: SignInPanelProps) => {
                 onChange={handleChange}
                 required
                 disabled={isLoading}
-                className="w-full rounded-[12px] border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.05)] px-4 py-4 pl-12 text-[1rem] text-white outline-none transition placeholder:text-[#6c7a8d] focus:border-[#3b82f6] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-xl border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.05)] px-4 py-4 pl-12 text-[1rem] text-white outline-none transition placeholder:text-[#6c7a8d] focus:border-[#3b82f6] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
               />
             </div>
           </div>
@@ -161,7 +161,7 @@ const SignInPanel = ({ onLogin, onSignUpClick }: SignInPanelProps) => {
                 onChange={handleChange}
                 required
                 disabled={isLoading}
-                className="w-full rounded-[12px] border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.05)] px-4 py-4 pl-12 pr-12 text-[1rem] text-white outline-none transition placeholder:text-[#6c7a8d] focus:border-[#3b82f6] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-xl border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.05)] px-4 py-4 pl-12 pr-12 text-[1rem] text-white outline-none transition placeholder:text-[#6c7a8d] focus:border-[#3b82f6] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
               />
               <button
                 type="button"
@@ -182,7 +182,7 @@ const SignInPanel = ({ onLogin, onSignUpClick }: SignInPanelProps) => {
                 name="remember"
                 checked={formData.remember}
                 onChange={handleChange}
-                className="h-[18px] w-[18px] accent-[#3b82f6]"
+                className="cursor-pointer h-4.5 w-4.5 accent-[#3b82f6]"
               />
               <span>Remember me</span>
             </label>
@@ -193,7 +193,8 @@ const SignInPanel = ({ onLogin, onSignUpClick }: SignInPanelProps) => {
 
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(135deg,#3b82f6_0%,#2563eb_100%)] px-4 py-4 text-[1rem] font-semibold text-white transition hover:-translate-y-[2px] hover:shadow-[0_6px_20px_rgba(59,130,246,0.4)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+            data-testid="form-sign-in"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#3b82f6_0%,#2563eb_100%)] px-4 py-4 text-[1rem] font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(59,130,246,0.4)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -223,7 +224,7 @@ const SignInPanel = ({ onLogin, onSignUpClick }: SignInPanelProps) => {
             <button
               key={button.label}
               type="button"
-              className="flex w-full max-w-[280px] items-center justify-center gap-2 rounded-[12px] border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.04)] px-4 py-[0.9rem] font-semibold text-white transition hover:-translate-y-[2px] hover:border-[#3b82f6] focus-visible:outline-none focus-visible:shadow-[0_0_0_4px_rgba(59,130,246,0.18)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+              className="flex w-full max-w-70 items-center justify-center gap-2 rounded-xl border-2 border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.04)] px-4 py-[0.9rem] font-semibold text-white transition hover:-translate-y-0.5 hover:border-[#3b82f6] focus-visible:outline-none focus-visible:shadow-[0_0_0_4px_rgba(59,130,246,0.18)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
               onClick={() => handleSocialLogin(button.provider)}
               disabled={isLoading || Boolean(button.disabled)}
               aria-disabled={isLoading || button.disabled ? "true" : "false"}

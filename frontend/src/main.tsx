@@ -9,7 +9,6 @@ import '@fontsource/league-spartan/600.css';
 import '@fontsource/league-spartan/700.css';
 
 // Tailwind + tokens + base (includes tokens.css & components.css)
-import './styles/global.css';
 
 // Legacy app styles (keeps current look intact)
 import './index.css';

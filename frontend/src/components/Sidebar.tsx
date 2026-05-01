@@ -16,7 +16,6 @@ import {
   Search,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import "./Sidebar.css";
 
 //Button component that we use throughout the sidebar
 //Parameters:
@@ -29,8 +28,9 @@ type NavButtonProps = {
   icon: LucideIcon;
   isExpanded: boolean;
   isActive?: boolean;
+  isDarkMode?: boolean;
   onClick?: (clickEvent: React.MouseEvent<HTMLAnchorElement>) => void;
-}
+};
 
 const NavButton: React.FC<NavButtonProps> = ({
   href,
@@ -38,6 +38,7 @@ const NavButton: React.FC<NavButtonProps> = ({
   icon: Icon,
   isExpanded,
   isActive = false,
+  isDarkMode = true,
   onClick,
 }) => {
   const handleClick = (clickEvent: React.MouseEvent<HTMLAnchorElement>): void => {
@@ -47,17 +48,37 @@ const NavButton: React.FC<NavButtonProps> = ({
     }
   };
 
+  const baseButton = `
+    relative flex items-center justify-center
+    h-[50px] w-[50px] rounded-[25%]
+    text-base font-medium no-underline cursor-pointer
+    transition-all duration-300
+    hover:-translate-y-0.5
+  `;
+
+  const themeButton = isDarkMode
+    ? "bg-slate-700 text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-slate-600 hover:shadow-[0_6px_16px_rgba(0,0,0,0.3)]"
+    : "bg-slate-100 text-slate-800 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-slate-200 hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)]";
+
+  const expandedButton = isExpanded
+    ? "w-[190px] min-w-[190px] max-w-[190px] min-h-[54px] justify-start gap-[15px] rounded-[25px] px-[18px] max-md:min-w-[140px] max-md:px-[15px]"
+    : "";
+
+  const activeButton = isActive
+    ? "bg-blue-500 shadow-[0_4px_20px_rgba(59,130,246,0.4)] hover:bg-blue-600"
+    : "";
+
   return (
-    <li className="nav-item">
+    <li className="m-0 flex w-full justify-center p-0">
       <a
-        className={`nav-link ${isExpanded ? "expanded" : ""} ${isActive ? "active" : ""}`}
+        className={`${baseButton} ${themeButton} ${expandedButton} ${activeButton}`}
         href={href}
         onClick={handleClick}
       >
-        <span className="nav-icon" aria-hidden="true">
+        <span className="flex h-5 w-5 items-center justify-center" aria-hidden="true">
           <Icon size={18} strokeWidth={2.2} />
         </span>
-        {isExpanded && <span className="nav-text">{name}</span>}
+        {isExpanded && <span className="whitespace-nowrap text-sm font-medium">{name}</span>}
       </a>
     </li>
   );
@@ -69,7 +90,7 @@ const SIDEBAR_EXPANDED_KEY = "sidebarExpanded";
 type SidebarProps = {
   onWidthChange?: (width: number) => void;
   isDarkMode?: boolean;
-}
+};
 
 const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode = true }) => {
   const navigate = useNavigate();
@@ -84,11 +105,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
     } catch {
       return true;
     }
-  }); // Track whether sidebar is expanded (persisted)
+  });
 
-  const [searchValue, setSearchValue] = useState<string>(""); // Track search input value
+  const [searchValue, setSearchValue] = useState<string>("");
 
-  // Determine active item based on current route
   const getActiveItem = (): "home" | "cloud-platforms" | "scans" | "tasks" | "reports" | "settings" | "account" => {
     const path = location.pathname;
     if (path === "/dashboard") return "home";
@@ -103,7 +123,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
 
   const activeItem = getActiveItem();
 
-  //Event to toggle collapsed state and notify parents that the width has changed
   const toggleSidebar = (): void => {
     const newExpanded = !isExpanded;
     setIsExpanded(newExpanded);
@@ -112,60 +131,87 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
       try {
         window.localStorage.setItem(SIDEBAR_EXPANDED_KEY, String(newExpanded));
       } catch {
-        // ignore storage errors (private mode, blocked, etc.)
+        // ignore storage errors
       }
     }
   };
 
-  //Navigate to the specified route
   const handleNavClick = (route: string): void => {
     navigate(route);
   };
 
-  //Once search is functional, this search value should be used as the search parameter. Just a placeholder for now, though.
   const handleSearchChange = (typed: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchValue(typed.target.value);
   };
 
-  const sidebarStyle = {
-    "--sidebar-width": isExpanded ? "220px" : "80px",
-  } as React.CSSProperties;
+  const sidebarTheme = isDarkMode
+    ? "bg-[#0a1628] shadow-[4px_0_10px_rgba(0,0,0,0.2)] border-r border-r-slate-400/25"
+    : "bg-white shadow-[4px_0_10px_rgba(0,0,0,0.1)] border-r border-r-slate-400/35";
 
   return (
-    <nav className={`sidebar ${isDarkMode ? "dark" : "light"}`} style={sidebarStyle}>
-      <div className="sidebar-content">
-        <div className="search-container">
-          {/* only display when the navbar is expanded! */}
+    <nav
+      className={`fixed left-0 top-0 z-1000 h-screen overflow-x-hidden overflow-y-hidden transition-[width,background-color] duration-300 ${
+        isExpanded ? "w-55" : "w-20"
+      } ${sidebarTheme}`}
+    >
+      <div className="flex h-screen w-full flex-col items-center px-3.75 pb-7.5 pt-5">
+        <div className="mb-10 flex w-full justify-center">
           {isExpanded ? (
-            <div className="search-bar">
-              <button className="search-toggle-button" onClick={toggleSidebar} aria-label="Collapse sidebar">
+            <div
+              className={`flex w-full max-w-47.5 items-center rounded-[25px] p-2 transition-all duration-300 hover:-translate-y-0.5 max-md:max-w-37.5 ${
+                isDarkMode
+                  ? "bg-slate-700 shadow-1 hover:bg-slate-600 hover:shadow-[0_6px_16px_rgba(0,0,0,0.3)]"
+                  : "bg-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-slate-200 hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)]"
+              }`}
+            >
+              <button
+                className={`flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full transition-colors duration-300 ${
+                  isDarkMode
+                    ? "bg-slate-600 text-white hover:bg-slate-500"
+                    : "bg-slate-200 text-slate-800 hover:bg-slate-300"
+                }`}
+                onClick={toggleSidebar}
+                aria-label="Collapse sidebar"
+              >
                 <ArrowLeft size={18} />
               </button>
+
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchValue}
                 onChange={handleSearchChange}
-                className="search-input"
+                className={`flex-1 bg-transparent px-3 py-2 text-sm outline-none ${
+                  isDarkMode ? "text-white placeholder:text-slate-400" : "text-slate-800 placeholder:text-slate-500"
+                }`}
               />
-              <span className="search-icon">
+
+              <span className={`${isDarkMode ? "text-slate-400" : "text-slate-500"} pr-2`}>
                 <Search size={16} />
               </span>
             </div>
           ) : (
-            <button className="toggle-button" onClick={toggleSidebar} aria-label="Expand sidebar">
+            <button
+              className={`flex h-12.5 w-12.5 items-center justify-center rounded-xl transition-all duration-300 hover:-translate-y-0.5 ${
+                isDarkMode
+                  ? "bg-slate-700 text-white shadow-1 hover:bg-slate-600 hover:shadow-[0_6px_16px_rgba(0,0,0,0.3)]"
+                  : "bg-slate-100 text-slate-800 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-slate-200 hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)]"
+              }`}
+              onClick={toggleSidebar}
+              aria-label="Expand sidebar"
+            >
               <Menu size={18} strokeWidth={2.2} />
             </button>
           )}
         </div>
 
-        {/* Main navigation area */}
-        <ul className="nav-links">
+        <ul className="m-0 flex w-full flex-1 list-none flex-col items-center gap-5 p-0">
           <NavButton
             href={"/dashboard"}
             name={"Dashboard"}
             icon={LayoutDashboard}
             isExpanded={isExpanded}
+            isDarkMode={isDarkMode}
             isActive={activeItem === "home"}
             onClick={() => handleNavClick("/dashboard")}
           />
@@ -174,6 +220,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             name={"Cloud Platforms"}
             icon={Cloud}
             isExpanded={isExpanded}
+            isDarkMode={isDarkMode}
             isActive={activeItem === "cloud-platforms"}
             onClick={() => handleNavClick("/cloud-platforms")}
           />
@@ -182,6 +229,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             name={"Scans"}
             icon={FileSearch}
             isExpanded={isExpanded}
+            isDarkMode={isDarkMode}
             isActive={activeItem === "scans"}
             onClick={() => handleNavClick("/scans")}
           />
@@ -190,25 +238,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             name={"Evidence"}
             icon={ShieldCheck}
             isExpanded={isExpanded}
+            isDarkMode={isDarkMode}
             isActive={activeItem === "tasks"}
             onClick={() => handleNavClick("/evidence-scanner")}
           />
-          {/* <NavButton
-            href={"/reports"}
-            name={"Reports"}
-            icon={FileText}
-            isExpanded={isExpanded}
-            isActive={activeItem === "reports"}
-          /> */}
         </ul>
 
-        {/* Settings section at bottom */}
-        <ul className="nav-settings">
+        <ul
+          className={`m-0 mt-auto flex w-full list-none flex-col items-center gap-3.75 p-0 pt-7.5 ${
+            isDarkMode ? "border-t border-t-blue-500/15" : "border-t border-t-slate-200"
+          }`}
+        >
           <NavButton
             href={"/settings"}
             name={"Settings"}
             icon={Settings}
             isExpanded={isExpanded}
+            isDarkMode={isDarkMode}
             isActive={activeItem === "settings"}
             onClick={() => handleNavClick("/settings")}
           />
@@ -217,6 +263,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             name={"Account"}
             icon={User}
             isExpanded={isExpanded}
+            isDarkMode={isDarkMode}
             isActive={activeItem === "account"}
             onClick={() => handleNavClick("/account")}
           />

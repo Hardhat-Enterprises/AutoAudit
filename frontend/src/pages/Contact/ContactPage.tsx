@@ -23,19 +23,19 @@ type ContactPageProps = {
 const ContactHero: React.FC = () => (
   <section
     id="home"
-    className="relative overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#162a4a] to-[#1e3a5f] px-[5%] pb-16 pt-40 text-center"
+    className="relative overflow-hidden bg-linear-to-br from-surface-1 via-accent-navy/88 to-accent-navy/70 px-[5%] pb-16 pt-40 text-center"
   >
-    <div className="pointer-events-none absolute -right-[200px] -top-[200px] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.1)_0%,transparent_70%)] opacity-90" />
-    <div className="pointer-events-none absolute -bottom-[100px] -left-[100px] h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.1)_0%,transparent_70%)] opacity-90" />
+    <div className="pointer-events-none absolute -right-50 -top-50 h-150 w-150 rounded-full bg-[radial-gradient(circle,rgb(var(--brand-blue)/0.1)_0%,transparent_70%)] opacity-90" />
+    <div className="pointer-events-none absolute -bottom-25 -left-25 h-100 w-100 rounded-full bg-[radial-gradient(circle,rgb(var(--brand-blue)/0.1)_0%,transparent_70%)] opacity-90" />
 
-    <div className="relative z-[1] mx-auto max-w-[800px]">
-      <p className="mb-3 text-sm font-semibold tracking-wide text-white">
+    <div className="relative z-1 mx-auto max-w-200">
+      <p className="mb-3 text-sm font-semibold tracking-wide text-text-strong">
         Contact AutoAudit
       </p>
-      <h1 className="mb-4 bg-gradient-to-br from-white to-[#3b82f6] bg-clip-text text-[clamp(2.5rem,6vw,3.5rem)] font-bold text-transparent">
+      <h1 className="mb-4 bg-linear-to-br from-text-strong to-brand-blue bg-clip-text text-[clamp(2.5rem,6vw,3.5rem)] font-bold text-transparent">
         Get in Touch
       </h1>
-      <p className="text-[1.2rem] leading-[1.6] text-[#b0c4de]">
+      <p className="text-[1.2rem] leading-[1.6] text-text-muted">
         Have questions about AutoAudit? Our team is here to help. Reach out and
         we&apos;ll respond as soon as possible.
       </p>
@@ -66,14 +66,14 @@ const ContactPage: React.FC<ContactPageProps> = ({ onSignIn }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1628] font-['Inter',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] text-white">
+    <div className="min-h-screen bg-dark-surface-1 font-['Inter',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] text-text-strong">
       <LandingHeader onSignInClick={onSignIn} />
 
       <main className="flex flex-col">
         <ContactHero />
 
-        <section id="features" className="bg-[#0f1f38] px-[5%] py-24">
-          <div className="mx-auto grid max-w-[1200px] gap-12 lg:grid-cols-[1fr_1.8fr] items-start">
+        <section id="features" className="bg-accent-navy/82 px-[5%] py-24">
+          <div className="mx-auto grid max-w-300 gap-12 lg:grid-cols-[1fr_1.8fr] items-start">
             <ContactInfoGrid />
             <ContactForm submitted={submitted} onSubmit={handleSubmit} />
           </div>
