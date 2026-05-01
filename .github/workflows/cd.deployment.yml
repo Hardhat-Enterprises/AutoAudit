@@ -93,8 +93,7 @@ jobs:
             --namespace "${{ env.NAMESPACE }}" \
             --set global.imageTag=${{ github.sha }} \
             --set "frontend.ingress.host=${{ secrets.POC_PRODUCTION_DOMAIN }}" \
-            --timeout 5m \
-            --server-side
+            --timeout 5m
 
       - name: Verify rollout
         run: |
