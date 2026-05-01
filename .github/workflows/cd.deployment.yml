@@ -86,6 +86,8 @@ jobs:
 
       - name: Install Helm
         uses: azure/setup-helm@v4
+        with:
+          version: '3.15.0'
 
       - name: Deploy
         run: |
@@ -96,8 +98,7 @@ jobs:
             --wait \
             --timeout 5m \
             --rollback-on-failure \
-            --server-side \
-            --force-conflicts
+            --server-side
 
       - name: Verify rollout
         run: |

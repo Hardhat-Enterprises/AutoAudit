@@ -4,7 +4,6 @@ metadata:
   name: backend-api
   namespace: production
 spec:
-  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: backend-api
