@@ -47,7 +47,11 @@ jobs:
       - name: Build image
         run: |
           IMAGE="${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}"
-          docker build -t "$IMAGE" -f ${{ matrix.dockerfile }} ${{ matrix.context }}
+          BUILD_ARGS=""
+          if [ "${{ matrix.service }}" = "frontend" ]; then
+            BUILD_ARGS="--build-arg VITE_API_URL=https://${{ secrets.POC_PRODUCTION_DOMAIN }}"
+          fi
+          docker build -t "$IMAGE" -f ${{ matrix.dockerfile }} $BUILD_ARGS ${{ matrix.context }}
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
       - name: Scan image with Trivy
