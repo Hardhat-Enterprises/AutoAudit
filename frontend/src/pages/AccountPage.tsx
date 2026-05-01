@@ -39,9 +39,8 @@ export default function AccountPage({
 }: AccountPageProps) {
   const navigate = useNavigate();
   const { user, token, logout: clearAuth } = useAuth() as AuthContextValue;
-
+  console.log("USER DATA:", user);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -52,6 +51,16 @@ export default function AccountPage({
     newPassword: "",
     confirmPassword: "",
   });
+
+  const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setPasswordData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   const [profileData, setProfileData] = useState({
     firstName: "",
@@ -69,39 +78,6 @@ export default function AccountPage({
     });
   }, [user]);
 
-  const inputClass = `w-full rounded-lg border px-3 py-2 text-sm outline-none transition
-    ${
-      isDarkMode
-        ? "border-slate-700 bg-slate-900 text-white placeholder:text-slate-500 focus:border-cyan-300"
-        : "border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-cyan-500"
-    }`;
-
-  const labelClass = `text-sm font-semibold ${
-    isDarkMode ? "text-slate-300" : "text-gray-600"
-  }`;
-
-  const cardClass = `rounded-xl border p-6 shadow-md ${
-    isDarkMode ? "border-slate-700 bg-slate-800" : "border-gray-200 bg-white"
-  }`;
-
-  const secondaryButtonClass = `inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition hover:opacity-90
-    ${
-      isDarkMode
-        ? "border-slate-700 bg-slate-900 text-white"
-        : "border-gray-300 bg-white text-gray-900"
-    }`;
-
-  const primaryButtonClass =
-    "inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:opacity-90";
-
-  const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setPasswordData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
   const handleProfileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setProfileData((prev) => ({
@@ -110,15 +86,16 @@ export default function AccountPage({
     }));
   };
 
+  const handleEditProfile = () => {
+    setIsEditingProfile(true);
+  };
+
   const handleCancelProfileEdit = () => {
-    const fullName = user?.name ?? "";
-
     setProfileData({
-      firstName: fullName ? fullName.split(" ")[0] : "",
-      lastName: fullName ? fullName.split(" ").slice(1).join(" ") : "",
-      organization: user?.organization ?? "",
+      firstName: user?.name?.split(" ")[0] || "",
+      lastName: user?.name?.split(" ").slice(1).join(" ") || "",
+      organization: user?.organization || "",
     });
-
     setIsEditingProfile(false);
   };
 
@@ -126,6 +103,13 @@ export default function AccountPage({
     console.log("Profile data to save:", profileData);
     setIsEditingProfile(false);
   };
+
+  const primaryLabel =
+    user?.email ||
+    user?.username ||
+    user?.name ||
+    (user?.id != null ? String(user.id) : null) ||
+    "Signed in";
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -149,11 +133,11 @@ export default function AccountPage({
       style={{
         marginLeft: `${sidebarWidth}px`,
         width: `calc(100% - ${sidebarWidth}px)`,
+        transition: "margin-left 0.4s ease, width 0.4s ease",
       }}
     >
-      <div className="mx-auto max-w-4xl p-6">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between gap-4">
+      <div className="mx-auto max-w-6xl p-9">
+        <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <User size={24} />
             <div>
@@ -166,9 +150,9 @@ export default function AccountPage({
 
           <button
             type="button"
+            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
           >
             {isLoggingOut ? (
               <>
@@ -184,224 +168,252 @@ export default function AccountPage({
           </button>
         </div>
 
-        <div className="space-y-6">
-          {/* Profile Card */}
-          <div className={cardClass}>
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h3 className="text-lg font-semibold">Profile</h3>
-
-              {!isEditingProfile ? (
-                <button
-                  type="button"
-                  className={secondaryButtonClass}
-                  onClick={() => setIsEditingProfile(true)}
-                >
-                  <Pencil size={16} />
-                  <span>Edit Profile</span>
-                </button>
-              ) : (
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    className={secondaryButtonClass}
-                    onClick={handleCancelProfileEdit}
-                  >
-                    <X size={16} />
-                    <span>Cancel</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className={primaryButtonClass}
-                    onClick={handleSaveProfile}
-                  >
-                    <Save size={16} />
-                    <span>Save Changes</span>
-                  </button>
-                </div>
-              )}
-            </div>
+        <div className="rounded-xl border border-slate-700 bg-slate-800 p-8 shadow-md">
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <h3 className="text-2xl font-semibold">Profile</h3>
 
             {!isEditingProfile ? (
-              <div className="space-y-4 border-t border-slate-700 pt-4">
-                <div className="flex flex-col">
-                  <span className="text-sm opacity-70">Name</span>
-                  <span className="text-base font-medium">
-                    {user?.name || "Not available"}
-                  </span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-sm opacity-70">Email</span>
-                  <span className="text-base font-medium">
-                    {user?.email || "Not available"}
-                  </span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-sm opacity-70">Organization</span>
-                  <span className="text-base font-medium">
-                    {user?.organization || "Not available"}
-                  </span>
-                </div>
-              </div>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-900 px-5 py-3 font-semibold text-white transition hover:opacity-90"
+                onClick={handleEditProfile}
+              >
+                <Pencil size={16} />
+                <span>Edit Profile</span>
+              </button>
             ) : (
-              <div className="space-y-4 border-t border-slate-700 pt-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="firstName" className={labelClass}>
-                      First Name
-                    </label>
-                    <input
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      value={profileData.firstName}
-                      onChange={handleProfileChange}
-                      placeholder="Enter first name"
-                      className={inputClass}
-                    />
-                  </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-900 px-5 py-3 font-semibold text-white transition hover:opacity-90"
+                  onClick={handleCancelProfileEdit}
+                >
+                  <X size={16} />
+                  <span>Cancel</span>
+                </button>
 
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="lastName" className={labelClass}>
-                      Last Name
-                    </label>
-                    <input
-                      id="lastName"
-                      name="lastName"
-                      type="text"
-                      value={profileData.lastName}
-                      onChange={handleProfileChange}
-                      placeholder="Enter last name"
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="organization" className={labelClass}>
-                    Organization
-                  </label>
-                  <input
-                    id="organization"
-                    name="organization"
-                    type="text"
-                    value={profileData.organization}
-                    onChange={handleProfileChange}
-                    placeholder="Enter organization name"
-                    className={inputClass}
-                  />
-                </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-300 px-5 py-3 font-semibold text-slate-950 transition hover:opacity-90"
+                  onClick={handleSaveProfile}
+                >
+                  <Save size={16} />
+                  <span>Save Changes</span>
+                </button>
               </div>
             )}
           </div>
 
-          {/* Change Password Card */}
-          <div className={cardClass}>
-            <h3 className="text-lg font-semibold">Change Password</h3>
+          {!isEditingProfile ? (
+            <div className="grid grid-cols-1 gap-8 border-t border-slate-700 pt-4 sm:grid-cols-3">
+              <div>
+                <span className="block text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  Name
+                </span>
+                <span className="mt-2 block text-base font-semibold">
+                  {user?.name
+                    ? user.name
+                    : user?.email
+                      ? user.email.split("@")[0].replace(/\./g, " ")
+                      : "Not available"}
+                </span>
+              </div>
 
-            <div className="mt-4 space-y-4">
-              <PasswordInput
-                id="currentPassword"
-                label="Current Password"
-                name="currentPassword"
-                value={passwordData.currentPassword}
-                placeholder="Enter current password"
-                showPassword={showCurrentPassword}
-                setShowPassword={setShowCurrentPassword}
-                onChange={handlePasswordChange}
-                inputClass={inputClass}
-                labelClass={labelClass}
-              />
+              <div>
+                <span className="block text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  Email
+                </span>
+                <span className="mt-2 block text-base font-semibold">
+                  {user?.email || "Not available"}
+                </span>
+              </div>
 
-              <PasswordInput
-                id="newPassword"
-                label="New Password"
-                name="newPassword"
-                value={passwordData.newPassword}
-                placeholder="Enter new password"
-                showPassword={showNewPassword}
-                setShowPassword={setShowNewPassword}
-                onChange={handlePasswordChange}
-                inputClass={inputClass}
-                labelClass={labelClass}
-              />
-
-              <PasswordInput
-                id="confirmPassword"
-                label="Confirm Password"
-                name="confirmPassword"
-                value={passwordData.confirmPassword}
-                placeholder="Confirm new password"
-                showPassword={showConfirmPassword}
-                setShowPassword={setShowConfirmPassword}
-                onChange={handlePasswordChange}
-                inputClass={inputClass}
-                labelClass={labelClass}
-              />
-
-              <button type="button" className={primaryButtonClass}>
-                Update Password
-              </button>
+              <div>
+                <span className="block text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  Organization
+                </span>
+                <span className="mt-2 block text-base font-semibold">
+                  {user?.organization || "AutoAudit"}
+                </span>
+              </div>
             </div>
+          ) : (
+            <div className="space-y-4 border-t border-slate-700 pt-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="firstName"
+                    className="text-sm font-semibold text-slate-300"
+                  >
+                    First Name
+                  </label>
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    value={profileData.firstName}
+                    onChange={handleProfileChange}
+                    placeholder="Enter first name"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="lastName"
+                    className="text-sm font-semibold text-slate-300"
+                  >
+                    Last Name
+                  </label>
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    value={profileData.lastName}
+                    onChange={handleProfileChange}
+                    placeholder="Enter last name"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="organization"
+                  className="text-sm font-semibold text-slate-300"
+                >
+                  Organization
+                </label>
+                <input
+                  id="organization"
+                  name="organization"
+                  type="text"
+                  value={profileData.organization}
+                  onChange={handleProfileChange}
+                  placeholder="Enter organization name"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Change Password Card */}
+
+        <div className="mt-8 rounded-xl border border-slate-700 bg-slate-800 p-8 shadow-md">
+          <h3 className="text-2xl font-semibold">Change Password</h3>
+
+          <div className="mt-5 flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="currentPassword"
+                className="text-sm font-semibold text-slate-300"
+              >
+                Current Password
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  id="currentPassword"
+                  name="currentPassword"
+                  type={showCurrentPassword ? "text" : "password"}
+                  placeholder="Enter current password"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 pr-10 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 text-slate-400 transition hover:text-cyan-300"
+                  onClick={() => setShowCurrentPassword((prev) => !prev)}
+                  aria-label={
+                    showCurrentPassword
+                      ? "Hide current password"
+                      : "Show current password"
+                  }
+                >
+                  {showCurrentPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="newPassword"
+                className="text-sm font-semibold text-slate-300"
+              >
+                New Password
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  id="newPassword"
+                  name="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Enter new password"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 pr-10 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 text-slate-400 transition hover:text-cyan-300"
+                  onClick={() => setShowNewPassword((prev) => !prev)}
+                  aria-label={
+                    showNewPassword ? "Hide new password" : "Show new password"
+                  }
+                >
+                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="confirmPassword"
+                className="text-sm font-semibold text-slate-300"
+              >
+                Confirm Password
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm new password"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 pr-10 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 text-slate-400 transition hover:text-cyan-300"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="mt-2 inline-flex w-fit items-center justify-center rounded-lg bg-cyan-300 px-5 py-3 font-semibold text-slate-950 transition hover:opacity-90"
+            >
+              Update Password
+            </button>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-type PasswordInputProps = {
-  id: string;
-  label: string;
-  name: string;
-  value: string;
-  placeholder: string;
-  showPassword: boolean;
-  setShowPassword: React.Dispatch<React.SetStateAction<boolean>>;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  inputClass: string;
-  labelClass: string;
-};
-
-function PasswordInput({
-  id,
-  label,
-  name,
-  value,
-  placeholder,
-  showPassword,
-  setShowPassword,
-  onChange,
-  inputClass,
-  labelClass,
-}: PasswordInputProps) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={id} className={labelClass}>
-        {label}
-      </label>
-
-      <div className="relative flex items-center">
-        <input
-          id={id}
-          name={name}
-          type={showPassword ? "text" : "password"}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          className={`${inputClass} pr-10`}
-        />
-
-        <button
-          type="button"
-          onClick={() => setShowPassword((prev) => !prev)}
-          aria-label={showPassword ? `Hide ${label}` : `Show ${label}`}
-          className="absolute right-3 text-slate-400 transition hover:text-cyan-300"
-        >
-          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-        </button>
       </div>
     </div>
   );
