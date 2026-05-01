@@ -86,8 +86,6 @@ jobs:
 
       - name: Install Helm
         uses: azure/setup-helm@v4
-        with:
-          version: '3.15.0'
 
       - name: Deploy
         run: |
@@ -95,9 +93,7 @@ jobs:
             --namespace "${{ env.NAMESPACE }}" \
             --set global.imageTag=${{ github.sha }} \
             --set "frontend.ingress.host=${{ secrets.POC_PRODUCTION_DOMAIN }}" \
-            --wait \
             --timeout 5m \
-            --rollback-on-failure \
             --server-side
 
       - name: Verify rollout
