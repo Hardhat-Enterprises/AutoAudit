@@ -221,6 +221,48 @@ def update_scan_status(
     )
 
 
+def fail_scan_after_orchestration_error(session: Session, scan_id: int, reason: str) -> None:
+    """Mark scan as failed and turn remaining pending controls into errors.
+
+    Used when the orchestrator cannot finish (e.g. missing metadata, broker errors).
+    Does not downgrade scans that already completed. Skips work if nothing was pending.
+    """
+    detail = (reason or "Orchestration error").strip()[:2000]
+    row = session.execute(
+        text("SELECT status FROM scan WHERE id = :scan_id FOR UPDATE"),
+        {"scan_id": scan_id},
+    ).fetchone()
+    if not row or row.status in ("completed", "failed"):
+        return
+
+    ctrl_msg = (f"Scan could not run: {detail}")[:500]
+    res = session.execute(
+        text("""
+            UPDATE scan_result
+            SET status = 'error',
+                message = :msg,
+                updated_at = now()
+            WHERE scan_id = :scan_id AND status = 'pending'
+        """),
+        {"scan_id": scan_id, "msg": ctrl_msg},
+    )
+    n = res.rowcount or 0
+    if n == 0:
+        return
+
+    session.execute(
+        text("""
+            UPDATE scan
+            SET error_count = COALESCE(error_count, 0) + :n,
+                status = 'failed',
+                finished_at = now(),
+                notes = :notes
+            WHERE id = :scan_id AND status NOT IN ('completed')
+        """),
+        {"scan_id": scan_id, "n": n, "notes": detail},
+    )
+
+
 def increment_scan_progress(
     session: Session,
     scan_id: int,
@@ -329,8 +371,8 @@ def finalize_scan_if_complete(session: Session, scan_id: int) -> bool:
     )
     row = result.fetchone()
 
-    if not row or row.status == "completed":
-        # Already finalized by another task
+    if not row or row.status in ("completed", "failed"):
+        # Already finalized, or orchestration marked the scan failed
         return False
 
     # Calculate compliance score

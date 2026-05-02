@@ -624,7 +624,7 @@ input:checked + .slider:before {
   background: transparent !important;
 }
 
-clear.compliance-chart.chart-bar .apexcharts-tooltip {
+.compliance-chart.chart-bar .apexcharts-tooltip {
   transform: translateY(-12px);
 }
 
@@ -881,11 +881,6 @@ clear.compliance-chart.chart-bar .apexcharts-tooltip {
   line-height: 1.2;
 }
 
-.dt-relative {
-  font-weight: 700;
-  font-size: 12px;
-}
-
 .dt .date {
   font-weight: 600;
   font-size: 12px;
@@ -895,10 +890,6 @@ clear.compliance-chart.chart-bar .apexcharts-tooltip {
 .dt .time {
   color: var(--text-tertiary);
   font-size: 12px;
-}
-
-.summary-relative-time {
-  font-weight: 600;
 }
 
 .result-pills {

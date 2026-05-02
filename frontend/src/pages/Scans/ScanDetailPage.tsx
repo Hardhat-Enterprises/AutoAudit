@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getScan } from '../../api/client';
-import { RelativeTime } from '../../components/RelativeTime';
+import { RelativeTime, relativeTimePresetClass } from '../../components/RelativeTime';
 import './ScanDetailPage.css';
 
 type ScanDetailPageProps = {
@@ -294,18 +294,18 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
             <div className="meta-item">
               <span className="meta-label">Started</span>
               <div className="meta-value">
-                <RelativeTime value={scan.started_at ?? scan.created_at} className="meta-relative" />
+                <RelativeTime value={scan.started_at ?? scan.created_at} preset="meta" />
               </div>
             </div>
             <div className="meta-item">
               <span className="meta-label">Completed</span>
               {scan.finished_at || scan.completed_at ? (
                 <div className="meta-value">
-                  <RelativeTime value={scan.finished_at ?? scan.completed_at} className="meta-relative" />
+                  <RelativeTime value={scan.finished_at ?? scan.completed_at} preset="meta" />
                 </div>
               ) : (
                 <div className="meta-value">
-                  <div className="meta-relative">
+                  <div className={relativeTimePresetClass('meta')}>
                     {scan.status === 'pending' || scan.status === 'running' ? 'In progress' : '-'}
                   </div>
                 </div>

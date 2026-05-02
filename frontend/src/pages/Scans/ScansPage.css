@@ -268,12 +268,6 @@
   line-height: 1.2;
 }
 
-.datetime-relative {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text-primary);
-}
-
 .results-summary .passed {
   color: #10b981;
 }

@@ -444,7 +444,7 @@ const ScansPage: React.FC<ScansPageProps> = ({ sidebarWidth = 220, isDarkMode = 
                         if (!dateString) return '-';
                         return (
                           <div className="datetime">
-                            <RelativeTime value={dateString} className="datetime-relative" />
+                            <RelativeTime value={dateString} preset="scansTableCell" />
                           </div>
                         );
                       })()}

@@ -3,9 +3,29 @@ import { formatAbsoluteTooltipAEST, parseDateBestEffortForRelative } from '../ut
 
 export type RelativeTimeLocale = Intl.LocalesArgument;
 
+/** Tailwind layout presets for `<RelativeTime />` (see `relativeTimePresetClass` for non-`<time>` siblings). */
+export type RelativeTimePreset = 'summary' | 'recentScanCell' | 'scansTableCell' | 'meta';
+
+const PRESET_CLASS: Record<RelativeTimePreset, string> = {
+  summary: 'font-semibold',
+  recentScanCell: 'text-xs font-bold',
+  scansTableCell: 'text-[13px] font-semibold text-[var(--text-primary)]',
+  meta: 'mb-1 text-[13px] font-semibold',
+};
+
+export function relativeTimePresetClass(preset: RelativeTimePreset): string {
+  return PRESET_CLASS[preset];
+}
+
+function mergePresetClass(preset: RelativeTimePreset | undefined, className: string | undefined): string | undefined {
+  const parts = [preset ? PRESET_CLASS[preset] : '', className].filter(Boolean);
+  return parts.length ? parts.join(' ') : undefined;
+}
+
 export type RelativeTimeProps = {
   value: string | number | Date | null | undefined;
   className?: string;
+  preset?: RelativeTimePreset;
   /** How often to refresh the label (e.g. so “5 minutes ago” advances). */
   tickMs?: number;
   /** Passed to `Intl.RelativeTimeFormat` (defaults to runtime locale). */
@@ -70,6 +90,7 @@ const DEFAULT_TICK_MS = 1_000;
 export function RelativeTime({
   value,
   className,
+  preset,
   tickMs = DEFAULT_TICK_MS,
   locale,
 }: RelativeTimeProps) {
@@ -79,14 +100,15 @@ export function RelativeTime({
     return () => window.clearInterval(id);
   }, [tickMs]);
   const text = formatRelativeTime(value, now, locale);
+  const mergedClass = mergePresetClass(preset, className);
   if (text === '-') {
-    return <span className={className}>-</span>;
+    return <span className={mergedClass}>-</span>;
   }
   const nowMs = now.getTime();
   const title = formatAbsoluteTooltipAEST(value);
   const iso = toIsoTimestamp(value, nowMs);
   return (
-    <time dateTime={iso} title={title || undefined} className={className}>
+    <time dateTime={iso} title={title || undefined} className={mergedClass}>
       {text}
     </time>
   );

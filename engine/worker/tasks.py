@@ -18,6 +18,7 @@ from worker.db import (
     increment_scan_skipped_count,
     update_scan_result,
     finalize_scan_if_complete,
+    fail_scan_after_orchestration_error,
 )
 
 
@@ -95,8 +96,14 @@ def run_scan(scan_id: int) -> dict:
             session.commit()
         return {"scan_id": scan_id, "status": "completed", "total_pending": 0}
 
-    # Load metadata to get control details
-    metadata = load_metadata(scan["framework"], scan["benchmark"], scan["version"])
+    # Load metadata to get control details (failure leaves scan "running" unless handled)
+    try:
+        metadata = load_metadata(scan["framework"], scan["benchmark"], scan["version"])
+    except Exception as exc:
+        with get_db_session() as session:
+            fail_scan_after_orchestration_error(session, scan_id, str(exc))
+            session.commit()
+        return {"scan_id": scan_id, "status": "failed", "error": str(exc)}
 
     # Build credentials dict for passing to tasks
     credentials = {
@@ -109,103 +116,125 @@ def run_scan(scan_id: int) -> dict:
     dispatched = 0
     skipped = 0
 
-    for result in pending_results:
-        control = get_control_metadata(metadata, result["control_id"])
-        if not control:
-            # Control not found in metadata (possible ID format mismatch)
-            with get_db_session() as session:
-                update_scan_result(
-                    session,
-                    result_id=result["id"],
-                    status="error",
-                    message=f"Control {result['control_id']} not found in metadata",
-                )
-                increment_scan_error_count(session, scan_id)
-                session.commit()
-            continue
-
-        # Check automation_status before dispatching
-        status = control.get("automation_status", "ready")
-        collector_id = control.get("data_collector_id") or ""
-
-        if status == "ready":
-            # Optional fast-scan mode: allow skipping slow PowerShell-based controls only when
-            # explicitly disabled via ENABLE_POWERSHELL_CONTROLS=false.
-            if (
-                settings.ENABLE_POWERSHELL_CONTROLS is False
-                and collector_id.startswith(("exchange.", "compliance.", "teams."))
-                and not collector_id.startswith("exchange.dns.")
-            ):
-                with get_db_session() as session:
-                    update_scan_result(
-                        session,
-                        result_id=result["id"],
-                        status="skipped",
-                        message="Skipped (fast scan): PowerShell-based controls disabled (ENABLE_POWERSHELL_CONTROLS=false).",
-                    )
-                    increment_scan_skipped_count(session, scan_id)
-                    session.commit()
-                skipped += 1
-                continue
-
-            # Verify collector exists before dispatching
-            if not control.get("data_collector_id"):
+    try:
+        for result in pending_results:
+            control = get_control_metadata(metadata, result["control_id"])
+            if not control:
+                # Control not found in metadata (possible ID format mismatch)
                 with get_db_session() as session:
                     update_scan_result(
                         session,
                         result_id=result["id"],
                         status="error",
-                        message="Control marked ready but has no data_collector_id",
+                        message=f"Control {result['control_id']} not found in metadata",
                     )
                     increment_scan_error_count(session, scan_id)
                     session.commit()
                 continue
 
-            evaluate_control.delay(
-                scan_id=scan_id,
-                result_id=result["id"],
-                control=control,
-                credentials=credentials,
-                framework=scan["framework"],
-                benchmark=scan["benchmark"],
-                version=scan["version"],
-            )
-            dispatched += 1
-        else:
-            # Skip non-ready controls (deferred, blocked, manual, not_started)
-            with get_db_session() as session:
-                update_scan_result(
-                    session,
-                    result_id=result["id"],
-                    status="skipped",
-                    message=f"Control {status}: {control.get('notes') or 'Not yet automatable'}",
-                )
-                increment_scan_skipped_count(session, scan_id)
-                session.commit()
-            skipped += 1
+            # Check automation_status before dispatching
+            status = control.get("automation_status", "ready")
+            collector_id = control.get("data_collector_id") or ""
 
-    # If no tasks were dispatched, finalize the scan immediately
-    # (all controls were skipped due to automation_status)
-    if dispatched == 0:
-        with get_db_session() as session:
-            finalize_scan_if_complete(session, scan_id)
-            session.commit()
+            if status == "ready":
+                # Optional fast-scan mode: allow skipping slow PowerShell-based controls only when
+                # explicitly disabled via ENABLE_POWERSHELL_CONTROLS=false.
+                if (
+                    settings.ENABLE_POWERSHELL_CONTROLS is False
+                    and collector_id.startswith(("exchange.", "compliance.", "teams."))
+                    and not collector_id.startswith("exchange.dns.")
+                ):
+                    with get_db_session() as session:
+                        update_scan_result(
+                            session,
+                            result_id=result["id"],
+                            status="skipped",
+                            message="Skipped (fast scan): PowerShell-based controls disabled (ENABLE_POWERSHELL_CONTROLS=false).",
+                        )
+                        increment_scan_skipped_count(session, scan_id)
+                        session.commit()
+                    skipped += 1
+                    continue
+
+                # Verify collector exists before dispatching
+                if not control.get("data_collector_id"):
+                    with get_db_session() as session:
+                        update_scan_result(
+                            session,
+                            result_id=result["id"],
+                            status="error",
+                            message="Control marked ready but has no data_collector_id",
+                        )
+                        increment_scan_error_count(session, scan_id)
+                        session.commit()
+                    continue
+
+                try:
+                    evaluate_control.delay(
+                        scan_id=scan_id,
+                        result_id=result["id"],
+                        control=control,
+                        credentials=credentials,
+                        framework=scan["framework"],
+                        benchmark=scan["benchmark"],
+                        version=scan["version"],
+                    )
+                    dispatched += 1
+                except Exception as exc:
+                    with get_db_session() as session:
+                        fail_scan_after_orchestration_error(
+                            session,
+                            scan_id,
+                            f"Could not queue control evaluation task: {exc}",
+                        )
+                        session.commit()
+                    return {
+                        "scan_id": scan_id,
+                        "status": "failed",
+                        "error": str(exc),
+                        "dispatched_before_failure": dispatched,
+                    }
+            else:
+                # Skip non-ready controls (deferred, blocked, manual, not_started)
+                with get_db_session() as session:
+                    update_scan_result(
+                        session,
+                        result_id=result["id"],
+                        status="skipped",
+                        message=f"Control {status}: {control.get('notes') or 'Not yet automatable'}",
+                    )
+                    increment_scan_skipped_count(session, scan_id)
+                    session.commit()
+                skipped += 1
+
+        # If no tasks were dispatched, finalize the scan immediately
+        # (all controls were skipped due to automation_status)
+        if dispatched == 0:
+            with get_db_session() as session:
+                finalize_scan_if_complete(session, scan_id)
+                session.commit()
+            return {
+                "scan_id": scan_id,
+                "status": "completed",
+                "dispatched": dispatched,
+                "skipped": skipped,
+            }
+
+        # Return immediately - don't wait for results
+        # Each evaluate_control task will update PostgreSQL directly
+        # The last task to complete will finalize the scan
         return {
             "scan_id": scan_id,
-            "status": "completed",
+            "status": "running",
             "dispatched": dispatched,
             "skipped": skipped,
         }
 
-    # Return immediately - don't wait for results
-    # Each evaluate_control task will update PostgreSQL directly
-    # The last task to complete will finalize the scan
-    return {
-        "scan_id": scan_id,
-        "status": "running",
-        "dispatched": dispatched,
-        "skipped": skipped,
-    }
+    except Exception as exc:
+        with get_db_session() as session:
+            fail_scan_after_orchestration_error(session, scan_id, str(exc))
+            session.commit()
+        return {"scan_id": scan_id, "status": "failed", "error": str(exc)}
 
 
 @celery_app.task(

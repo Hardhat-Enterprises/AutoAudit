@@ -1,430 +1,212 @@
-import React, { useState, useEffect, useCallback, JSX } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Loader2,
-  AlertCircle,
-  FileText,
-  Shield,
-  AlertTriangle,
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { getScan } from '../api/client';
-import { RelativeTime } from './RelativeTime';
+import React, { useMemo } from 'react';
+import Chart from 'react-apexcharts';
+import type { ApexOptions } from 'apexcharts';
 
-type ScanDetailPageProps = {
-  sidebarWidth?: number;
+export type ComplianceChartType = 'doughnut' | 'pie' | 'bar';
+
+export type ComplianceChartProps = {
+  chartType: ComplianceChartType;
+  labels: string[];
+  values: number[];
   isDarkMode?: boolean;
-}
-
-type ScanResult = {
-  control_id?: string | number;
-  status?: string;
-  title?: string;
-  description?: string;
-  message?: string;
-}
-
-type ScanDetail = {
-  id?: number | string;
-  status?: string;
-  benchmark?: string;
-  version?: string;
-  connection_name?: string;
-  m365_connection_id?: number | string;
-  started_at?: string | null;
-  created_at?: string | null;
-  finished_at?: string | null;
-  completed_at?: string | null;
-  total_controls?: number;
-  passed_count?: number;
-  failed_count?: number;
-  error_count?: number;
-  skipped_count?: number;
-  results?: ScanResult[];
-  error?: string;
-}
-
-function getErrorMessage(err: unknown, fallback: string): string {
-  if (err instanceof Error && err.message) return err.message;
-  if ((err as { message?: string })?.message) return (err as { message: string }).message;
-  return fallback;
-}
-
-function compareControlIdAscending(a: ScanResult, b: ScanResult): number {
-  const aId = (a?.control_id ?? '').toString();
-  const bId = (b?.control_id ?? '').toString();
-  const aParts = aId.split('.').map((s) => Number.parseInt(s, 10));
-  const bParts = bId.split('.').map((s) => Number.parseInt(s, 10));
-
-  const len = Math.max(aParts.length, bParts.length);
-  for (let i = 0; i < len; i++) {
-    const av = Number.isFinite(aParts[i]) ? aParts[i] : -1;
-    const bv = Number.isFinite(bParts[i]) ? bParts[i] : -1;
-    if (av !== bv) return av - bv;
-  }
-  return aId.localeCompare(bId);
-}
-
-const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isDarkMode = true }) => {
-  const { scanId } = useParams<{ scanId: string }>();
-  const navigate = useNavigate();
-  const { token } = useAuth();
-
-  const [scan, setScan] = useState<ScanDetail | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadScan = useCallback(async (): Promise<ScanDetail | null> => {
-    if (!scanId) {
-      setError('Scan ID is missing');
-      return null;
-    }
-
-    try {
-      const scanData = await getScan(token, scanId);
-      setScan(scanData as ScanDetail);
-      setError(null);
-      return scanData as ScanDetail;
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to load scan'));
-      return null;
-    }
-  }, [token, scanId]);
-
-  useEffect(() => {
-    async function initialLoad(): Promise<void> {
-      setIsLoading(true);
-      await loadScan();
-      setIsLoading(false);
-    }
-    initialLoad();
-  }, [loadScan]);
-
-  // Poll for updates every 3 seconds while pending/running
-  useEffect(() => {
-    if (!scan || scan.status === 'completed' || scan.status === 'failed') {
-      return;
-    }
-
-    const interval = setInterval(async () => {
-      const updatedScan = await loadScan();
-      if (updatedScan?.status === 'completed' || updatedScan?.status === 'failed') {
-        clearInterval(interval);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [scan, loadScan]);
-
-  function getStatusIcon(status?: string): JSX.Element {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle size={20} className="status-icon success" />;
-      case 'failed':
-        return <XCircle size={20} className="status-icon error" />;
-      case 'running':
-        return <Loader2 size={20} className="status-icon running spinning" />;
-      default:
-        return <Clock size={20} className="status-icon pending" />;
-    }
-  }
-
-  function getStatusText(status?: string): string {
-    switch (status) {
-      case 'completed':
-        return 'Completed';
-      case 'failed':
-        return 'Failed';
-      case 'running':
-        return 'Running';
-      default:
-        return 'Pending';
-    }
-  }
-
-
-  function getResultIcon(status?: string): JSX.Element {
-    switch (status) {
-      case 'passed':
-        return <CheckCircle size={16} className="result-icon pass" />;
-      case 'failed':
-        return <XCircle size={16} className="result-icon fail" />;
-      case 'error':
-        return <AlertTriangle size={16} className="result-icon error" />;
-      case 'pending':
-        return <Clock size={16} className="result-icon pending" />;
-      default:
-        return <AlertCircle size={16} className="result-icon unknown" />;
-    }
-  }
-
-  function getResultBadgeText(status?: string): string {
-    switch (status) {
-      case 'passed':
-        return 'Pass';
-      case 'failed':
-        return 'Fail';
-      case 'error':
-        return 'Error';
-      case 'pending':
-        return 'Pending';
-      case 'skipped':
-        return 'Skipped';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div
-        className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}
-        style={{
-          marginLeft: `${sidebarWidth}px`,
-          width: `calc(100% - ${sidebarWidth}px)`,
-          transition: 'margin-left 0.4s ease, width 0.4s ease'
-        }}
-      >
-        <div className="scan-detail-container">
-          <div className="loading-state">
-            <Loader2 size={32} className="spinning" />
-            <p>Loading scan details...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !scan) {
-    return (
-      <div
-        className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}
-        style={{
-          marginLeft: `${sidebarWidth}px`,
-          width: `calc(100% - ${sidebarWidth}px)`,
-          transition: 'margin-left 0.4s ease, width 0.4s ease'
-        }}
-      >
-        <div className="scan-detail-container">
-          <div className="error-state">
-            <AlertCircle size={48} />
-            <h3>Failed to load scan</h3>
-            <p>{error || 'Scan not found'}</p>
-            <button className="toolbar-button secondary" onClick={() => navigate('/scans')}>
-              <ArrowLeft size={16} />
-              <span>Back to Scans</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Build summary from scan counts (API returns these directly)
-  const summary = {
-    total: scan.total_controls || 0,
-    passed: scan.passed_count || 0,
-    failed: scan.failed_count || 0,
-    errors: scan.error_count || 0,
-    pending:
-      (scan.total_controls || 0) -
-      (scan.passed_count || 0) -
-      (scan.failed_count || 0) -
-      (scan.error_count || 0) -
-      (scan.skipped_count || 0),
-  };
-
-  const done = summary.passed + summary.failed + summary.errors + (scan.skipped_count || 0);
-
-  const progressPercent =
-    summary.total > 0
-      ? Math.min(100, Math.round((done / summary.total) * 100))
-      : scan.status === 'completed'
-        ? 100
-        : 0;
-
-  const results = (scan.results || [])
-    .filter((r) => (r?.status || '').toLowerCase() !== 'skipped')
-    .slice()
-    .sort(compareControlIdAscending);
-  return (
-    <div
-      className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}
-      style={{
-        marginLeft: `${sidebarWidth}px`,
-        width: `calc(100% - ${sidebarWidth}px)`,
-        transition: 'margin-left 0.4s ease, width 0.4s ease'
-      }}
-    >
-      <div className="scan-detail-container">
-        <div className="page-header">
-          <button className="back-button" onClick={() => navigate('/scans')}>
-            <ArrowLeft size={20} />
-            <span>Back to Scans</span>
-          </button>
-        </div>
-
-        <div className="scan-header-card">
-          <div className="scan-header-content">
-            <div className="scan-icon">
-              <Shield size={32} />
-            </div>
-            <div className="scan-info">
-              <h1>{scan.benchmark || 'Compliance Scan'}</h1>
-              <p>{scan.version || ''}</p>
-            </div>
-            <span className={`status-badge large ${scan.status || 'pending'}`}>
-              {getStatusIcon(scan.status)}
-              {getStatusText(scan.status)}
-            </span>
-          </div>
-
-          <div className="scan-meta">
-            <div className="meta-item">
-              <span className="meta-label">Connection</span>
-              <span className="meta-value">
-                {scan.connection_name || (scan.m365_connection_id ? `Connection #${scan.m365_connection_id}` : '-')}
-              </span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-label">Started</span>
-              <div className="meta-value">
-                <RelativeTime value={scan.started_at ?? scan.created_at} className="meta-relative" />
-              </div>
-            </div>
-            <div className="meta-item">
-              <span className="meta-label">Completed</span>
-              {scan.finished_at || scan.completed_at ? (
-                <div className="meta-value">
-                  <RelativeTime value={scan.finished_at ?? scan.completed_at} className="meta-relative" />
-                </div>
-              ) : (
-                <div className="meta-value">
-                  <div className="meta-relative">
-                    {scan.status === 'pending' || scan.status === 'running' ? 'In progress' : '-'}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {(scan.status === 'pending' || scan.status === 'running') && (
-          <div className="progress-card">
-            <div className="progress-content">
-              <Loader2 size={24} className="spinning" />
-              <div className="progress-text">
-                <h3>Scan in Progress</h3>
-                <p>
-                  {scan.status === 'pending'
-                    ? 'Waiting to start...'
-                    : `Evaluating controls... ${done} of ${summary.total} complete`}
-                </p>
-              </div>
-            </div>
-
-            <div className="scan-progress-bar">
-              <div className="scan-progress-track">
-                <div
-                  className={`scan-progress-fill ${scan.status || 'pending'}`}
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-              <div className="scan-progress-meta">
-                <span>{done}/{summary.total} controls</span>
-                <span className="scan-progress-sep">•</span>
-                <span>{progressPercent}%</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="stats-grid">
-          <div className="stat-card total">
-            <div className="stat-icon">
-              <FileText size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{summary.total}</span>
-              <span className="stat-label">Total Controls</span>
-            </div>
-          </div>
-          <div className="stat-card passed">
-            <div className="stat-icon">
-              <CheckCircle size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{summary.passed}</span>
-              <span className="stat-label">Passed</span>
-            </div>
-          </div>
-          <div className="stat-card failed">
-            <div className="stat-icon">
-              <XCircle size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{summary.failed}</span>
-              <span className="stat-label">Failed</span>
-            </div>
-          </div>
-          <div className="stat-card errors">
-            <div className="stat-icon">
-              <AlertTriangle size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{summary.errors}</span>
-              <span className="stat-label">Errors</span>
-            </div>
-          </div>
-        </div>
-
-        {results.length > 0 && (
-          <div className="results-section">
-            <h2>Control Results</h2>
-            <div className="results-list">
-              {results.map((result, index) => (
-                <div
-                  key={result.control_id || index}
-                  className={`result-card ${result.status || 'unknown'}`}
-                >
-                  <div className="result-header">
-                    <div className="result-title">
-                      {getResultIcon(result.status)}
-                      <span className="control-id">{result.control_id}</span>
-                      <h4>{result.title || result.control_id}</h4>
-                    </div>
-                    <span className={`result-badge ${result.status || 'unknown'}`}>
-                      {getResultBadgeText(result.status)}
-                    </span>
-                  </div>
-                  {result.description && (
-                    <p className="result-description">{result.description}</p>
-                  )}
-                  {result.message && (
-                    <p className="result-message">{result.message}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {scan.status === 'failed' && scan.error && (
-          <div className="error-card">
-            <AlertCircle size={20} />
-            <div className="error-content">
-              <h4>Scan Failed</h4>
-              <p>{scan.error}</p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  /** Reserved for responsive layout; chart fills its container width. */
+  sidebarWidth?: number;
 };
 
-export default ScanDetailPage;
+function colorForOutcomeLabel(label: string): string {
+  const u = label.toLowerCase();
+  if (u.includes('pass')) return 'rgb(16, 185, 129)';
+  if (u.includes('fail')) return 'rgb(239, 68, 68)';
+  if (u.includes('error')) return 'rgb(249, 115, 22)';
+  if (u.includes('skip')) return 'rgb(100, 116, 139)';
+  return 'rgb(148, 163, 184)';
+}
+
+function useChartConfig(
+  chartType: ComplianceChartType,
+  labels: string[],
+  values: number[],
+  isDarkMode: boolean
+): { options: ApexOptions; series: number[] | { name: string; data: number[] }[]; apexType: 'donut' | 'pie' | 'bar' } {
+  const foreColor = isDarkMode ? 'rgb(226, 232, 240)' : 'rgb(11, 18, 32)';
+  const muted = isDarkMode ? 'rgb(148, 163, 184)' : 'rgb(71, 85, 105)';
+
+  return useMemo(() => {
+    const baseChart: ApexOptions['chart'] = {
+      background: 'transparent',
+      toolbar: { show: false },
+      animations: { enabled: true },
+      fontFamily: 'Segoe UI, ui-sans-serif, system-ui, sans-serif',
+    };
+
+    const legend: ApexOptions['legend'] = {
+      position: 'bottom',
+      fontSize: '13px',
+      labels: { colors: foreColor },
+      markers: { size: 10 },
+    };
+
+    const dataLabels: ApexOptions['dataLabels'] = {
+      enabled: chartType !== 'bar',
+      style: { fontSize: '12px', colors: [foreColor] },
+      dropShadow: { enabled: false },
+    };
+
+    const tooltip: ApexOptions['tooltip'] = {
+      theme: isDarkMode ? 'dark' : 'light',
+      y: {
+        formatter: (val: number) => (chartType === 'bar' ? `${val}%` : String(val)),
+      },
+    };
+
+    if (chartType === 'bar') {
+      const options: ApexOptions = {
+        chart: { ...baseChart, type: 'bar' },
+        theme: { mode: isDarkMode ? 'dark' : 'light' },
+        colors: ['rgb(100, 223, 223)'],
+        plotOptions: {
+          bar: {
+            borderRadius: 6,
+            columnWidth: '55%',
+            dataLabels: { position: 'top' },
+          },
+        },
+        dataLabels: {
+          enabled: true,
+          offsetY: -22,
+          style: { fontSize: '12px', colors: [foreColor] },
+          formatter: (val: number) => `${val}%`,
+        },
+        xaxis: {
+          categories: labels,
+          labels: {
+            style: { colors: muted, fontSize: '11px' },
+          },
+          axisBorder: { show: false },
+          axisTicks: { show: false },
+        },
+        yaxis: {
+          max: 100,
+          tickAmount: 5,
+          labels: {
+            style: { colors: muted, fontSize: '11px' },
+            formatter: (val: number) => `${Math.round(val)}%`,
+          },
+        },
+        grid: {
+          borderColor: isDarkMode ? 'rgba(148, 163, 184, 0.12)' : 'rgba(71, 85, 105, 0.15)',
+          strokeDashArray: 4,
+        },
+        legend: { show: false },
+        tooltip,
+      };
+
+      return {
+        options,
+        series: [{ name: 'Compliance', data: values }],
+        apexType: 'bar',
+      };
+    }
+
+    const sliceColors = labels.map((l) => colorForOutcomeLabel(l));
+
+    const options: ApexOptions = {
+      chart: { ...baseChart, type: chartType === 'doughnut' ? 'donut' : 'pie' },
+      theme: { mode: isDarkMode ? 'dark' : 'light' },
+      labels,
+      colors: sliceColors,
+      legend,
+      dataLabels: {
+        ...dataLabels,
+        formatter: (_val: string | number, opts: { seriesIndex: number }) => {
+          const v = opts != null ? Number(values[opts.seriesIndex] ?? 0) : 0;
+          return v > 0 ? String(v) : '';
+        },
+      },
+      plotOptions: {
+        pie: {
+          expandOnClick: false,
+          donut: {
+            size: chartType === 'doughnut' ? '68%' : '0%',
+            labels: {
+              show: chartType === 'doughnut',
+              name: { color: foreColor },
+              value: { color: foreColor, fontSize: '22px', fontWeight: 600 },
+              total: {
+                show: true,
+                label: 'Total',
+                color: muted,
+                formatter: () => {
+                  const sum = values.reduce((a, b) => a + b, 0);
+                  return String(sum);
+                },
+              },
+            },
+          },
+        },
+      },
+      stroke: { width: chartType === 'doughnut' ? 2 : 1, colors: ['transparent'] },
+      tooltip,
+    };
+
+    return {
+      options,
+      series: values,
+      apexType: chartType === 'doughnut' ? 'donut' : 'pie',
+    };
+  }, [chartType, foreColor, isDarkMode, labels, muted, values]);
+}
+
+export default function ComplianceChart({
+  chartType,
+  labels,
+  values,
+  isDarkMode = true,
+}: ComplianceChartProps) {
+  const { options, series, apexType } = useChartConfig(chartType, labels, values, isDarkMode);
+
+  const isBarEmpty = chartType === 'bar' && labels.length === 0;
+  const showRingEmpty =
+    chartType !== 'bar' && labels.length > 0 && values.every((v) => v === 0);
+
+  if (isBarEmpty) {
+    return (
+      <div
+        className="compliance-chart chart-bar flex h-full min-h-[280px] w-full flex-col items-center justify-center gap-2 rounded-[var(--radius-2)] border border-dashed border-subtle/50 bg-surface-2/40 px-4 text-center text-sm text-muted"
+        role="status"
+        aria-live="polite"
+      >
+        <span className="font-medium text-text-strong">No trend data yet</span>
+        <span className="max-w-xs text-muted">Complete at least one scan to see compliance over recent runs.</span>
+      </div>
+    );
+  }
+
+  if (showRingEmpty) {
+    return (
+      <div
+        className="compliance-chart flex h-full min-h-[280px] w-full flex-col items-center justify-center gap-2 rounded-[var(--radius-2)] border border-dashed border-subtle/50 bg-surface-2/40 px-4 text-center text-sm text-muted"
+        role="status"
+        aria-live="polite"
+      >
+        <span className="font-medium text-text-strong">No control results</span>
+        <span className="max-w-xs text-muted">Run a completed scan to populate this chart.</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`compliance-chart h-full w-full min-h-[280px] ${chartType === 'bar' ? 'chart-bar' : ''}`}
+    >
+      <Chart
+        key={`${chartType}-${labels.join('|')}`}
+        options={options}
+        series={series}
+        type={apexType}
+        width="100%"
+        height={340}
+      />
+    </div>
+  );
+}

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./Dashboard.css";
-import ComplianceChart from "../components/ComplianceChart";
+import ComplianceChart, { type ComplianceChartType } from "../components/ComplianceChart";
 import Dropdown from "../components/Dropdown";
 import { useNavigate } from "react-router-dom";
 import {
@@ -15,8 +15,6 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getBenchmarks, getConnections, getScans, getScan } from "../api/client";
 import { RelativeTime } from "../components/RelativeTime";
-
-type ChartType = "doughnut" | "pie" | "bar";
 
 type DashboardProps = {
   sidebarWidth?: number;
@@ -99,7 +97,7 @@ export default function Dashboard({
     { value: "bar", label: "Compliance Trend (Bar)" },
   ];
 
-  const [selectedChartType, setSelectedChartType] = useState<ChartType>("doughnut");
+  const [selectedChartType, setSelectedChartType] = useState<ComplianceChartType>("doughnut");
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>("all");
   const [selectedBenchmarkKey, setSelectedBenchmarkKey] = useState<string>("all");
 
@@ -182,7 +180,7 @@ export default function Dashboard({
     return filteredScans[0];
   }, [filteredScans]);
 
-  const chartModel = useMemo<{ chartType: ChartType; labels: string[]; values: number[] }>(() => {
+  const chartModel = useMemo<{ chartType: ComplianceChartType; labels: string[]; values: number[] }>(() => {
     const s = latestRelevantScan;
     const passed = Number(s?.passed_count || 0);
     const failed = Number(s?.failed_count || 0);
@@ -307,7 +305,7 @@ export default function Dashboard({
         label:
           hasScan && lastScanLabel ? (
             <>
-              Updated <RelativeTime value={lastScanLabel} className="summary-relative-time" />
+              Updated <RelativeTime value={lastScanLabel} preset="summary" />
             </>
           ) : (
             'Updated —'
@@ -533,13 +531,16 @@ export default function Dashboard({
                 </div>
               <Dropdown
                 value={selectedChartType}
-                onChange={(value) => setSelectedChartType(value as ChartType)}
+                onChange={(value) => setSelectedChartType(value as ComplianceChartType)}
                 options={chartTypeOptions}
                 isDarkMode={isDarkMode}
               />
               </div>
               <div className="chart-surface">
                 <ComplianceChart
+                  chartType={chartModel.chartType}
+                  labels={chartModel.labels}
+                  values={chartModel.values}
                   isDarkMode={isDarkMode}
                   sidebarWidth={sidebarWidth}
                 />
@@ -589,7 +590,7 @@ export default function Dashboard({
                             </td>
                             <td>
                               <div className="dt">
-                                <RelativeTime value={s.started_at || s.finished_at} className="dt-relative" />
+                                <RelativeTime value={s.started_at || s.finished_at} preset="recentScanCell" />
                               </div>
                             </td>
                             <td>

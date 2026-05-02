@@ -115,12 +115,6 @@
   font-size: 14px;
 }
 
-.meta-value .meta-relative {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
 .progress-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
