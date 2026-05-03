@@ -115,6 +115,16 @@
   font-size: 14px;
 }
 
+.meta-value .meta-date {
+  font-weight: 600;
+}
+
+.meta-value .meta-time {
+  margin-top: 2px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
 .progress-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);

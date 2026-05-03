@@ -624,7 +624,7 @@ input:checked + .slider:before {
   background: transparent !important;
 }
 
-.compliance-chart.chart-bar .apexcharts-tooltip {
+clear.compliance-chart.chart-bar .apexcharts-tooltip {
   transform: translateY(-12px);
 }
 
@@ -882,9 +882,8 @@ input:checked + .slider:before {
 }
 
 .dt .date {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 12px;
-  color: var(--text-tertiary);
 }
 
 .dt .time {
