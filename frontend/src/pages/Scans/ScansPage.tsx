@@ -20,7 +20,7 @@ import {
 	deleteScan,
 	getSettings,
 } from "../../api/client";
-import { RelativeTime } from "../../components/RelativeTime";
+import { formatDateTimePartsAEST } from "../../utils/helpers";
 
 type ScansPageProps = {
 	sidebarWidth?: number;
@@ -95,7 +95,6 @@ const ScansPage: React.FC<ScansPageProps> = ({
 	});
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 	const appliedNavStateRef = useRef<boolean>(false);
-	const stableStartedAtRef = useRef<Record<string, string>>({});
 
 	const loadScans = useCallback(async (): Promise<void> => {
 		try {
@@ -230,35 +229,10 @@ const ScansPage: React.FC<ScansPageProps> = ({
 		}
 	}
 
-	function getStableStartedAt(scan: Scan): string | null {
-		const candidate = scan.started_at || scan.created_at || null;
-		if (!candidate) return null;
-
-		const key = String(scan.id);
-		const existing = stableStartedAtRef.current[key];
-		if (!existing) {
-			stableStartedAtRef.current[key] = candidate;
-			return candidate;
-		}
-
-		const parseTimestampMs = (value: string): number => {
-			const direct = new Date(value).getTime();
-			if (!Number.isNaN(direct)) return direct;
-			const normalized = value.trim().replace(" ", "T").replace(/(\.\d{3})\d+/, "$1");
-			return new Date(normalized).getTime();
-		};
-
-		const candidateMs = parseTimestampMs(candidate);
-		const existingMs = parseTimestampMs(existing);
-		if (Number.isNaN(existingMs)) {
-			stableStartedAtRef.current[key] = candidate;
-			return candidate;
-		}
-		if (!Number.isNaN(candidateMs) && candidateMs < existingMs) {
-			stableStartedAtRef.current[key] = candidate;
-			return candidate;
-		}
-		return existing;
+	function formatDate(
+		dateString?: string | null,
+	): ReturnType<typeof formatDateTimePartsAEST> {
+		return formatDateTimePartsAEST(dateString);
 	}
 
 	function getStatusBadgeClasses(status?: string): string {
@@ -553,10 +527,21 @@ const ScansPage: React.FC<ScansPageProps> = ({
 										</td>
 										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											{(() => {
-												const dateString = getStableStartedAt(scan);
+												const dateString =
+													scan.started_at ||
+													scan.created_at;
 												if (!dateString) return "-";
+												const dt =
+													formatDate(dateString);
 												return (
-													<RelativeTime value={dateString} preset="scansTableCell" />
+													<div className="flex flex-col gap-0.5 leading-tight">
+														<div className="font-semibold text-(--text-primary) text-[13px]">
+															{dt.date}
+														</div>
+														<div className="text-xs text-(--text-tertiary)">
+															{dt.time}
+														</div>
+													</div>
 												);
 											})()}
 										</td>
