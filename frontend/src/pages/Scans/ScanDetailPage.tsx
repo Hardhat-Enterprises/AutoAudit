@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { getScan } from "../../api/client";
-import { formatDateAEST, formatTimeAEST } from "../../utils/helpers";
+import { RelativeTime, relativeTimePresetClass } from "../../components/RelativeTime";
 
 type ScanDetailPageProps = {
 	sidebarWidth?: number;
@@ -212,14 +212,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 			default:
 				return "Pending";
 		}
-	}
-
-	function formatDate(dateString?: string | null): string {
-		return formatDateAEST(dateString);
-	}
-
-	function formatTime(dateString?: string | null): string {
-		return formatTimeAEST(dateString);
 	}
 
 	function getResultIcon(status?: string): JSX.Element {
@@ -478,18 +470,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 								Started
 							</span>
 							<div className={`text-sm ${textPrimary}`}>
-								<div className="font-semibold">
-									{formatDate(
-										scan.started_at || scan.created_at,
-									)}
-								</div>
-								<div
-									className={`mt-0.5 text-xs ${textTertiary}`}
-								>
-									{formatTime(
-										scan.started_at || scan.created_at,
-									)}
-								</div>
+								<RelativeTime value={scan.started_at ?? scan.created_at} preset="meta" />
 							</div>
 						</div>
 						<div className="flex flex-col gap-1">
@@ -500,24 +481,11 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 							</span>
 							{scan.finished_at || scan.completed_at ? (
 								<div className={`text-sm ${textPrimary}`}>
-									<div className="font-semibold">
-										{formatDate(
-											scan.finished_at ||
-												scan.completed_at,
-										)}
-									</div>
-									<div
-										className={`mt-0.5 text-xs ${textTertiary}`}
-									>
-										{formatTime(
-											scan.finished_at ||
-												scan.completed_at,
-										)}
-									</div>
+									<RelativeTime value={scan.finished_at ?? scan.completed_at} preset="meta" />
 								</div>
 							) : (
 								<div className={`text-sm ${textPrimary}`}>
-									<div className="font-semibold">
+									<div className={relativeTimePresetClass("meta")}>
 										{scan.status === "pending" ||
 										scan.status === "running"
 											? "In progress"
