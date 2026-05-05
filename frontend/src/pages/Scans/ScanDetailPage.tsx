@@ -489,14 +489,14 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 
 				<div ref={reportRef} className="w-full min-w-0">
 				{/* Header card */}
-				<div className={`rounded-xl border p-6 mb-6 ${cardBg}`}>
+				<div className={`rounded-xl border p-6 mb-6 ${eCard}`}>
 					<div className="flex gap-4 items-center mb-5 max-md:flex-col max-md:items-start">
 						<div className="flex justify-center items-center w-14 h-14 text-teal-400 rounded-xl bg-teal-400/15">
 							<Shield size={32} />
 						</div>
 						<div className="flex-1">
 							<h1
-								className={`text-[22px] font-semibold m-0 mb-1 ${eTextPrimary}`}
+								className={`text-[22px] font-semibold m-0 mb-1 ${textPrimary}`}
 							>
 								{scan.benchmark || "Compliance Scan"}
 							</h1>
