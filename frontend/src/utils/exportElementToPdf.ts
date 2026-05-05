@@ -3,6 +3,111 @@ import { jsPDF } from "jspdf";
 
 const MARGIN_PT = 24;
 
+/**
+ * Per-capture limit for canvas device pixels on an edge. Stays under strict
+ * browser caps (Safari ~4096) so html2canvas output is valid before PDF paging.
+ */
+const MAX_CAPTURE_DEVICE_EDGE = 4096;
+
+/** Default raster scale; reduced automatically if the element is very wide. */
+const DEFAULT_CAPTURE_SCALE = 2;
+
+type PdfLayoutState = {
+	/** Used content height on the current PDF page (pt), from top margin downward. */
+	yUsedPt: number;
+};
+
+function effectiveCaptureScale(scrollWidthCss: number, requested: number): number {
+	const w = Math.max(1, Math.ceil(scrollWidthCss));
+	const maxScale = MAX_CAPTURE_DEVICE_EDGE / w;
+	return Math.max(1, Math.min(requested, maxScale));
+}
+
+/** Max element height (CSS px) per html2canvas call at the given scale. */
+function maxChunkCssHeight(scale: number): number {
+	return Math.max(160, Math.floor(MAX_CAPTURE_DEVICE_EDGE / scale));
+}
+
+const sharedHtml2CanvasOptions = {
+	useCORS: true,
+	logging: false,
+	backgroundColor: "#ffffff" as const,
+};
+
+/**
+ * Rasterizes one canvas (one vertical segment of the report) into the PDF,
+ * continuing mid-page when a previous segment left space below the margin.
+ */
+function appendCanvasToPdfContinuous(
+	pdf: jsPDF,
+	canvas: HTMLCanvasElement,
+	contentWidth: number,
+	contentHeight: number,
+	layout: PdfLayoutState,
+): void {
+	const imgScaledHeightPt =
+		(canvas.height * contentWidth) / canvas.width;
+	if (imgScaledHeightPt <= 0) {
+		return;
+	}
+
+	let yPt = 0;
+	while (yPt < imgScaledHeightPt - 1e-4) {
+		const spaceLeftPt = contentHeight - layout.yUsedPt;
+		const sliceHeightPt = Math.min(
+			spaceLeftPt,
+			imgScaledHeightPt - yPt,
+		);
+		if (sliceHeightPt <= 1e-6) {
+			pdf.addPage();
+			layout.yUsedPt = 0;
+			continue;
+		}
+
+		const sourceY = (yPt / imgScaledHeightPt) * canvas.height;
+		const sourceH = (sliceHeightPt / imgScaledHeightPt) * canvas.height;
+
+		const slice = document.createElement("canvas");
+		slice.width = canvas.width;
+		slice.height = Math.max(1, Math.ceil(sourceH));
+		const ctx = slice.getContext("2d");
+		if (!ctx) {
+			throw new Error("Could not get canvas context");
+		}
+		ctx.drawImage(
+			canvas,
+			0,
+			sourceY,
+			canvas.width,
+			sourceH,
+			0,
+			0,
+			canvas.width,
+			sourceH,
+		);
+
+		const dataUrl = slice.toDataURL("image/png");
+		pdf.addImage(
+			dataUrl,
+			"PNG",
+			MARGIN_PT,
+			MARGIN_PT + layout.yUsedPt,
+			contentWidth,
+			sliceHeightPt,
+		);
+
+		yPt += sliceHeightPt;
+		layout.yUsedPt += sliceHeightPt;
+
+		if (layout.yUsedPt >= contentHeight - 1e-3) {
+			layout.yUsedPt = 0;
+			if (yPt < imgScaledHeightPt - 1e-4) {
+				pdf.addPage();
+			}
+		}
+	}
+}
+
 /** Sentinel: do not copy this computed property onto the clone. */
 const SKIP_PROPERTY = "__PDF_EXPORT_SKIP_PROPERTY__";
 
@@ -382,23 +487,13 @@ function prepareCloneForHtml2Canvas(
 
 /**
  * Renders a DOM node to a multi-page A4 PDF and triggers download in the browser.
+ * Captures the node in vertical html2canvas chunks so device-pixel canvas size
+ * stays within browser limits on long reports.
  */
 export async function exportElementToPdf(
 	element: HTMLElement,
 	filename: string,
 ): Promise<void> {
-	const canvas = await html2canvas(element, {
-		scale: 2,
-		useCORS: true,
-		logging: false,
-		backgroundColor: "#ffffff",
-		windowWidth: element.scrollWidth,
-		windowHeight: element.scrollHeight,
-		onclone: (clonedDoc, clonedRoot) => {
-			prepareCloneForHtml2Canvas(element, clonedDoc, clonedRoot);
-		},
-	});
-
 	const pdf = new jsPDF({
 		unit: "pt",
 		format: "a4",
@@ -409,50 +504,39 @@ export async function exportElementToPdf(
 	const contentWidth = pageWidth - MARGIN_PT * 2;
 	const contentHeight = pageHeight - MARGIN_PT * 2;
 
-	const imgScaledHeight = (canvas.height * contentWidth) / canvas.width;
-	if (imgScaledHeight <= 0) {
-		pdf.save(filename);
-		return;
-	}
+	const totalWidth = Math.max(1, Math.ceil(element.scrollWidth));
+	const totalHeight = Math.max(1, Math.ceil(element.scrollHeight));
+	const scale = effectiveCaptureScale(
+		totalWidth,
+		DEFAULT_CAPTURE_SCALE,
+	);
+	const chunkCss = maxChunkCssHeight(scale);
 
-	let yOffset = 0;
-	while (yOffset < imgScaledHeight) {
-		if (yOffset > 0) {
-			pdf.addPage();
-		}
-		const sliceHeightPt = Math.min(contentHeight, imgScaledHeight - yOffset);
-		const sourceY = (yOffset / imgScaledHeight) * canvas.height;
-		const sourceH = (sliceHeightPt / imgScaledHeight) * canvas.height;
+	const layout: PdfLayoutState = { yUsedPt: 0 };
 
-		const slice = document.createElement("canvas");
-		slice.width = canvas.width;
-		slice.height = Math.max(1, Math.ceil(sourceH));
-		const ctx = slice.getContext("2d");
-		if (!ctx) {
-			throw new Error("Could not get canvas context");
-		}
-		ctx.drawImage(
+	for (let y = 0; y < totalHeight; y += chunkCss) {
+		const sliceH = Math.min(chunkCss, totalHeight - y);
+		const canvas = await html2canvas(element, {
+			...sharedHtml2CanvasOptions,
+			scale,
+			x: 0,
+			y,
+			width: totalWidth,
+			height: sliceH,
+			windowWidth: totalWidth,
+			windowHeight: totalHeight,
+			onclone: (clonedDoc, clonedRoot) => {
+				prepareCloneForHtml2Canvas(element, clonedDoc, clonedRoot);
+			},
+		});
+
+		appendCanvasToPdfContinuous(
+			pdf,
 			canvas,
-			0,
-			sourceY,
-			canvas.width,
-			sourceH,
-			0,
-			0,
-			canvas.width,
-			sourceH,
-		);
-
-		const dataUrl = slice.toDataURL("image/png");
-		pdf.addImage(
-			dataUrl,
-			"PNG",
-			MARGIN_PT,
-			MARGIN_PT,
 			contentWidth,
-			sliceHeightPt,
+			contentHeight,
+			layout,
 		);
-		yOffset += sliceHeightPt;
 	}
 
 	pdf.save(filename);
