@@ -35,12 +35,12 @@ const LandingHeader = ({
             src="/AutoAudit.png"
             alt="AutoAudit"
             loading="lazy"
-            className="block h-17.5 w-auto transition-transform duration-200 hover:scale-[1.03]"
+            className="block w-auto transition-transform duration-200 h-17.5 hover:scale-[1.03]"
           />
         </picture>
       </Link>
 
-      <nav className="flex flex-wrap items-center justify-end gap-6" aria-label="Primary navigation">
+      <nav className="flex flex-wrap gap-6 justify-end items-center" aria-label="Primary navigation">
         {navLinks
           .filter((link) => !hiddenLinkSet.has(link.label.toLowerCase()))
           .map((link) =>
@@ -48,7 +48,7 @@ const LandingHeader = ({
               <Link
                 key={link.label}
                 to={link.href}
-                className="relative py-1 text-sm font-medium text-text-muted transition-colors duration-200 after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-brand-blue after:transition-all hover:text-text-strong hover:after:w-full"
+                className="relative py-1 text-sm font-medium transition-colors duration-200 text-text-muted after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-brand-blue after:transition-all hover:text-text-strong hover:after:w-full"
               >
                 {link.label}
               </Link>
@@ -56,7 +56,7 @@ const LandingHeader = ({
               <a
                 key={link.label}
                 href={link.href}
-                className="relative py-1 text-sm font-medium text-text-muted transition-colors duration-200 after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-brand-blue after:transition-all hover:text-text-strong hover:after:w-full"
+                className="relative py-1 text-sm font-medium transition-colors duration-200 text-text-muted after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-brand-blue after:transition-all hover:text-text-strong hover:after:w-full"
               >
                 {link.label}
               </a>
@@ -67,7 +67,7 @@ const LandingHeader = ({
             type="button"
             data-testid="sign-in-header"
             onClick={onSignInClick}
-            className="rounded-full bg-linear-to-br from-brand-blue to-brand-blue-deep px-5 py-2.5 text-sm font-semibold text-text-strong transition duration-200 hover:-translate-y-0.5 hover:from-brand-cyan hover:to-brand-blue hover:shadow-[0_10px_25px_rgb(var(--brand-blue)/0.35)]"
+            className="py-2.5 px-5 text-sm font-semibold rounded-full transition duration-200 hover:-translate-y-0.5 bg-linear-to-br from-brand-blue to-brand-blue-deep text-text-strong hover:from-brand-cyan hover:to-brand-blue hover:shadow-[0_10px_25px_rgb(var(--brand-blue)/0.35)]"
           >
             Sign In
           </button>

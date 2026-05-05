@@ -366,8 +366,8 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
       }}
     >
       <div className="mx-auto w-full max-w-7xl">
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
+        <div className="flex gap-4 justify-between items-start mb-6">
+          <div className="flex gap-4 items-start">
             <Link2 size={24} className="mt-1 text-blue-400" />
             <div>
               <h1 className={`text-2xl font-bold ${pageTheme.strong}`}>
@@ -389,7 +389,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
         </div>
 
         {error && (
-          <div className="mb-6 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-500">
+          <div className="flex gap-2 items-center py-3 px-4 mb-6 text-red-500 rounded-lg border border-red-500/30 bg-red-500/10">
             <AlertCircle size={18} />
             <span className="text-sm">{error}</span>
           </div>
@@ -511,7 +511,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex gap-3 justify-end pt-2">
                 <button
                   type="button"
                   className={buttonSecondary}
@@ -631,7 +631,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                 />
               </div>
 
-              <div className="mt-2 flex justify-end gap-3">
+              <div className="flex gap-3 justify-end mt-2">
                 <button
                   type="button"
                   className={buttonSecondary}
@@ -680,7 +680,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                 className={`flex flex-col gap-4 rounded-xl border p-5 transition hover:border-blue-400 md:flex-row md:items-center md:justify-between ${pageTheme.card}`}
               >
                 <div className="flex-1">
-                  <div className="mb-2 flex items-center gap-3">
+                  <div className="flex gap-3 items-center mb-2">
                     <h4
                       className={`text-base font-semibold ${pageTheme.strong}`}
                     >
@@ -688,17 +688,17 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                     </h4>
 
                     {testingId === connection.id ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2.5 py-1 text-xs font-medium text-orange-500">
+                      <span className="inline-flex gap-1 items-center py-1 px-2.5 text-xs font-medium text-orange-500 rounded-full bg-orange-500/15">
                         <Loader2 size={12} className="animate-spin" />
                         <span>Testing</span>
                       </span>
                     ) : testResults[connection.id]?.success === true ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-500">
+                      <span className="inline-flex gap-1 items-center py-1 px-2.5 text-xs font-medium text-emerald-500 rounded-full bg-emerald-500/15">
                         <CheckCircle2 size={12} />
                         <span>Connected</span>
                       </span>
                     ) : testResults[connection.id]?.success === false ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2.5 py-1 text-xs font-medium text-red-500">
+                      <span className="inline-flex gap-1 items-center py-1 px-2.5 text-xs font-medium text-red-500 rounded-full bg-red-500/15">
                         <XCircle size={12} />
                         <span>Failed</span>
                       </span>
@@ -733,7 +733,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                   </div>
                 </div>
 
-                <div className="flex w-full flex-wrap gap-2 md:w-auto">
+                <div className="flex flex-wrap gap-2 w-full md:w-auto">
                   <button
                     className={buttonSecondary}
                     onClick={() => handleTestConnection(connection)}

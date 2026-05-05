@@ -86,39 +86,39 @@ const standards: SupportedStandard[] = [
 
 const AboutUs = ({ onSignInClick = () => {} }: AboutUsProps) => {
   return (
-    <div className="min-h-screen bg-[#0a1628] font-['Inter',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] text-white">
+    <div className="min-h-screen bg-[rgb(var(--landing-bg-base))] font-['Inter',-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] text-white">
       <LandingHeader onSignInClick={onSignInClick} />
 
       <main className="flex flex-col gap-12">
         <section
           id="home"
-          className="relative overflow-hidden bg-linear-to-br from-[#0a1628] via-[#1a3a4f] to-[#2a4a5f] px-[5%] pb-16 pt-24 text-center md:pb-12"
+          className="relative overflow-hidden bg-linear-to-br from-[rgb(var(--landing-bg-base))] via-[rgb(var(--landing-bg-alt-mid))] to-[rgb(var(--landing-bg-alt-end))] px-[5%] pb-16 pt-24 text-center md:pb-12"
         >
-          <div className="pointer-events-none absolute -right-36 -top-44 h-130 w-130 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.1)_0%,transparent_70%)]" />
+          <div className="pointer-events-none absolute -right-36 -top-44 h-130 w-130 rounded-full bg-[radial-gradient(circle,rgb(var(--brand-blue)/0.1)_0%,transparent_70%)]" />
 
           <picture>
             <source srcSet="/AutoAudit.webp" type="image/webp" />
             <img
               src="/AutoAudit.png"
               alt="AutoAudit"
-              className="mx-auto mb-8 block w-55 drop-shadow-[0_10px_25px_rgba(59,130,246,0.35)]"
+              className="block mx-auto mb-8 w-55 drop-shadow-[0_10px_25px_rgb(var(--brand-blue)/0.35)]"
             />
           </picture>
 
-          <h1 className="mb-4 bg-linear-to-br from-white to-[#3b82f6] bg-clip-text text-[clamp(2.5rem,6vw,3.4rem)] font-bold text-transparent">
+          <h1 className="mb-4 font-bold text-transparent bg-clip-text from-white bg-linear-to-br to-[rgb(var(--brand-blue))] text-[clamp(2.5rem,6vw,3.4rem)]">
             About AutoAudit
           </h1>
-          <p className="mx-auto max-w-190 text-[1.2rem] text-[#b0c4de]">
+          <p className="mx-auto max-w-190 text-[1.2rem] text-[rgb(var(--landing-text-soft))]">
             Revolutionizing Cloud Compliance for Modern Enterprises
           </p>
         </section>
 
         <section className="px-[5%] md:px-6">
-          <h2 className="mb-8 text-center text-[clamp(2rem,5vw,2.6rem)] font-semibold text-[#3b82f6]">
+          <h2 className="mb-8 font-semibold text-center text-[clamp(2rem,5vw,2.6rem)] text-[rgb(var(--brand-blue))]">
             Our Mission
           </h2>
-          <div className="mx-auto max-w-300 rounded-[20px] border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.03)] p-12 backdrop-blur-[10px] md:p-8">
-            <p className="text-[1.05rem] leading-[1.8] text-[#b0c4de]">
+          <div className="p-12 mx-auto border md:p-8 max-w-300 rounded-[20px] border-[rgb(var(--brand-blue)/0.1)] bg-[rgb(255_255_255/0.03)] backdrop-blur-[10px]">
+            <p className="text-[1.05rem] leading-[1.8] text-[rgb(var(--landing-text-soft))]">
               AutoAudit empowers organizations to maintain robust security
               postures in their Microsoft 365 environments through automated
               compliance monitoring and assessment. We bridge the gap between
@@ -129,27 +129,27 @@ const AboutUs = ({ onSignInClick = () => {} }: AboutUsProps) => {
         </section>
 
         <section id="features" className="px-[5%] md:px-6">
-          <h2 className="mb-8 text-center text-[clamp(2rem,5vw,2.6rem)] font-semibold text-[#3b82f6]">
+          <h2 className="mb-8 font-semibold text-center text-[clamp(2rem,5vw,2.6rem)] text-[rgb(var(--brand-blue))]">
             What We Do
           </h2>
-          <div className="mx-auto grid max-w-300 grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-8">
+          <div className="grid gap-8 mx-auto max-w-300 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
                 <article
                   key={feature.title}
-                  className="group relative overflow-hidden rounded-[20px] border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.03)] p-8 transition-all duration-300 hover:-translate-y-2.5 hover:border-[#3b82f6] hover:shadow-[0_20px_40px_rgba(59,130,246,0.2)]"
+                  className="overflow-hidden relative p-8 border transition-all duration-300 hover:-translate-y-2.5 group rounded-[20px] border-[rgb(var(--brand-blue)/0.1)] bg-[rgb(255_255_255/0.03)] hover:border-[rgb(var(--brand-blue))] hover:shadow-[0_20px_40px_rgb(var(--brand-blue)/0.2)]"
                 >
-                  <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-linear-to-br from-[rgba(59,130,246,0.08)] to-[rgba(37,99,235,0.08)]" />
+                  <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-linear-to-br from-[rgb(var(--brand-blue)/0.08)] to-[rgb(var(--brand-blue-deep)/0.08)]" />
 
-                  <div className="relative z-1 mb-5 flex h-15 w-15 items-center justify-center rounded-[15px] bg-linear-to-br from-[#3b82f6] to-[#2563eb] text-white">
+                  <div className="flex relative justify-center items-center mb-5 text-white z-1 h-15 w-15 rounded-[15px] bg-linear-to-br from-[rgb(var(--brand-blue))] to-[rgb(var(--brand-blue-deep))]">
                     <Icon size={28} strokeWidth={2.1} />
                   </div>
 
-                  <h3 className="relative z-1 mb-3 text-xl font-semibold">
+                  <h3 className="relative mb-3 text-xl font-semibold z-1">
                     {feature.title}
                   </h3>
-                  <p className="relative z-1 leading-[1.6] text-[#b0c4de]">
+                  <p className="relative z-1 leading-[1.6] text-[rgb(var(--landing-text-soft))]">
                     {feature.description}
                   </p>
                 </article>
@@ -159,11 +159,11 @@ const AboutUs = ({ onSignInClick = () => {} }: AboutUsProps) => {
         </section>
 
         <section id="benefits" className="px-[5%] md:px-6">
-          <h2 className="mb-8 text-center text-[clamp(2rem,5vw,2.6rem)] font-semibold text-[#3b82f6]">
+          <h2 className="mb-8 font-semibold text-center text-[clamp(2rem,5vw,2.6rem)] text-[rgb(var(--brand-blue))]">
             Why AutoAudit?
           </h2>
-          <div className="mx-auto max-w-300 rounded-[20px] border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.03)] p-12 backdrop-blur-[10px] md:p-8">
-            <p className="text-[1.05rem] leading-[1.8] text-[#b0c4de]">
+          <div className="p-12 mx-auto border md:p-8 max-w-300 rounded-[20px] border-[rgb(var(--brand-blue)/0.1)] bg-[rgb(255_255_255/0.03)] backdrop-blur-[10px]">
+            <p className="text-[1.05rem] leading-[1.8] text-[rgb(var(--landing-text-soft))]">
               In today&apos;s rapidly evolving threat landscape, manual
               compliance reviews become inefficient. Cloud misconfiguration
               remains one of the leading causes of data breaches, with
@@ -171,7 +171,7 @@ const AboutUs = ({ onSignInClick = () => {} }: AboutUsProps) => {
               expanding cloud footprints.
             </p>
             <br />
-            <p className="text-[1.05rem] leading-[1.8] text-[#b0c4de]">
+            <p className="text-[1.05rem] leading-[1.8] text-[rgb(var(--landing-text-soft))]">
               AutoAudit was born from the recognition that compliance
               shouldn&apos;t be a burden. Our platform transforms complex
               regulatory frameworks into automated, actionable insights,
@@ -182,19 +182,19 @@ const AboutUs = ({ onSignInClick = () => {} }: AboutUsProps) => {
         </section>
 
         <section className="px-[5%] md:px-6">
-          <h2 className="mb-8 text-center text-[clamp(2rem,5vw,2.6rem)] font-semibold text-[#3b82f6]">
+          <h2 className="mb-8 font-semibold text-center text-[clamp(2rem,5vw,2.6rem)] text-[rgb(var(--brand-blue))]">
             Industry Standards We Support
           </h2>
-          <div className="mx-auto grid max-w-300 grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-8">
+          <div className="grid gap-8 mx-auto max-w-300 grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
             {standards.map((standard) => (
               <article
                 key={standard.title}
-                className="rounded-2xl border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.03)] p-8 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#3b82f6]"
+                className="p-8 rounded-2xl border transition-all duration-300 hover:-translate-y-1.5 border-[rgb(var(--brand-blue)/0.1)] bg-[rgb(255_255_255/0.03)] hover:border-[rgb(var(--brand-blue))]"
               >
-                <h3 className="mb-2.5 text-[1.2rem] font-semibold text-[#3b82f6]">
+                <h3 className="mb-2.5 font-semibold text-[1.2rem] text-[rgb(var(--brand-blue))]">
                   {standard.title}
                 </h3>
-                <p className="text-[0.95rem] leading-[1.6] text-[#b0c4de]">
+                <p className="text-[0.95rem] leading-[1.6] text-[rgb(var(--landing-text-soft))]">
                   {standard.description}
                 </p>
               </article>
@@ -203,11 +203,11 @@ const AboutUs = ({ onSignInClick = () => {} }: AboutUsProps) => {
         </section>
 
         <section className="px-[5%] md:px-6">
-          <h2 className="mb-8 text-center text-[clamp(2rem,5vw,2.6rem)] font-semibold text-[#3b82f6]">
+          <h2 className="mb-8 font-semibold text-center text-[clamp(2rem,5vw,2.6rem)] text-[rgb(var(--brand-blue))]">
             Our Commitment
           </h2>
-          <div className="mx-auto max-w-300 rounded-[20px] border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.03)] p-12 backdrop-blur-[10px] md:p-8">
-            <p className="text-[1.05rem] leading-[1.8] text-[#b0c4de]">
+          <div className="p-12 mx-auto border md:p-8 max-w-300 rounded-[20px] border-[rgb(var(--brand-blue)/0.1)] bg-[rgb(255_255_255/0.03)] backdrop-blur-[10px]">
+            <p className="text-[1.05rem] leading-[1.8] text-[rgb(var(--landing-text-soft))]">
               We&apos;re committed to providing enterprise-grade security tools
               that are both powerful and accessible. Our team continuously
               researches emerging threats and evolving compliance requirements
@@ -215,7 +215,7 @@ const AboutUs = ({ onSignInClick = () => {} }: AboutUsProps) => {
               posture management.
             </p>
             <br />
-            <p className="text-[1.05rem] leading-[1.8] text-[#b0c4de]">
+            <p className="text-[1.05rem] leading-[1.8] text-[rgb(var(--landing-text-soft))]">
               Privacy and security are fundamental to everything we do. We
               employ bank-level encryption, follow zero-trust principles, and
               maintain strict data governance practices to protect your
@@ -224,16 +224,16 @@ const AboutUs = ({ onSignInClick = () => {} }: AboutUsProps) => {
           </div>
         </section>
 
-        <section className="mx-[5%] mb-16 rounded-[30px] border border-[rgba(59,130,246,0.2)] bg-linear-to-br from-[#1e3a5f] to-[#0a1628] px-[5%] py-16 text-center md:mx-6 md:px-6 md:py-12">
-          <h2 className="mb-4 text-[clamp(2rem,5vw,2.6rem)] font-semibold">
+        <section className="mx-[5%] mb-16 rounded-[30px] border border-[rgb(var(--brand-blue)/0.2)] bg-linear-to-br from-[rgb(var(--landing-bg-alt-start))] to-[rgb(var(--landing-bg-base))] px-[5%] py-16 text-center md:mx-6 md:px-6 md:py-12">
+          <h2 className="mb-4 font-semibold text-[clamp(2rem,5vw,2.6rem)]">
             Ready to Transform Your Compliance Strategy?
           </h2>
-          <p className="mb-8 text-[1.1rem] text-[#b0c4de]">
+          <p className="mb-8 text-[1.1rem] text-[rgb(var(--landing-text-soft))]">
             Join organizations worldwide who trust AutoAudit to secure their
             cloud environments.
           </p>
           <button
-            className="rounded-full bg-linear-to-br from-[#3b82f6] to-[#2563eb] px-10 py-3.5 text-base font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(59,130,246,0.35)]"
+            className="py-3.5 px-10 text-base font-semibold text-white rounded-full transition duration-200 hover:-translate-y-0.5 bg-linear-to-br from-[rgb(var(--brand-blue))] to-[rgb(var(--brand-blue-deep))] hover:shadow-[0_10px_25px_rgb(var(--brand-blue)/0.35)]"
             onClick={onSignInClick}
           >
             Get Started Today

@@ -274,7 +274,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 		return (
 			<div
 				className={`min-h-screen p-6 transition-colors duration-300 ${
-					isDarkMode ? "bg-(--bg-primary)" : "bg-slate-50"
+					isDarkMode ? "bg-primary" : "bg-slate-50"
 				}`}
 				style={{
 					marginLeft: `${sidebarWidth}px`,
@@ -282,8 +282,8 @@ const ScansPage: React.FC<ScansPageProps> = ({
 					transition: "margin-left 0.4s ease, width 0.4s ease",
 				}}
 			>
-				<div className="max-w-300 mx-auto">
-					<div className="flex flex-col items-center justify-center py-16 text-(--text-secondary)">
+				<div className="mx-auto max-w-300">
+					<div className="flex flex-col justify-center items-center py-16 text-(--text-secondary)">
 						<Loader2 size={32} className="animate-spin" />
 						<p className="mt-4">Loading scans...</p>
 					</div>
@@ -295,7 +295,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 	return (
 		<div
 			className={`min-h-screen p-6 transition-colors duration-300 ${
-				isDarkMode ? "bg-(--bg-primary)" : "bg-slate-50"
+				isDarkMode ? "bg-primary" : "bg-slate-50"
 			}`}
 			style={{
 				marginLeft: `${sidebarWidth}px`,
@@ -303,23 +303,23 @@ const ScansPage: React.FC<ScansPageProps> = ({
 				transition: "margin-left 0.4s ease, width 0.4s ease",
 			}}
 		>
-			<div className="max-w-300 mx-auto">
+			<div className="mx-auto max-w-300">
 				{/* Page Header */}
-				<div className="flex items-center justify-between mb-6 max-md:flex-col max-md:items-start max-md:gap-4">
-					<div className="flex items-center gap-4 text-(--text-primary)">
+				<div className="flex justify-between items-center mb-6 max-md:flex-col max-md:items-start max-md:gap-4">
+					<div className="flex gap-4 items-center text-(--text-primary)">
 						<Search size={24} className="text-blue-500" />
 						<div>
-							<h1 className="text-2xl font-bold text-(--text-primary) m-0">
+							<h1 className="m-0 text-2xl font-bold text-(--text-primary)">
 								Compliance Scans
 							</h1>
-							<p className="text-sm text-(--text-secondary) m-0">
+							<p className="m-0 text-sm text-(--text-secondary)">
 								Run and manage compliance scans against your
 								M365 connections
 							</p>
 						</div>
 					</div>
 					<button
-						className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+						className="inline-flex gap-2 items-center py-2 px-4 text-sm font-medium text-white bg-blue-500 rounded-lg transition hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
 						onClick={() => setShowForm(!showForm)}
 						disabled={connections.length === 0}
 					>
@@ -330,7 +330,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 
 				{/* Error Banner */}
 				{error && (
-					<div className="flex items-center gap-2 px-4 py-3 rounded-lg mb-6 bg-red-500/10 border border-red-500/30 text-red-500">
+					<div className="flex gap-2 items-center py-3 px-4 mb-6 text-red-500 rounded-lg border bg-red-500/10 border-red-500/30">
 						<AlertCircle size={18} />
 						<span>{error}</span>
 					</div>
@@ -338,7 +338,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 
 				{/* Warning Banner */}
 				{connections.length === 0 && !isLoading && (
-					<div className="flex items-center gap-2 px-4 py-3 rounded-lg mb-6 bg-orange-500/10 border border-orange-500/30 text-orange-500">
+					<div className="flex gap-2 items-center py-3 px-4 mb-6 text-orange-500 rounded-lg border bg-orange-500/10 border-orange-500/30">
 						<AlertCircle size={18} />
 						<span>
 							You need to add a connection before you can run
@@ -349,8 +349,8 @@ const ScansPage: React.FC<ScansPageProps> = ({
 
 				{/* New Scan Form */}
 				{showForm && (
-					<div className="bg-secondary border border-(--border-color) rounded-xl p-6 mb-6">
-						<h3 className="text-(--text-primary) text-lg font-semibold mb-5">
+					<div className="p-6 mb-6 rounded-xl border bg-secondary border-(--border-color)">
+						<h3 className="mb-5 text-lg font-semibold text-(--text-primary)">
 							New Compliance Scan
 						</h3>
 						<form onSubmit={handleSubmit}>
@@ -358,7 +358,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 								<div className="mb-4">
 									<label
 										htmlFor="m365_connection_id"
-										className="block text-(--text-secondary) text-sm font-medium mb-2"
+										className="block mb-2 text-sm font-medium text-(--text-secondary)"
 									>
 										Cloud Platform
 									</label>
@@ -369,15 +369,16 @@ const ScansPage: React.FC<ScansPageProps> = ({
 										onChange={handleChange}
 										required
 										disabled={isSubmitting}
-										className="w-full px-3.5 py-2.5 bg-(--bg-tertiary) border border-(--border-color) rounded-lg text-(--text-primary) text-sm transition-colors duration-200 cursor-pointer focus:outline-none focus:border-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+										className="py-2.5 px-3.5 w-full text-sm rounded-lg border transition-colors duration-200 cursor-pointer focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed bg-(--bg-tertiary) border-(--border-color) text-(--text-primary)"
 									>
-										<option value="">
+										<option value="" className="bg-primary">
 											Select a cloud platform
 										</option>
 										{connections.map((conn) => (
 											<option
 												key={conn.id}
 												value={conn.id}
+												className="bg-primary"
 											>
 												{conn.name}
 											</option>
@@ -388,7 +389,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 								<div className="mb-4">
 									<label
 										htmlFor="benchmark_key"
-										className="block text-(--text-secondary) text-sm font-medium mb-2"
+										className="block mb-2 text-sm font-medium text-(--text-secondary)"
 									>
 										Benchmark
 									</label>
@@ -399,15 +400,16 @@ const ScansPage: React.FC<ScansPageProps> = ({
 										onChange={handleChange}
 										required
 										disabled={isSubmitting}
-										className="w-full px-3.5 py-2.5 bg-(--bg-tertiary) border border-(--border-color) rounded-lg text-(--text-primary) text-sm transition-colors duration-200 cursor-pointer focus:outline-none focus:border-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+										className="py-2.5 px-3.5 w-full text-sm rounded-lg border transition-colors duration-200 cursor-pointer focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed bg-(--bg-tertiary) border-(--border-color) text-(--text-primary)"
 									>
-										<option value="">
+										<option value="" className="bg-primary">
 											Select a benchmark
 										</option>
 										{benchmarks.map((bench) => (
 											<option
 												key={`${bench.framework}|${bench.slug}|${bench.version}`}
 												value={`${bench.framework}|${bench.slug}|${bench.version}`}
+												className="bg-primary"
 											>
 												{bench.name} ({bench.version})
 											</option>
@@ -416,10 +418,10 @@ const ScansPage: React.FC<ScansPageProps> = ({
 								</div>
 							</div>
 
-							<div className="flex justify-end gap-3 mt-2">
+							<div className="flex gap-3 justify-end mt-2">
 								<button
 									type="button"
-									className="toolbar-button secondary"
+									className="flex gap-2 items-center py-2 px-4 font-medium rounded-lg border-none cursor-pointer outline-none text-[14px] [transition:all_0.3s_ease] bg-secondary"
 									onClick={() => setShowForm(false)}
 									disabled={isSubmitting}
 								>
@@ -427,7 +429,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 								</button>
 								<button
 									type="submit"
-									className="toolbar-button primary"
+									className="flex gap-2 items-center py-2 px-4 font-medium rounded-lg border-none cursor-pointer outline-none text-[14px] [transition:all_0.3s_ease] bg-primary"
 									disabled={isSubmitting}
 								>
 									{isSubmitting ? (
@@ -451,17 +453,17 @@ const ScansPage: React.FC<ScansPageProps> = ({
 				)}
 
 				{/* Scans List */}
-				<div className="bg-secondary border border-dashed border-slate-600 rounded-xl overflow-hidden">
+				<div className="overflow-hidden rounded-xl border border-dashed bg-secondary border-slate-600">
 					{scans.length === 0 ? (
-						<div className="text-center py-16 px-5">
+						<div className="py-16 px-5 text-center">
 							<Search
 								size={48}
-								className="text-(--text-tertiary) mb-4 mx-auto"
+								className="mx-auto mb-4 text-(--text-tertiary)"
 							/>
-							<h3 className="text-(--text-primary) text-lg font-semibold mb-2">
+							<h3 className="mb-2 text-lg font-semibold text-(--text-primary)">
 								No scans yet
 							</h3>
-							<p className="text-(--text-secondary) text-sm">
+							<p className="text-sm text-(--text-secondary)">
 								Run your first compliance scan to see results
 								here.
 							</p>
@@ -470,19 +472,19 @@ const ScansPage: React.FC<ScansPageProps> = ({
 						<table className="w-full border-collapse max-md:block max-md:overflow-x-auto">
 							<thead>
 								<tr>
-									<th className="text-left px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary)">
+									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
 										Status
 									</th>
-									<th className="text-left px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary)">
+									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
 										Benchmark
 									</th>
-									<th className="text-left px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary)">
+									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
 										Connection
 									</th>
-									<th className="text-left px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary)">
+									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
 										Started
 									</th>
-									<th className="text-left px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary)">
+									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
 										Results
 									</th>
 									<th className="text-right px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary) w-[1%] whitespace-nowrap">
@@ -499,7 +501,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 										}
 										className="cursor-pointer transition-colors duration-200 hover:bg-(--bg-tertiary) last:[&>td]:border-b-0"
 									>
-										<td className="px-5 py-4 text-(--text-primary) text-sm border-b border-(--border-color)]">
+										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											<span
 												className={getStatusBadgeClasses(
 													scan.status,
@@ -509,7 +511,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 												{getStatusText(scan.status)}
 											</span>
 										</td>
-										<td className="px-5 py-4 text-(--text-primary) text-sm border-b border-(--border-color)]">
+										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											<span className="block font-medium">
 												{scan.benchmark || "-"}
 											</span>
@@ -517,13 +519,13 @@ const ScansPage: React.FC<ScansPageProps> = ({
 												{scan.version || ""}
 											</span>
 										</td>
-										<td className="px-5 py-4 text-(--text-primary) text-sm border-b border-(--border-color)]">
+										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											{scan.connection_name ||
 												(scan.m365_connection_id
 													? `Connection #${scan.m365_connection_id}`
 													: "-")}
 										</td>
-										<td className="px-5 py-4 text-(--text-primary) text-sm border-b border-(--border-color)]">
+										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											{(() => {
 												const dateString =
 													scan.started_at ||
@@ -533,17 +535,17 @@ const ScansPage: React.FC<ScansPageProps> = ({
 													formatDate(dateString);
 												return (
 													<div className="flex flex-col gap-0.5 leading-tight">
-														<div className="text-(--text-primary) font-semibold text-[13px]">
+														<div className="font-semibold text-(--text-primary) text-[13px]">
 															{dt.date}
 														</div>
-														<div className="text-(--text-tertiary) text-xs">
+														<div className="text-xs text-(--text-tertiary)">
 															{dt.time}
 														</div>
 													</div>
 												);
 											})()}
 										</td>
-										<td className="px-5 py-4 text-(--text-primary) text-sm border-b border-(--border-color)]">
+										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											{scan.status === "completed" ||
 											scan.status === "running" ? (
 												<div className="flex gap-3 text-[13px]">
@@ -585,7 +587,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 											) => e.stopPropagation()}
 										>
 											<button
-												className="toolbar-button danger px-2.5 py-1.5 text-[13px]"
+												className="flex gap-2 items-center py-1.5 px-2.5 font-medium rounded-lg border-none cursor-pointer outline-none [transition:all_0.3s_ease] text-[rgb(var(--accent-bad))] text-[13px]"
 												onClick={() =>
 													handleDelete(scan.id)
 												}

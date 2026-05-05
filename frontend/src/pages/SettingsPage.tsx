@@ -76,12 +76,12 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
         transition: "margin-left 0.4s ease, width 0.4s ease",
       }}
     >
-      <div className="mx-auto flex max-w-250 flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-text-strong">
+      <div className="flex flex-col gap-6 mx-auto max-w-250">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-4 items-center text-text-strong">
             <Settings size={24} className="shrink-0 text-accent-teal" aria-hidden />
             <div>
-              <h1 className="font-header text-2xl font-bold">Settings</h1>
+              <h1 className="text-2xl font-bold font-header">Settings</h1>
               <p className="mt-0 text-sm text-muted">Workspace preferences and application settings.</p>
             </div>
           </div>
@@ -89,7 +89,7 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
 
         {error ? (
           <div
-            className="flex items-center gap-2 rounded-lg border border-[rgb(var(--accent-bad)/0.35)] bg-[rgb(var(--accent-bad)/0.1)] px-4 py-3 text-sm text-accent-bad"
+            className="flex gap-2 items-center py-3 px-4 text-sm rounded-lg border border-[rgb(var(--accent-bad)/0.35)] bg-[rgb(var(--accent-bad)/0.1)] text-accent-bad"
             role="alert"
           >
             <AlertCircle size={18} className="shrink-0" aria-hidden />
@@ -98,45 +98,45 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
         ) : null}
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center px-5 py-16 text-muted">
+          <div className="flex flex-col justify-center items-center py-16 px-5 text-muted">
             <Loader2 size={32} className="animate-spin" aria-hidden />
             <p className="mt-4 text-sm">Loading settings...</p>
           </div>
         ) : (
           <div className="card bg-secondary">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+              <div className="flex flex-col gap-1 min-w-0">
                 <div className="text-sm font-semibold text-text-strong">Confirm before delete</div>
-                <div className="text-[13px] leading-snug text-muted">
+                <div className="leading-snug text-[13px] text-muted">
                   Show a confirmation dialog before deleting scans.
                 </div>
               </div>
               <label
-                className="relative inline-block h-6.5 w-12.5 shrink-0 cursor-pointer has-disabled:cursor-not-allowed has-disabled:opacity-50"
+                className="inline-block relative cursor-pointer h-6.5 w-12.5 shrink-0 has-disabled:cursor-not-allowed has-disabled:opacity-50"
                 aria-label="Confirm before delete"
               >
                 <input
                   type="checkbox"
-                  className="peer sr-only"
+                  className="sr-only peer"
                   checked={draftConfirmDeleteEnabled}
                   onChange={handleToggleConfirmDelete}
                   disabled={isSaving}
                 />
                 <span
-                  className="absolute inset-0 rounded-[26px] bg-[rgb(var(--text-muted)/0.45)] transition-colors peer-checked:bg-accent-teal"
+                  className="absolute inset-0 transition-colors rounded-[26px] bg-[rgb(var(--text-muted)/0.45)] peer-checked:bg-accent-teal"
                   aria-hidden
                 />
                 <span
-                  className="absolute left-0.75 top-0.75 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-6"
+                  className="absolute w-5 h-5 bg-white rounded-full shadow transition-transform left-0.75 top-0.75 peer-checked:translate-x-6"
                   aria-hidden
                 />
               </label>
             </div>
 
-            <div className="mt-4 flex flex-wrap justify-end gap-3">
+            <div className="flex flex-wrap gap-3 justify-end mt-4">
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border-subtle bg-surface-2 px-4 py-2 text-sm font-medium text-text-strong transition-all duration-300 hover:-translate-y-px hover:bg-border-subtle disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                className="inline-flex gap-2 justify-center items-center py-2 px-4 text-sm font-medium rounded-lg border transition-all duration-300 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed border-border-subtle bg-surface-2 text-text-strong hover:bg-border-subtle disabled:hover:translate-y-0"
                 onClick={handleReset}
                 disabled={!hasChanges || isSaving}
               >
@@ -144,7 +144,7 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
               </button>
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[rgb(var(--accent-teal)/0.4)] bg-accent-teal px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-px hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                className="inline-flex gap-2 justify-center items-center py-2 px-4 text-sm font-semibold text-white rounded-lg border shadow-lg transition-all duration-300 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed border-[rgb(var(--accent-teal)/0.4)] bg-accent-teal hover:brightness-105 disabled:hover:translate-y-0"
                 onClick={handleSave}
                 disabled={!hasChanges || isSaving}
               >

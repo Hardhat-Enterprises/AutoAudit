@@ -50,15 +50,15 @@ const FAQItem: React.FC<FAQItemProps> = ({
   isActive,
   onToggle,
 }) => (
-  <article className="mb-4 overflow-hidden rounded-[15px] border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.02)]">
+  <article className="overflow-hidden mb-4 border rounded-[15px] border-[rgb(var(--brand-blue)/0.1)] bg-[rgb(255_255_255/0.02)]">
     <button
-      className="flex w-full items-center justify-between bg-transparent px-6 py-5 text-left text-base text-white transition hover:bg-[rgba(255,255,255,0.04)]"
+      className="flex justify-between items-center py-5 px-6 w-full text-base text-left text-white bg-transparent transition hover:bg-[rgb(255_255_255/0.04)]"
       type="button"
       onClick={onToggle}
     >
       <span className="pr-4 font-medium">{question}</span>
       <span
-        className={`text-[1.4rem] text-[#3b82f6] transition-transform duration-300 ${
+        className={`text-[1.4rem] text-[rgb(var(--brand-blue))] transition-transform duration-300 ${
           isActive ? "rotate-45" : ""
         }`}
       >
@@ -71,7 +71,7 @@ const FAQItem: React.FC<FAQItemProps> = ({
         isActive ? "max-h-[500px]" : "max-h-0"
       }`}
     >
-      <div className="px-6 pb-6 text-[#b0c4de] leading-[1.6]">{answer}</div>
+      <div className="px-6 pb-6 text-[rgb(var(--landing-text-soft))] leading-[1.6]">{answer}</div>
     </div>
   </article>
 );
@@ -82,14 +82,14 @@ const FAQSection: React.FC = () => {
   return (
     <section
       id="benefits"
-      className="bg-gradient-to-br from-[#0a1628] to-[#1e3a5f] px-[5%] py-24"
+      className="bg-gradient-to-br from-[rgb(var(--landing-bg-base))] to-[rgb(var(--landing-bg-alt-start))] px-[5%] py-24"
     >
       <div className="mx-auto max-w-[900px]">
         <div className="mb-10 text-center">
-          <h2 className="mb-3 text-[2.4rem] font-semibold text-white">
+          <h2 className="mb-3 font-semibold text-white text-[2.4rem]">
             Frequently Asked Questions
           </h2>
-          <p className="text-[#b0c4de]">
+          <p className="text-[rgb(var(--landing-text-soft))]">
             Quick answers to common questions about AutoAudit
           </p>
         </div>

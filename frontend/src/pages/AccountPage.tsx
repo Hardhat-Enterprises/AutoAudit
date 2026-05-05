@@ -64,10 +64,10 @@ export default function AccountPage({
         width: `calc(100% - ${sidebarWidth}px)`,
       }}
     >
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="p-6 mx-auto max-w-4xl">
         {/* HEADER */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex gap-3 items-center">
             <User size={24} />
             <div>
               <h1 className="text-2xl font-semibold">Account</h1>
@@ -81,7 +81,7 @@ export default function AccountPage({
             type="button"
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition disabled:opacity-50"
+            className="flex gap-2 items-center py-2 px-4 bg-red-600 rounded-lg transition hover:bg-red-700 disabled:opacity-50"
           >
             {isLoggingOut ? (
               <>
@@ -98,10 +98,10 @@ export default function AccountPage({
         </div>
 
         {/* PROFILE CARD (FIXES YOUR PR COMMENTS) */}
-        <div className="p-6 rounded-xl border border-slate-700 bg-secondary shadow-md">
+        <div className="p-6 rounded-xl border shadow-md border-slate-700 bg-secondary">
           <h3 className="text-lg font-semibold">Profile</h3>
 
-          <hr className="border border-slate-600 my-4"/>
+          <hr className="my-4 border border-slate-600"/>
 
           <div className="space-y-3">
             <div className="flex flex-col">

@@ -55,19 +55,19 @@ export default function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps)
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#081b2e]">
+    <div className="flex flex-col min-h-screen bg-[rgb(8_27_46)]">
       <LandingHeader />
 
-      <main className="flex flex-1 items-center justify-center px-6 py-12">
-        <div className="grid w-full max-w-6xl gap-10 lg:grid-cols-2">
+      <main className="flex flex-1 justify-center items-center py-12 px-6">
+        <div className="grid gap-10 w-full max-w-6xl lg:grid-cols-2">
 
           {/* Left side (branding) */}
-          <div className="hidden lg:flex items-center justify-center">
+          <div className="hidden justify-center items-center lg:flex">
             <SignupBrandPanel />
           </div>
 
           {/* Right side (form) */}
-          <div className="flex items-center justify-center">
+          <div className="flex justify-center items-center">
             <SignupFormPanel
               formData={formData}
               onFormChange={handleFormChange}
