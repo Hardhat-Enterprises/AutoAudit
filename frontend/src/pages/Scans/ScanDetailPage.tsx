@@ -143,8 +143,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 
 	const reportRef = useRef<HTMLDivElement | null>(null);
 	const [isExporting, setIsExporting] = useState(false);
-	const [forceLightForExport, setForceLightForExport] =
-		useState(false);
 
 	const loadScan = useCallback(async (): Promise<ScanDetail | null> => {
 		if (!scanId) {
@@ -303,7 +301,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 			return;
 		}
 		setIsExporting(true);
-		setForceLightForExport(true);
 		try {
 			await new Promise<void>((resolve) => {
 				requestAnimationFrame(() => {
@@ -312,12 +309,13 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 			});
 			const el = reportRef.current;
 			if (el) {
-				await exportElementToPdf(el, buildScanExportFilename(scanId));
+				await exportElementToPdf(el, buildScanExportFilename(scanId), {
+					lightOffScreenClone: isDarkMode,
+				});
 			}
 		} catch (err) {
 			console.error("Export failed", err);
 		} finally {
-			setForceLightForExport(false);
 			setIsExporting(false);
 		}
 	};
@@ -407,7 +405,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 		.slice()
 		.sort(compareControlIdAscending);
 
-	const eDark = isDarkMode && !forceLightForExport;
+	const eDark = isDarkMode;
 	const eTextPrimary = eDark ? textPrimary : "text-slate-800";
 	const eTextSecondary = eDark ? textSecondary : "text-slate-500";
 	const eTextTertiary = eDark ? textTertiary : "text-slate-400";

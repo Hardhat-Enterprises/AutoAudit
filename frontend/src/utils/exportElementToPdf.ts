@@ -485,13 +485,61 @@ function prepareCloneForHtml2Canvas(
 	stripAuthorStylesFromCloneDocument(clonedDoc);
 }
 
+function stripIdsFromSubtree(root: HTMLElement): void {
+	root.removeAttribute("id");
+	root.querySelectorAll("[id]").forEach((n) => {
+		n.removeAttribute("id");
+	});
+}
+
 /**
- * Renders a DOM node to a multi-page A4 PDF and triggers download in the browser.
- * Captures the node in vertical html2canvas chunks so device-pixel canvas size
- * stays within browser limits on long reports.
+ * Deep-clones `source`, applies light theme tokens (see `index.css` `.light`),
+ * and appends it off-screen so html2canvas can capture a print-style PDF
+ * without changing the visible DOM.
  */
-export async function exportElementToPdf(
-	element: HTMLElement,
+function mountLightPrintPdfClone(source: HTMLElement): {
+	captureRoot: HTMLElement;
+	cleanup: () => void;
+} {
+	const shell = document.createElement("div");
+	shell.setAttribute("aria-hidden", "true");
+	shell.className = "light";
+	shell.style.cssText = [
+		"position:fixed",
+		"left:-10000px",
+		"top:0",
+		"width:max-content",
+		"min-width:0",
+		"box-sizing:border-box",
+		"pointer-events:none",
+		"z-index:2147483646",
+	].join(";");
+
+	const captureRoot = source.cloneNode(true) as HTMLElement;
+	captureRoot.style.width = `${Math.max(1, Math.ceil(source.scrollWidth))}px`;
+	stripIdsFromSubtree(captureRoot);
+	shell.appendChild(captureRoot);
+	document.body.appendChild(shell);
+	void shell.offsetHeight;
+
+	return {
+		captureRoot,
+		cleanup: () => {
+			shell.remove();
+		},
+	};
+}
+
+export type ExportPdfOptions = {
+	/**
+	 * When true, rasterizes a light-theme off-screen clone so the live `element`
+	 * is not restyled (e.g. dark UI stays dark while the PDF uses light surfaces).
+	 */
+	lightOffScreenClone?: boolean;
+};
+
+async function rasterizeElementToPdf(
+	captureTarget: HTMLElement,
 	filename: string,
 ): Promise<void> {
 	const pdf = new jsPDF({
@@ -504,8 +552,8 @@ export async function exportElementToPdf(
 	const contentWidth = pageWidth - MARGIN_PT * 2;
 	const contentHeight = pageHeight - MARGIN_PT * 2;
 
-	const totalWidth = Math.max(1, Math.ceil(element.scrollWidth));
-	const totalHeight = Math.max(1, Math.ceil(element.scrollHeight));
+	const totalWidth = Math.max(1, Math.ceil(captureTarget.scrollWidth));
+	const totalHeight = Math.max(1, Math.ceil(captureTarget.scrollHeight));
 	const scale = effectiveCaptureScale(
 		totalWidth,
 		DEFAULT_CAPTURE_SCALE,
@@ -516,7 +564,7 @@ export async function exportElementToPdf(
 
 	for (let y = 0; y < totalHeight; y += chunkCss) {
 		const sliceH = Math.min(chunkCss, totalHeight - y);
-		const canvas = await html2canvas(element, {
+		const canvas = await html2canvas(captureTarget, {
 			...sharedHtml2CanvasOptions,
 			scale,
 			x: 0,
@@ -526,7 +574,7 @@ export async function exportElementToPdf(
 			windowWidth: totalWidth,
 			windowHeight: totalHeight,
 			onclone: (clonedDoc, clonedRoot) => {
-				prepareCloneForHtml2Canvas(element, clonedDoc, clonedRoot);
+				prepareCloneForHtml2Canvas(captureTarget, clonedDoc, clonedRoot);
 			},
 		});
 
@@ -540,4 +588,28 @@ export async function exportElementToPdf(
 	}
 
 	pdf.save(filename);
+}
+
+/**
+ * Renders a DOM node to a multi-page A4 PDF and triggers download in the browser.
+ * Captures the node in vertical html2canvas chunks so device-pixel canvas size
+ * stays within browser limits on long reports.
+ */
+export async function exportElementToPdf(
+	element: HTMLElement,
+	filename: string,
+	options?: ExportPdfOptions,
+): Promise<void> {
+	const useLightClone = options?.lightOffScreenClone ?? false;
+	if (!useLightClone) {
+		await rasterizeElementToPdf(element, filename);
+		return;
+	}
+
+	const { captureRoot, cleanup } = mountLightPrintPdfClone(element);
+	try {
+		await rasterizeElementToPdf(captureRoot, filename);
+	} finally {
+		cleanup();
+	}
 }
