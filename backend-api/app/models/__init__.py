@@ -12,6 +12,8 @@ from app.models.compliance import Scan
 from app.models.evidence_validation import EvidenceValidation
 from app.models.contact import ContactSubmission, SubmissionNote, SubmissionHistory
 from app.models.user_settings import UserSettings
+from app.models.user_settings import UserSettings
+from app.models.control_verification_template import ControlVerificationTemplate
 
 __all__ = [
     "User",
@@ -29,4 +31,5 @@ __all__ = [
     "SubmissionNote",
     "SubmissionHistory",
     "UserSettings",
+    "ControlVerificationTemplate",
 ]
