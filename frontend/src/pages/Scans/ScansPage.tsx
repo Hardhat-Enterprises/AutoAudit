@@ -273,12 +273,15 @@ const ScansPage: React.FC<ScansPageProps> = ({
 	if (isLoading) {
 		return (
 			<div
-				className={`min-h-screen p-6 transition-colors duration-300 ${
+				className={`min-h-screen px-3 py-5 transition-colors duration-300 sm:px-4 md:px-6 ${
 					isDarkMode ? "bg-primary" : "bg-slate-50"
 				}`}
 				style={{
-					marginLeft: `${sidebarWidth}px`,
-					width: `calc(100% - ${sidebarWidth}px)`,
+					marginLeft: sidebarWidth === 0 ? "80px" : `${sidebarWidth}px`,
+					width:
+						sidebarWidth === 0
+							? "calc(100% - 80px)"
+							: `calc(100% - ${sidebarWidth}px)`,
 					transition: "margin-left 0.4s ease, width 0.4s ease",
 				}}
 			>
@@ -294,32 +297,35 @@ const ScansPage: React.FC<ScansPageProps> = ({
 
 	return (
 		<div
-			className={`min-h-screen p-6 transition-colors duration-300 ${
+			className={`min-h-screen px-3 py-5 transition-colors duration-300 sm:px-4 md:px-6 ${
 				isDarkMode ? "bg-primary" : "bg-slate-50"
 			}`}
 			style={{
-				marginLeft: `${sidebarWidth}px`,
-				width: `calc(100% - ${sidebarWidth}px)`,
+				marginLeft: sidebarWidth === 0 ? "80px" : `${sidebarWidth}px`,
+				width:
+					sidebarWidth === 0
+						? "calc(100% - 80px)"
+						: `calc(100% - ${sidebarWidth}px)`,
 				transition: "margin-left 0.4s ease, width 0.4s ease",
 			}}
 		>
-			<div className="mx-auto max-w-300">
-				{/* Page Header */}
-				<div className="flex justify-between items-center mb-6 max-md:flex-col max-md:items-start max-md:gap-4">
-					<div className="flex gap-4 items-center text-(--text-primary)">
+			<div className="mx-auto w-full max-w-300">
+				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div className="flex min-w-0 gap-3 items-center text-(--text-primary) sm:gap-4">
 						<Search size={24} className="text-blue-500" />
 						<div>
-							<h1 className="m-0 text-2xl font-bold text-(--text-primary)">
+							<h1 className="m-0 text-xl font-bold text-(--text-primary) sm:text-2xl">
 								Compliance Scans
 							</h1>
-							<p className="m-0 text-sm text-(--text-secondary)">
+							<p className="m-0 text-sm leading-snug text-(--text-secondary)">
 								Run and manage compliance scans against your
 								M365 connections
 							</p>
 						</div>
 					</div>
+
 					<button
-						className="inline-flex gap-2 items-center py-2 px-4 text-sm font-medium text-white bg-blue-500 rounded-lg transition hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+						className="inline-flex w-full justify-center gap-2 items-center py-2 px-4 text-sm font-medium text-white bg-blue-500 rounded-lg transition hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed sm:w-auto"
 						onClick={() => setShowForm(!showForm)}
 						disabled={connections.length === 0}
 					>
@@ -328,17 +334,15 @@ const ScansPage: React.FC<ScansPageProps> = ({
 					</button>
 				</div>
 
-				{/* Error Banner */}
 				{error && (
-					<div className="flex gap-2 items-center py-3 px-4 mb-6 text-red-500 rounded-lg border bg-red-500/10 border-red-500/30">
+					<div className="mb-6 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-500">
 						<AlertCircle size={18} />
 						<span>{error}</span>
 					</div>
 				)}
 
-				{/* Warning Banner */}
 				{connections.length === 0 && !isLoading && (
-					<div className="flex gap-2 items-center py-3 px-4 mb-6 text-orange-500 rounded-lg border bg-orange-500/10 border-orange-500/30">
+					<div className="mb-6 flex items-start gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-orange-500">
 						<AlertCircle size={18} />
 						<span>
 							You need to add a connection before you can run
@@ -347,14 +351,14 @@ const ScansPage: React.FC<ScansPageProps> = ({
 					</div>
 				)}
 
-				{/* New Scan Form */}
 				{showForm && (
-					<div className="p-6 mb-6 rounded-xl border bg-secondary border-(--border-color)">
+					<div className="mb-6 rounded-xl border bg-secondary border-(--border-color) p-4 sm:p-6">
 						<h3 className="mb-5 text-lg font-semibold text-(--text-primary)">
 							New Compliance Scan
 						</h3>
+
 						<form onSubmit={handleSubmit}>
-							<div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+							<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 								<div className="mb-4">
 									<label
 										htmlFor="m365_connection_id"
@@ -418,18 +422,19 @@ const ScansPage: React.FC<ScansPageProps> = ({
 								</div>
 							</div>
 
-							<div className="flex gap-3 justify-end mt-2">
+							<div className="mt-2 flex flex-col gap-3 sm:flex-row sm:justify-end">
 								<button
 									type="button"
-									className="flex gap-2 items-center py-2 px-4 font-medium rounded-lg border-none cursor-pointer outline-none text-[14px] [transition:all_0.3s_ease] bg-secondary"
+									className="flex justify-center gap-2 items-center py-2 px-4 font-medium rounded-lg border-none cursor-pointer outline-none text-[14px] [transition:all_0.3s_ease] bg-secondary"
 									onClick={() => setShowForm(false)}
 									disabled={isSubmitting}
 								>
 									Cancel
 								</button>
+
 								<button
 									type="submit"
-									className="flex gap-2 items-center py-2 px-4 font-medium rounded-lg border-none cursor-pointer outline-none text-[14px] [transition:all_0.3s_ease] bg-primary"
+									className="flex justify-center gap-2 items-center py-2 px-4 font-medium rounded-lg border-none cursor-pointer outline-none text-[14px] [transition:all_0.3s_ease] bg-primary"
 									disabled={isSubmitting}
 								>
 									{isSubmitting ? (
@@ -452,7 +457,6 @@ const ScansPage: React.FC<ScansPageProps> = ({
 					</div>
 				)}
 
-				{/* Scans List */}
 				<div className="overflow-hidden rounded-xl border border-dashed bg-secondary border-slate-600">
 					{scans.length === 0 ? (
 						<div className="py-16 px-5 text-center">
@@ -469,151 +473,167 @@ const ScansPage: React.FC<ScansPageProps> = ({
 							</p>
 						</div>
 					) : (
-						<table className="w-full border-collapse max-md:block max-md:overflow-x-auto">
-							<thead>
-								<tr>
-									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
-										Status
-									</th>
-									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
-										Benchmark
-									</th>
-									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
-										Connection
-									</th>
-									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
-										Started
-									</th>
-									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
-										Results
-									</th>
-									<th className="text-right px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary) w-[1%] whitespace-nowrap">
-										Actions
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								{scans.map((scan) => (
-									<tr
-										key={scan.id}
-										onClick={() =>
-											navigate(`/scans/${scan.id}`)
-										}
-										className="cursor-pointer transition-colors duration-200 hover:bg-(--bg-tertiary) last:[&>td]:border-b-0"
-									>
-										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
-											<span
-												className={getStatusBadgeClasses(
-													scan.status,
-												)}
-											>
-												{getStatusIcon(scan.status)}
-												{getStatusText(scan.status)}
-											</span>
-										</td>
-										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
-											<span className="block font-medium">
-												{scan.benchmark || "-"}
-											</span>
-											<span className="block text-xs text-(--text-tertiary)">
-												{scan.version || ""}
-											</span>
-										</td>
-										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
-											{scan.connection_name ||
-												(scan.m365_connection_id
-													? `Connection #${scan.m365_connection_id}`
-													: "-")}
-										</td>
-										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
-											{(() => {
-												const dateString =
-													scan.started_at ||
-													scan.created_at;
-												if (!dateString) return "-";
-												const dt =
-													formatDate(dateString);
-												return (
-													<div className="flex flex-col gap-0.5 leading-tight">
-														<div className="font-semibold text-(--text-primary) text-[13px]">
-															{dt.date}
-														</div>
-														<div className="text-xs text-(--text-tertiary)">
-															{dt.time}
-														</div>
-													</div>
-												);
-											})()}
-										</td>
-										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
-											{scan.status === "completed" ||
-											scan.status === "running" ? (
-												<div className="flex gap-3 text-[13px]">
-													<span className="text-emerald-500">
-														{scan.passed_count || 0}{" "}
-														passed
-													</span>
-													<span className="text-red-500">
-														{scan.failed_count || 0}{" "}
-														failed
-													</span>
-													{scan.status ===
-														"running" &&
-														(scan.total_controls ||
-															0) > 0 && (
-															<span>
-																(
-																{(scan.passed_count ||
-																	0) +
-																	(scan.failed_count ||
-																		0) +
-																	(scan.error_count ||
-																		0)}
-																/
-																{scan.total_controls ||
-																	0}
-																)
-															</span>
-														)}
-												</div>
-											) : (
-												"-"
-											)}
-										</td>
-										<td
-											className="text-right px-5 py-4 text-sm border-b border-(--border-color)] w-[1%] whitespace-nowrap"
-											onClick={(
-												e: React.MouseEvent<HTMLTableCellElement>,
-											) => e.stopPropagation()}
-										>
-											<button
-												className="flex gap-2 items-center py-1.5 px-2.5 font-medium rounded-lg border-none cursor-pointer outline-none [transition:all_0.3s_ease] text-[rgb(var(--accent-bad))] text-[13px]"
-												onClick={() =>
-													handleDelete(scan.id)
-												}
-												disabled={
-													deletingId === scan.id
-												}
-											>
-												{deletingId === scan.id ? (
-													<Loader2
-														size={14}
-														className="animate-spin"
-													/>
-												) : (
-													<Trash2 size={14} />
-												)}
-												<span>
-													{deletingId === scan.id
-														? "Deleting..."
-														: "Delete"}
-												</span>
-											</button>
-										</td>
+						<div className="w-full overflow-x-auto">
+							<table className="w-full min-w-[760px] border-collapse">
+								<thead>
+									<tr>
+										<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
+											Status
+										</th>
+										<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
+											Benchmark
+										</th>
+										<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
+											Connection
+										</th>
+										<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
+											Started
+										</th>
+										<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
+											Results
+										</th>
+										<th className="text-right px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary) w-[1%] whitespace-nowrap">
+											Actions
+										</th>
 									</tr>
-								))}
-							</tbody>
-						</table>
+								</thead>
+
+								<tbody>
+									{scans.map((scan) => (
+										<tr
+											key={scan.id}
+											onClick={() =>
+												navigate(`/scans/${scan.id}`)
+											}
+											className="cursor-pointer transition-colors duration-200 hover:bg-(--bg-tertiary) last:[&>td]:border-b-0"
+										>
+											<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
+												<span
+													className={getStatusBadgeClasses(
+														scan.status,
+													)}
+												>
+													{getStatusIcon(
+														scan.status,
+													)}
+													{getStatusText(
+														scan.status,
+													)}
+												</span>
+											</td>
+
+											<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
+												<span className="block font-medium">
+													{scan.benchmark || "-"}
+												</span>
+												<span className="block text-xs text-(--text-tertiary)">
+													{scan.version || ""}
+												</span>
+											</td>
+
+											<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
+												{scan.connection_name ||
+													(scan.m365_connection_id
+														? `Connection #${scan.m365_connection_id}`
+														: "-")}
+											</td>
+
+											<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
+												{(() => {
+													const dateString =
+														scan.started_at ||
+														scan.created_at;
+													if (!dateString)
+														return "-";
+													const dt =
+														formatDate(dateString);
+													return (
+														<div className="flex flex-col gap-0.5 leading-tight">
+															<div className="font-semibold text-(--text-primary) text-[13px]">
+																{dt.date}
+															</div>
+															<div className="text-xs text-(--text-tertiary)">
+																{dt.time}
+															</div>
+														</div>
+													);
+												})()}
+											</td>
+
+											<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
+												{scan.status ===
+													"completed" ||
+												scan.status === "running" ? (
+													<div className="flex flex-wrap gap-3 text-[13px]">
+														<span className="text-emerald-500">
+															{scan.passed_count ||
+																0}{" "}
+															passed
+														</span>
+														<span className="text-red-500">
+															{scan.failed_count ||
+																0}{" "}
+															failed
+														</span>
+														{scan.status ===
+															"running" &&
+															(scan.total_controls ||
+																0) > 0 && (
+																<span>
+																	(
+																	{(scan.passed_count ||
+																		0) +
+																		(scan.failed_count ||
+																			0) +
+																		(scan.error_count ||
+																			0)}
+																	/
+																	{scan.total_controls ||
+																		0}
+																	)
+																</span>
+															)}
+													</div>
+												) : (
+													"-"
+												)}
+											</td>
+
+											<td
+												className="text-right px-5 py-4 text-sm border-b border-(--border-color)] w-[1%] whitespace-nowrap"
+												onClick={(
+													e: React.MouseEvent<HTMLTableCellElement>,
+												) => e.stopPropagation()}
+											>
+												<button
+													className="flex justify-center gap-2 items-center py-1.5 px-2.5 font-medium rounded-lg border-none cursor-pointer outline-none [transition:all_0.3s_ease] text-[rgb(var(--accent-bad))] text-[13px]"
+													onClick={() =>
+														handleDelete(scan.id)
+													}
+													disabled={
+														deletingId === scan.id
+													}
+												>
+													{deletingId === scan.id ? (
+														<Loader2
+															size={14}
+															className="animate-spin"
+														/>
+													) : (
+														<Trash2 size={14} />
+													)}
+													<span>
+														{deletingId === scan.id
+															? "Deleting..."
+															: "Delete"}
+													</span>
+												</button>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
 					)}
 				</div>
 			</div>

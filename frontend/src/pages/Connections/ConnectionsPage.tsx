@@ -358,19 +358,19 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
 
   return (
     <div
-      className={`min-h-screen p-6 transition-colors duration-300 ${pageTheme.page}`}
+      className={`min-h-screen px-3 py-5 transition-colors duration-300 sm:px-4 md:px-6 ${pageTheme.page}`}
       style={{
-        marginLeft: `${sidebarWidth}px`,
-        width: `calc(100% - ${sidebarWidth}px)`,
+        marginLeft: sidebarWidth === 0 ? "80px" : `${sidebarWidth}px`,
+        width: sidebarWidth === 0 ? "calc(100% - 80px)" : `calc(100% - ${sidebarWidth}px)`,
         transition: "margin-left 0.4s ease, width 0.4s ease",
       }}
     >
       <div className="mx-auto w-full max-w-7xl">
         <div className="flex gap-4 justify-between items-start mb-6">
-          <div className="flex gap-4 items-start">
+          <div className="flex min-w-0 gap-3 items-start sm:gap-4">
             <Link2 size={24} className="mt-1 text-blue-400" />
             <div>
-              <h1 className={`text-2xl font-bold ${pageTheme.strong}`}>
+              <h1 className={`text-xl font-bold sm:text-2xl ${pageTheme.strong}`}>
                 Cloud Platforms
               </h1>
               <p className={`text-sm ${pageTheme.muted}`}>
@@ -380,7 +380,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
           </div>
 
           <button
-            className={buttonPrimary}
+            className={`${buttonPrimary} w-full justify-center sm:w-auto`}
             onClick={() => setShowForm(!showForm)}
           >
             <Plus size={16} />
@@ -396,7 +396,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
         )}
 
         {showForm && (
-          <div className={`mb-6 rounded-xl border p-6 ${pageTheme.card}`}>
+          <div className={`mb-6 rounded-xl border p-4 sm:p-6 ${pageTheme.card}`}>
             <h3 className={`mb-5 text-lg font-semibold ${pageTheme.strong}`}>
               New Connection
             </h3>
@@ -511,7 +511,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                 </div>
               </div>
 
-              <div className="flex gap-3 justify-end pt-2">
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   className={buttonSecondary}
@@ -631,7 +631,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                 />
               </div>
 
-              <div className="flex gap-3 justify-end mt-2">
+              <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   className={buttonSecondary}
@@ -677,10 +677,10 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
             connections.map((connection) => (
               <div
                 key={connection.id}
-                className={`flex flex-col gap-4 rounded-xl border p-5 transition hover:border-blue-400 md:flex-row md:items-center md:justify-between ${pageTheme.card}`}
+                className={`flex flex-col gap-4 rounded-xl border p-4 transition hover:border-blue-400 md:flex-row md:items-center md:justify-between md:p-5 ${pageTheme.card}`}
               >
-                <div className="flex-1">
-                  <div className="flex gap-3 items-center mb-2">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                     <h4
                       className={`text-base font-semibold ${pageTheme.strong}`}
                     >
@@ -706,7 +706,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                   </div>
 
                   <div
-                    className={`flex flex-wrap gap-x-4 gap-y-2 text-sm ${pageTheme.muted}`}
+                    className={`flex flex-col gap-2 text-sm ${pageTheme.muted} sm:flex-row sm:flex-wrap sm:gap-x-4`}
                   >
                     <span>
                       <strong className="text-slate-400">Tenant ID:</strong>{" "}
@@ -733,7 +733,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap md:w-auto">
                   <button
                     className={buttonSecondary}
                     onClick={() => handleTestConnection(connection)}
