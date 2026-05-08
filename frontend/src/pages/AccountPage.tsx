@@ -10,7 +10,11 @@ import {
   Save,
   X,
 } from "lucide-react";
-import { logout as apiLogout } from "../api/client";
+import {
+  logout as apiLogout,
+  updateCurrentUser,
+  changePassword,
+} from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
 type AccountPageProps = {
@@ -23,6 +27,9 @@ type AuthUser = {
   email?: string | null;
   username?: string | null;
   name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  organization_name?: string | null;
   organization?: string | null;
   id?: string | number | null;
 };
@@ -46,6 +53,10 @@ export default function AccountPage({
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -68,13 +79,15 @@ export default function AccountPage({
     organization: "",
   });
 
-  useEffect(() => {
-    const fullName = user?.name ?? "";
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
 
+  useEffect(() => {
     setProfileData({
-      firstName: fullName ? fullName.split(" ")[0] : "",
-      lastName: fullName ? fullName.split(" ").slice(1).join(" ") : "",
-      organization: user?.organization ?? "",
+      firstName: user?.first_name ?? "",
+      lastName: user?.last_name ?? "",
+      organization: user?.organization_name ?? "",
     });
   }, [user]);
 
@@ -87,21 +100,62 @@ export default function AccountPage({
   };
 
   const handleEditProfile = () => {
+    setProfileError("");
+    setProfileSuccess("");
+    setProfileData({
+      firstName: user?.first_name ?? "",
+      lastName: user?.last_name ?? "",
+      organization: user?.organization_name ?? "",
+    });
     setIsEditingProfile(true);
   };
 
   const handleCancelProfileEdit = () => {
     setProfileData({
-      firstName: user?.name?.split(" ")[0] || "",
-      lastName: user?.name?.split(" ").slice(1).join(" ") || "",
-      organization: user?.organization || "",
+      firstName: user?.first_name ?? "",
+      lastName: user?.last_name ?? "",
+      organization: user?.organization_name ?? "",
     });
+
     setIsEditingProfile(false);
   };
 
-  const handleSaveProfile = () => {
-    console.log("Profile data to save:", profileData);
-    setIsEditingProfile(false);
+  const handleSaveProfile = async () => {
+    setProfileError("");
+    setProfileSuccess("");
+
+    if (!profileData.firstName.trim() || !profileData.lastName.trim()) {
+      setProfileError("First name and last name are required.");
+      return;
+    }
+
+    if (!profileData.organization.trim()) {
+      setProfileError("Organization is required.");
+      return;
+    }
+
+    try {
+      setIsSavingProfile(true);
+
+      const updatedUser = await updateCurrentUser(token, {
+        first_name: profileData.firstName.trim(),
+        last_name: profileData.lastName.trim(),
+        organization_name: profileData.organization.trim(),
+      });
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      setProfileSuccess("Profile updated successfully.");
+      setIsEditingProfile(false);
+
+      window.location.reload();
+    } catch (error) {
+      setProfileError(
+        error instanceof Error ? error.message : "Failed to update profile.",
+      );
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const primaryLabel =
@@ -122,6 +176,55 @@ export default function AccountPage({
     } finally {
       clearAuth();
       navigate("/");
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (
+      !passwordData.currentPassword ||
+      !passwordData.newPassword ||
+      !passwordData.confirmPassword
+    ) {
+      setPasswordError("Please fill in all password fields.");
+      return;
+    }
+
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      setPasswordError(
+        "New password cannot be the same as the current password.",
+      );
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("New password and confirm password do not match.");
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+
+      await changePassword(token, {
+        current_password: passwordData.currentPassword,
+        new_password: passwordData.newPassword,
+      });
+
+      setPasswordSuccess("Password changed successfully.");
+
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      setPasswordError(
+        error instanceof Error ? error.message : "Failed to change password.",
+      );
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -194,11 +297,12 @@ export default function AccountPage({
 
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-300 px-5 py-3 font-semibold text-slate-950 transition hover:opacity-90"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-300 px-5 py-3 font-semibold text-slate-950 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                   onClick={handleSaveProfile}
+                  disabled={isSavingProfile}
                 >
                   <Save size={16} />
-                  <span>Save Changes</span>
+                  <span>{isSavingProfile ? "Saving..." : "Save Changes"}</span>
                 </button>
               </div>
             )}
@@ -211,11 +315,9 @@ export default function AccountPage({
                   Name
                 </span>
                 <span className="mt-2 block text-base font-semibold">
-                  {user?.name
-                    ? user.name
-                    : user?.email
-                      ? user.email.split("@")[0].replace(/\./g, " ")
-                      : "Not available"}
+                  {user?.first_name && user?.last_name
+                    ? `${user.first_name} ${user.last_name}`
+                    : "Not available"}
                 </span>
               </div>
 
@@ -233,7 +335,7 @@ export default function AccountPage({
                   Organization
                 </span>
                 <span className="mt-2 block text-base font-semibold">
-                  {user?.organization || "AutoAudit"}
+                  {user?.organization_name || "Not available"}
                 </span>
               </div>
             </div>
@@ -294,6 +396,17 @@ export default function AccountPage({
                   className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300"
                 />
               </div>
+              {profileError && (
+                <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                  {profileError}
+                </p>
+              )}
+
+              {profileSuccess && (
+                <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+                  {profileSuccess}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -405,12 +518,24 @@ export default function AccountPage({
                 </button>
               </div>
             </div>
+            {passwordError && (
+              <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                {passwordError}
+              </p>
+            )}
 
+            {passwordSuccess && (
+              <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+                {passwordSuccess}
+              </p>
+            )}
             <button
               type="button"
-              className="mt-2 inline-flex w-fit items-center justify-center rounded-lg bg-cyan-300 px-5 py-3 font-semibold text-slate-950 transition hover:opacity-90"
+              className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-5 py-3 font-semibold text-slate-950 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleUpdatePassword}
+              disabled={isChangingPassword}
             >
-              Update Password
+              {isChangingPassword ? "Updating..." : "Update Password"}
             </button>
           </div>
         </div>
