@@ -15,8 +15,10 @@ def calculate_score(file_path: Path) -> int:
         return 0
 
     content = file_path.read_text(encoding="utf-8")
-    lines = {line.strip() for line in content.splitlines()}
-
+    lines = [
+            line.strip().rstrip("#").strip()
+            for line in content.splitlines()
+            ]
     score = 0
 
     for section, points in SCORING_SECTIONS.items():
