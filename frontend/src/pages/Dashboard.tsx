@@ -494,9 +494,7 @@ export default function Dashboard({
     return `${base} border-[rgb(var(--accent-warn)/0.35)] bg-[rgb(var(--accent-warn)/0.1)] text-[rgb(var(--accent-warn))]`;
   }
 
-  const pageBg = isDarkMode
-    ? "text-white"
-    : "bg-[rgb(var(--surface-1))] text-[rgb(30_41_59)]";
+  const pageBg = isDarkMode ? "text-white" : "bg-[rgb(var(--surface-1))] text-[rgb(30_41_59)]";
 
   const panelBase = isDarkMode
     ? "border border-[rgb(var(--brand-blue)/0.16)] bg-[rgb(var(--surface-1)/0.72)]"
@@ -549,30 +547,37 @@ export default function Dashboard({
     navigate("/evidence-scanner");
   };
 
+  const pageOffsetStyle = {
+    marginLeft: sidebarWidth === 0 ? "80px" : `${sidebarWidth}px`,
+    width:
+      sidebarWidth === 0
+        ? "calc(100% - 80px)"
+        : `calc(100% - ${sidebarWidth}px)`,
+    transition: "margin-left 0.4s ease, width 0.4s ease",
+  };
+
   return (
     <div
-      className={`${pageBg} min-h-screen px-6 py-5 transition-colors duration-300`}
+      className={`${pageBg} min-h-screen px-4 py-4 transition-colors duration-300 md:px-6 md:py-5`}
       style={{
-        marginLeft: `${sidebarWidth}px`,
-        width: `calc(100% - ${sidebarWidth}px)`,
-        transition: "margin-left 0.4s ease, width 0.4s ease",
+        ...pageOffsetStyle,
         background: isDarkMode
           ? "radial-gradient(1200px 650px at 280px 0px, rgb(var(--brand-blue)/0.22), transparent 60%), radial-gradient(900px 540px at calc(100% - 260px) 80px, rgb(var(--accent-good)/0.14), transparent 65%), #0a1628"
           : undefined,
       }}
     >
-      <div className="flex flex-col gap-6 mx-auto max-w-330">
-        <div className="flex flex-col gap-4 justify-between items-start mb-0 md:flex-row md:items-center">
-          <div className="flex gap-4 items-center">
+      <div className="mx-auto flex w-full max-w-330 flex-col gap-6">
+        <div className="mb-0 flex flex-col gap-4 items-start justify-between md:flex-row md:items-center">
+          <div className="flex items-center gap-3 sm:gap-4">
             <div
-              className={`flex h-14 w-14 items-center justify-center rounded-[14px] ${panelBase}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-[14px] sm:h-14 sm:w-14 ${panelBase}`}
             >
               <picture>
                 <source srcSet="/AutoAudit.webp" type="image/webp" />
                 <img
                   src="/AutoAudit.png"
                   alt="AutoAudit Logo"
-                  className="object-contain w-14 h-14 rounded-xl"
+                  className="h-11 w-11 rounded-xl object-contain sm:h-14 sm:w-14"
                   loading="lazy"
                   width="56"
                   height="56"
@@ -581,17 +586,15 @@ export default function Dashboard({
             </div>
 
             <div>
-              <h1 className={`m-0 text-[24px] font-bold ${textPrimary}`}>
-                AutoAudit
-              </h1>
-              <p className={`m-0 text-[14px] ${textSecondary}`}>
+              <h1 className={`m-0 text-[21px] font-bold leading-tight sm:text-[24px] ${textPrimary}`}>AutoAudit</h1>
+              <p className={`m-0 text-[12px] leading-tight sm:text-[14px] ${textSecondary}`}>
                 Microsoft 365 Compliance Platform
               </p>
             </div>
           </div>
 
           <div
-            className="flex gap-3 items-center self-end md:self-auto"
+            className="flex items-center gap-2 self-end md:self-auto md:gap-3"
             role="group"
             aria-label="Theme toggle"
           >
@@ -617,12 +620,10 @@ export default function Dashboard({
         </div>
 
         <div
-          className={`relative z-50 grid items-center gap-4 overflow-visible rounded-xl px-6 py-4 shadow-[0_0_0_1px_rgb(var(--brand-blue)/0.06)] md:grid-cols-[minmax(0,1fr)_auto] ${panelBase}`}
+          className={`relative z-50 grid items-center gap-4 overflow-visible rounded-xl px-4 py-4 shadow-[0_0_0_1px_rgb(var(--brand-blue)/0.06)] md:grid-cols-[minmax(0,1fr)_auto] md:px-6 ${panelBase}`}
         >
-          <div className="flex overflow-visible flex-wrap flex-1 gap-3 items-center min-w-0">
-            <span className={`text-[14px] font-medium ${textPrimary}`}>
-              Connection
-            </span>
+          <div className="flex flex-col overflow-visible flex-1 gap-3 items-stretch min-w-0 sm:flex-row sm:flex-wrap sm:items-center">
+            <span className={`text-[14px] font-medium ${textPrimary}`}>Connection</span>
             <Dropdown
               value={selectedConnectionId}
               onChange={setSelectedConnectionId}
@@ -641,9 +642,9 @@ export default function Dashboard({
             />
           </div>
 
-          <div className="flex flex-wrap gap-3 justify-end items-center max-sm:w-full max-sm:flex-col">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
             <button
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
+              className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition sm:w-auto ${secondaryButton}`}
               onClick={handleExportReport}
               disabled={!latestRelevantScan?.id}
             >
@@ -651,7 +652,7 @@ export default function Dashboard({
             </button>
 
             <button
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
+              className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition sm:w-auto ${secondaryButton}`}
               onClick={handleEvidenceScanner}
             >
               Evidence Scanner
@@ -757,7 +758,7 @@ export default function Dashboard({
             <div
               className={`relative flex min-h-0 flex-col gap-4 overflow-visible rounded-xl p-6 shadow-[0_0_0_1px_rgb(var(--brand-blue)/0.05)] ${panelBase}`}
             >
-              <div className="flex relative justify-between items-center z-5">
+              <div className="relative z-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-1 gap-3 items-center min-w-0">
                   <span
                     className={`inline-flex h-6 w-6 items-center justify-center rounded-md ${
@@ -800,7 +801,7 @@ export default function Dashboard({
                 </div>
 
                 <button
-                  className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
+                  className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition sm:w-auto ${secondaryButton}`}
                   onClick={() => navigate("/scans")}
                 >
                   Open Scans
@@ -816,7 +817,7 @@ export default function Dashboard({
                   </p>
 
                   <button
-                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-semibold transition ${primaryButton}`}
+                    className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[14px] font-semibold transition sm:w-auto ${primaryButton}`}
                     onClick={handleRunNewScan}
                   >
                     Run a Scan
@@ -831,7 +832,7 @@ export default function Dashboard({
                   }`}
                 >
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
+                    <table className="min-w-[620px] w-full border-collapse">
                       <thead>
                         <tr className={tertiaryPanel}>
                           <th
@@ -1039,7 +1040,7 @@ export default function Dashboard({
                   {nextFixes.topItems.map((r, idx) => (
                     <button
                       key={`${r.control_id || idx}`}
-                      className={`grid w-full grid-cols-[72px_minmax(0,1fr)] items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition ${
+                      className={`grid w-full grid-cols-[56px_minmax(0,1fr)] items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition sm:grid-cols-[72px_minmax(0,1fr)] ${
                         isDarkMode
                           ? "border-[rgb(var(--brand-blue)/0.16)] bg-[rgb(var(--surface-2)/0.78)] text-white hover:border-[rgb(var(--brand-blue)/0.45)] hover:bg-[rgb(var(--brand-blue)/0.1)]"
                           : "border-border-subtle bg-border-subtle text-[rgb(30_41_59)] hover:border-brand-blue-soft hover:bg-[rgb(239_246_255)]"
