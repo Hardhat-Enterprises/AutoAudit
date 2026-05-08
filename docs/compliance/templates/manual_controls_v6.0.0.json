@@ -1,0 +1,358 @@
+[
+  {
+    "control_id": "1.1.2",
+    "title": "Two emergency access (break-glass) accounts exist",
+    "severity": "high",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "emergency access",
+      "break glass",
+      "excluded from conditional access",
+      "cloud-only",
+      "MFA exempt",
+      "break-glass account"
+    ],
+    "instructions": "Emergency access accounts are backup admin accounts kept for situations where normal admin accounts get locked out. There should always be two of them and they need to be set up in a specific way to actually work in a lockout scenario.\n\n1. Go to entra.microsoft.com.\n2. Click Identity > Users > All users.\n3. Search for your break-glass or emergency accounts by name.\n4. Confirm at least two exist.\n5. Open each one and check three things: the account is cloud-only (not synced from on-premises AD), it is excluded from all Conditional Access policies, and MFA is not directly enforced on the account.\n6. Take a screenshot of the user list and each account's properties panel showing those settings are in place."
+  },
+  {
+    "control_id": "1.3.8",
+    "title": "Sway content cannot be shared outside the organisation",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "sway",
+      "external sharing",
+      "disabled",
+      "outside your organization",
+      "sharing settings"
+    ],
+    "instructions": "Microsoft Sway is a presentation tool included in M365. By default it can allow users to share content with people outside the organisation, which is a data leakage risk.\n\n1. Go to admin.microsoft.com.\n2. Click Settings > Org settings, then find Sway in the list.\n3. Look for the option that says something like 'Let people in your organization share their Sways with people outside your organization'.\n4. Confirm it is unchecked or turned off.\n5. Take a screenshot of the Sway settings page showing external sharing is disabled.\n\nNote: The keywords 'outside your organization' and 'external sharing' come directly from the label Microsoft uses on this settings page."
+  },
+  {
+    "control_id": "2.2.1",
+    "title": "Emergency access account sign-ins are being monitored",
+    "severity": "high",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "emergency access",
+      "sign-in alert",
+      "monitoring",
+      "alert rule",
+      "break glass",
+      "audit log alert",
+      "diagnostic settings"
+    ],
+    "instructions": "Having break-glass accounts is only useful if you know when someone uses them. Any sign-in to an emergency access account should trigger an immediate alert because under normal operations these accounts should never be used.\n\n1. Go to entra.microsoft.com > Monitoring > Alerts.\n2. Check whether an alert rule exists that targets sign-in activity from the emergency access accounts you identified in control 1.1.2.\n3. If your organisation uses Microsoft Sentinel or Defender, check there instead for an analytic rule covering break-glass logins.\n4. Take a screenshot of the alert rule showing which accounts are being monitored and what condition triggers the alert.\n\nNote: Keywords cover multiple valid locations for this control — 'alert rule' is the Entra label, 'diagnostic settings' is the Azure Monitor label, 'audit log alert' is the Sentinel label. Any of these is acceptable evidence."
+  },
+  {
+    "control_id": "2.4.3",
+    "title": "Microsoft Defender for Cloud Apps is turned on and has active policies",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "defender for cloud apps",
+      "MCAS",
+      "cloud app security",
+      "enabled",
+      "connected apps",
+      "policies configured"
+    ],
+    "instructions": "Defender for Cloud Apps (previously called Microsoft Cloud App Security or MCAS) monitors how cloud apps are being used across your tenant. Just having a licence is not enough — it needs to be actively enabled with at least one policy running.\n\n1. Go to security.microsoft.com and click Cloud apps in the left menu.\n2. Confirm Defender for Cloud Apps is enabled, not just showing as licensed.\n3. Check that at least one policy exists and is active.\n4. Confirm Microsoft 365 appears as a connected app source.\n5. Take a screenshot of the Cloud Apps overview page showing the enabled status, connected apps, and at least one active policy.\n\nNote: Both 'MCAS' and 'cloud app security' are in the keywords because Microsoft still uses both names across different parts of their portal depending on the tenant's licence age."
+  },
+  {
+    "control_id": "5.1.2.1",
+    "title": "Per-user MFA is fully disabled — MFA runs through Conditional Access only",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "per-user MFA",
+      "multi-factor authentication",
+      "disabled",
+      "conditional access MFA",
+      "legacy MFA"
+    ],
+    "instructions": "There are two ways to enforce MFA in Entra — the old per-user method and the modern Conditional Access method. CIS requires that per-user MFA is completely switched off because it conflicts with Conditional Access policies and creates unpredictable behaviour. MFA should only be enforced through Conditional Access.\n\n1. Go to entra.microsoft.com > Users > All users.\n2. Look for a 'Per-user MFA' button in the top menu bar and click it.\n3. You will see a list of users each with an MFA status column.\n4. Every single user should show 'Disabled'. If any show 'Enabled' or 'Enforced' this control fails.\n5. Take a screenshot of the full per-user MFA page showing all users at Disabled.\n\nNote: 'Legacy MFA' is included as a keyword because Microsoft documentation refers to per-user MFA as the legacy method."
+  },
+  {
+    "control_id": "5.1.2.4",
+    "title": "Non-admin users cannot access the Entra admin center",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "admin center access",
+      "restricted",
+      "non-admin users",
+      "restrict access to admin portals",
+      "Entra admin center"
+    ],
+    "instructions": "By default regular users can browse to the Entra admin center even if they cannot change anything. This setting hides it from them entirely so only admins can see it.\n\n1. Go to entra.microsoft.com.\n2. Click User settings in the left menu.\n3. Find the toggle labelled 'Restrict access to Microsoft Entra admin center'.\n4. Confirm it is set to Yes.\n5. Take a screenshot of the user settings page showing that restriction is on.\n\nNote: 'Restrict access to Microsoft Entra admin center' is the exact label on the page — that phrase becomes the location keyword confirming the auditor is in the right place."
+  },
+  {
+    "control_id": "5.1.2.5",
+    "title": "'Stay signed in' prompt is hidden from users",
+    "severity": "low",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "stay signed in",
+      "keep me signed in",
+      "KMSI",
+      "hidden",
+      "sign-in page",
+      "company branding"
+    ],
+    "instructions": "After signing in, Microsoft can show users a prompt asking if they want to stay signed in. On shared or unmanaged devices this is a security risk. This setting hides that prompt entirely.\n\n1. Go to entra.microsoft.com.\n2. Click Company branding in the left menu.\n3. Open the default branding entry.\n4. Look for a setting called 'Show option to remain signed in'.\n5. Confirm it is set to No.\n6. Take a screenshot of the branding settings page showing this is off.\n\nNote: KMSI is Microsoft's internal acronym for Keep Me Signed In — it appears in their documentation and sometimes in the portal UI itself so it is included as a keyword alongside the plain English version."
+  },
+  {
+    "control_id": "5.1.2.6",
+    "title": "LinkedIn account connections are disabled for all users",
+    "severity": "low",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "LinkedIn",
+      "account connections",
+      "disabled",
+      "LinkedIn integration",
+      "user settings"
+    ],
+    "instructions": "M365 can let users link their work accounts to their personal LinkedIn profiles. This creates a privacy and data exposure risk by connecting corporate identities to a public social network.\n\n1. Go to entra.microsoft.com.\n2. Click User settings in the left menu.\n3. Find the section labelled 'LinkedIn account connections'.\n4. Confirm it is set to No for all users.\n5. Take a screenshot of the user settings page showing LinkedIn connections are off.\n\nNote: 'LinkedIn account connections' is the exact heading Microsoft uses on this page — it is the location keyword. 'Disabled' is the state keyword confirming the setting is off."
+  },
+  {
+    "control_id": "5.1.8.1",
+    "title": "Password hash sync is enabled for hybrid environments",
+    "severity": "high",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "password hash sync",
+      "hybrid",
+      "Azure AD Connect",
+      "Entra Connect",
+      "sync enabled",
+      "PHS"
+    ],
+    "instructions": "For organisations that use both on-premises Active Directory and Entra ID (hybrid setups), password hash sync keeps credentials in sync between the two. Without it, cloud-based risk detection like Microsoft Entra ID Protection cannot evaluate password-based risks.\n\n1. Go to entra.microsoft.com.\n2. Click Identity > Hybrid management > Microsoft Entra Connect.\n3. Confirm Password Hash Synchronization is listed as Enabled.\n4. Check that the last sync completed successfully and recently.\n5. Take a screenshot of the sync status page showing PHS enabled and the last sync timestamp.\n\nNote: If the organisation is fully cloud-only with no on-premises AD, document this explicitly as not applicable rather than leaving it as pending. Keywords include both 'Azure AD Connect' and 'Entra Connect' because Microsoft renamed the tool and different tenants will show different names depending on their version."
+  },
+  {
+    "control_id": "5.2.4.1",
+    "title": "Self-service password reset is enabled for all users",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "self-service password reset",
+      "SSPR",
+      "All",
+      "enabled",
+      "password reset",
+      "authentication methods"
+    ],
+    "instructions": "Self-service password reset lets users reset their own passwords without calling the helpdesk. CIS requires this to be enabled for all users — not just selected groups — so there is always a fallback path if a user gets locked out.\n\n1. Go to entra.microsoft.com.\n2. Click Protection > Password reset in the left menu.\n3. Under Properties, find 'Self service password reset enabled'.\n4. Confirm the dropdown is set to All.\n5. Take a screenshot of the Password reset properties page showing SSPR enabled for All.\n\nNote: SSPR is the acronym Microsoft uses throughout their portal for this feature. 'All' is deliberately included as a keyword because it is the specific value that proves compliance — 'Selected' or 'None' would mean the control fails."
+  },
+  {
+    "control_id": "7.2.8",
+    "title": "SharePoint external sharing is limited to a specific security group",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "external sharing",
+      "security group",
+      "SharePoint",
+      "restricted",
+      "sharing policy",
+      "limit external sharing"
+    ],
+    "instructions": "SharePoint external sharing should not be open to all users. CIS requires it to be restricted to a defined security group so only approved people can share content externally.\n\n1. Go to admin.microsoft.com.\n2. Navigate to the SharePoint admin center > Policies > Sharing.\n3. Look for the option that limits who can share externally — it should reference a specific security group rather than being open to everyone.\n4. Take a screenshot of the sharing settings page showing the security group restriction is in place.\n\nNote: The AutoAudit SharePoint collector for this control raises NotImplementedError — this control is manually verified for now and is an automation candidate once the collector is completed. Keywords come from the SharePoint admin center page labels."
+  },
+  {
+    "control_id": "8.4.1",
+    "title": "Teams app permission policies are configured to restrict unapproved apps",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "app permission policy",
+      "Teams apps",
+      "configured",
+      "third-party apps",
+      "custom apps",
+      "allow specific apps"
+    ],
+    "instructions": "By default Teams allows users to install any app including third-party and custom apps. App permission policies let admins restrict this to only approved apps, reducing the risk of malicious or data-exfiltrating apps being installed.\n\n1. Go to admin.teams.microsoft.com.\n2. Click Teams apps > Permission policies in the left menu.\n3. Confirm that a custom permission policy exists beyond the default Global policy.\n4. Open that policy and verify it restricts third-party and custom apps to an approved list only.\n5. Confirm the policy is assigned to users and not just sitting unassigned.\n6. Take a screenshot of the permission policies page and the policy detail page showing the app restrictions.\n\nNote: 'App permission policy' and 'Teams apps' are the exact navigation labels in the Teams admin center. 'Allow specific apps' is the option label that appears when a policy is configured to restrict rather than allow all."
+  },
+  {
+    "control_id": "9.1.1",
+    "title": "Guest user access to Microsoft Fabric is restricted",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "guest users",
+      "Fabric",
+      "restricted",
+      "external users",
+      "tenant settings",
+      "guest access"
+    ],
+    "instructions": "Microsoft Fabric is a data analytics platform. Guest users — people from outside the organisation — should not have open access to Fabric content by default.\n\n1. Go to app.fabric.microsoft.com or app.powerbi.com and make sure you are signed in as a Fabric admin.\n2. Click the settings icon and go to Admin portal > Tenant settings.\n3. Search for 'Allow Azure Active Directory guest users to access Microsoft Fabric'.\n4. Confirm it is Disabled or restricted to a specific security group.\n5. Take a screenshot of the tenant setting showing its current state.\n\nNote: All 9.1.x controls (9.1.1 through 9.1.12) are checked through the same Fabric admin portal under Tenant settings. The Fabric API auth is untested in AutoAudit so all of these are manually verified for now. 'Tenant settings' is the location keyword shared across all Fabric controls — it confirms the auditor is in the right section of the portal."
+  },
+  {
+    "control_id": "9.1.2",
+    "title": "Users cannot invite external guests into Fabric (Fabric)",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "external invitations",
+      "Fabric",
+      "restricted",
+      "tenant settings",
+      "invite external users"
+    ],
+    "instructions": "This setting controls whether regular users can invite external people to collaborate on Fabric items. Leaving this open means any user could grant an outsider access to potentially sensitive data.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'Allow users to invite external users to collaborate through item sharing and permissions'.\n3. Confirm it is Disabled or restricted to specific groups.\n4. Take a screenshot of the setting showing its state."
+  },
+  {
+    "control_id": "9.1.3",
+    "title": "Existing Power BI guest users cannot access Fabric content (Fabric)",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "guest access",
+      "content",
+      "Fabric",
+      "restricted",
+      "tenant settings",
+      "Power BI guest"
+    ],
+    "instructions": "Some organisations had guest users in Power BI before migrating to Fabric. This setting controls whether those legacy guest users automatically get access to Fabric. They should not.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'Allow existing Power BI guest users to access Fabric'.\n3. Confirm it is Disabled or restricted.\n4. Take a screenshot of the setting showing its state."
+  },
+  {
+    "control_id": "9.1.4",
+    "title": "'Publish to web' is disabled or strictly restricted (Fabric)",
+    "severity": "high",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "publish to web",
+      "Fabric",
+      "disabled",
+      "restricted",
+      "tenant settings",
+      "public embedding"
+    ],
+    "instructions": "Publish to web creates a publicly accessible link to a Fabric or Power BI report — no login required. This means anyone on the internet can view the report. For most organisations this is a serious data exposure risk and should be completely disabled or locked to specific admin-approved groups only.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'Publish to web'.\n3. Confirm it is Disabled, or if restricted, that only a named admin group has access.\n4. Take a screenshot of the setting showing its state.\n\nNote: This is rated high severity unlike most other 9.1.x controls — a misconfigured publish to web setting can expose sensitive business data to the public internet with no authentication."
+  },
+  {
+    "control_id": "9.1.5",
+    "title": "R and Python script visuals are disabled (Fabric)",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "R visuals",
+      "Python visuals",
+      "disabled",
+      "Fabric",
+      "tenant settings",
+      "script visuals"
+    ],
+    "instructions": "Fabric and Power BI support visuals that run R or Python scripts to generate charts. These scripts execute in the user's browser and can be a vector for running arbitrary code or exfiltrating data if a malicious report is opened.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'Interact with and share R and Python visuals'.\n3. Confirm it is Disabled.\n4. Take a screenshot of the setting showing it is off."
+  },
+  {
+    "control_id": "9.1.6",
+    "title": "Sensitivity labels can be applied to Fabric and Power BI content (Fabric)",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "sensitivity labels",
+      "enabled",
+      "Fabric",
+      "tenant settings",
+      "information protection",
+      "Power BI content"
+    ],
+    "instructions": "Sensitivity labels let admins and users classify and protect data in Fabric and Power BI reports — for example marking a report as Confidential so it cannot be exported or shared outside the organisation. This setting must be enabled for labels to work.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'Allow users to apply sensitivity labels for Power BI content'.\n3. Confirm it is Enabled.\n4. Take a screenshot of the setting showing it is on.\n\nNote: This is the one 9.1.x control where the expected state is Enabled, not Disabled. The keyword 'enabled' here is a positive signal unlike in most other controls."
+  },
+  {
+    "control_id": "9.1.7",
+    "title": "Shareable links to Fabric content cannot be sent to everyone in the org (Fabric)",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "shareable links",
+      "restricted",
+      "Fabric",
+      "tenant settings",
+      "link sharing",
+      "everyone in your organization"
+    ],
+    "instructions": "This setting controls whether users can create share links that grant access to anyone in the organisation without the recipient needing explicit permission. This is too broad for most sensitive data environments.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'Allow shareable links to grant access to everyone in your organization'.\n3. Confirm it is Disabled or restricted.\n4. Take a screenshot of the setting showing its state."
+  },
+  {
+    "control_id": "9.1.8",
+    "title": "External data sharing from Fabric is restricted (Fabric)",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "external data sharing",
+      "restricted",
+      "Fabric",
+      "tenant settings",
+      "OneLake"
+    ],
+    "instructions": "External data sharing allows Fabric data to be shared with users in other Azure tenants via OneLake. This should be restricted so data does not leave the organisation without explicit approval.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'External data sharing'.\n3. Confirm it is Disabled or restricted.\n4. Take a screenshot of the setting showing its state.\n\nNote: 'OneLake' is included as a keyword because it is the specific Fabric data storage layer this setting controls — it often appears in the setting description text on the portal page."
+  },
+  {
+    "control_id": "9.1.9",
+    "title": "ResourceKey authentication is blocked (Fabric)",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "ResourceKey",
+      "authentication",
+      "blocked",
+      "Fabric",
+      "tenant settings",
+      "resource key"
+    ],
+    "instructions": "ResourceKey authentication allows embedding Fabric content using a static key rather than user identity. Static keys do not expire and do not require a user login, making them a weaker authentication method that should be blocked.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'Block ResourceKey Authentication'.\n3. Confirm it is Enabled — meaning the block is active.\n4. Take a screenshot of the setting showing it is turned on.\n\nNote: 'ResourceKey' with a capital K is how Microsoft spells this in the portal — both 'ResourceKey' and 'resource key' are in the keywords to cover any OCR capitalisation variations."
+  },
+  {
+    "control_id": "9.1.10",
+    "title": "Service principals can only use Power BI APIs if explicitly permitted (Fabric)",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "service principal",
+      "API access",
+      "restricted",
+      "Fabric",
+      "tenant settings",
+      "Power BI APIs"
+    ],
+    "instructions": "Service principals are non-human identities used by applications and automation scripts. Allowing any service principal to call the Power BI and Fabric APIs without restriction means any app in the tenant could read or modify reports and datasets.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'Allow service principals to use Power BI APIs'.\n3. Confirm it is Disabled or restricted to specific named security groups.\n4. Take a screenshot of the setting showing its state."
+  },
+  {
+    "control_id": "9.1.11",
+    "title": "Service principals cannot create or use Fabric profiles (Fabric)",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "service principals",
+      "profiles",
+      "disabled",
+      "Fabric",
+      "tenant settings",
+      "create and use profiles"
+    ],
+    "instructions": "Service principal profiles are a Fabric feature that lets an app act as multiple different identities. This can be misused to bypass access controls or impersonate multiple users from a single service account.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'Allow service principals to create and use profiles'.\n3. Confirm it is Disabled.\n4. Take a screenshot of the setting showing it is off."
+  },
+  {
+    "control_id": "9.1.12",
+    "title": "Service principals cannot create Fabric workspaces or deployment pipelines (Fabric)",
+    "severity": "medium",
+    "evidence_type": "screenshot",
+    "keywords": [
+      "service principals",
+      "workspaces",
+      "restricted",
+      "Fabric",
+      "tenant settings",
+      "deployment pipelines",
+      "connections"
+    ],
+    "instructions": "Allowing service principals to create workspaces and deployment pipelines means automated scripts or compromised app identities could provision new environments in Fabric without human approval.\n\n1. Go to Fabric admin portal > Tenant settings.\n2. Find 'Allow service principals to create workspaces, connections, and deployment pipelines'.\n3. Confirm it is Disabled or restricted.\n4. Take a screenshot of the setting showing its state."
+  }
+]
