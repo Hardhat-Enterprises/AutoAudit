@@ -9,6 +9,8 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
     "apexcharts": "^5.3.6",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.542.0",
     "react": "^19.1.1",
     "react-apexcharts": "^1.9.0",
