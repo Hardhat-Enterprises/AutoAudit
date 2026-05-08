@@ -25,7 +25,15 @@
   --accent-bad: 239 68 68;
   --brand-blue: 59 130 246;
   --brand-blue-deep: 37 99 235;
+  --brand-blue-soft: 147 197 253;
   --brand-cyan: 34 211 238;
+  --landing-text-soft: 176 196 222;
+  --landing-bg-base: 10 22 40;
+  --landing-bg-mid: 15 31 56;
+  --landing-bg-end: 22 42 74;
+  --landing-bg-alt-start: 30 58 95;
+  --landing-bg-alt-mid: 26 58 79;
+  --landing-bg-alt-end: 42 74 95;
 
   /* Spacing & Radius */
   --radius-1: 8px;
@@ -65,7 +73,15 @@
   --color-accent-bad: rgb(var(--accent-bad));
   --color-brand-blue: rgb(var(--brand-blue));
   --color-brand-blue-deep: rgb(var(--brand-blue-deep));
+  --color-brand-blue-soft: rgb(var(--brand-blue-soft));
   --color-brand-cyan: rgb(var(--brand-cyan));
+  --color-landing-text-soft: rgb(var(--landing-text-soft));
+  --color-landing-bg-base: rgb(var(--landing-bg-base));
+  --color-landing-bg-mid: rgb(var(--landing-bg-mid));
+  --color-landing-bg-end: rgb(var(--landing-bg-end));
+  --color-landing-bg-alt-start: rgb(var(--landing-bg-alt-start));
+  --color-landing-bg-alt-mid: rgb(var(--landing-bg-alt-mid));
+  --color-landing-bg-alt-end: rgb(var(--landing-bg-alt-end));
 }
 
 /* ============================================================================
@@ -196,8 +212,6 @@
   .issue-col {
     @apply flex h-full flex-col gap-5;
   }
-
-  @tailwind utilities;
 }
 
 /* ============================================================================

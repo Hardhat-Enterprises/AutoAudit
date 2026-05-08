@@ -144,16 +144,16 @@ const GoogleCallbackPage = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#081b2e]">
+    <div className="flex flex-col min-h-screen bg-[rgb(8_27_46)]">
       <LoginHeader />
-      <main className="flex flex-1 items-center justify-center px-6 py-12">
-        <div className="grid w-full max-w-6xl gap-10 lg:grid-cols-2">
-          <div className="hidden items-center justify-center lg:flex">
+      <main className="flex flex-1 justify-center items-center py-12 px-6">
+        <div className="grid gap-10 w-full max-w-6xl lg:grid-cols-2">
+          <div className="hidden justify-center items-center lg:flex">
             <BrandPanel />
           </div>
 
-          <section className="flex items-center justify-center">
-            <div className="w-full max-w-[480px] rounded-[18px] bg-[rgba(15,35,56,0.9)] p-9 shadow-[0_30px_60px_rgba(5,9,20,0.45)]">
+          <section className="flex justify-center items-center">
+            <div className="p-9 w-full max-w-[480px] rounded-[18px] bg-[rgb(15_35_56/0.9)] shadow-[0_30px_60px_rgb(5_9_20/0.45)]">
               {error ? (
                 <>
                   <div>
@@ -163,21 +163,21 @@ const GoogleCallbackPage = () => {
                     </p>
                   </div>
 
-                  <div className="mb-4 mt-6 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-3 text-red-400">
+                  <div className="flex gap-2 items-center py-3 px-3 mt-6 mb-4 text-red-400 rounded-lg border border-red-500/30 bg-red-500/10">
                     <AlertCircle size={18} />
                     <span>{error}</span>
                   </div>
 
                   <button
                     type="button"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-4 text-base font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(59,130,246,0.4)]"
+                    className="flex gap-2 justify-center items-center py-4 px-4 w-full text-base font-semibold text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl transition hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgb(var(--brand-blue)/0.4)]"
                     onClick={() => navigate("/login")}
                   >
                     Back to sign in
                   </button>
                 </>
               ) : (
-                <div className="mt-2 flex min-h-[140px] flex-col items-center justify-center gap-3 text-[#b0c4de]">
+                <div className="flex flex-col gap-3 justify-center items-center mt-2 min-h-[140px] text-[rgb(var(--landing-text-soft))]">
                   <Loader2 size={28} className="animate-spin" />
                   <div className="text-sm">Please wait while we sign you in.</div>
                 </div>

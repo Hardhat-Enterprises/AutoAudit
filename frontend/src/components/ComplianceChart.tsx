@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getScan } from '../api/client';
-import { formatDateAEST, formatTimeAEST } from '../utils/helpers';
+import { RelativeTime } from './RelativeTime';
 
 type ScanDetailPageProps = {
   sidebarWidth?: number;
@@ -124,7 +124,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
       case 'failed':
         return <XCircle size={20} className="text-rose-500" />;
       case 'running':
-        return <Loader2 size={20} className="animate-spin text-blue-500" />;
+        return <Loader2 size={20} className="text-blue-500 animate-spin" />;
       default:
         return <Clock size={20} className="text-amber-500" />;
     }
@@ -154,14 +154,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
       default:
         return 'bg-amber-500/15 text-amber-500 border border-amber-500/30';
     }
-  }
-
-  function formatDate(dateString?: string | null): string {
-    return formatDateAEST(dateString);
-  }
-
-  function formatTime(dateString?: string | null): string {
-    return formatTimeAEST(dateString);
   }
 
   function getResultIcon(status?: string): JSX.Element {
@@ -250,7 +242,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
       >
         <div className="mx-auto max-w-5xl">
           <div className={`${cardClass} flex flex-col items-center justify-center p-16`}>
-            <Loader2 size={32} className="animate-spin text-blue-500" />
+            <Loader2 size={32} className="text-blue-500 animate-spin" />
             <p className={`mt-4 ${subtleText}`}>Loading scan details...</p>
           </div>
         </div>
@@ -322,8 +314,8 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
         transition: 'margin-left 0.4s ease, width 0.4s ease',
       }}
     >
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="mx-auto space-y-6 max-w-5xl">
+        <div className="flex justify-between items-center">
           <button
             className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium ${
               isDarkMode
@@ -338,8 +330,8 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
         </div>
 
         <div className={`${cardClass} p-6`}>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-wrap gap-4 justify-between items-start">
+            <div className="flex gap-4 items-center">
               <div
                 className={`rounded-xl p-3 ${
                   isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-100 text-blue-600'
@@ -359,26 +351,24 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
             </span>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 mt-6 md:grid-cols-3">
             <div>
               <span className={`block text-xs uppercase tracking-wide ${mutedText}`}>Connection</span>
-              <span className="mt-1 block text-sm font-medium">
+              <span className="block mt-1 text-sm font-medium">
                 {scan.connection_name || (scan.m365_connection_id ? `Connection #${scan.m365_connection_id}` : '-')}
               </span>
             </div>
             <div>
               <span className={`block text-xs uppercase tracking-wide ${mutedText}`}>Started</span>
-              <div className="mt-1 text-sm">
-                <div>{formatDate(scan.started_at || scan.created_at)}</div>
-                <div className={mutedText}>{formatTime(scan.started_at || scan.created_at)}</div>
+              <div className={`mt-1 text-sm font-semibold ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                <RelativeTime value={scan.started_at || scan.created_at} />
               </div>
             </div>
             <div>
               <span className={`block text-xs uppercase tracking-wide ${mutedText}`}>Completed</span>
               {scan.finished_at || scan.completed_at ? (
-                <div className="mt-1 text-sm">
-                  <div>{formatDate(scan.finished_at || scan.completed_at)}</div>
-                  <div className={mutedText}>{formatTime(scan.finished_at || scan.completed_at)}</div>
+                <div className={`mt-1 text-sm font-semibold ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                  <RelativeTime value={scan.finished_at || scan.completed_at} />
                 </div>
               ) : (
                 <div className="mt-1 text-sm">
@@ -391,8 +381,8 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
 
         {(scan.status === 'pending' || scan.status === 'running') && (
           <div className={`${cardClass} p-6`}>
-            <div className="flex items-center gap-3">
-              <Loader2 size={24} className="animate-spin text-blue-500" />
+            <div className="flex gap-3 items-center">
+              <Loader2 size={24} className="text-blue-500 animate-spin" />
               <div>
                 <h3 className="text-lg font-semibold">Scan in Progress</h3>
                 <p className={subtleText}>
@@ -421,7 +411,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className={`${cardClass} p-5`}>
-            <div className="flex items-center gap-3">
+            <div className="flex gap-3 items-center">
               <FileText size={20} className="text-blue-500" />
               <div>
                 <div className="text-xl font-bold">{summary.total}</div>
@@ -430,7 +420,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
             </div>
           </div>
           <div className={`${cardClass} p-5`}>
-            <div className="flex items-center gap-3">
+            <div className="flex gap-3 items-center">
               <CheckCircle size={20} className="text-emerald-500" />
               <div>
                 <div className="text-xl font-bold">{summary.passed}</div>
@@ -439,7 +429,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
             </div>
           </div>
           <div className={`${cardClass} p-5`}>
-            <div className="flex items-center gap-3">
+            <div className="flex gap-3 items-center">
               <XCircle size={20} className="text-rose-500" />
               <div>
                 <div className="text-xl font-bold">{summary.failed}</div>
@@ -448,7 +438,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
             </div>
           </div>
           <div className={`${cardClass} p-5`}>
-            <div className="flex items-center gap-3">
+            <div className="flex gap-3 items-center">
               <AlertTriangle size={20} className="text-amber-500" />
               <div>
                 <div className="text-xl font-bold">{summary.errors}</div>
@@ -467,8 +457,8 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
                   key={result.control_id || index}
                   className={`rounded-xl border p-4 ${isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50'} ${getResultCardClass(result.status)}`}
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap gap-3 justify-between items-center">
+                    <div className="flex gap-2 items-center">
                       {getResultIcon(result.status)}
                       <span className={`text-xs font-semibold uppercase ${mutedText}`}>{result.control_id}</span>
                       <h4 className="font-semibold">{result.title || result.control_id}</h4>
@@ -486,8 +476,8 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
         )}
 
         {scan.status === 'failed' && scan.error && (
-          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-rose-500">
-            <div className="flex items-start gap-3">
+          <div className="p-4 text-rose-500 rounded-xl border border-rose-500/30 bg-rose-500/10">
+            <div className="flex gap-3 items-start">
               <AlertCircle size={20} />
               <div>
                 <h4 className="font-semibold">Scan Failed</h4>

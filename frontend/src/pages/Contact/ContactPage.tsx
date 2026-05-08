@@ -28,11 +28,11 @@ const ContactHero: React.FC = () => (
     <div className="pointer-events-none absolute -right-50 -top-50 h-150 w-150 rounded-full bg-[radial-gradient(circle,rgb(var(--brand-blue)/0.1)_0%,transparent_70%)] opacity-90" />
     <div className="pointer-events-none absolute -bottom-25 -left-25 h-100 w-100 rounded-full bg-[radial-gradient(circle,rgb(var(--brand-blue)/0.1)_0%,transparent_70%)] opacity-90" />
 
-    <div className="relative z-1 mx-auto max-w-200">
+    <div className="relative mx-auto z-1 max-w-200">
       <p className="mb-3 text-sm font-semibold tracking-wide text-text-strong">
         Contact AutoAudit
       </p>
-      <h1 className="mb-4 bg-linear-to-br from-text-strong to-brand-blue bg-clip-text text-[clamp(2.5rem,6vw,3.5rem)] font-bold text-transparent">
+      <h1 className="mb-4 font-bold text-transparent bg-clip-text bg-linear-to-br from-text-strong to-brand-blue text-[clamp(2.5rem,6vw,3.5rem)]">
         Get in Touch
       </h1>
       <p className="text-[1.2rem] leading-[1.6] text-text-muted">
@@ -73,7 +73,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ onSignIn }) => {
         <ContactHero />
 
         <section id="features" className="bg-accent-navy/82 px-[5%] py-24">
-          <div className="mx-auto grid max-w-300 gap-12 lg:grid-cols-[1fr_1.8fr] items-start">
+          <div className="grid gap-12 items-start mx-auto max-w-300 lg:grid-cols-[1fr_1.8fr]">
             <ContactInfoGrid />
             <ContactForm submitted={submitted} onSubmit={handleSubmit} />
           </div>

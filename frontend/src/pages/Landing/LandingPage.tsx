@@ -39,9 +39,9 @@ const LandingPage = ({ onSignInClick }: LandingPageProps) => {
   }, [location.hash]);
 
   return (
-    <div className="min-h-screen bg-[#0a1628] text-white">
+    <div className="min-h-screen text-white bg-[rgb(var(--landing-bg-base))]">
       <a
-        className="sr-only z-50 rounded-xl bg-[#3b82f6] px-4 py-2 font-semibold text-white focus:fixed focus:left-4 focus:top-4 focus:not-sr-only"
+        className="z-50 py-2 px-4 font-semibold text-white rounded-xl sr-only focus:fixed focus:top-4 focus:left-4 focus:not-sr-only bg-[rgb(var(--brand-blue))]"
         href="#main-content"
       >
         Skip to main content

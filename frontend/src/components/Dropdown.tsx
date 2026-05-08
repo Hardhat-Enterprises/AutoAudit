@@ -64,7 +64,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   return (
   <div
     ref={dropdownRef}
-    className="relative inline-block min-w-0 shrink isolate"
+    className="inline-block relative min-w-0 shrink isolate"
   >
     <button
       type="button"
@@ -72,9 +72,9 @@ const Dropdown: React.FC<DropdownProps> = ({
         if (!hasOptions) return;
         setIsOpen(!isOpen);
       }}
-      className="flex items-center justify-between gap-2 min-w-10 max-w-full px-3 py-2 text-[14px] font-bold rounded-lg border transition-all duration-200 bg-transparent text-text-muted border-brand-blue/12 hover:bg-surface-2/45 hover:border-brand-blue/35 hover:text-text-strong focus:outline-none focus:border-brand-blue/60 focus:shadow-[0_0_0_2px_rgb(var(--brand-blue)/0.25)]"
+      className="flex gap-2 justify-between items-center py-2 px-3 max-w-full font-bold bg-transparent rounded-lg border transition-all duration-200 focus:outline-none min-w-10 text-[14px] text-text-muted border-brand-blue/12 hover:bg-surface-2/45 hover:border-brand-blue/35 hover:text-text-strong focus:border-brand-blue/60 focus:shadow-[0_0_0_2px_rgb(var(--brand-blue)/0.25)]"
     >
-      <span className="flex-1 text-left truncate min-w-0">
+      <span className="flex-1 min-w-0 text-left truncate">
         {selectedLabel}
       </span>
 
@@ -89,7 +89,7 @@ const Dropdown: React.FC<DropdownProps> = ({
 
     {isOpen && hasOptions && (
       <div
-        className="absolute top-full left-0 right-0 mt-1 rounded-lg border overflow-hidden z-1100 transition-all duration-300 bg-surface-2 border-brand-blue/6 shadow-[0_18px_45px_rgb(0_0_0/0.6)]"
+        className="overflow-hidden absolute right-0 left-0 top-full mt-1 rounded-lg border transition-all duration-300 z-1100 bg-surface-2 border-brand-blue/6 shadow-[0_18px_45px_rgb(0_0_0/0.6)]"
       >
         {safeOptions.map((option) => (
           <button

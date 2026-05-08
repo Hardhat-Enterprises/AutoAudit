@@ -19,8 +19,10 @@ import {
 	createScan,
 	deleteScan,
 	getSettings,
+	getScanReadiness,
+	type ScanReadinessResponse,
 } from "../../api/client";
-import { formatDateTimePartsAEST } from "../../utils/helpers";
+import { RelativeTime } from "../../components/RelativeTime";
 
 type ScansPageProps = {
 	sidebarWidth?: number;
@@ -94,7 +96,13 @@ const ScansPage: React.FC<ScansPageProps> = ({
 		benchmark_key: navState?.preselect?.benchmark_key || "",
 	});
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+	const [isCheckingReadiness, setIsCheckingReadiness] =
+		useState<boolean>(false);
+	const [readiness, setReadiness] = useState<ScanReadinessResponse | null>(
+		null,
+	);
 	const appliedNavStateRef = useRef<boolean>(false);
+	const stableStartedAtRef = useRef<Record<string, string>>({});
 
 	const loadScans = useCallback(async (): Promise<void> => {
 		try {
@@ -175,24 +183,112 @@ const ScansPage: React.FC<ScansPageProps> = ({
 		setFormData((prev) => ({ ...prev, [name]: value }));
 	}
 
+	useEffect(() => {
+		// A readiness result only applies to the currently selected connection and benchmark.
+		setReadiness(null);
+	}, [formData.m365_connection_id, formData.benchmark_key]);
+
+	function parseSelectedBenchmark(): {
+		framework: string;
+		benchmark: string;
+		version: string;
+	} | null {
+		const parts = formData.benchmark_key.split("|");
+		if (parts.length !== 3) return null;
+		const [framework, benchmark, version] = parts;
+		if (!framework || !benchmark || !version) return null;
+		return { framework, benchmark, version };
+	}
+
+	function getReadinessWarningMessage(): string | null {
+		if (!readiness) {
+			return "Pre-scan readiness has not been run. Starting anyway may lead to a stuck, pending, or partially failed scan if the tenant is missing required permissions. Do you want to continue?";
+		}
+
+		const hasFailures = readiness.checks.some(
+			(check) => check.status === "fail",
+		);
+		if (hasFailures) {
+			return "Pre-scan readiness found blocking issues. Starting anyway may lead to a stuck, pending, or failed scan because some required access checks did not pass. Do you want to continue?";
+		}
+
+		const hasWarnings = readiness.checks.some(
+			(check) => check.status === "warn",
+		);
+		if (hasWarnings) {
+			return "Pre-scan readiness returned warnings. Some controls may be skipped or fail during the scan. Do you want to continue?";
+		}
+
+		return null;
+	}
+
+	async function handleRunReadinessCheck(): Promise<void> {
+		setError(null);
+		setReadiness(null);
+
+		if (!formData.m365_connection_id) {
+			setError("Select a cloud platform before running readiness checks.");
+			return;
+		}
+
+		const parsedBenchmark = parseSelectedBenchmark();
+		if (!parsedBenchmark) {
+			setError("Select a benchmark before running readiness checks.");
+			return;
+		}
+
+		setIsCheckingReadiness(true);
+		try {
+			const readinessResult = await getScanReadiness(token, {
+				m365_connection_id: parseInt(formData.m365_connection_id, 10),
+				framework: parsedBenchmark.framework,
+				benchmark: parsedBenchmark.benchmark,
+				version: parsedBenchmark.version,
+			});
+			setReadiness(readinessResult);
+			if (!readinessResult.ready) {
+				setError(
+					"Environment is not ready. Resolve the critical checks shown below.",
+				);
+			}
+		} catch (err: unknown) {
+			setError((err as any)?.message || "Failed to run readiness checks");
+		} finally {
+			setIsCheckingReadiness(false);
+		}
+	}
+
 	async function handleSubmit(
 		e: React.FormEvent<HTMLFormElement>,
 	): Promise<void> {
 		e.preventDefault();
-		setIsSubmitting(true);
 		setError(null);
 
+		const readinessWarning = getReadinessWarningMessage();
+		if (readinessWarning && !window.confirm(readinessWarning)) {
+			return;
+		}
+
+		const parsedBenchmark = parseSelectedBenchmark();
+		if (!parsedBenchmark) {
+			setError(
+				"Invalid benchmark selection. Please select a benchmark again.",
+			);
+			return;
+		}
+
+		setIsSubmitting(true);
+
 		try {
-			const [framework, benchmark, version] =
-				formData.benchmark_key.split("|");
 			const newScan = await createScan(token, {
 				m365_connection_id: parseInt(formData.m365_connection_id, 10),
-				framework,
-				benchmark,
-				version,
+				framework: parsedBenchmark.framework,
+				benchmark: parsedBenchmark.benchmark,
+				version: parsedBenchmark.version,
 			});
 			setScans((prev) => [newScan, ...prev]);
 			setFormData({ m365_connection_id: "", benchmark_key: "" });
+			setReadiness(null);
 			setShowForm(false);
 		} catch (err: unknown) {
 			setError((err as any)?.message || "Failed to create scan");
@@ -229,10 +325,38 @@ const ScansPage: React.FC<ScansPageProps> = ({
 		}
 	}
 
-	function formatDate(
-		dateString?: string | null,
-	): ReturnType<typeof formatDateTimePartsAEST> {
-		return formatDateTimePartsAEST(dateString);
+	function getStableStartedAt(scan: Scan): string | null {
+		const candidate = scan.started_at || scan.created_at || null;
+		if (!candidate) return null;
+
+		const key = String(scan.id);
+		const existing = stableStartedAtRef.current[key];
+		if (!existing) {
+			stableStartedAtRef.current[key] = candidate;
+			return candidate;
+		}
+
+		const parseTimestampMs = (value: string): number => {
+			const direct = new Date(value).getTime();
+			if (!Number.isNaN(direct)) return direct;
+			const normalized = value
+				.trim()
+				.replace(" ", "T")
+				.replace(/(\.\d{3})\d+/, "$1");
+			return new Date(normalized).getTime();
+		};
+
+		const candidateMs = parseTimestampMs(candidate);
+		const existingMs = parseTimestampMs(existing);
+		if (Number.isNaN(existingMs)) {
+			stableStartedAtRef.current[key] = candidate;
+			return candidate;
+		}
+		if (!Number.isNaN(candidateMs) && candidateMs < existingMs) {
+			stableStartedAtRef.current[key] = candidate;
+			return candidate;
+		}
+		return existing;
 	}
 
 	function getStatusBadgeClasses(status?: string): string {
@@ -282,8 +406,8 @@ const ScansPage: React.FC<ScansPageProps> = ({
 					transition: "margin-left 0.4s ease, width 0.4s ease",
 				}}
 			>
-				<div className="max-w-300 mx-auto">
-					<div className="flex flex-col items-center justify-center py-16 text-(--text-secondary)">
+				<div className="mx-auto max-w-300">
+					<div className="flex flex-col justify-center items-center py-16 text-(--text-secondary)">
 						<Loader2 size={32} className="animate-spin" />
 						<p className="mt-4">Loading scans...</p>
 					</div>
@@ -303,23 +427,23 @@ const ScansPage: React.FC<ScansPageProps> = ({
 				transition: "margin-left 0.4s ease, width 0.4s ease",
 			}}
 		>
-			<div className="max-w-300 mx-auto">
+			<div className="mx-auto max-w-300">
 				{/* Page Header */}
-				<div className="flex items-center justify-between mb-6 max-md:flex-col max-md:items-start max-md:gap-4">
-					<div className="flex items-center gap-4 text-(--text-primary)">
+				<div className="flex justify-between items-center mb-6 max-md:flex-col max-md:items-start max-md:gap-4">
+					<div className="flex gap-4 items-center text-(--text-primary)">
 						<Search size={24} className="text-blue-500" />
 						<div>
-							<h1 className="text-2xl font-bold text-(--text-primary) m-0">
+							<h1 className="m-0 text-2xl font-bold text-(--text-primary)">
 								Compliance Scans
 							</h1>
-							<p className="text-sm text-(--text-secondary) m-0">
+							<p className="m-0 text-sm text-(--text-secondary)">
 								Run and manage compliance scans against your
 								M365 connections
 							</p>
 						</div>
 					</div>
 					<button
-						className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+						className="inline-flex gap-2 items-center py-2 px-4 text-sm font-medium text-white bg-blue-500 rounded-lg transition hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
 						onClick={() => setShowForm(!showForm)}
 						disabled={connections.length === 0}
 					>
@@ -330,7 +454,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 
 				{/* Error Banner */}
 				{error && (
-					<div className="flex items-center gap-2 px-4 py-3 rounded-lg mb-6 bg-red-500/10 border border-red-500/30 text-red-500">
+					<div className="flex gap-2 items-center py-3 px-4 mb-6 text-red-500 rounded-lg border bg-red-500/10 border-red-500/30">
 						<AlertCircle size={18} />
 						<span>{error}</span>
 					</div>
@@ -338,7 +462,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 
 				{/* Warning Banner */}
 				{connections.length === 0 && !isLoading && (
-					<div className="flex items-center gap-2 px-4 py-3 rounded-lg mb-6 bg-orange-500/10 border border-orange-500/30 text-orange-500">
+					<div className="flex gap-2 items-center py-3 px-4 mb-6 text-orange-500 rounded-lg border bg-orange-500/10 border-orange-500/30">
 						<AlertCircle size={18} />
 						<span>
 							You need to add a connection before you can run
@@ -349,8 +473,8 @@ const ScansPage: React.FC<ScansPageProps> = ({
 
 				{/* New Scan Form */}
 				{showForm && (
-					<div className="bg-secondary border border-(--border-color) rounded-xl p-6 mb-6">
-						<h3 className="text-(--text-primary) text-lg font-semibold mb-5">
+					<div className="p-6 mb-6 rounded-xl border bg-secondary border-(--border-color)">
+						<h3 className="mb-5 text-lg font-semibold text-(--text-primary)">
 							New Compliance Scan
 						</h3>
 						<form onSubmit={handleSubmit}>
@@ -358,7 +482,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 								<div className="mb-4">
 									<label
 										htmlFor="m365_connection_id"
-										className="block text-(--text-secondary) text-sm font-medium mb-2"
+										className="block mb-2 text-sm font-medium text-(--text-secondary)"
 									>
 										Cloud Platform
 									</label>
@@ -369,7 +493,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 										onChange={handleChange}
 										required
 										disabled={isSubmitting}
-										className="w-full px-3.5 py-2.5 bg-(--bg-tertiary) border border-(--border-color) rounded-lg text-(--text-primary) text-sm transition-colors duration-200 cursor-pointer focus:outline-none focus:border-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+										className="py-2.5 px-3.5 w-full text-sm rounded-lg border transition-colors duration-200 cursor-pointer focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed bg-(--bg-tertiary) border-(--border-color) text-(--text-primary)"
 									>
 										<option value="" className="bg-primary">
 											Select a cloud platform
@@ -389,7 +513,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 								<div className="mb-4">
 									<label
 										htmlFor="benchmark_key"
-										className="block text-(--text-secondary) text-sm font-medium mb-2"
+										className="block mb-2 text-sm font-medium text-(--text-secondary)"
 									>
 										Benchmark
 									</label>
@@ -400,7 +524,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 										onChange={handleChange}
 										required
 										disabled={isSubmitting}
-										className="w-full px-3.5 py-2.5 bg-(--bg-tertiary) border border-(--border-color) rounded-lg text-(--text-primary) text-sm transition-colors duration-200 cursor-pointer focus:outline-none focus:border-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+										className="py-2.5 px-3.5 w-full text-sm rounded-lg border transition-colors duration-200 cursor-pointer focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed bg-(--bg-tertiary) border-(--border-color) text-(--text-primary)"
 									>
 										<option value="" className="bg-primary">
 											Select a benchmark
@@ -415,13 +539,108 @@ const ScansPage: React.FC<ScansPageProps> = ({
 											</option>
 										))}
 									</select>
-								</div>
 							</div>
+						</div>
 
-							<div className="flex justify-end gap-3 mt-2">
+						<div className="mb-4">
+							<div className="flex flex-wrap gap-3 items-center">
 								<button
 									type="button"
-									className="flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium cursor-pointer [transition:all_0.3s_ease] border-none outline-none bg-secondary"
+									className="inline-flex gap-2 items-center py-2 px-4 text-sm font-medium rounded-lg border transition hover:border-blue-500/60 hover:text-white disabled:opacity-60 disabled:cursor-not-allowed border-(--border-color) text-(--text-primary)"
+									onClick={handleRunReadinessCheck}
+									disabled={
+										isSubmitting ||
+										isCheckingReadiness ||
+										!formData.m365_connection_id ||
+										!formData.benchmark_key
+									}
+								>
+									{isCheckingReadiness ? (
+										<>
+											<Loader2
+												size={16}
+												className="animate-spin"
+											/>
+											<span>Checking...</span>
+										</>
+									) : (
+										<span>Run Readiness Check</span>
+									)}
+								</button>
+								{readiness ? (
+									<span
+										className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
+											readiness.ready
+												? "bg-emerald-500/15 text-emerald-400"
+												: "bg-red-500/15 text-red-400"
+										}`}
+									>
+										{readiness.ready ? "Ready" : "Not Ready"}
+									</span>
+								) : null}
+							</div>
+						</div>
+
+						{readiness ? (
+							<div
+								className={`mb-4 rounded-xl border p-4 ${
+									readiness.ready
+										? "border-emerald-500/40 bg-emerald-500/5"
+										: "border-red-500/40 bg-red-500/5"
+								}`}
+							>
+								<h4 className="mb-2 text-sm font-semibold text-(--text-primary)">
+									Pre-scan readiness
+								</h4>
+								<p className="mb-3 text-sm text-(--text-secondary)">
+									{readiness.summary}
+								</p>
+								<ul className="space-y-2">
+									{readiness.checks.map((check) => (
+										<li
+											key={check.key}
+											className={`rounded-lg border p-3 ${
+												check.status === "pass"
+													? "border-emerald-500/35 bg-emerald-500/5"
+													: check.status === "fail"
+														? "border-red-500/35 bg-red-500/5"
+														: "border-orange-500/35 bg-orange-500/5"
+											}`}
+										>
+											<div className="flex justify-between items-start gap-3">
+												<span className="text-sm font-medium text-(--text-primary)">
+													{check.label}
+												</span>
+												<span
+													className={`inline-flex rounded-full px-2 py-1 text-[11px] font-bold ${
+														check.status === "pass"
+															? "bg-emerald-500/15 text-emerald-400"
+															: check.status === "fail"
+																? "bg-red-500/15 text-red-400"
+																: "bg-orange-500/15 text-orange-400"
+													}`}
+												>
+													{check.status.toUpperCase()}
+												</span>
+											</div>
+											<span className="mt-1 inline-block text-xs text-(--text-secondary)">
+												{check.message}
+											</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						) : (
+							<div className="flex gap-2 items-center py-3 px-4 mb-4 text-orange-500 rounded-lg border bg-orange-500/10 border-orange-500/30">
+								<AlertCircle size={18} />
+								<span>Run readiness check before starting a scan.</span>
+							</div>
+						)}
+
+						<div className="flex gap-3 justify-end mt-2">
+							<button
+								type="button"
+									className="flex gap-2 items-center py-2 px-4 font-medium rounded-lg border-none cursor-pointer outline-none text-[14px] [transition:all_0.3s_ease] bg-secondary"
 									onClick={() => setShowForm(false)}
 									disabled={isSubmitting}
 								>
@@ -429,7 +648,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 								</button>
 								<button
 									type="submit"
-									className="flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium cursor-pointer [transition:all_0.3s_ease] border-none outline-none bg-primary"
+									className="flex gap-2 items-center py-2 px-4 font-medium rounded-lg border-none cursor-pointer outline-none text-[14px] [transition:all_0.3s_ease] bg-primary"
 									disabled={isSubmitting}
 								>
 									{isSubmitting ? (
@@ -453,17 +672,17 @@ const ScansPage: React.FC<ScansPageProps> = ({
 				)}
 
 				{/* Scans List */}
-				<div className="bg-secondary border border-dashed border-slate-600 rounded-xl overflow-hidden">
+				<div className="overflow-hidden rounded-xl border border-dashed bg-secondary border-slate-600">
 					{scans.length === 0 ? (
-						<div className="text-center py-16 px-5">
+						<div className="py-16 px-5 text-center">
 							<Search
 								size={48}
-								className="text-(--text-tertiary) mb-4 mx-auto"
+								className="mx-auto mb-4 text-(--text-tertiary)"
 							/>
-							<h3 className="text-(--text-primary) text-lg font-semibold mb-2">
+							<h3 className="mb-2 text-lg font-semibold text-(--text-primary)">
 								No scans yet
 							</h3>
-							<p className="text-(--text-secondary) text-sm">
+							<p className="text-sm text-(--text-secondary)">
 								Run your first compliance scan to see results
 								here.
 							</p>
@@ -472,19 +691,19 @@ const ScansPage: React.FC<ScansPageProps> = ({
 						<table className="w-full border-collapse max-md:block max-md:overflow-x-auto">
 							<thead>
 								<tr>
-									<th className="text-left px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary)">
+									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
 										Status
 									</th>
-									<th className="text-left px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary)">
+									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
 										Benchmark
 									</th>
-									<th className="text-left px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary)">
+									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
 										Connection
 									</th>
-									<th className="text-left px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary)">
+									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
 										Started
 									</th>
-									<th className="text-left px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary)">
+									<th className="py-4 px-5 text-xs font-semibold tracking-wider text-left uppercase border-b text-(--text-secondary) border-(--border-color)] bg-(--bg-tertiary)">
 										Results
 									</th>
 									<th className="text-right px-5 py-4 text-(--text-secondary) text-xs font-semibold uppercase tracking-wider border-b border-(--border-color)] bg-(--bg-tertiary) w-[1%] whitespace-nowrap">
@@ -501,7 +720,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 										}
 										className="cursor-pointer transition-colors duration-200 hover:bg-(--bg-tertiary) last:[&>td]:border-b-0"
 									>
-										<td className="px-5 py-4 text-(--text-primary) text-sm border-b border-(--border-color)]">
+										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											<span
 												className={getStatusBadgeClasses(
 													scan.status,
@@ -511,7 +730,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 												{getStatusText(scan.status)}
 											</span>
 										</td>
-										<td className="px-5 py-4 text-(--text-primary) text-sm border-b border-(--border-color)]">
+										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											<span className="block font-medium">
 												{scan.benchmark || "-"}
 											</span>
@@ -519,33 +738,25 @@ const ScansPage: React.FC<ScansPageProps> = ({
 												{scan.version || ""}
 											</span>
 										</td>
-										<td className="px-5 py-4 text-(--text-primary) text-sm border-b border-(--border-color)]">
+										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											{scan.connection_name ||
 												(scan.m365_connection_id
 													? `Connection #${scan.m365_connection_id}`
 													: "-")}
 										</td>
-										<td className="px-5 py-4 text-(--text-primary) text-sm border-b border-(--border-color)]">
+										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											{(() => {
-												const dateString =
-													scan.started_at ||
-													scan.created_at;
+												const dateString = getStableStartedAt(scan);
 												if (!dateString) return "-";
-												const dt =
-													formatDate(dateString);
 												return (
-													<div className="flex flex-col gap-0.5 leading-tight">
-														<div className="text-(--text-primary) font-semibold text-[13px]">
-															{dt.date}
-														</div>
-														<div className="text-(--text-tertiary) text-xs">
-															{dt.time}
-														</div>
-													</div>
+													<RelativeTime
+														value={dateString}
+														preset="scansTableCell"
+													/>
 												);
 											})()}
 										</td>
-										<td className="px-5 py-4 text-(--text-primary) text-sm border-b border-(--border-color)]">
+										<td className="py-4 px-5 text-sm border-b text-(--text-primary) border-(--border-color)]">
 											{scan.status === "completed" ||
 											scan.status === "running" ? (
 												<div className="flex gap-3 text-[13px]">
@@ -587,7 +798,7 @@ const ScansPage: React.FC<ScansPageProps> = ({
 											) => e.stopPropagation()}
 										>
 											<button
-												className="flex items-center gap-2 rounded-lg font-medium cursor-pointer [transition:all_0.3s_ease] border-none outline-none text-[#ef4444] px-2.5 py-1.5 text-[13px]"
+												className="flex gap-2 items-center py-1.5 px-2.5 font-medium rounded-lg border-none cursor-pointer outline-none [transition:all_0.3s_ease] text-[rgb(var(--accent-bad))] text-[13px]"
 												onClick={() =>
 													handleDelete(scan.id)
 												}

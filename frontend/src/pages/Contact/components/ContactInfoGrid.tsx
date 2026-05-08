@@ -73,9 +73,9 @@ const ContactInfoGrid: React.FC = () => {
       {infoCards.map((card) => (
         <article
           key={card.title}
-          className="rounded-[20px] border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.03)] p-8 transition-all duration-300 hover:border-[#3b82f6] hover:bg-[rgba(255,255,255,0.05)]"
+          className="p-8 border transition-all duration-300 rounded-[20px] border-[rgb(var(--brand-blue)/0.1)] bg-[rgb(255_255_255/0.03)] hover:border-[rgb(var(--brand-blue))] hover:bg-[rgb(255_255_255/0.05)]"
         >
-          <div className="mb-5 flex h-[56px] w-[56px] items-center justify-center rounded-[14px] bg-gradient-to-br from-[#3b82f6] to-[#2563eb] text-2xl">
+          <div className="flex justify-center items-center mb-5 text-2xl bg-gradient-to-br h-[56px] w-[56px] rounded-[14px] from-[rgb(var(--brand-blue))] to-[rgb(var(--brand-blue-deep))]">
             {card.icon}
           </div>
 
@@ -83,7 +83,7 @@ const ContactInfoGrid: React.FC = () => {
             {card.title}
           </h3>
 
-          <p className="mb-2 whitespace-pre-line leading-[1.6] text-[#b0c4de]">
+          <p className="mb-2 whitespace-pre-line leading-[1.6] text-[rgb(var(--landing-text-soft))]">
             {card.description}
           </p>
 
@@ -92,20 +92,20 @@ const ContactInfoGrid: React.FC = () => {
               <a
                 key={`${link.label}-${index}`}
                 href={link.href}
-                className="block text-[#3b82f6] transition hover:text-[#2563eb]"
+                className="block transition text-[rgb(var(--brand-blue))] hover:text-[rgb(var(--brand-blue-deep))]"
               >
                 {link.label}
               </a>
             ))}
 
           {card.social && (
-            <div className="mt-4 flex gap-4">
+            <div className="flex gap-4 mt-4">
               {card.social.map(({ label, icon: Icon, href }) => (
                 <a
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="flex h-[44px] w-[44px] items-center justify-center rounded-[12px] border border-[rgba(59,130,246,0.2)] bg-[rgba(59,130,246,0.12)] text-white transition hover:border-transparent hover:bg-gradient-to-br hover:from-[#3b82f6] hover:to-[#2563eb]"
+                  className="flex justify-center items-center text-white border transition hover:bg-gradient-to-br hover:border-transparent h-[44px] w-[44px] rounded-[12px] border-[rgb(var(--brand-blue)/0.2)] bg-[rgb(var(--brand-blue)/0.12)] hover:from-[rgb(var(--brand-blue))] hover:to-[rgb(var(--brand-blue-deep))]"
                 >
                   <Icon size={18} strokeWidth={1.7} />
                 </a>

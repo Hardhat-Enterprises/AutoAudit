@@ -227,8 +227,8 @@ const ContactAdminPage: React.FC = () => {
 
   if (user?.role !== "admin") {
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-16 text-white">
-        <div className="mx-auto max-w-3xl rounded-2xl border border-cyan-400/10 bg-white/5 p-10 text-center">
+      <div className="py-16 px-4 min-h-screen text-white bg-slate-950">
+        <div className="p-10 mx-auto max-w-3xl text-center rounded-2xl border border-cyan-400/10 bg-white/5">
           <h2 className="mb-3 text-2xl font-semibold">Admin access required</h2>
           <p className="text-slate-300">
             You do not have permission to view this page.
@@ -245,9 +245,9 @@ const ContactAdminPage: React.FC = () => {
   const isLongMessage = messageWordCount > 500;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0a1628] font-sans text-white">
+    <div className="overflow-x-hidden min-h-screen font-sans text-white bg-[rgb(var(--landing-bg-base))]">
       <div className="mx-auto max-w-400 px-[3%] py-8">
-        <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <header className="flex flex-col gap-4 mb-8 md:flex-row md:justify-between md:items-start">
           <div>
             <h1 className="mb-2 text-3xl font-bold">Contact Submissions</h1>
             <p className="text-base text-slate-300">
@@ -257,19 +257,19 @@ const ContactAdminPage: React.FC = () => {
         </header>
 
         {error && (
-          <div className="mb-4 rounded-xl border border-red-400/40 bg-red-500/15 px-4 py-3 text-red-200">
+          <div className="py-3 px-4 mb-4 text-red-200 rounded-xl border border-red-400/40 bg-red-500/15">
             {error}
           </div>
         )}
 
         {actionMessage && (
-          <div className="mb-4 rounded-xl border border-green-400/40 bg-green-500/15 px-4 py-3 text-green-200">
+          <div className="py-3 px-4 mb-4 text-green-200 rounded-xl border border-green-400/40 bg-green-500/15">
             {actionMessage}
           </div>
         )}
 
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-[350px_minmax(0,1fr)]">
-          <section className="max-h-100 overflow-y-auto rounded-[20px] border border-cyan-400/10 bg-white/5 p-6 xl:max-h-[calc(100vh-160px)]">
+          <section className="overflow-y-auto p-6 border max-h-100 rounded-[20px] border-cyan-400/10 bg-white/5 xl:max-h-[calc(100vh-160px)]">
             {isLoading ? (
               <p className="text-slate-300">Loading submissions...</p>
             ) : submissions.length ? (
@@ -291,7 +291,7 @@ const ContactAdminPage: React.FC = () => {
                         <h3 className="mb-1 text-lg font-semibold">
                           {submission.first_name} {submission.last_name}
                         </h3>
-                        <p className="truncate text-sm text-slate-300">
+                        <p className="text-sm truncate text-slate-300">
                           {submission.subject}
                         </p>
                       </div>
@@ -312,26 +312,26 @@ const ContactAdminPage: React.FC = () => {
             )}
           </section>
 
-          <section className="max-h-[calc(100vh-160px)] overflow-y-auto rounded-[20px] border border-cyan-400/10 bg-white/5 p-8">
+          <section className="overflow-y-auto p-8 border max-h-[calc(100vh-160px)] rounded-[20px] border-cyan-400/10 bg-white/5">
             {selectedSubmission ? (
               <div>
-                <div className="mb-8 border-b border-cyan-400/10 pb-6">
+                <div className="pb-6 mb-8 border-b border-cyan-400/10">
                   <h2 className="mb-2 text-3xl font-bold">
                     {selectedSubmission.subject}
                   </h2>
-                  <span className="inline-block rounded-lg bg-cyan-400/10 px-4 py-2 text-sm capitalize text-cyan-300">
+                  <span className="inline-block py-2 px-4 text-sm text-cyan-300 capitalize rounded-lg bg-cyan-400/10">
                     {selectedSubmission.status}
                   </span>
                 </div>
 
-                <div className="mb-8 rounded-xl border border-cyan-400/10 bg-white/5 p-6">
+                <div className="p-6 mb-8 rounded-xl border border-cyan-400/10 bg-white/5">
                   <h3 className="mb-4 text-lg font-semibold">
                     Contact Information
                   </h3>
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="rounded-lg border border-cyan-400/10 bg-white/5 p-4">
-                      <span className="mb-2 block text-sm text-slate-300">
+                    <div className="p-4 rounded-lg border border-cyan-400/10 bg-white/5">
+                      <span className="block mb-2 text-sm text-slate-300">
                         Name
                       </span>
                       <span className="text-base font-medium text-white">
@@ -340,17 +340,17 @@ const ContactAdminPage: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="rounded-lg border border-cyan-400/10 bg-white/5 p-4">
-                      <span className="mb-2 block text-sm text-slate-300">
+                    <div className="p-4 rounded-lg border border-cyan-400/10 bg-white/5">
+                      <span className="block mb-2 text-sm text-slate-300">
                         Email
                       </span>
-                      <span className="break-all text-base font-medium text-white">
+                      <span className="text-base font-medium text-white break-all">
                         {selectedSubmission.email}
                       </span>
                     </div>
 
-                    <div className="rounded-lg border border-cyan-400/10 bg-white/5 p-4">
-                      <span className="mb-2 block text-sm text-slate-300">
+                    <div className="p-4 rounded-lg border border-cyan-400/10 bg-white/5">
+                      <span className="block mb-2 text-sm text-slate-300">
                         Phone
                       </span>
                       <span className="text-base font-medium text-white">
@@ -358,8 +358,8 @@ const ContactAdminPage: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="rounded-lg border border-cyan-400/10 bg-white/5 p-4">
-                      <span className="mb-2 block text-sm text-slate-300">
+                    <div className="p-4 rounded-lg border border-cyan-400/10 bg-white/5">
+                      <span className="block mb-2 text-sm text-slate-300">
                         Company
                       </span>
                       <span className="text-base font-medium text-white">
@@ -369,7 +369,7 @@ const ContactAdminPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mb-8 rounded-xl border border-cyan-400/10 bg-white/5 p-6">
+                <div className="p-6 mb-8 rounded-xl border border-cyan-400/10 bg-white/5">
                   <h3 className="mb-4 text-lg font-semibold">Message</h3>
                   <div
                     className={`wrap-break-word whitespace-pre-wrap rounded-lg border border-cyan-400/10 bg-white/10 p-6 text-[15px] leading-8 text-slate-300 ${
@@ -380,13 +380,13 @@ const ContactAdminPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mb-8 grid grid-cols-1 gap-5">
+                <div className="grid grid-cols-1 gap-5 mb-8">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-white">
+                    <label className="block mb-2 text-sm font-semibold text-white">
                       Status
                     </label>
                     <select
-                      className="min-h-11.5 w-full rounded-xl border border-slate-700 bg-slate-700 px-4 py-3 pr-10 text-sm text-white outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="py-3 px-4 pr-10 w-full text-sm text-white rounded-xl border transition outline-none focus:border-cyan-400 focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed min-h-11.5 border-slate-700 bg-slate-700 focus:ring-cyan-300/20"
                       value={selectedSubmission.status}
                       onChange={(event) =>
                         handleUpdate({ status: event.target.value })
@@ -401,11 +401,11 @@ const ContactAdminPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-white">
+                    <label className="block mb-2 text-sm font-semibold text-white">
                       Priority
                     </label>
                     <select
-                      className="min-h-11.5 w-full rounded-xl border border-slate-700 bg-slate-700 px-4 py-3 pr-10 text-sm text-white outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="py-3 px-4 pr-10 w-full text-sm text-white rounded-xl border transition outline-none focus:border-cyan-400 focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed min-h-11.5 border-slate-700 bg-slate-700 focus:ring-cyan-300/20"
                       value={selectedSubmission.priority}
                       onChange={(event) =>
                         handleUpdate({ priority: event.target.value })
@@ -420,9 +420,9 @@ const ContactAdminPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2">
                   <button
-                    className="rounded-xl bg-linear-to-r from-cyan-400 to-blue-500 px-4 py-4 font-semibold text-white shadow-lg shadow-cyan-400/30 transition hover:-translate-y-0.5 hover:shadow-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                    className="py-4 px-4 font-semibold text-white from-cyan-400 to-blue-500 rounded-xl shadow-lg transition hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed bg-linear-to-r shadow-cyan-400/30 hover:shadow-cyan-400/40 disabled:hover:translate-y-0"
                     onClick={() => handleUpdate({ assigned_to: currentUserId })}
                     disabled={currentUserId === undefined}
                     title={
@@ -435,7 +435,7 @@ const ContactAdminPage: React.FC = () => {
                   </button>
 
                   <button
-                    className="rounded-xl bg-linear-to-r from-red-600 to-red-700 px-4 py-4 font-semibold text-white shadow-lg shadow-red-500/30 transition hover:-translate-y-0.5 hover:shadow-red-500/40"
+                    className="py-4 px-4 font-semibold text-white from-red-600 to-red-700 rounded-xl shadow-lg transition hover:-translate-y-0.5 bg-linear-to-r shadow-red-500/30 hover:shadow-red-500/40"
                     onClick={handleDelete}
                   >
                     Delete
@@ -445,15 +445,15 @@ const ContactAdminPage: React.FC = () => {
                 <div className="mb-8">
                   <h3 className="mb-4 text-lg font-semibold">Notes</h3>
                   <textarea
-                    className="min-h-30 w-full resize-y rounded-xl border-2 border-cyan-400/20 bg-white/10 p-4 text-[15px] text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:bg-white/15"
+                    className="p-4 w-full text-white rounded-xl border-2 transition outline-none resize-y focus:border-cyan-400 min-h-30 border-cyan-400/20 bg-white/10 text-[15px] placeholder:text-slate-500 focus:bg-white/15"
                     value={noteText}
                     onChange={(event) => setNoteText(event.target.value)}
                     placeholder="Add an internal note"
                   />
-                  <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <label className="flex items-center gap-2 text-sm text-slate-300">
+                  <div className="flex flex-col gap-4 mt-4 sm:flex-row sm:justify-between sm:items-center">
+                    <label className="flex gap-2 items-center text-sm text-slate-300">
                       <input
-                        className="h-4.5 w-4.5 cursor-pointer accent-cyan-400"
+                        className="cursor-pointer h-4.5 w-4.5 accent-cyan-400"
                         type="checkbox"
                         checked={isInternal}
                         onChange={(event) => setIsInternal(event.target.checked)}
@@ -462,7 +462,7 @@ const ContactAdminPage: React.FC = () => {
                     </label>
 
                     <button
-                      className="rounded-xl bg-linear-to-r from-cyan-400 to-blue-500 px-6 py-3 font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-400/30"
+                      className="py-3 px-6 font-semibold text-white from-cyan-400 to-blue-500 rounded-xl transition hover:shadow-lg hover:-translate-y-0.5 bg-linear-to-r hover:shadow-cyan-400/30"
                       onClick={handleAddNote}
                     >
                       Add note
@@ -474,7 +474,7 @@ const ContactAdminPage: React.FC = () => {
                   {notes.map((note) => (
                     <div
                       key={note.id}
-                      className="mb-4 rounded-xl border border-cyan-400/10 bg-white/10 p-4"
+                      className="p-4 mb-4 rounded-xl border border-cyan-400/10 bg-white/10"
                     >
                       <h4 className="mb-2 text-base font-semibold">Note</h4>
                       <p className="mb-2 text-sm text-slate-300">{note.note}</p>
@@ -490,9 +490,9 @@ const ContactAdminPage: React.FC = () => {
                   {history.map((entry) => (
                     <div
                       key={entry.id}
-                      className="mb-4 rounded-lg border-l-4 border-cyan-400 bg-white/5 p-4"
+                      className="p-4 mb-4 rounded-lg border-l-4 border-cyan-400 bg-white/5"
                     >
-                      <span className="mb-2 inline-block rounded-md bg-cyan-400/20 px-3 py-1 text-xs font-semibold uppercase text-cyan-300">
+                      <span className="inline-block py-1 px-3 mb-2 text-xs font-semibold text-cyan-300 uppercase rounded-md bg-cyan-400/20">
                         {entry.action}
                       </span>
                       <p className="mb-2 text-sm text-slate-300">

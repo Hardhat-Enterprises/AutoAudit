@@ -2,7 +2,7 @@
 //Last updated 17 September 2025
 //Added theme support
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -57,28 +57,28 @@ const NavButton: React.FC<NavButtonProps> = ({
   `;
 
   const themeButton = isDarkMode
-    ? "bg-slate-700 text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] hover:bg-slate-600 hover:shadow-[0_6px_16px_rgba(0,0,0,0.3)]"
-    : "bg-slate-100 text-slate-800 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-slate-200 hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)]";
+    ? "bg-slate-700 text-white shadow-[0_4px_12px_rgb(0_0_0/0.2)] hover:bg-slate-600 hover:shadow-[0_6px_16px_rgb(0_0_0/0.3)]"
+    : "bg-slate-100 text-slate-800 shadow-[0_4px_12px_rgb(0_0_0/0.1)] hover:bg-slate-200 hover:shadow-[0_6px_16px_rgb(0_0_0/0.15)]";
 
   const expandedButton = isExpanded
     ? "w-[190px] min-w-[190px] max-w-[190px] min-h-[54px] justify-start gap-[15px] rounded-[25px] px-[18px] max-md:min-w-[140px] max-md:px-[15px]"
     : "";
 
   const activeButton = isActive
-    ? "bg-blue-500 shadow-[0_4px_20px_rgba(59,130,246,0.4)] hover:bg-blue-600"
+    ? "bg-blue-500 shadow-[0_4px_20px_rgb(var(--brand-blue)/0.4)] hover:bg-blue-600"
     : "";
 
   return (
-    <li className="m-0 flex w-full justify-center p-0">
+    <li className="flex justify-center p-0 m-0 w-full">
       <a
         className={`${baseButton} ${themeButton} ${expandedButton} ${activeButton}`}
         href={href}
         onClick={handleClick}
       >
-        <span className="flex h-5 w-5 items-center justify-center" aria-hidden="true">
+        <span className="flex justify-center items-center w-5 h-5" aria-hidden="true">
           <Icon size={18} strokeWidth={2.2} />
         </span>
-        {isExpanded && <span className="whitespace-nowrap text-sm font-medium">{name}</span>}
+        {isExpanded && <span className="text-sm font-medium whitespace-nowrap">{name}</span>}
       </a>
     </li>
   );
@@ -95,7 +95,10 @@ type SidebarProps = {
 const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
-
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth < 768;
+  });
   const [isExpanded, setIsExpanded] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     try {
@@ -108,6 +111,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
   });
 
   const [searchValue, setSearchValue] = useState<string>("");
+    useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      onWidthChange(mobile ? 0 : isExpanded ? 220 : 80);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isExpanded, onWidthChange]);
+
+  const effectiveExpanded = isMobile ? false : isExpanded;
 
   const getActiveItem = (): "home" | "cloud-platforms" | "scans" | "tasks" | "reports" | "settings" | "account" => {
     const path = location.pathname;
@@ -123,10 +140,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
 
   const activeItem = getActiveItem();
 
-  const toggleSidebar = (): void => {
+    const toggleSidebar = (): void => {
     const newExpanded = !isExpanded;
     setIsExpanded(newExpanded);
-    onWidthChange(newExpanded ? 220 : 80);
+    onWidthChange(isMobile ? 0 : newExpanded ? 220 : 80);
     if (typeof window !== "undefined") {
       try {
         window.localStorage.setItem(SIDEBAR_EXPANDED_KEY, String(newExpanded));
@@ -145,23 +162,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
   };
 
   const sidebarTheme = isDarkMode
-    ? "bg-[#0a1628] shadow-[4px_0_10px_rgba(0,0,0,0.2)] border-r border-r-slate-400/25"
-    : "bg-white shadow-[4px_0_10px_rgba(0,0,0,0.1)] border-r border-r-slate-400/35";
+    ? "bg-[rgb(var(--landing-bg-base))] shadow-[4px_0_10px_rgb(0_0_0/0.2)] border-r border-r-slate-400/25"
+    : "bg-white shadow-[4px_0_10px_rgb(0_0_0/0.1)] border-r border-r-slate-400/35";
 
   return (
     <nav
       className={`fixed left-0 top-0 z-1000 h-screen overflow-x-hidden overflow-y-hidden transition-[width,background-color] duration-300 ${
-        isExpanded ? "w-55" : "w-20"
+                effectiveExpanded ? "w-55" : "w-20"
       } ${sidebarTheme}`}
     >
-      <div className="flex h-screen w-full flex-col items-center px-3.75 pb-7.5 pt-5">
-        <div className="mb-10 flex w-full justify-center">
-          {isExpanded ? (
+      <div className="flex flex-col items-center pt-5 w-full h-screen px-3.75 pb-7.5">
+        <div className="flex justify-center mb-10 w-full">
+                    {effectiveExpanded ? (
             <div
               className={`flex w-full max-w-47.5 items-center rounded-[25px] p-2 transition-all duration-300 hover:-translate-y-0.5 max-md:max-w-37.5 ${
                 isDarkMode
-                  ? "bg-slate-700 shadow-1 hover:bg-slate-600 hover:shadow-[0_6px_16px_rgba(0,0,0,0.3)]"
-                  : "bg-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-slate-200 hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)]"
+                  ? "bg-slate-700 shadow-1 hover:bg-slate-600 hover:shadow-[0_6px_16px_rgb(0_0_0/0.3)]"
+                  : "bg-slate-100 shadow-[0_4px_12px_rgb(0_0_0/0.1)] hover:bg-slate-200 hover:shadow-[0_6px_16px_rgb(0_0_0/0.15)]"
               }`}
             >
               <button
@@ -194,8 +211,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             <button
               className={`flex h-12.5 w-12.5 items-center justify-center rounded-xl transition-all duration-300 hover:-translate-y-0.5 ${
                 isDarkMode
-                  ? "bg-slate-700 text-white shadow-1 hover:bg-slate-600 hover:shadow-[0_6px_16px_rgba(0,0,0,0.3)]"
-                  : "bg-slate-100 text-slate-800 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-slate-200 hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)]"
+                  ? "bg-slate-700 text-white shadow-1 hover:bg-slate-600 hover:shadow-[0_6px_16px_rgb(0_0_0/0.3)]"
+                  : "bg-slate-100 text-slate-800 shadow-[0_4px_12px_rgb(0_0_0/0.1)] hover:bg-slate-200 hover:shadow-[0_6px_16px_rgb(0_0_0/0.15)]"
               }`}
               onClick={toggleSidebar}
               aria-label="Expand sidebar"
@@ -205,12 +222,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
           )}
         </div>
 
-        <ul className="m-0 flex w-full flex-1 list-none flex-col items-center gap-5 p-0">
+        <ul className="flex flex-col flex-1 gap-5 items-center p-0 m-0 w-full list-none">
           <NavButton
             href={"/dashboard"}
             name={"Dashboard"}
             icon={LayoutDashboard}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "home"}
             onClick={() => handleNavClick("/dashboard")}
@@ -219,7 +236,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/cloud-platforms"}
             name={"Cloud Platforms"}
             icon={Cloud}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "cloud-platforms"}
             onClick={() => handleNavClick("/cloud-platforms")}
@@ -228,7 +245,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/scans"}
             name={"Scans"}
             icon={FileSearch}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "scans"}
             onClick={() => handleNavClick("/scans")}
@@ -237,7 +254,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/evidence-scanner"}
             name={"Evidence"}
             icon={ShieldCheck}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "tasks"}
             onClick={() => handleNavClick("/evidence-scanner")}
@@ -253,7 +270,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/settings"}
             name={"Settings"}
             icon={Settings}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "settings"}
             onClick={() => handleNavClick("/settings")}
@@ -262,7 +279,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/account"}
             name={"Account"}
             icon={User}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "account"}
             onClick={() => handleNavClick("/account")}

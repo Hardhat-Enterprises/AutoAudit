@@ -60,14 +60,14 @@ export default function AccountPage({
         isDarkMode ? "bg-slate-900 text-white" : "bg-gray-100 text-black"
       }`}
       style={{
-        marginLeft: `${sidebarWidth}px`,
-        width: `calc(100% - ${sidebarWidth}px)`,
-      }}
+  marginLeft: sidebarWidth ? `${sidebarWidth}px` : 0,
+  width: sidebarWidth ? `calc(100% - ${sidebarWidth}px)` : "100%",
+}}
     >
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="p-4 pl-24 mx-auto max-w-4xl sm:p-6 sm:pl-6">
         {/* HEADER */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-4 items-start mb-8 sm:flex-row sm:justify-between sm:items-center">
+          <div className="flex gap-3 items-center">
             <User size={24} />
             <div>
               <h1 className="text-2xl font-semibold">Account</h1>
@@ -81,7 +81,7 @@ export default function AccountPage({
             type="button"
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition disabled:opacity-50"
+            className="flex gap-2 justify-center items-center py-2 px-4 w-full bg-red-600 rounded-lg transition sm:w-auto hover:bg-red-700 disabled:opacity-50"
           >
             {isLoggingOut ? (
               <>
@@ -98,10 +98,10 @@ export default function AccountPage({
         </div>
 
         {/* PROFILE CARD (FIXES YOUR PR COMMENTS) */}
-        <div className="p-6 rounded-xl border border-slate-700 bg-secondary shadow-md">
+        <div className="p-6 rounded-xl border shadow-md border-slate-700 bg-secondary">
           <h3 className="text-lg font-semibold">Profile</h3>
 
-          <hr className="border border-slate-600 my-4"/>
+          <hr className="my-4 border border-slate-600"/>
 
           <div className="space-y-3">
             <div className="flex flex-col">

@@ -27,9 +27,9 @@ const initialState: ContactFormData = {
 };
 
 const fieldClassName =
-  "w-full rounded-xl border border-[rgba(59,130,246,0.2)] bg-[rgba(255,255,255,0.05)] px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-400 focus:border-[#3b82f6] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_2px_rgba(59,130,246,0.15)]";
+  "w-full rounded-xl border border-[rgb(var(--brand-blue)/0.2)] bg-[rgb(255_255_255/0.05)] px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-400 focus:border-[rgb(var(--brand-blue))] focus:bg-[rgb(255_255_255/0.08)] focus:shadow-[0_0_0_2px_rgb(var(--brand-blue)/0.15)]";
 
-const labelClassName = "mb-2 block text-sm font-medium text-[#b0c4de]";
+const labelClassName = "mb-2 block text-sm font-medium text-[rgb(var(--landing-text-soft))]";
 
 const ContactForm: React.FC<ContactFormProps> = ({ submitted, onSubmit }) => {
   const [formData, setFormData] = useState<ContactFormData>(initialState);
@@ -64,13 +64,13 @@ const ContactForm: React.FC<ContactFormProps> = ({ submitted, onSubmit }) => {
   };
 
   return (
-    <div className="rounded-[20px] border border-[rgba(59,130,246,0.1)] bg-[rgba(255,255,255,0.03)] p-8 backdrop-blur-[10px] md:p-12">
+    <div className="p-8 border md:p-12 rounded-[20px] border-[rgb(var(--brand-blue)/0.1)] bg-[rgb(255_255_255/0.03)] backdrop-blur-[10px]">
       <h2 className="mb-6 text-2xl font-semibold text-white">
         Send us a Message
       </h2>
 
       <form onSubmit={handleSubmit} noValidate>
-        <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 mb-6 md:grid-cols-2">
           <div>
             <label htmlFor="firstName" className={labelClassName}>
               First Name *
@@ -98,7 +98,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ submitted, onSubmit }) => {
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 mb-6 md:grid-cols-2">
           <div>
             <label htmlFor="email" className={labelClassName}>
               Email Address *
@@ -178,19 +178,19 @@ const ContactForm: React.FC<ContactFormProps> = ({ submitted, onSubmit }) => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-2 w-full rounded-full bg-gradient-to-br from-[#3b82f6] to-[#2563eb] px-6 py-3 text-lg font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(59,130,246,0.35)] disabled:cursor-not-allowed disabled:opacity-70"
+          className="py-3 px-6 mt-2 w-full text-lg font-semibold text-white bg-gradient-to-br rounded-full transition duration-200 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed from-[rgb(var(--brand-blue))] to-[rgb(var(--brand-blue-deep))] hover:shadow-[0_10px_25px_rgb(var(--brand-blue)/0.35)]"
         >
           {isSubmitting ? "Sending..." : "Send Message"}
         </button>
 
         {error && (
-          <div className="mt-4 rounded-xl border border-[rgba(239,68,68,0.4)] bg-[rgba(239,68,68,0.12)] px-4 py-3 text-center text-[#fecaca]">
+          <div className="py-3 px-4 mt-4 text-center rounded-xl border border-[rgb(var(--accent-bad)/0.4)] bg-[rgb(var(--accent-bad)/0.12)] text-[rgb(254_202_202)]">
             {error}
           </div>
         )}
 
         {submitted && (
-          <div className="mt-4 rounded-xl border border-[#3b82f6] bg-[rgba(59,130,246,0.12)] px-4 py-4 text-center text-[#3b82f6]">
+          <div className="py-4 px-4 mt-4 text-center rounded-xl border border-[rgb(var(--brand-blue))] bg-[rgb(var(--brand-blue)/0.12)] text-[rgb(var(--brand-blue))]">
             ✓ Thank you! Your message has been sent successfully. We&apos;ll get
             back to you soon.
           </div>
