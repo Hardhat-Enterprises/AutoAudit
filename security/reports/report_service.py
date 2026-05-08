@@ -1191,6 +1191,34 @@ def generate_single_finding_pdf(
 
 
 # ---------------------------------------------------------------------------
+# Backward-compatibility alias
+#
+# security/evidence_backend/reportgenerator.py and security/evidence_ui/app.py
+# both import generate_pdf from this module.  It maps to generate_single_finding_pdf
+# which accepts the same arguments those callers pass.
+# ---------------------------------------------------------------------------
+
+def generate_pdf(
+    data: Mapping[str, Any],
+    *,
+    template_path: os.PathLike | str = "AutoAudit_Report_Template.docx",
+    output_dir: os.PathLike | str = "reports_out",
+    base_dir: os.PathLike | str = ".",
+    image_marker: str = "[Embed evidence here]",
+    unique_id_override: Optional[str] = None,
+) -> Path:
+    """Alias for generate_single_finding_pdf — kept for backward compatibility."""
+    return generate_single_finding_pdf(
+        data,
+        template_path=template_path,
+        output_dir=output_dir,
+        base_dir=base_dir,
+        image_marker=image_marker,
+        unique_id_override=unique_id_override,
+    )
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -1214,7 +1242,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # Default: generate full report
-    dataset  = args[0] if args and not args[0].startswith("--") else "fake_dataset_template_ready.json"
+    dataset  = args[0] if args and not args[0].startswith("--") else "fake_dataset.json"
     template = args[1] if len(args) > 1 and not args[1].startswith("--") else "AutoAudit_Report_Template.docx"
     outdir   = args[2] if len(args) > 2 and not args[2].startswith("--") else "reports_out"
     to_pdf   = "--pdf" in args
