@@ -304,6 +304,24 @@ export type CreateScanPayload = {
   version: string;
 }
 
+// One item in the readiness breakdown shown on the scan form.
+export type ScanReadinessCheck = {
+  key: string;
+  label: string;
+  status: 'pass' | 'fail' | 'warn';
+  severity: 'critical' | 'warning';
+  message: string;
+}
+
+export type ScanReadinessResponse = {
+  ready: boolean;
+  summary: string;
+  required_permissions: string[];
+  missing_permissions: string[];
+  unverified_permissions: string[];
+  checks: ScanReadinessCheck[];
+}
+
 export async function getScans(token: AuthToken): Promise<any> {
   return fetchWithAuth('/v1/scans/', token);
 }
@@ -317,6 +335,26 @@ export async function createScan(token: AuthToken, data: CreateScanPayload): Pro
     method: 'POST',
     body: JSON.stringify(data),
   });
+}
+
+export async function getScanReadiness(
+  token: AuthToken,
+  params: {
+    m365_connection_id: number;
+    framework: string;
+    benchmark: string;
+    version: string;
+  }
+): Promise<ScanReadinessResponse> {
+  // Readiness is a lightweight GET request because it only validates the selected connection and benchmark. It does not create or start a scan.
+  const search = new URLSearchParams({
+    m365_connection_id: String(params.m365_connection_id),
+    framework: params.framework,
+    benchmark: params.benchmark,
+    version: params.version,
+  });
+
+  return fetchWithAuth(`/v1/scans/readiness?${search.toString()}`, token);
 }
 
 export async function deleteScan(token: AuthToken, id: string | number): Promise<void> {

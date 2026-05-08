@@ -323,18 +323,18 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
 
   return (
     <div
-      className={`${isDarkMode ? 'dark' : 'light'} min-h-screen p-6 bg-surface-1 text-text-strong transition-colors duration-200 in-[.light]:bg-surface-1`}
+      className={`${isDarkMode ? 'dark' : 'light'} min-h-screen p-4 pl-24 bg-surface-1 text-text-strong transition-colors duration-200 sm:p-6 sm:pl-6 in-[.light]:bg-surface-1`}
       style={{
-        // Layout: keep page content aligned with collapsible sidebar width.
-        marginLeft: `${sidebarWidth}px`,
-        width: `calc(100% - ${sidebarWidth}px)`,
-        transition: 'margin-left 0.4s ease, width 0.4s ease'
-      }}
+  // Layout: keep desktop aligned with sidebar, but allow full width on mobile.
+  marginLeft: sidebarWidth ? `${sidebarWidth}px` : 0,
+  width: sidebarWidth ? `calc(100% - ${sidebarWidth}px)` : '100%',
+  transition: 'margin-left 0.4s ease, width 0.4s ease'
+}}
     >
       <div className="mx-auto w-full max-w-300">
-        <div className="flex gap-5 justify-start items-center pl-6 mb-1.5">
-          <div className="flex gap-5 items-center">
-            <img src="/AutoAudit.png" alt="AutoAudit Logo" className="object-contain w-40 h-40" />
+        <div className="flex justify-start items-center mb-1.5 sm:pl-6">
+          <div className="flex flex-col gap-2 items-start sm:flex-row sm:gap-5 sm:items-center">
+            <img src="/AutoAudit.png" alt="AutoAudit Logo" className="object-contain w-24 h-24 sm:w-40 sm:h-40" />
             <h1
               className="m-0 font-bold tracking-wide leading-none text-accent-teal in-[.light]:text-brand-blue"
               style={{
@@ -347,7 +347,7 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
           </div>
         </div>
 
-        <p className="mt-1.5 mb-6 ml-6 leading-snug text-left text-text-muted text-[15px]">
+        <p className="mt-1.5 mb-6 leading-snug text-left text-text-muted text-[15px] sm:ml-6">
           Your Evidence Assistant: Pick a strategy and upload your file. Images, PDF, DOCX, TXT, logs, registry exports
           are supported.
         </p>
@@ -415,7 +415,7 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
 
           <div className="flex flex-wrap gap-3 items-center mt-6">
             <button
-              className="flex gap-2 items-center py-3 px-5 font-semibold border transition-all duration-300 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed rounded-[10px] text-[15px] bg-accent-teal text-accent-navy border-accent-teal hover:bg-brand-cyan hover:border-brand-cyan hover:shadow-[0_4px_12px_rgb(var(--brand-cyan))] disabled:hover:bg-brand-cyan disabled:hover:border-brand-cyan"
+              className="flex gap-2 justify-center items-center py-3 px-5 w-full font-semibold border transition-all duration-300 cursor-pointer sm:w-auto disabled:opacity-60 disabled:cursor-not-allowed rounded-[10px] text-[15px] bg-accent-teal text-accent-navy border-accent-teal hover:bg-brand-cyan hover:border-brand-cyan hover:shadow-[0_4px_12px_rgb(var(--brand-cyan))] disabled:hover:bg-brand-cyan disabled:hover:border-brand-cyan"
               // Disable until strategy + file selected (and while scanning).
               disabled={!selectedStrategy || !selectedFile || isScanning}
               onClick={handleScan}

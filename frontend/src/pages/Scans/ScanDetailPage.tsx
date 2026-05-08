@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, JSX } from "react";
+import React, { useState, useEffect, useCallback, JSX } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
 	ArrowLeft,
@@ -8,15 +8,12 @@ import {
 	Loader2,
 	AlertCircle,
 	FileText,
-	FileDown,
 	Shield,
 	AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { getScan } from "../../api/client";
-import { formatDateAEST, formatTimeAEST } from "../../utils/helpers";
-import { buildScanExportFilename } from "../../utils/buildScanExportFilename";
-import { exportElementToPdf } from "../../utils/exportElementToPdf";
+import { RelativeTime, relativeTimePresetClass } from "../../components/RelativeTime";
 
 type ScanDetailPageProps = {
 	sidebarWidth?: number;
@@ -141,9 +138,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
 
-	const reportRef = useRef<HTMLDivElement | null>(null);
-	const [isExporting, setIsExporting] = useState(false);
-
 	const loadScan = useCallback(async (): Promise<ScanDetail | null> => {
 		if (!scanId) {
 			setError("Scan ID is missing");
@@ -220,14 +214,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 		}
 	}
 
-	function formatDate(dateString?: string | null): string {
-		return formatDateAEST(dateString);
-	}
-
-	function formatTime(dateString?: string | null): string {
-		return formatTimeAEST(dateString);
-	}
-
 	function getResultIcon(status?: string): JSX.Element {
 		const colors =
 			resultStatusColors[status || ""] || resultStatusColors.unknown;
@@ -294,30 +280,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 		marginLeft: `${sidebarWidth}px`,
 		width: `calc(100% - ${sidebarWidth}px)`,
 		transition: "margin-left 0.4s ease, width 0.4s ease",
-	};
-
-	const handleExportPdf = async (): Promise<void> => {
-		if (!scanId) {
-			return;
-		}
-		setIsExporting(true);
-		try {
-			await new Promise<void>((resolve) => {
-				requestAnimationFrame(() => {
-					requestAnimationFrame(() => resolve());
-				});
-			});
-			const el = reportRef.current;
-			if (el) {
-				await exportElementToPdf(el, buildScanExportFilename(scanId), {
-					lightOffScreenClone: isDarkMode,
-				});
-			}
-		} catch (err) {
-			console.error("Export failed", err);
-		} finally {
-			setIsExporting(false);
-		}
 	};
 
 	if (isLoading) {
@@ -405,17 +367,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 		.slice()
 		.sort(compareControlIdAscending);
 
-	const eDark = isDarkMode;
-	const eTextPrimary = eDark ? textPrimary : "text-slate-800";
-	const eTextSecondary = eDark ? textSecondary : "text-slate-500";
-	const eTextTertiary = eDark ? textTertiary : "text-slate-400";
-	const eCard = eDark ? cardBg : "bg-white border-slate-200";
-	const eTertiaryBg = eDark ? tertiaryBg : "bg-slate-100";
-	const eBorder = eDark ? borderColor : "border-slate-200";
-	const eProgressTrack = eDark
-		? "border-slate-400/20 bg-slate-500/20"
-		: "border-slate-200 bg-slate-200";
-
 	const statCards = [
 		{
 			key: "total",
@@ -423,8 +374,8 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 			value: summary.total,
 			label: "Total Controls",
 			iconBg: "bg-slate-500/15",
-			iconColor: eTextSecondary,
-			valueColor: eTextPrimary,
+			iconColor: textSecondary,
+			valueColor: textPrimary,
 		},
 		{
 			key: "passed",
@@ -458,36 +409,19 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 	return (
 		<div className={pageClasses} style={pageStyle}>
 			<div className="mx-auto max-w-250">
-				<div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+				{/* Back button */}
+				<div className="mb-6">
 					<button
-						type="button"
-						className={`inline-flex items-center gap-2 bg-transparent border-none text-sm cursor-pointer py-2 transition-colors ${textSecondary} hover:opacity-90`}
+						className={`inline-flex items-center gap-2 bg-transparent border-none text-sm cursor-pointer py-2 transition-colors ${textSecondary} hover:${textPrimary}`}
 						onClick={() => navigate("/scans")}
 					>
 						<ArrowLeft size={20} />
 						<span>Back to Scans</span>
 					</button>
-					<button
-						type="button"
-						className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
-						onClick={() => {
-							void handleExportPdf();
-						}}
-						disabled={isExporting}
-						aria-busy={isExporting}
-					>
-						{isExporting ? (
-							<Loader2 size={16} className="animate-spin" />
-						) : (
-							<FileDown size={16} />
-						)}
-						{isExporting ? "Exporting…" : "Export PDF"}
-					</button>
 				</div>
 
-				<div ref={reportRef} className="w-full min-w-0">
 				{/* Header card */}
-				<div className={`rounded-xl border p-6 mb-6 ${eCard}`}>
+				<div className={`rounded-xl border p-6 mb-6 ${cardBg}`}>
 					<div className="flex gap-4 items-center mb-5 max-md:flex-col max-md:items-start">
 						<div className="flex justify-center items-center w-14 h-14 text-teal-400 rounded-xl bg-teal-400/15">
 							<Shield size={32} />
@@ -498,7 +432,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 							>
 								{scan.benchmark || "Compliance Scan"}
 							</h1>
-							<p className={`text-sm m-0 ${eTextSecondary}`}>
+							<p className={`text-sm m-0 ${textSecondary}`}>
 								{scan.version || ""}
 							</p>
 						</div>
@@ -514,15 +448,15 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 					</div>
 
 					<div
-						className={`flex gap-8 pt-4 border-t max-md:flex-col max-md:gap-4 ${eBorder}`}
+						className={`flex gap-8 pt-4 border-t max-md:flex-col max-md:gap-4 ${borderColor}`}
 					>
 						<div className="flex flex-col gap-1">
 							<span
-								className={`text-xs font-medium uppercase tracking-wide ${eTextTertiary}`}
+								className={`text-xs font-medium uppercase tracking-wide ${textTertiary}`}
 							>
 								Connection
 							</span>
-							<span className={`text-sm ${eTextPrimary}`}>
+							<span className={`text-sm ${textPrimary}`}>
 								{scan.connection_name ||
 									(scan.m365_connection_id
 										? `Connection #${scan.m365_connection_id}`
@@ -531,51 +465,27 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 						</div>
 						<div className="flex flex-col gap-1">
 							<span
-								className={`text-xs font-medium uppercase tracking-wide ${eTextTertiary}`}
+								className={`text-xs font-medium uppercase tracking-wide ${textTertiary}`}
 							>
 								Started
 							</span>
-							<div className={`text-sm ${eTextPrimary}`}>
-								<div className="font-semibold">
-									{formatDate(
-										scan.started_at || scan.created_at,
-									)}
-								</div>
-								<div
-									className={`mt-0.5 text-xs ${eTextTertiary}`}
-								>
-									{formatTime(
-										scan.started_at || scan.created_at,
-									)}
-								</div>
+							<div className={`text-sm ${textPrimary}`}>
+								<RelativeTime value={scan.started_at ?? scan.created_at} preset="meta" />
 							</div>
 						</div>
 						<div className="flex flex-col gap-1">
 							<span
-								className={`text-xs font-medium uppercase tracking-wide ${eTextTertiary}`}
+								className={`text-xs font-medium uppercase tracking-wide ${textTertiary}`}
 							>
 								Completed
 							</span>
 							{scan.finished_at || scan.completed_at ? (
-								<div className={`text-sm ${eTextPrimary}`}>
-									<div className="font-semibold">
-										{formatDate(
-											scan.finished_at ||
-												scan.completed_at,
-										)}
-									</div>
-									<div
-										className={`mt-0.5 text-xs ${eTextTertiary}`}
-									>
-										{formatTime(
-											scan.finished_at ||
-												scan.completed_at,
-										)}
-									</div>
+								<div className={`text-sm ${textPrimary}`}>
+									<RelativeTime value={scan.finished_at ?? scan.completed_at} preset="meta" />
 								</div>
 							) : (
-								<div className={`text-sm ${eTextPrimary}`}>
-									<div className="font-semibold">
+								<div className={`text-sm ${textPrimary}`}>
+									<div className={relativeTimePresetClass("meta")}>
 										{scan.status === "pending" ||
 										scan.status === "running"
 											? "In progress"
@@ -590,7 +500,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 				{/* Progress card */}
 				{(scan.status === "pending" || scan.status === "running") && (
 					<div
-						className={`rounded-xl border p-6 text-center mb-6 ${eCard}`}
+						className={`rounded-xl border p-6 text-center mb-6 ${cardBg}`}
 					>
 						<div className="flex flex-col gap-4 items-center">
 							<Loader2
@@ -599,11 +509,11 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 							/>
 							<div>
 								<h3
-									className={`text-lg font-semibold m-0 mb-1 ${eTextPrimary}`}
+									className={`text-lg font-semibold m-0 mb-1 ${textPrimary}`}
 								>
 									Scan in Progress
 								</h3>
-								<p className={`text-sm m-0 ${eTextSecondary}`}>
+								<p className={`text-sm m-0 ${textSecondary}`}>
 									{scan.status === "pending"
 										? "Waiting to start..."
 										: `Evaluating controls... ${done} of ${summary.total} complete`}
@@ -619,7 +529,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 								/>
 							</div>
 							<div
-								className={`mt-2.5 flex items-center justify-center gap-2 text-xs ${eTextTertiary}`}
+								className={`mt-2.5 flex items-center justify-center gap-2 text-xs ${textTertiary}`}
 							>
 								<span>
 									{done}/{summary.total} controls
@@ -636,7 +546,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 					{statCards.map((stat) => (
 						<div
 							key={stat.key}
-							className={`flex items-center gap-4 rounded-xl border p-5 ${eCard}`}
+							className={`flex items-center gap-4 rounded-xl border p-5 ${cardBg}`}
 						>
 							<div
 								className={`flex h-11 w-11 items-center justify-center rounded-[10px] ${stat.iconBg} ${stat.iconColor}`}
@@ -650,7 +560,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 									{stat.value}
 								</span>
 								<span
-									className={`mt-1 text-[13px] ${eTextSecondary}`}
+									className={`mt-1 text-[13px] ${textSecondary}`}
 								>
 									{stat.label}
 								</span>
@@ -661,9 +571,9 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 
 				{/* Results section */}
 				{results.length > 0 && (
-					<div className={`rounded-xl border p-6 ${eCard}`}>
+					<div className={`rounded-xl border p-6 ${cardBg}`}>
 						<h2
-							className={`text-lg font-semibold m-0 mb-5 ${eTextPrimary}`}
+							className={`text-lg font-semibold m-0 mb-5 ${textPrimary}`}
 						>
 							Control Results
 						</h2>
@@ -679,7 +589,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 								return (
 									<div
 										key={result.control_id || index}
-										className={`rounded-lg border-l-[3px] p-4 ${eTertiaryBg} ${colors.border} ${
+										className={`rounded-lg border-l-[3px] p-4 ${tertiaryBg} ${colors.border} ${
 											isPending ? "opacity-70" : ""
 										} ${isSkipped ? "opacity-60" : ""}`}
 									>
@@ -687,8 +597,8 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 											<div className="flex flex-1 gap-2.5 items-center">
 												{getResultIcon(result.status)}
 												<span
-													className={`rounded px-2 py-0.5 font-mono text-xs ${eTextTertiary} ${
-														eDark
+													className={`rounded px-2 py-0.5 font-mono text-xs ${textTertiary} ${
+														isDarkMode
 															? "bg-secondary"
 															: "bg-white"
 													}`}
@@ -696,7 +606,7 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 													{result.control_id}
 												</span>
 												<h4
-													className={`m-0 text-sm font-medium ${eTextPrimary}`}
+													className={`m-0 text-sm font-medium ${textPrimary}`}
 												>
 													{result.title ||
 														result.control_id}
@@ -712,14 +622,14 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 										</div>
 										{result.description && (
 											<p
-												className={`ml-6.5 mt-3 text-[13px] leading-relaxed ${eTextSecondary}`}
+												className={`ml-6.5 mt-3 text-[13px] leading-relaxed ${textSecondary}`}
 											>
 												{result.description}
 											</p>
 										)}
 										{result.message && (
 											<p
-												className={`ml-6.5 mt-2 text-xs italic ${eTextTertiary}`}
+												className={`ml-6.5 mt-2 text-xs italic ${textTertiary}`}
 											>
 												{result.message}
 											</p>
@@ -742,13 +652,12 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({
 							<h4 className="m-0 mb-2 text-base font-semibold text-red-500">
 								Scan Failed
 							</h4>
-							<p className={`m-0 text-sm ${eTextPrimary}`}>
+							<p className={`m-0 text-sm ${textPrimary}`}>
 								{scan.error}
 							</p>
 						</div>
 					</div>
 				)}
-				</div>
 			</div>
 		</div>
 	);

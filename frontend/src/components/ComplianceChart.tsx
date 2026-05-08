@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getScan } from '../api/client';
-import { formatDateAEST, formatTimeAEST } from '../utils/helpers';
+import { RelativeTime } from './RelativeTime';
 
 type ScanDetailPageProps = {
   sidebarWidth?: number;
@@ -154,14 +154,6 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
       default:
         return 'bg-amber-500/15 text-amber-500 border border-amber-500/30';
     }
-  }
-
-  function formatDate(dateString?: string | null): string {
-    return formatDateAEST(dateString);
-  }
-
-  function formatTime(dateString?: string | null): string {
-    return formatTimeAEST(dateString);
   }
 
   function getResultIcon(status?: string): JSX.Element {
@@ -368,17 +360,15 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
             </div>
             <div>
               <span className={`block text-xs uppercase tracking-wide ${mutedText}`}>Started</span>
-              <div className="mt-1 text-sm">
-                <div>{formatDate(scan.started_at || scan.created_at)}</div>
-                <div className={mutedText}>{formatTime(scan.started_at || scan.created_at)}</div>
+              <div className={`mt-1 text-sm font-semibold ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                <RelativeTime value={scan.started_at || scan.created_at} />
               </div>
             </div>
             <div>
               <span className={`block text-xs uppercase tracking-wide ${mutedText}`}>Completed</span>
               {scan.finished_at || scan.completed_at ? (
-                <div className="mt-1 text-sm">
-                  <div>{formatDate(scan.finished_at || scan.completed_at)}</div>
-                  <div className={mutedText}>{formatTime(scan.finished_at || scan.completed_at)}</div>
+                <div className={`mt-1 text-sm font-semibold ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                  <RelativeTime value={scan.finished_at || scan.completed_at} />
                 </div>
               ) : (
                 <div className="mt-1 text-sm">

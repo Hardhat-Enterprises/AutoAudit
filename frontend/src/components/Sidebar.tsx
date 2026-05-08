@@ -2,7 +2,7 @@
 //Last updated 17 September 2025
 //Added theme support
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -95,7 +95,10 @@ type SidebarProps = {
 const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
-
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth < 768;
+  });
   const [isExpanded, setIsExpanded] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     try {
@@ -108,6 +111,20 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
   });
 
   const [searchValue, setSearchValue] = useState<string>("");
+    useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      onWidthChange(mobile ? 0 : isExpanded ? 220 : 80);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isExpanded, onWidthChange]);
+
+  const effectiveExpanded = isMobile ? false : isExpanded;
 
   const getActiveItem = (): "home" | "cloud-platforms" | "scans" | "tasks" | "reports" | "settings" | "account" => {
     const path = location.pathname;
@@ -123,10 +140,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
 
   const activeItem = getActiveItem();
 
-  const toggleSidebar = (): void => {
+    const toggleSidebar = (): void => {
     const newExpanded = !isExpanded;
     setIsExpanded(newExpanded);
-    onWidthChange(newExpanded ? 220 : 80);
+    onWidthChange(isMobile ? 0 : newExpanded ? 220 : 80);
     if (typeof window !== "undefined") {
       try {
         window.localStorage.setItem(SIDEBAR_EXPANDED_KEY, String(newExpanded));
@@ -151,12 +168,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
   return (
     <nav
       className={`fixed left-0 top-0 z-1000 h-screen overflow-x-hidden overflow-y-hidden transition-[width,background-color] duration-300 ${
-        isExpanded ? "w-55" : "w-20"
+                effectiveExpanded ? "w-55" : "w-20"
       } ${sidebarTheme}`}
     >
       <div className="flex flex-col items-center pt-5 w-full h-screen px-3.75 pb-7.5">
         <div className="flex justify-center mb-10 w-full">
-          {isExpanded ? (
+                    {effectiveExpanded ? (
             <div
               className={`flex w-full max-w-47.5 items-center rounded-[25px] p-2 transition-all duration-300 hover:-translate-y-0.5 max-md:max-w-37.5 ${
                 isDarkMode
@@ -210,7 +227,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/dashboard"}
             name={"Dashboard"}
             icon={LayoutDashboard}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "home"}
             onClick={() => handleNavClick("/dashboard")}
@@ -219,7 +236,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/cloud-platforms"}
             name={"Cloud Platforms"}
             icon={Cloud}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "cloud-platforms"}
             onClick={() => handleNavClick("/cloud-platforms")}
@@ -228,7 +245,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/scans"}
             name={"Scans"}
             icon={FileSearch}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "scans"}
             onClick={() => handleNavClick("/scans")}
@@ -237,7 +254,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/evidence-scanner"}
             name={"Evidence"}
             icon={ShieldCheck}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "tasks"}
             onClick={() => handleNavClick("/evidence-scanner")}
@@ -253,7 +270,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/settings"}
             name={"Settings"}
             icon={Settings}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "settings"}
             onClick={() => handleNavClick("/settings")}
@@ -262,7 +279,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onWidthChange = () => {}, isDarkMode 
             href={"/account"}
             name={"Account"}
             icon={User}
-            isExpanded={isExpanded}
+            isExpanded={effectiveExpanded}
             isDarkMode={isDarkMode}
             isActive={activeItem === "account"}
             onClick={() => handleNavClick("/account")}
