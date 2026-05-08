@@ -46,7 +46,6 @@ export default function AccountPage({
 }: AccountPageProps) {
   const navigate = useNavigate();
   const { user, token, logout: clearAuth } = useAuth() as AuthContextValue;
-  console.log("USER DATA:", user);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -158,12 +157,12 @@ export default function AccountPage({
     }
   };
 
-  const primaryLabel =
-    user?.email ||
-    user?.username ||
-    user?.name ||
-    (user?.id != null ? String(user.id) : null) ||
-    "Signed in";
+  // const primaryLabel =
+  //   user?.email ||
+  //   user?.username ||
+  //   user?.name ||
+  //   (user?.id != null ? String(user.id) : null) ||
+  //   "Signed in";
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
