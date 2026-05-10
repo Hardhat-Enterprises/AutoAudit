@@ -101,3 +101,24 @@ class ScanCreatedResponse(BaseModel):
     id: int
     status: str
     message: str
+
+
+class ScanReadinessCheck(BaseModel):
+    """Individual readiness check result."""
+
+    key: str
+    label: str
+    status: str  # pass, fail, warn
+    severity: str  # critical, warning
+    message: str
+
+
+class ScanReadinessResponse(BaseModel):
+    """Pre-scan readiness result."""
+
+    ready: bool
+    summary: str
+    required_permissions: list[str]
+    missing_permissions: list[str]
+    unverified_permissions: list[str]
+    checks: list[ScanReadinessCheck]

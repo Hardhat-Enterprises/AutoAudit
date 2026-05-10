@@ -84,7 +84,7 @@ describe('SignUpPage', () => {
         <SignUpPage onSignUp={vi.fn()} onBackToLogin={onBackToLogin} />
       </MemoryRouter>
     );
-    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    await userEvent.click(screen.getByTestId("back-sign-in"));
     expect(onBackToLogin).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,18 +1,14 @@
-
-
-
 import React, { useState } from "react";
-
 
 type FAQ = {
   question: string;
   answer: string;
-}
+};
 
 type FAQItemProps = FAQ & {
   isActive: boolean;
   onToggle: () => void;
-}
+};
 
 // Data
 const faqItems: FAQ[] = [
@@ -48,29 +44,54 @@ const faqItems: FAQ[] = [
   },
 ];
 
-
-const FAQItem: React.FC<FAQItemProps> = ({ question, answer, isActive, onToggle }) => (
-  <article className={`faq-item ${isActive ? "active" : ""}`}>
-    <button className="faq-question" type="button" onClick={onToggle}>
-      <span>{question}</span>
-      <span className="faq-icon">+</span>
+const FAQItem: React.FC<FAQItemProps> = ({
+  question,
+  answer,
+  isActive,
+  onToggle,
+}) => (
+  <article className="overflow-hidden mb-4 border rounded-[15px] border-[rgb(var(--brand-blue)/0.1)] bg-[rgb(255_255_255/0.02)]">
+    <button
+      className="flex justify-between items-center py-5 px-6 w-full text-base text-left text-white bg-transparent transition hover:bg-[rgb(255_255_255/0.04)]"
+      type="button"
+      onClick={onToggle}
+    >
+      <span className="pr-4 font-medium">{question}</span>
+      <span
+        className={`text-[1.4rem] text-[rgb(var(--brand-blue))] transition-transform duration-300 ${
+          isActive ? "rotate-45" : ""
+        }`}
+      >
+        +
+      </span>
     </button>
-    <div className="faq-answer">
-      <div className="faq-answer-content">{answer}</div>
+
+    <div
+      className={`overflow-hidden transition-all duration-300 ${
+        isActive ? "max-h-[500px]" : "max-h-0"
+      }`}
+    >
+      <div className="px-6 pb-6 text-[rgb(var(--landing-text-soft))] leading-[1.6]">{answer}</div>
     </div>
   </article>
 );
-
 
 const FAQSection: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   return (
-    <section className="faq-section" id="benefits">
-      <div className="faq-container">
-        <div className="faq-header">
-          <h2>Frequently Asked Questions</h2>
-          <p>Quick answers to common questions about AutoAudit</p>
+    <section
+      id="benefits"
+      className="bg-gradient-to-br from-[rgb(var(--landing-bg-base))] to-[rgb(var(--landing-bg-alt-start))] px-[5%] py-24"
+    >
+      <div className="mx-auto max-w-[900px]">
+        <div className="mb-10 text-center">
+          <h2 className="mb-3 font-semibold text-white text-[2.4rem]">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-[rgb(var(--landing-text-soft))]">
+            Quick answers to common questions about AutoAudit
+          </p>
         </div>
 
         {faqItems.map((item, index) => (
@@ -78,7 +99,9 @@ const FAQSection: React.FC = () => {
             key={item.question}
             {...item}
             isActive={activeIndex === index}
-            onToggle={() => setActiveIndex(activeIndex === index ? null : index)}
+            onToggle={() =>
+              setActiveIndex(activeIndex === index ? null : index)
+            }
           />
         ))}
       </div>

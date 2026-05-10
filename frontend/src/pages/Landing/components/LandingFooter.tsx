@@ -52,24 +52,34 @@ const footerColumns: FooterColumn[] = [
 
 const LandingFooter = () => {
   return (
-    <footer className="landing-footer">
-      <div className="footer-content">
+    <footer className="relative overflow-hidden border-t border-[rgb(var(--brand-blue)/0.1)] bg-linear-to-br from-landing-bg-base via-landing-bg-mid to-landing-bg-end px-[5%] pb-10 pt-16">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgb(var(--brand-blue)/0.08),transparent_62%),radial-gradient(circle_at_88%_22%,rgb(var(--brand-blue-deep)/0.06),transparent_60%)]" />
+      <div className="grid relative gap-8 mx-auto mb-8 max-w-300 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
         {footerColumns.map((column) => (
-          <section key={column.title} className="footer-section">
-            <h3>{column.title}</h3>
-            <ul>
+          <section key={column.title}>
+            <h3 className="mb-4 text-lg font-semibold text-white">{column.title}</h3>
+            <ul className="p-0 m-0 list-none">
               {column.links.map((link) => (
-                <li key={link.label}>
+                <li key={link.label} className="mt-3 first:mt-0">
                   {link.href === "#" ? (
-                    <span className="footer-link-disabled" aria-disabled="true">
+                    <span
+                      className="cursor-not-allowed text-[rgb(var(--landing-text-soft)/0.45)]"
+                      aria-disabled="true"
+                    >
                       {link.label}
                     </span>
                   ) : link.href.startsWith("/") ? (
-                    <Link to={link.href}>{link.label}</Link>
+                    <Link className="transition-colors duration-200 text-landing-text-soft hover:text-brand-blue" to={link.href}>
+                      {link.label}
+                    </Link>
                   ) : link.href.startsWith("#") ? (
-                    <Link to={`/${link.href}`}>{link.label}</Link>
+                    <Link className="transition-colors duration-200 text-landing-text-soft hover:text-brand-blue" to={`/${link.href}`}>
+                      {link.label}
+                    </Link>
                   ) : (
-                    <a href={link.href}>{link.label}</a>
+                    <a className="transition-colors duration-200 text-landing-text-soft hover:text-brand-blue" href={link.href}>
+                      {link.label}
+                    </a>
                   )}
                 </li>
               ))}
@@ -77,7 +87,7 @@ const LandingFooter = () => {
           </section>
         ))}
       </div>
-      <div className="footer-bottom">
+      <div className="relative pt-6 text-sm text-center border-t border-[rgb(var(--brand-blue)/0.1)] text-landing-text-soft">
         <p>&copy; {new Date().getFullYear()} AutoAudit. All rights reserved.</p>
       </div>
     </footer>
