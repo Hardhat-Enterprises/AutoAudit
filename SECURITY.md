@@ -99,3 +99,45 @@ Recommended controls:
 Security issues should be handled carefully and responsibly. The goal is to protect users, project data, and the AutoAudit platform while giving the team enough detail to reproduce and fix the issue.
 
 Security fixes should be tested before merging and should include evidence such as workflow runs, screenshots, or review notes where appropriate.
+
+
+## Security Testing and Monitoring
+
+Security testing should be performed continuously throughout development and deployment processes.
+
+Recommended security testing activities include:
+
+- Static application security testing using Bandit
+- Code scanning through GitHub CodeQL workflows
+- Dependency vulnerability monitoring
+- CI/CD workflow validation
+- Pull request review before merging
+- Testing workflow failures using intentionally insecure code samples
+- Monitoring GitHub security alerts and Dependabot notifications
+
+Workflow failures caused by detected vulnerabilities should be reviewed before deployment approval.
+
+Security monitoring should also include:
+
+- Logging suspicious authentication attempts
+- Monitoring repeated failed login activity
+- Reviewing unusual file upload behaviour
+- Tracking dependency security advisories
+- Reviewing CI/CD workflow permission usage
+
+## Container and Infrastructure Security
+
+AutoAudit uses container-based deployment and infrastructure components that should follow secure configuration practices.
+
+Recommended infrastructure security practices include:
+
+- Restrict unnecessary container privileges
+- Use environment variables for sensitive configuration values
+- Avoid hardcoded credentials or API keys
+- Scan container images for vulnerabilities
+- Keep Docker images and dependencies updated
+- Restrict public exposure of internal services
+- Apply least privilege principles to workflows and deployments
+- Review infrastructure configurations regularly
+
+Infrastructure and deployment security should be reviewed continuously as the platform evolves into a larger multi-tenant SaaS environment.
