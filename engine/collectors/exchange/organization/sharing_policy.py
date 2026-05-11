@@ -89,8 +89,22 @@ def _violations_for_policies(policies: list[Any]) -> list[dict[str, Any]]:
 
 
 class SharingPolicyDataCollector(BasePowerShellCollector):
+    """Collects sharing policy settings for CIS compliance evaluation.
+
+    This collector retrieves external calendar sharing settings
+    to verify proper sharing restrictions are configured.
+    """
 
     async def collect(self, client: PowerShellClient) -> dict[str, Any]:
+        """Collect sharing policy data.
+
+        Returns:
+            Dict containing:
+            - sharing_policies: List of sharing policies
+            - default_policy: The default sharing policy
+            - calendar_sharing_violations: Non-compliant calendar sharing rules
+            - external_calendar_sharing_restricted: True if no violations found
+        """
         policies = await client.run_cmdlet("ExchangeOnline", "Get-SharingPolicy")
 
         if policies is None:
