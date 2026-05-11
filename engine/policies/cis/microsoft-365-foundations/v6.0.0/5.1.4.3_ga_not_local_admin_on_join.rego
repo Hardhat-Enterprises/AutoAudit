@@ -46,5 +46,5 @@ result := output if {
 }
 
 build_message(false) := "Global Administrator role is not assigned local admin rights on Entra-joined devices"
-build_message(null) := "Unable to determine whether GA role is granted local admin rights on join; azureADJoin.localAdministratorsConfiguration not returned by API"
+build_message(null) := "Unable to determine whether GA role is granted local admin rights on join; azureADJoin.localAdmins not returned by API"
 build_message(true) := "Global Administrator role is configured as a local administrator on Entra-joined devices"

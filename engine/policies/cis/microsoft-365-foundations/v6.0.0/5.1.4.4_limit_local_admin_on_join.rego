@@ -45,6 +45,12 @@ result := output if {
     }
 }
 
-build_message(null) := "Unable to determine local admin assignment for registering users; azureADJoin.localAdministratorsConfiguration not returned by API"
-build_message(val) := "Registering users are not granted local administrator rights on Entra-joined devices" if { lower(val) == "notallowed" }
-build_message(val) := sprintf("Registering users are granted local admin rights on join (registeringUsers=%s)", [val])
+build_message(null) := "Unable to determine local admin assignment for registering users; azureADJoin.localAdmins not returned by API"
+build_message(val) := "Registering users are not granted local administrator rights on Entra-joined devices" if {
+    val != null
+    lower(val) == "notallowed"
+}
+build_message(val) := sprintf("Registering users are granted local admin rights on join (registeringUsers=%s)", [val]) if {
+    val != null
+    lower(val) != "notallowed"
+}
