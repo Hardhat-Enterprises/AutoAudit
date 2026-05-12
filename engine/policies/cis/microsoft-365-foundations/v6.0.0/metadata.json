@@ -770,7 +770,7 @@
       "data_collector_id": "entra.devices.device_registration_policy",
       "policy_file": "5.1.4.2_limit_device_registration_quota.rego",
       "requires_permissions": ["Policy.Read.DeviceConfiguration"],
-      "notes": "Compliant when userDeviceQuota > 0; value of 0 treated as unlimited. CIS recommends setting this to 5."
+      "notes": "CIS v6.0.0 requires userDeviceQuota to be set to 20 or less. A value of 0 is treated as unlimited and is non-compliant."
     },
     {
       "control_id": "5.1.4.3",

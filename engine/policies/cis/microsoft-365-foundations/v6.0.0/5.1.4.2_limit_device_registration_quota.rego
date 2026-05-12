@@ -30,6 +30,7 @@ default result := {
 compliant := true if {
     input.user_device_quota != null
     input.user_device_quota > 0
+    input.user_device_quota <= 20
 } else := false
 
 result := output if {
@@ -42,6 +43,10 @@ result := output if {
     }
 }
 
-build_message(q) := sprintf("Device registration quota is set to %d", [q]) if { q > 0 }
-build_message(0) := "Device registration quota is set to unlimited"
-build_message(null) := "Device registration quota is not configured"
+build_message(q) := "Device registration quota is not configured" if {
+    q == null
+} else := "Device registration quota is set to unlimited (non-compliant; CIS requires 20 or less)" if {
+    q == 0
+} else := sprintf("Device registration quota is set to %d", [q]) if {
+    q <= 20
+} else := sprintf("Device registration quota is %d; CIS requires 20 or less", [q])
