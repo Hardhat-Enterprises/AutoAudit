@@ -25,6 +25,9 @@ dependencies = [
     "cryptography>=42.0.0",
     # Celery client for queueing tasks
     "celery[redis]>=5.3.0",
+    # Prometheus instrumentation for HPA custom metrics + Grafana dashboards
+    "prometheus-fastapi-instrumentator>=7.0.0",
+    "redis>=5.0.0",
 ]
 
 [project.optional-dependencies]

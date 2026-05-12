@@ -186,6 +186,10 @@ Common environment variables for backend-api (also used by migration job).
       key: encryption-key
 - name: POLICIES_DIR
   value: /app/policies
+{{- if .Values.synthetic.enabled }}
+- name: SYNTHETIC_ENABLED
+  value: "true"
+{{- end }}
 {{- range $key, $value := .Values.backendApi.env }}
 - name: {{ $key }}
   value: {{ $value | quote }}
@@ -219,4 +223,8 @@ Common environment variables for worker.
       key: encryption-key
 - name: POWERSHELL_SERVICE_URL
   value: {{ include "autoaudit.powershellService.url" . | quote }}
+{{- if .Values.synthetic.enabled }}
+- name: SYNTHETIC_ENABLED
+  value: "true"
+{{- end }}
 {{- end }}

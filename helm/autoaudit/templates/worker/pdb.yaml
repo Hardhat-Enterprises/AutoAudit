@@ -1,0 +1,29 @@
+{{/*
+PodDisruptionBudget per worker queue. Celery workers are eviction-tolerant
+(at-least-once retries via task_acks_late + task_reject_on_worker_lost), so
+maxUnavailable is the right axis — keeps a node-drain from wiping out the
+whole pool of one queue while still allowing rolling updates.
+*/}}
+{{- range $queue := .Values.worker.queues }}
+{{- if $queue.podDisruptionBudget.enabled }}
+{{- $component := printf "worker-%s" (regexReplaceAll "[^a-z0-9]+" (lower $queue.name) "-") -}}
+{{- $deploymentName := printf "%s-%s" (include "autoaudit.fullname" $) $component -}}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $deploymentName }}
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" $ "component" $component) | nindent 4 }}
+    autoaudit.io/worker-queue: {{ $queue.name | quote }}
+spec:
+  {{- if $queue.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ $queue.podDisruptionBudget.minAvailable }}
+  {{- else }}
+  maxUnavailable: {{ default 1 $queue.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "autoaudit.selectorLabels" (dict "context" $ "component" $component) | nindent 6 }}
+{{- end }}
+{{- end }}

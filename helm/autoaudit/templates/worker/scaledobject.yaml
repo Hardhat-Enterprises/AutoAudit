@@ -1,0 +1,40 @@
+{{/*
+KEDA ScaledObject per worker queue. Triggers on Redis list length (which is
+how Celery stores pending tasks per queue with the redis broker), so pod count
+follows actual backlog rather than CPU.
+Requires KEDA installed in the cluster (keda.sh/v1alpha1).
+*/}}
+{{- range $queue := .Values.worker.queues }}
+{{- if $queue.keda.enabled }}
+{{- $component := printf "worker-%s" (regexReplaceAll "[^a-z0-9]+" (lower $queue.name) "-") -}}
+{{- $deploymentName := printf "%s-%s" (include "autoaudit.fullname" $) $component -}}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ $deploymentName }}
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" $ "component" $component) | nindent 4 }}
+    autoaudit.io/worker-queue: {{ $queue.name | quote }}
+spec:
+  scaleTargetRef:
+    name: {{ $deploymentName }}
+  minReplicaCount: {{ default 1 $queue.keda.minReplicaCount }}
+  maxReplicaCount: {{ default 5 $queue.keda.maxReplicaCount }}
+  pollingInterval: {{ default 10 $queue.keda.pollingInterval }}
+  cooldownPeriod: {{ default 60 $queue.keda.cooldownPeriod }}
+  triggers:
+    - type: redis
+      metadata:
+        # Redis address (host:port) — must NOT include scheme or auth.
+        address: {{ printf "%s:6379" (include "autoaudit.redis.host" $) | quote }}
+        # The Celery queue name == the Redis list key.
+        listName: {{ $queue.name | quote }}
+        # Scale up by 1 pod for every `listLength` items waiting.
+        listLength: {{ default "5" $queue.keda.listLength | quote }}
+        # Wait until the connection is authenticated before checking length.
+        enableTLS: "false"
+      authenticationRef:
+        name: {{ include "autoaudit.fullname" $ }}-redis-auth
+{{- end }}
+{{- end }}

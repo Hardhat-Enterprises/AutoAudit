@@ -4,7 +4,14 @@ import json
 import os
 import re
 import subprocess
+import time
 from typing import Any, Dict, Optional
+
+from metrics import (
+    pwsh_active_subprocesses,
+    pwsh_execution_duration_seconds,
+    pwsh_executions_total,
+)
 
 # NOTE: This validation function is duplicated in engine/worker/validators.py
 # because the powershell service is an isolated package. Keep both copies in sync.
@@ -176,31 +183,43 @@ def execute_cmdlet(
     else:
         env["EXO_TOKEN"] = token
 
-    # Execute PowerShell
+    # Execute PowerShell, surfacing metrics so HPA / dashboards can see capacity.
+    pwsh_active_subprocesses.inc()
+    start = time.monotonic()
+    outcome = "error"
     try:
-        proc = subprocess.run(
-            ["pwsh", "-NoProfile", "-NonInteractive", "-Command", script],
-            capture_output=True,
-            text=True,
-            timeout=120,
-            env=env,
-        )
-    except subprocess.TimeoutExpired:
-        raise PowerShellExecutionError("PowerShell execution timed out after 120 seconds")
-    except Exception as e:
-        raise PowerShellExecutionError(f"Failed to execute PowerShell: {e}")
+        try:
+            proc = subprocess.run(
+                ["pwsh", "-NoProfile", "-NonInteractive", "-Command", script],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                env=env,
+            )
+        except subprocess.TimeoutExpired:
+            outcome = "timeout"
+            raise PowerShellExecutionError("PowerShell execution timed out after 120 seconds")
+        except Exception as e:
+            raise PowerShellExecutionError(f"Failed to execute PowerShell: {e}")
 
-    if proc.returncode != 0:
-        raise PowerShellExecutionError(f"PowerShell execution failed:\n{proc.stderr}")
+        if proc.returncode != 0:
+            raise PowerShellExecutionError(f"PowerShell execution failed:\n{proc.stderr}")
 
-    # Parse JSON output
-    stdout = proc.stdout.strip()
-    if not stdout or stdout == "null":
-        return None
+        # Parse JSON output
+        stdout = proc.stdout.strip()
+        if not stdout or stdout == "null":
+            outcome = "success"
+            return None
 
-    try:
-        return json.loads(stdout)
-    except json.JSONDecodeError as e:
-        raise PowerShellExecutionError(
-            f"Failed to parse PowerShell output as JSON:\n{stdout}\nError: {e}"
-        )
+        try:
+            result = json.loads(stdout)
+        except json.JSONDecodeError as e:
+            raise PowerShellExecutionError(
+                f"Failed to parse PowerShell output as JSON:\n{stdout}\nError: {e}"
+            )
+        outcome = "success"
+        return result
+    finally:
+        pwsh_active_subprocesses.dec()
+        pwsh_execution_duration_seconds.labels(module=module).observe(time.monotonic() - start)
+        pwsh_executions_total.labels(module=module, outcome=outcome).inc()

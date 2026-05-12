@@ -5,7 +5,9 @@ metadata:
   labels:
     {{- include "autoaudit.componentLabels" (dict "context" . "component" "frontend") | nindent 4 }}
 spec:
+  {{- if not .Values.frontend.autoscaling.enabled }}
   replicas: {{ .Values.frontend.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "autoaudit.selectorLabels" (dict "context" . "component" "frontend") | nindent 6 }}
@@ -15,6 +17,17 @@ spec:
         {{- include "autoaudit.componentLabels" (dict "context" . "component" "frontend") | nindent 8 }}
     spec:
       {{- include "autoaudit.imagePullSecrets" . | nindent 6 }}
+      {{- with .Values.frontend.lifecycle.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
+      {{- end }}
+      {{- with .Values.frontend.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.frontend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: frontend
           image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.frontend.image.repository "tag" (.Values.frontend.image.tag | default .Values.global.imageTag | default .Chart.AppVersion)) }}
@@ -23,6 +36,14 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          {{- with .Values.frontend.lifecycle.preStopSleepSeconds }}
+          lifecycle:
+            preStop:
+              exec:
+                # nginx draining: SIGQUIT instead of default SIGTERM lets in-flight
+                # connections finish. The sleep covers LB endpoint-cache draining.
+                command: ["sh", "-c", "sleep {{ . }} && /usr/sbin/nginx -s quit"]
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /
