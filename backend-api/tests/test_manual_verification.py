@@ -14,16 +14,16 @@ from app.models.compliance import Scan
 from app.models.manual_scan_result_detail import ManualScanResultDetail
 from app.main import app
 
-#Test database setup
+# ── Test database setup ──
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 TestSession = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
-#Fake users
-def make_user(id: int, email: str) -> User:
-    user = User.__new__(User)
-    user.id = id
+# ── Fake users ──
+def _make_user(user_id: int, email: str) -> User:
+    user = object.__new__(User)
+    user.id = user_id
     user.email = email
     user.role = Role.ADMIN
     user.is_active = True
@@ -33,12 +33,12 @@ def make_user(id: int, email: str) -> User:
     return user
 
 
-user_a = make_user(1, "alice@test.com")
-user_b = make_user(2, "bob@test.com")
+user_a = _make_user(1, "alice@test.com")
+user_b = _make_user(2, "bob@test.com")
 current_test_user = user_a
 
 
-#Dependency overrides
+# ── Dependency overrides ──
 async def override_get_session():
     async with TestSession() as session:
         yield session
@@ -52,7 +52,7 @@ app.dependency_overrides[get_async_session] = override_get_session
 app.dependency_overrides[get_current_user] = override_get_current_user
 
 
-#Fixtures
+# ── Fixtures ──
 @pytest_asyncio.fixture(autouse=True)
 async def setup_database():
     async with engine.begin() as conn:
@@ -66,46 +66,43 @@ async def setup_database():
 async def seed_scan():
     """Create a scan and scan_result for testing."""
     async with TestSession() as session:
-        scan = Scan(
-            m365_connection_id=1,
-            status="completed",
-            benchmark_id="cis-m365-v6",
-        )
+        scan = Scan(m365_connection_id=1, status="completed", benchmark_id="cis-m365-v6")
         session.add(scan)
         await session.commit()
         await session.refresh(scan)
 
-        scan_result = ScanResult(
-            scan_id=scan.id,
-            control_id="1.1.2",
-            status="pending",
-        )
-        session.add(scan_result)
+        sr1 = ScanResult(scan_id=scan.id, control_id="1.1.2", status="pending")
+        session.add(sr1)
         await session.commit()
-        await session.refresh(scan_result)
+        await session.refresh(sr1)
 
-        # Create a second scan_result for duplicate tests
-        scan_result_2 = ScanResult(
-            scan_id=scan.id,
-            control_id="1.1.3",
-            status="pending",
-        )
-        session.add(scan_result_2)
+        sr2 = ScanResult(scan_id=scan.id, control_id="1.1.3", status="pending")
+        session.add(sr2)
         await session.commit()
-        await session.refresh(scan_result_2)
+        await session.refresh(sr2)
 
-        return scan_result.id, scan_result_2.id
+        return sr1.id, sr2.id
 
 
 @pytest.fixture
 def client():
-    return AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
-    )
+    return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
 
 
-#Tests
+# ── Helper to create a verification as a specific user ──
+async def _create_as_user(http_client, scan_result_id: int, user: User, comment: str = "Test"):
+    """Create a manual verification record as a given user."""
+    global current_test_user
+    current_test_user = user
+    async with http_client as c:
+        resp = await c.post("/v1/manual-verification/", json={
+            "scan_result_id": scan_result_id,
+            "comment": comment,
+        })
+    return resp
+
+
+# ── Tests ──
 
 class TestCreateManualVerification:
     """Tests for POST /v1/manual-verification/"""
@@ -130,13 +127,13 @@ class TestCreateManualVerification:
         async with client as c:
             await c.post("/v1/manual-verification/", json={
                 "scan_result_id": scan_result_id,
-                "comment": "First verification",
+                "comment": "First",
             })
             response = await c.post("/v1/manual-verification/", json={
                 "scan_result_id": scan_result_id,
-                "comment": "Duplicate attempt",
+                "comment": "Duplicate",
             })
-        assert response.status_code in (409, 500)  # unique constraint violation
+        assert response.status_code in (409, 500)
 
 
 class TestGetManualVerification:
@@ -147,8 +144,7 @@ class TestGetManualVerification:
         scan_result_id, _ = await seed_scan
         async with client as c:
             create_resp = await c.post("/v1/manual-verification/", json={
-                "scan_result_id": scan_result_id,
-                "comment": "Test",
+                "scan_result_id": scan_result_id, "comment": "Test",
             })
             detail_id = create_resp.json()["id"]
             response = await c.get(f"/v1/manual-verification/{detail_id}")
@@ -165,23 +161,14 @@ class TestGetManualVerification:
     async def test_get_other_users_record_returns_403(self, client, seed_scan):
         global current_test_user
         scan_result_id, _ = await seed_scan
-
-        # Create as user_a
-        current_test_user = user_a
-        async with client as c:
-            create_resp = await c.post("/v1/manual-verification/", json={
-                "scan_result_id": scan_result_id,
-                "comment": "Alice's verification",
-            })
-            detail_id = create_resp.json()["id"]
-
-        # Try to read as user_b
+        resp = await _create_as_user(client, scan_result_id, user_a, "Alice's record")
+        detail_id = resp.json()["id"]
         current_test_user = user_b
-        async with client as c:
+        new_client = AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
+        async with new_client as c:
             response = await c.get(f"/v1/manual-verification/{detail_id}")
         assert response.status_code == 403
-
-        current_test_user = user_a  # reset
+        current_test_user = user_a
 
 
 class TestUpdateManualVerification:
@@ -192,47 +179,33 @@ class TestUpdateManualVerification:
         scan_result_id, _ = await seed_scan
         async with client as c:
             create_resp = await c.post("/v1/manual-verification/", json={
-                "scan_result_id": scan_result_id,
-                "comment": "Original comment",
+                "scan_result_id": scan_result_id, "comment": "Original",
             })
             detail_id = create_resp.json()["id"]
             response = await c.patch(f"/v1/manual-verification/{detail_id}", json={
-                "comment": "Updated comment",
+                "comment": "Updated",
             })
         assert response.status_code == 200
-        assert response.json()["comment"] == "Updated comment"
+        assert response.json()["comment"] == "Updated"
 
     @pytest.mark.asyncio
     async def test_update_nonexistent_returns_404(self, client):
         async with client as c:
-            response = await c.patch("/v1/manual-verification/99999", json={
-                "comment": "Doesn't matter",
-            })
+            response = await c.patch("/v1/manual-verification/99999", json={"comment": "X"})
         assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_update_other_users_record_returns_403(self, client, seed_scan):
         global current_test_user
         scan_result_id, _ = await seed_scan
-
-        # Create as user_a
-        current_test_user = user_a
-        async with client as c:
-            create_resp = await c.post("/v1/manual-verification/", json={
-                "scan_result_id": scan_result_id,
-                "comment": "Alice's verification",
-            })
-            detail_id = create_resp.json()["id"]
-
-        # Try to update as user_b
+        resp = await _create_as_user(client, scan_result_id, user_a, "Alice's record")
+        detail_id = resp.json()["id"]
         current_test_user = user_b
-        async with client as c:
-            response = await c.patch(f"/v1/manual-verification/{detail_id}", json={
-                "comment": "Bob trying to edit",
-            })
+        new_client = AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
+        async with new_client as c:
+            response = await c.patch(f"/v1/manual-verification/{detail_id}", json={"comment": "Bob"})
         assert response.status_code == 403
-
-        current_test_user = user_a  # reset
+        current_test_user = user_a
 
 
 class TestDeleteManualVerification:
@@ -243,8 +216,7 @@ class TestDeleteManualVerification:
         scan_result_id, _ = await seed_scan
         async with client as c:
             create_resp = await c.post("/v1/manual-verification/", json={
-                "scan_result_id": scan_result_id,
-                "comment": "To be deleted",
+                "scan_result_id": scan_result_id, "comment": "To delete",
             })
             detail_id = create_resp.json()["id"]
             response = await c.delete(f"/v1/manual-verification/{detail_id}")
@@ -260,20 +232,11 @@ class TestDeleteManualVerification:
     async def test_delete_other_users_record_returns_403(self, client, seed_scan):
         global current_test_user
         scan_result_id, _ = await seed_scan
-
-        # Create as user_a
-        current_test_user = user_a
-        async with client as c:
-            create_resp = await c.post("/v1/manual-verification/", json={
-                "scan_result_id": scan_result_id,
-                "comment": "Alice's verification",
-            })
-            detail_id = create_resp.json()["id"]
-
-        # Try to delete as user_b
+        resp = await _create_as_user(client, scan_result_id, user_a, "Alice's record")
+        detail_id = resp.json()["id"]
         current_test_user = user_b
-        async with client as c:
+        new_client = AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
+        async with new_client as c:
             response = await c.delete(f"/v1/manual-verification/{detail_id}")
         assert response.status_code == 403
-
-        current_test_user = user_a  # reset
+        current_test_user = user_a
