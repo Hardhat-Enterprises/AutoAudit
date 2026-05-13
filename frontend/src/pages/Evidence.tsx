@@ -10,7 +10,7 @@
 // - POST /v1/evidence/scan        -> run scan on uploaded file
 // - GET  /v1/evidence/reports/:id -> download a generated report
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { getEvidenceReportUrl, getEvidenceStrategies, scanEvidence } from '../api/client';
+import { downloadEvidenceReport, getEvidenceReportUrl, getEvidenceStrategies, scanEvidence } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import './Evidence.css';
 
@@ -423,14 +423,12 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
               <div className="results-kpis">
                 {/* Prefer a single download action instead of repeating a link per row. */}
                 {reportFiles.length > 0 && (
-                  <a
-                    href={getEvidenceReportUrl(reportFiles[0])}
+                  <button
                     className="report-link"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    onClick={() => downloadEvidenceReport(token, reportFiles[0])}
                   >
                     Download PDF
-                  </a>
+                  </button>
                 )}
                 <span className="kpi-chip kpi-total">{resultsSummary.total} total</span>
                 <span className="kpi-chip kpi-pass">{resultsSummary.pass} pass</span>
