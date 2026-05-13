@@ -17,6 +17,15 @@ from app.schemas.manual_scan_result_detail import (
 router = APIRouter(prefix="/manual-verification", tags=["Manual Verification"])
 
 
+def _check_ownership(detail: ManualScanResultDetail, user: User) -> None:
+    """Raise 403 if the current user does not own this record."""
+    if detail.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this record",
+        )
+
+
 @router.post("/", response_model=ManualScanResultDetailRead, status_code=status.HTTP_201_CREATED)
 async def create_manual_verification(
     data: ManualScanResultDetailCreate,
@@ -48,6 +57,7 @@ async def get_manual_verification(
     detail = result.scalar_one_or_none()
     if not detail:
         raise HTTPException(status_code=404, detail="Manual verification not found")
+    _check_ownership(detail, current_user)
     return detail
 
 
@@ -66,6 +76,7 @@ async def get_manual_verification_by_scan_result(
     detail = result.scalar_one_or_none()
     if not detail:
         raise HTTPException(status_code=404, detail="Manual verification not found for this scan result")
+    _check_ownership(detail, current_user)
     return detail
 
 
@@ -83,6 +94,7 @@ async def update_manual_verification(
     detail = result.scalar_one_or_none()
     if not detail:
         raise HTTPException(status_code=404, detail="Manual verification not found")
+    _check_ownership(detail, current_user)
 
     if update.comment is not None:
         detail.comment = update.comment
@@ -105,6 +117,7 @@ async def delete_manual_verification(
     detail = result.scalar_one_or_none()
     if not detail:
         raise HTTPException(status_code=404, detail="Manual verification not found")
+    _check_ownership(detail, current_user)
 
     await db.delete(detail)
     await db.commit()
