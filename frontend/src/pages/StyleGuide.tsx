@@ -1,4 +1,3 @@
-import "../index.css";
 import { TOKEN_META } from "../styles/tokens-meta"; // name, rgb, hex labels
 
 type ThemeMode = "dark" | "light";
@@ -50,7 +49,7 @@ function Swatch({ token, mode }: { token: TokenKey; mode: ThemeMode }) {
 
   return (
     <div
-      className="flex flex-col items-center justify-center h-28 rounded text-center p-2"
+      className="flex flex-col justify-center items-center p-2 h-28 text-center rounded"
       style={{
         background: `rgb(var(--${token}))`,     // paint with CSS var so .light works
         color: `rgb(${labelText})`,             // computed for contrast
@@ -68,7 +67,7 @@ function Swatch({ token, mode }: { token: TokenKey; mode: ThemeMode }) {
 
 export default function StyleGuide() {
   return (
-    <div className="space-y-12 p-8 bg-surface-1 text-text-strong min-h-screen">
+    <div className="p-8 space-y-12 min-h-screen bg-surface-1 text-text-strong">
       {/* Color palette */}
       {/* Dark mode section */}
       <section
@@ -79,7 +78,7 @@ export default function StyleGuide() {
         }}
       >
         <h2 className="text-xl font-semibold">Dark Mode</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
           {TOKENS.map((t) => (
             <Swatch key={`dark-${t}`} token={t} mode="dark" />
           ))}
@@ -88,14 +87,14 @@ export default function StyleGuide() {
 
       {/* Light mode section */}
       <section
-        className="light p-6 space-y-4"
+        className="p-6 space-y-4 light"
         style={{
           background: "rgb(var(--surface-1))",
           color: "rgb(var(--text-strong))"
         }}
       >
         <h2 className="text-xl font-semibold">Light Mode</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
           {TOKENS.map((t) => (
             <Swatch key={`light-${t}`} token={t} mode="light" />
           ))}
@@ -105,7 +104,7 @@ export default function StyleGuide() {
       {/* Typography*/}
       {/* Header font*/}
       <section>
-        <h2 className="text-2xl font-header mb-2">Header Text</h2>
+        <h2 className="mb-2 text-2xl font-header">Header Text</h2>
         <p className="text-sm text-muted">
           This section demonstrates the <span className="font-header">League Spartan</span> header font stack.
         </p>
@@ -118,7 +117,7 @@ export default function StyleGuide() {
       
       {/* Body Font */}
       <section>
-        <h2 className="text-2xl font-header mb-2">Body Text</h2>
+        <h2 className="mb-2 text-2xl font-header">Body Text</h2>
         <p className="text-sm text-muted">
           This section demonstrates the <span className="font-body">Segoe UI</span> body font stack.
         </p>
@@ -134,12 +133,12 @@ export default function StyleGuide() {
           
       {/* Code font demo */}
       <section>
-        <h2 className="text-2xl font-header mb-2">Code Text</h2>
+        <h2 className="mb-2 text-2xl font-header">Code Text</h2>
         <p className="text-sm text-muted">
           Example PowerShell commands shown in a styled code block.
         </p>
         <div className="mt-4 space-y-4">
-          <pre className="font-mono text-base bg-surface-2 text-accent-teal p-4 rounded-lg shadow-1 overflow-x-auto">
+          <pre className="overflow-x-auto p-4 font-mono text-base rounded-lg bg-surface-2 text-accent-teal shadow-1">
       {`npm install my-package`}
           </pre>
         </div>

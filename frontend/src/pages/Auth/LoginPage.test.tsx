@@ -55,7 +55,7 @@ describe('LoginPage', () => {
 
     await userEvent.type(screen.getByLabelText(/email address/i), 'x@y.com');
     await userEvent.type(screen.getByLabelText(/^password$/i), 'secret');
-    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    await userEvent.click(screen.getByTestId("form-sign-in"));
 
     expect(onLogin).toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: /create one/i }));

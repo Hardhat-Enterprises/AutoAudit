@@ -13,12 +13,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getScan } from '../api/client';
-import { formatDateAEST, formatTimeAEST } from '../utils/helpers';
+import { RelativeTime } from './RelativeTime';
 
 type ScanDetailPageProps = {
   sidebarWidth?: number;
   isDarkMode?: boolean;
-}
+};
 
 type ScanResult = {
   control_id?: string | number;
@@ -26,7 +26,7 @@ type ScanResult = {
   title?: string;
   description?: string;
   message?: string;
-}
+};
 
 type ScanDetail = {
   id?: number | string;
@@ -46,7 +46,7 @@ type ScanDetail = {
   skipped_count?: number;
   results?: ScanResult[];
   error?: string;
-}
+};
 
 function getErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error && err.message) return err.message;
@@ -104,11 +104,8 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
     initialLoad();
   }, [loadScan]);
 
-  // Poll for updates every 3 seconds while pending/running
   useEffect(() => {
-    if (!scan || scan.status === 'completed' || scan.status === 'failed') {
-      return;
-    }
+    if (!scan || scan.status === 'completed' || scan.status === 'failed') return;
 
     const interval = setInterval(async () => {
       const updatedScan = await loadScan();
@@ -123,13 +120,13 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
   function getStatusIcon(status?: string): JSX.Element {
     switch (status) {
       case 'completed':
-        return <CheckCircle size={20} className="status-icon success" />;
+        return <CheckCircle size={20} className="text-emerald-500" />;
       case 'failed':
-        return <XCircle size={20} className="status-icon error" />;
+        return <XCircle size={20} className="text-rose-500" />;
       case 'running':
-        return <Loader2 size={20} className="status-icon running spinning" />;
+        return <Loader2 size={20} className="text-blue-500 animate-spin" />;
       default:
-        return <Clock size={20} className="status-icon pending" />;
+        return <Clock size={20} className="text-amber-500" />;
     }
   }
 
@@ -146,26 +143,31 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
     }
   }
 
-  function formatDate(dateString?: string | null): string {
-    return formatDateAEST(dateString);
-  }
-
-  function formatTime(dateString?: string | null): string {
-    return formatTimeAEST(dateString);
+  function getStatusBadgeClass(status?: string): string {
+    switch (status) {
+      case 'completed':
+        return 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30';
+      case 'failed':
+        return 'bg-rose-500/15 text-rose-500 border border-rose-500/30';
+      case 'running':
+        return 'bg-blue-500/15 text-blue-500 border border-blue-500/30';
+      default:
+        return 'bg-amber-500/15 text-amber-500 border border-amber-500/30';
+    }
   }
 
   function getResultIcon(status?: string): JSX.Element {
     switch (status) {
       case 'passed':
-        return <CheckCircle size={16} className="result-icon pass" />;
+        return <CheckCircle size={16} className="text-emerald-500" />;
       case 'failed':
-        return <XCircle size={16} className="result-icon fail" />;
+        return <XCircle size={16} className="text-rose-500" />;
       case 'error':
-        return <AlertTriangle size={16} className="result-icon error" />;
+        return <AlertTriangle size={16} className="text-amber-500" />;
       case 'pending':
-        return <Clock size={16} className="result-icon pending" />;
+        return <Clock size={16} className="text-blue-500" />;
       default:
-        return <AlertCircle size={16} className="result-icon unknown" />;
+        return <AlertCircle size={16} className="text-slate-400" />;
     }
   }
 
@@ -186,20 +188,62 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
     }
   }
 
+  function getResultBadgeClass(status?: string): string {
+    switch (status) {
+      case 'passed':
+        return 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30';
+      case 'failed':
+        return 'bg-rose-500/15 text-rose-500 border border-rose-500/30';
+      case 'error':
+        return 'bg-amber-500/15 text-amber-500 border border-amber-500/30';
+      case 'pending':
+        return 'bg-blue-500/15 text-blue-500 border border-blue-500/30';
+      case 'skipped':
+        return 'bg-slate-500/15 text-slate-500 border border-slate-500/30';
+      default:
+        return 'bg-slate-500/15 text-slate-500 border border-slate-500/30';
+    }
+  }
+
+  function getResultCardClass(status?: string): string {
+    switch (status) {
+      case 'passed':
+        return 'border-emerald-500/30';
+      case 'failed':
+        return 'border-rose-500/30';
+      case 'error':
+        return 'border-amber-500/30';
+      case 'pending':
+        return 'border-blue-500/30';
+      default:
+        return 'border-slate-300 dark:border-slate-700';
+    }
+  }
+
+  const pageClass = isDarkMode
+    ? 'bg-slate-900 text-slate-100 transition-colors duration-300'
+    : 'bg-slate-50 text-slate-900 transition-colors duration-300';
+
+  const cardClass = isDarkMode
+    ? 'rounded-xl border border-slate-700 bg-slate-800'
+    : 'rounded-xl border border-slate-200 bg-white';
+
+  const mutedText = isDarkMode ? 'text-slate-400' : 'text-slate-500';
+  const subtleText = isDarkMode ? 'text-slate-300' : 'text-slate-600';
+
   if (isLoading) {
     return (
       <div
-        className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}
+        className={pageClass}
         style={{
           marginLeft: `${sidebarWidth}px`,
           width: `calc(100% - ${sidebarWidth}px)`,
-          transition: 'margin-left 0.4s ease, width 0.4s ease'
         }}
       >
-        <div className="scan-detail-container">
-          <div className="loading-state">
-            <Loader2 size={32} className="spinning" />
-            <p>Loading scan details...</p>
+        <div className="mx-auto max-w-5xl">
+          <div className={`${cardClass} flex flex-col items-center justify-center p-16`}>
+            <Loader2 size={32} className="text-blue-500 animate-spin" />
+            <p className={`mt-4 ${subtleText}`}>Loading scan details...</p>
           </div>
         </div>
       </div>
@@ -209,19 +253,24 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
   if (error || !scan) {
     return (
       <div
-        className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}
+        className={pageClass}
         style={{
-          marginLeft: `${sidebarWidth}px`,
           width: `calc(100% - ${sidebarWidth}px)`,
-          transition: 'margin-left 0.4s ease, width 0.4s ease'
         }}
       >
-        <div className="scan-detail-container">
-          <div className="error-state">
-            <AlertCircle size={48} />
-            <h3>Failed to load scan</h3>
-            <p>{error || 'Scan not found'}</p>
-            <button className="toolbar-button secondary" onClick={() => navigate('/scans')}>
+        <div className="mx-auto max-w-5xl">
+          <div className={`${cardClass} flex flex-col items-center justify-center p-16 text-center`}>
+            <AlertCircle size={48} className="text-rose-500" />
+            <h3 className="mt-3 text-xl font-semibold">Failed to load scan</h3>
+            <p className={`mt-2 ${subtleText}`}>{error || 'Scan not found'}</p>
+            <button
+              className={`mt-6 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium ${
+                isDarkMode
+                  ? 'border-slate-600 bg-slate-700 text-slate-100 hover:bg-slate-600'
+                  : 'border-slate-300 bg-white text-slate-800 hover:bg-slate-100'
+              }`}
+              onClick={() => navigate('/scans')}
+            >
               <ArrowLeft size={16} />
               <span>Back to Scans</span>
             </button>
@@ -231,28 +280,25 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
     );
   }
 
-  // Build summary from scan counts (API returns these directly)
   const summary = {
     total: scan.total_controls || 0,
     passed: scan.passed_count || 0,
     failed: scan.failed_count || 0,
     errors: scan.error_count || 0,
-    pending:
+    pending: Math.max(
+      0,
       (scan.total_controls || 0) -
-      (scan.passed_count || 0) -
-      (scan.failed_count || 0) -
-      (scan.error_count || 0) -
-      (scan.skipped_count || 0),
+        (scan.passed_count || 0) -
+        (scan.failed_count || 0) -
+        (scan.error_count || 0) -
+        (scan.skipped_count || 0),
+    ),
   };
 
   const done = summary.passed + summary.failed + summary.errors + (scan.skipped_count || 0);
 
   const progressPercent =
-    summary.total > 0
-      ? Math.min(100, Math.round((done / summary.total) * 100))
-      : scan.status === 'completed'
-        ? 100
-        : 0;
+    summary.total > 0 ? Math.min(100, Math.round((done / summary.total) * 100)) : scan.status === 'completed' ? 100 : 0;
 
   const results = (scan.results || [])
     .filter((r) => (r?.status || '').toLowerCase() !== 'skipped')
@@ -261,62 +307,72 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
 
   return (
     <div
-      className={`scan-detail-page ${isDarkMode ? 'dark' : 'light'}`}
+      className={pageClass}
       style={{
         marginLeft: `${sidebarWidth}px`,
         width: `calc(100% - ${sidebarWidth}px)`,
-        transition: 'margin-left 0.4s ease, width 0.4s ease'
+        transition: 'margin-left 0.4s ease, width 0.4s ease',
       }}
     >
-      <div className="scan-detail-container">
-        <div className="page-header">
-          <button className="back-button" onClick={() => navigate('/scans')}>
+      <div className="mx-auto space-y-6 max-w-5xl">
+        <div className="flex justify-between items-center">
+          <button
+            className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium ${
+              isDarkMode
+                ? 'border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700'
+                : 'border-slate-300 bg-white text-slate-800 hover:bg-slate-100'
+            }`}
+            onClick={() => navigate('/scans')}
+          >
             <ArrowLeft size={20} />
             <span>Back to Scans</span>
           </button>
         </div>
 
-        <div className="scan-header-card">
-          <div className="scan-header-content">
-            <div className="scan-icon">
-              <Shield size={32} />
+        <div className={`${cardClass} p-6`}>
+          <div className="flex flex-wrap gap-4 justify-between items-start">
+            <div className="flex gap-4 items-center">
+              <div
+                className={`rounded-xl p-3 ${
+                  isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-100 text-blue-600'
+                }`}
+              >
+                <Shield size={32} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">{scan.benchmark || 'Compliance Scan'}</h1>
+                <p className={`${mutedText}`}>{scan.version || ''}</p>
+              </div>
             </div>
-            <div className="scan-info">
-              <h1>{scan.benchmark || 'Compliance Scan'}</h1>
-              <p>{scan.version || ''}</p>
-            </div>
-            <span className={`status-badge large ${scan.status || 'pending'}`}>
+
+            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${getStatusBadgeClass(scan.status)}`}>
               {getStatusIcon(scan.status)}
               {getStatusText(scan.status)}
             </span>
           </div>
 
-          <div className="scan-meta">
-            <div className="meta-item">
-              <span className="meta-label">Connection</span>
-              <span className="meta-value">
+          <div className="grid gap-4 mt-6 md:grid-cols-3">
+            <div>
+              <span className={`block text-xs uppercase tracking-wide ${mutedText}`}>Connection</span>
+              <span className="block mt-1 text-sm font-medium">
                 {scan.connection_name || (scan.m365_connection_id ? `Connection #${scan.m365_connection_id}` : '-')}
               </span>
             </div>
-            <div className="meta-item">
-              <span className="meta-label">Started</span>
-              <div className="meta-value">
-                <div className="meta-date">{formatDate(scan.started_at || scan.created_at)}</div>
-                <div className="meta-time">{formatTime(scan.started_at || scan.created_at)}</div>
+            <div>
+              <span className={`block text-xs uppercase tracking-wide ${mutedText}`}>Started</span>
+              <div className={`mt-1 text-sm font-semibold ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                <RelativeTime value={scan.started_at || scan.created_at} />
               </div>
             </div>
-            <div className="meta-item">
-              <span className="meta-label">Completed</span>
+            <div>
+              <span className={`block text-xs uppercase tracking-wide ${mutedText}`}>Completed</span>
               {scan.finished_at || scan.completed_at ? (
-                <div className="meta-value">
-                  <div className="meta-date">{formatDate(scan.finished_at || scan.completed_at)}</div>
-                  <div className="meta-time">{formatTime(scan.finished_at || scan.completed_at)}</div>
+                <div className={`mt-1 text-sm font-semibold ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                  <RelativeTime value={scan.finished_at || scan.completed_at} />
                 </div>
               ) : (
-                <div className="meta-value">
-                  <div className="meta-date">
-                    {scan.status === 'pending' || scan.status === 'running' ? 'In progress' : '-'}
-                  </div>
+                <div className="mt-1 text-sm">
+                  <div>{scan.status === 'pending' || scan.status === 'running' ? 'In progress' : '-'}</div>
                 </div>
               )}
             </div>
@@ -324,12 +380,12 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
         </div>
 
         {(scan.status === 'pending' || scan.status === 'running') && (
-          <div className="progress-card">
-            <div className="progress-content">
-              <Loader2 size={24} className="spinning" />
-              <div className="progress-text">
-                <h3>Scan in Progress</h3>
-                <p>
+          <div className={`${cardClass} p-6`}>
+            <div className="flex gap-3 items-center">
+              <Loader2 size={24} className="text-blue-500 animate-spin" />
+              <div>
+                <h3 className="text-lg font-semibold">Scan in Progress</h3>
+                <p className={subtleText}>
                   {scan.status === 'pending'
                     ? 'Waiting to start...'
                     : `Evaluating controls... ${done} of ${summary.total} complete`}
@@ -337,86 +393,82 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
               </div>
             </div>
 
-            <div className="scan-progress-bar">
-              <div className="scan-progress-track">
+            <div className="mt-4">
+              <div className={`h-2 w-full overflow-hidden rounded-full ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'}`}>
                 <div
-                  className={`scan-progress-fill ${scan.status || 'pending'}`}
+                  className={`h-full rounded-full ${scan.status === 'running' ? 'bg-blue-500' : 'bg-amber-500'}`}
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <div className="scan-progress-meta">
+              <div className={`mt-2 flex items-center gap-2 text-sm ${mutedText}`}>
                 <span>{done}/{summary.total} controls</span>
-                <span className="scan-progress-sep">•</span>
+                <span>•</span>
                 <span>{progressPercent}%</span>
               </div>
             </div>
           </div>
         )}
 
-        <div className="stats-grid">
-          <div className="stat-card total">
-            <div className="stat-icon">
-              <FileText size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{summary.total}</span>
-              <span className="stat-label">Total Controls</span>
-            </div>
-          </div>
-          <div className="stat-card passed">
-            <div className="stat-icon">
-              <CheckCircle size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{summary.passed}</span>
-              <span className="stat-label">Passed</span>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={`${cardClass} p-5`}>
+            <div className="flex gap-3 items-center">
+              <FileText size={20} className="text-blue-500" />
+              <div>
+                <div className="text-xl font-bold">{summary.total}</div>
+                <div className={`text-sm ${mutedText}`}>Total Controls</div>
+              </div>
             </div>
           </div>
-          <div className="stat-card failed">
-            <div className="stat-icon">
-              <XCircle size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{summary.failed}</span>
-              <span className="stat-label">Failed</span>
+          <div className={`${cardClass} p-5`}>
+            <div className="flex gap-3 items-center">
+              <CheckCircle size={20} className="text-emerald-500" />
+              <div>
+                <div className="text-xl font-bold">{summary.passed}</div>
+                <div className={`text-sm ${mutedText}`}>Passed</div>
+              </div>
             </div>
           </div>
-          <div className="stat-card errors">
-            <div className="stat-icon">
-              <AlertTriangle size={20} />
+          <div className={`${cardClass} p-5`}>
+            <div className="flex gap-3 items-center">
+              <XCircle size={20} className="text-rose-500" />
+              <div>
+                <div className="text-xl font-bold">{summary.failed}</div>
+                <div className={`text-sm ${mutedText}`}>Failed</div>
+              </div>
             </div>
-            <div className="stat-content">
-              <span className="stat-value">{summary.errors}</span>
-              <span className="stat-label">Errors</span>
+          </div>
+          <div className={`${cardClass} p-5`}>
+            <div className="flex gap-3 items-center">
+              <AlertTriangle size={20} className="text-amber-500" />
+              <div>
+                <div className="text-xl font-bold">{summary.errors}</div>
+                <div className={`text-sm ${mutedText}`}>Errors</div>
+              </div>
             </div>
           </div>
         </div>
 
         {results.length > 0 && (
-          <div className="results-section">
-            <h2>Control Results</h2>
-            <div className="results-list">
+          <div className={`${cardClass} p-6`}>
+            <h2 className="text-xl font-semibold">Control Results</h2>
+            <div className="mt-4 space-y-3">
               {results.map((result, index) => (
                 <div
                   key={result.control_id || index}
-                  className={`result-card ${result.status || 'unknown'}`}
+                  className={`rounded-xl border p-4 ${isDarkMode ? 'bg-slate-900/30' : 'bg-slate-50'} ${getResultCardClass(result.status)}`}
                 >
-                  <div className="result-header">
-                    <div className="result-title">
+                  <div className="flex flex-wrap gap-3 justify-between items-center">
+                    <div className="flex gap-2 items-center">
                       {getResultIcon(result.status)}
-                      <span className="control-id">{result.control_id}</span>
-                      <h4>{result.title || result.control_id}</h4>
+                      <span className={`text-xs font-semibold uppercase ${mutedText}`}>{result.control_id}</span>
+                      <h4 className="font-semibold">{result.title || result.control_id}</h4>
                     </div>
-                    <span className={`result-badge ${result.status || 'unknown'}`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${getResultBadgeClass(result.status)}`}>
                       {getResultBadgeText(result.status)}
                     </span>
                   </div>
-                  {result.description && (
-                    <p className="result-description">{result.description}</p>
-                  )}
-                  {result.message && (
-                    <p className="result-message">{result.message}</p>
-                  )}
+                  {result.description && <p className={`mt-2 text-sm ${subtleText}`}>{result.description}</p>}
+                  {result.message && <p className={`mt-2 text-sm ${mutedText}`}>{result.message}</p>}
                 </div>
               ))}
             </div>
@@ -424,11 +476,13 @@ const ScanDetailPage: React.FC<ScanDetailPageProps> = ({ sidebarWidth = 220, isD
         )}
 
         {scan.status === 'failed' && scan.error && (
-          <div className="error-card">
-            <AlertCircle size={20} />
-            <div className="error-content">
-              <h4>Scan Failed</h4>
-              <p>{scan.error}</p>
+          <div className="p-4 text-rose-500 rounded-xl border border-rose-500/30 bg-rose-500/10">
+            <div className="flex gap-3 items-start">
+              <AlertCircle size={20} />
+              <div>
+                <h4 className="font-semibold">Scan Failed</h4>
+                <p className="text-sm">{scan.error}</p>
+              </div>
             </div>
           </div>
         )}
