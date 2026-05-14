@@ -18,11 +18,11 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 
 | Our Audit Type | Count | Description |
 |----------------|-------|-------------|
-| Automated | 48 | Fully automatable with current collectors |
+| Automated | 47 | Fully automatable with current collectors |
 | Deferred | 12 | Collector works but needs "compliant with review" capability |
 | Blocked | 21 | Collector exists but authentication issues prevent execution |
 | Manual | 14 | No API available, truly requires manual verification |
-| Not Started | 45 | No collector implemented yet |
+| Not Started | 46 | No collector implemented yet |
 
 ---
 
@@ -49,9 +49,9 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 1.1.1 | L1 | Ensure Administrative accounts are cloud-only | Automated | Automated | `entra.roles.cloud_only_admins` | Implemented | |
 | 1.1.2 | L1 | Ensure two emergency access accounts have been defined | Manual | Manual | | N/A | Organizational policy; requires human designation of accounts |
 | 1.1.3 | L1 | Ensure that between two and four global admins are designated | Automated | Automated | `entra.roles.privileged_roles` | Implemented | |
-| 1.1.4 | L1 | Ensure administrative accounts use licenses with a reduced application footprint | Automated | Automated | `entra.roles.admin_license_footprint` | Implemented | Graph `licenseDetails` per admin; sample `{"admin_accounts":[{"userPrincipalName":"admin@contoso.com","uses_reduced_license_footprint":true,"high_footprint_service_plans_enabled":[],"sku_part_numbers":["AAD_PREMIUM_P2"]}]}` |
+| 1.1.4 | L1 | Ensure administrative accounts use licenses with a reduced application footprint | Automated | Not Started | | Not Started | |
 | 1.2.1 | L2 | Ensure that only organizationally managed/approved public groups exist | Automated | Not Started | `entra.groups.groups` | Not Started | Collector exists but control logic not defined |
-| 1.2.2 | L1 | Ensure sign-in to shared mailboxes is blocked | Automated | Automated | `exchange.mailbox.mailboxes` | Implemented | Graph `User.Read.All`; candidates approximated (unlicensed mail-enabled members); `SignInBlocked` derived from `accountEnabled`; see collector `detection_limitations` |
+| 1.2.2 | L1 | Ensure sign-in to shared mailboxes is blocked | Automated | Automated | `exchange.mailbox.mailboxes` | Implemented | Exchange Online PowerShell; `Get-EXOMailbox -RecipientTypeDetails SharedMailbox` then `Get-User -Identity {UPN}` for `BlockCredentials` |
 | 1.3.1 | L1 | Ensure the 'Password expiration policy' is set to 'Set passwords to never expire (recommended)' | Automated | Automated | `entra.domains.password_policy` | Implemented | |
 | 1.3.2 | L2 | Ensure 'Idle session timeout' is set to '3 hours (or less)' for unmanaged devices | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires CA policy coverage verification |
 | 1.3.3 | L2 | Ensure 'External sharing' of calendars is not available | Automated | Not Started | `exchange.organization.sharing_policy` | Not Started | Collector exists but control logic not defined |

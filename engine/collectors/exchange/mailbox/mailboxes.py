@@ -23,13 +23,20 @@ class MailboxesDataCollector(BasePowerShellCollector):
 
         mailboxes: list[dict[str, Any]] = []
         for m in raw:
-            account_enabled = m.get("AccountEnabled")
+            upn = m.get("UserPrincipalName")
+            sign_in_blocked: bool | None = None
+            if upn:
+                user = await client.run_cmdlet("ExchangeOnline", "Get-User", Identity=upn)
+                if isinstance(user, dict):
+                    block_credentials = user.get("BlockCredentials")
+                    if block_credentials is not None:
+                        sign_in_blocked = bool(block_credentials)
+
             mailboxes.append({
-                "UserPrincipalName": m.get("UserPrincipalName"),
+                "UserPrincipalName": upn,
                 "DisplayName": m.get("DisplayName"),
                 "PrimarySmtpAddress": m.get("PrimarySmtpAddress"),
-                "AccountEnabled": account_enabled,
-                "SignInBlocked": None if account_enabled is None else (not account_enabled),
+                "SignInBlocked": sign_in_blocked,
             })
 
         return {
