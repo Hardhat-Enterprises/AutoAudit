@@ -459,6 +459,10 @@ def _bucket_fails_by_severity(controls: list) -> Dict[str, Optional[dict]]:
     for ctrl in controls:
         n  = _normalize_keys(ctrl)
         pf = _pick(n, "pass fail", "pass/fail", "passfail").upper()
+        if not pf:
+            status = _pick(n, "compliance status", "compliance_status").lower()
+            if "non" in status or "partial" in status:
+                pf = "FAIL"
         sv = _pick(n, "risk rating", "risk_rating", "severity")
         if pf == "FAIL" and sv in buckets and buckets[sv] is None:
             buckets[sv] = dict(ctrl)
@@ -468,9 +472,14 @@ def _bucket_fails_by_severity(controls: list) -> Dict[str, Optional[dict]]:
 # ---------------------------------------------------------------------------
 # Table location helpers
 #
-# These run before any substitution so the placeholder text is still raw
-# and searchable.  If they run after, the tokens have been replaced and the
-# table can no longer be found by content.
+# _find_remediation_table runs before substitution so the Remediation_Action_N
+# tokens are still present and searchable.
+#
+# _find_appendix_b_table and _find_evidence_table also run before substitution,
+# identifying tables by their header placeholder text.  The row-level fill
+# functions (_substitute_appendix_b, _substitute_evidence_table) use index-
+# based row selection so they work correctly even after earlier passes have
+# consumed the placeholder content.
 # ---------------------------------------------------------------------------
 
 def _find_remediation_table(doc: Document) -> Optional[Any]:
@@ -484,7 +493,7 @@ def _find_remediation_table(doc: Document) -> Optional[Any]:
 def _find_appendix_b_table(doc: Document) -> Optional[Any]:
     for table in doc.tables:
         full = " ".join(c.text for row in table.rows for c in row.cells)
-        if "Control_Name" in full and ("EV-00" in full or "UniqueID" in full):
+        if "Control_Name" in full and "UniqueID" in full:
             return table
     return None
 
@@ -492,7 +501,7 @@ def _find_appendix_b_table(doc: Document) -> Optional[Any]:
 def _find_evidence_table(doc: Document) -> Optional[Any]:
     for table in doc.tables:
         full = " ".join(c.text for row in table.rows for c in row.cells)
-        if "EV-001" in full and "Evidence_1_Description" in full:
+        if "Evidence_1_Description" in full:
             return table
     return None
 
@@ -615,44 +624,47 @@ def _substitute_appendix_b(doc: Document, controls: list, app_b_table) -> None:
     if not app_b_table:
         return
 
-    data_rows = [
-        row for row in app_b_table.rows
-        if "Control_Name" in " ".join(c.text for c in row.cells)
-        or "UniqueID"     in " ".join(c.text for c in row.cells)
-    ]
+    # Skip header row; fill data rows by index so token replacement order
+    # doesn't matter (tokens are already consumed before this runs).
+    data_rows = list(app_b_table.rows)[1:]
 
     for row, ctrl in zip(data_rows, controls):
-        n       = _normalize_keys(ctrl)
+        n = _normalize_keys(ctrl)
+        # Derive Pass/Fail from Compliance_Status if the field is absent.
+        pf = _pick(n, "pass fail", "pass/fail")
+        if not pf:
+            status = _pick(n, "compliance status", "compliance_status").lower()
+            pf = "FAIL" if ("non" in status or "partial" in status) else "PASS"
         row_map = _sanitise_mapping({
             "Control_Name": _pick(n, "control name", "control_name") or "",
             "Control Name": _pick(n, "control name", "control_name") or "",
             "UniqueID":     _pick(n, "uniqueid", "unique id") or "",
             "Level":        _pick(n, "level") or "",
-            "Pass/Fail":    _pick(n, "pass fail", "pass/fail") or "",
+            "Pass/Fail":    pf,
         })
         _sub_mapping_in_element(row._tr, row_map)
 
-    for i in range(len(controls), len(data_rows)):
+    for row in data_rows[len(controls):]:
         pad = {"Control_Name": "", "Control Name": "", "UniqueID": "", "Level": "", "Pass/Fail": ""}
-        _sub_mapping_in_element(data_rows[i]._tr, pad)
+        _sub_mapping_in_element(row._tr, pad)
 
 
 def _substitute_evidence_table(doc: Document, evidence_items: list, ev_table) -> None:
     """
     Fill the Evidence Register table row by row (Appendix A).
 
-    The template reuses {UniqueID} for the Mapped Control column and
-    {Assessment_Date} for Date Captured.  Both are shared token names that
-    global substitution would fill with wrong values (tenant-level data), so
-    we handle them per-row here before the global pass runs.
+    Uses numbered tokens (Evidence_N_MappedControl, Evidence_N_Date) rather
+    than shared token names (UniqueID, Assessment_Date) to avoid cross-
+    contamination with the global substitution pass.
+
+    Rows are selected by index rather than by token text, since this function
+    runs after earlier passes have already consumed the placeholder content.
     """
     if not ev_table:
         return
 
-    data_rows = [
-        row for row in ev_table.rows
-        if "EV-0" in " ".join(c.text for c in row.cells)
-    ]
+    # Skip header row; fill data rows by index.
+    data_rows = list(ev_table.rows)[1:]
 
     for i, (row, item) in enumerate(zip(data_rows, evidence_items), 1):
         n      = _normalize_keys(item)
@@ -664,21 +676,21 @@ def _substitute_evidence_table(doc: Document, evidence_items: list, ev_table) ->
             or _pick(n, "date", "assessment date", "assessment_date") or ""
         )
         row_map = _sanitise_mapping({
-            f"Evidence_{i}_Description": desc,
-            f"Evidence_{i}_Source":      source,
-            "UniqueID":        mapped,
-            "Assessment_Date": date,
+            f"Evidence_{i}_Description":   desc,
+            f"Evidence_{i}_Source":        source,
+            f"Evidence_{i}_MappedControl": mapped,
+            f"Evidence_{i}_Date":          date,
         })
         _sub_mapping_in_element(row._tr, row_map)
 
-    for i in range(len(evidence_items), len(data_rows)):
+    for idx in range(len(evidence_items) + 1, len(data_rows) + 1):
         pad = {
-            f"Evidence_{i+1}_Description": "",
-            f"Evidence_{i+1}_Source":      "",
-            "UniqueID":        "",
-            "Assessment_Date": "",
+            f"Evidence_{idx}_Description":   "",
+            f"Evidence_{idx}_Source":        "",
+            f"Evidence_{idx}_MappedControl": "",
+            f"Evidence_{idx}_Date":          "",
         }
-        _sub_mapping_in_element(data_rows[i]._tr, pad)
+        _sub_mapping_in_element(data_rows[idx - 1]._tr, pad)
 
 
 def _substitute_global(doc: Document, mapping: Dict[str, str]) -> None:
@@ -902,13 +914,13 @@ def _render_report_doc(
     """
     Load the template and run all substitution passes in the correct order.
 
-    Order matters here — do not rearrange:
+    Order matters — do not rearrange:
       1. Locate scoped tables while placeholder text is still raw.
-      2. Per-block finding substitution (scoped to sections 6.1-6.4).
+      2. Per-block finding substitution (scoped to sections 6.1–6.4).
       3. Per-row remediation table.
-      4. Per-row Appendix B.
-      5. Per-row Evidence Register.
-      6. Global substitution (everything remaining).
+      4. Per-row Appendix B (index-based; Pass/Fail derived from Compliance_Status).
+      5. Per-row Evidence Register (index-based; numbered tokens throughout).
+      6. Global substitution (fills everything remaining).
       7. Remove stray template instruction markers.
       8. Lock finding table column widths.
     """
