@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from collections import defaultdict
 
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
@@ -14,12 +15,21 @@ from app.models.user import User
 from app.schemas.scan import (
     ScanCreate,
     ScanCreatedResponse,
+    ControlCategoryBreakdown,
     ScanListItem,
+    ScanReadinessCheck,
+    ScanReadinessResponse,
     ScanRead,
     ScanResultRead,
+    ScanSummary,
 )
 from app.services.benchmark_reader import get_file_reader
 from app.services.celery_client import queue_scan
+from app.services.encryption import decrypt
+from app.services.scan_readiness import (
+    evaluate_scan_readiness,
+    extract_required_permissions,
+)
 
 router = APIRouter(prefix="/scans", tags=["Scans"])
 
@@ -132,6 +142,76 @@ async def list_scans(
     )
     return list(result.scalars().all())
 
+# Get scan readiness status for a given M365 connection and benchmark. This is used by the frontend before starting a scan to validate the connection and provide feedback on any issues that might cause the scan to fail or have incomplete results.
+@router.get("/readiness", response_model=ScanReadinessResponse)
+async def get_scan_readiness(
+    m365_connection_id: int,
+    framework: str,
+    benchmark: str,
+    version: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> ScanReadinessResponse:
+    """Validate whether a scan can run successfully before queueing it."""
+    # Readiness uses the saved M365 connection exactly as the user configured it.
+    result = await db.execute(
+        select(M365Connection).where(
+            M365Connection.id == m365_connection_id,
+            M365Connection.user_id == current_user.id,
+            M365Connection.is_active == True,
+        )
+    )
+    connection = result.scalar_one_or_none()
+    if not connection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"M365 connection {m365_connection_id} not found or inactive",
+        )
+
+    # Benchmark metadata is the source of truth for which controls are runnable and which permissions those controls declare.
+    file_reader = get_file_reader()
+    try:
+        metadata = file_reader.get_benchmark_metadata(framework, benchmark, version)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Benchmark {framework}/{benchmark}/{version} not found",
+        )
+
+    if metadata.get("platform", "").lower() != "m365":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Benchmark platform '{metadata.get('platform')}' does not match M365 connection",
+        )
+
+    # The API layer only prepares inputs here. The actual readiness logic lives in scan_readiness.py so the route stays thin.
+    required_permissions = extract_required_permissions(metadata.get("controls", []))
+    readiness = await evaluate_scan_readiness(
+        tenant_id=connection.tenant_id,
+        client_id=connection.client_id,
+        client_secret=decrypt(connection.encrypted_client_secret),
+        required_permissions=required_permissions,
+    )
+
+    # Convert the service result into the response model returned to the frontend.
+    return ScanReadinessResponse(
+        ready=readiness.ready,
+        summary=readiness.summary,
+        required_permissions=readiness.required_permissions,
+        missing_permissions=readiness.missing_permissions,
+        unverified_permissions=readiness.unverified_permissions,
+        checks=[
+            ScanReadinessCheck(
+                key=check.key,
+                label=check.label,
+                status=check.status,
+                severity=check.severity,
+                message=check.message,
+            )
+            for check in readiness.checks
+        ],
+    )
+
 
 @router.get("/{scan_id}", response_model=ScanRead)
 async def get_scan(
@@ -153,6 +233,67 @@ async def get_scan(
         )
     return scan
 
+@router.get("/{scan_id}/summary", response_model=ScanSummary)
+async def get_scan_summary(
+    scan_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> ScanSummary:
+    """Get a lightweight  summary for a scan."""
+    result = await db.execute(
+        select(Scan).where(
+            Scan.id == scan_id,
+            Scan.user_id == current_user.id,
+        )
+    )
+    scan = result.scalar_one_or_none()
+    if not scan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Scan {scan_id} not found",
+        )
+
+    results = await db.execute(
+        select(ScanResult.control_id, ScanResult.status).where(
+            ScanResult.scan_id == scan_id
+        )
+    )
+    rows = results.all()
+
+    buckets: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"total": 0, "passed": 0, "failed": 0, "skipped": 0, "error": 0}
+    )
+    for control_id, status_ in rows:
+        prefix = (
+            control_id.split(".")[0]
+            if "." in control_id
+            else control_id.split("-")[0]
+        )
+        buckets[prefix]["total"] += 1
+        if status_ in buckets[prefix]:
+            buckets[prefix][status_] += 1
+
+    categories = [
+        ControlCategoryBreakdown(category=cat, **counts)
+        for cat, counts in sorted(buckets.items())
+    ]
+
+    return ScanSummary(
+        id=scan.id,
+        status=scan.status,
+        framework=scan.framework,
+        benchmark=scan.benchmark,
+        version=scan.version,
+        started_at=scan.started_at,
+        finished_at=scan.finished_at,
+        compliance_score=scan.compliance_score,
+        total_controls=scan.total_controls,
+        passed_count=scan.passed_count,
+        failed_count=scan.failed_count,
+        skipped_count=scan.skipped_count,
+        error_count=scan.error_count,
+        categories=categories,
+    )
 
 @router.get("/{scan_id}/results", response_model=list[ScanResultRead])
 async def get_scan_results(

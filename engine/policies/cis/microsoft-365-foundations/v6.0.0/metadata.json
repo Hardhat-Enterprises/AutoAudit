@@ -648,7 +648,7 @@
       "benchmark_audit_type": "Automated",
       "automation_status": "ready",
       "data_collector_id": "entra.policies.authorization_policy",
-      "policy_file": null,
+      "policy_file": "5.1.2.2_block_third_party_integrated_apps.rego",
       "requires_permissions": ["Policy.Read.All"],
       "notes": "Check allowedToCreateApps"
     },

@@ -7,9 +7,6 @@ from collectors.entra.applications.apps_and_services_settings import (
     AppsAndServicesSettingsDataCollector,
 )
 from collectors.entra.applications.forms_settings import FormsSettingsDataCollector
-from collectors.entra.applications.service_principals import (
-    ServicePrincipalsDataCollector,
-)
 
 # Authentication
 from collectors.entra.authentication.authentication_methods import (
@@ -45,7 +42,6 @@ from collectors.entra.devices.enrollment_restrictions import (
 )
 
 # Domains
-from collectors.entra.domains.domains import DomainsDataCollector
 from collectors.entra.domains.password_policy import PasswordPolicyDataCollector
 
 # Governance
@@ -56,9 +52,6 @@ from collectors.entra.governance.pim_role_policies import PimRolePoliciesDataCol
 from collectors.entra.groups.groups import GroupsDataCollector
 
 # Policies
-from collectors.entra.policies.activity_timeout_policy import (
-    ActivityTimeoutPolicyDataCollector,
-)
 from collectors.entra.policies.admin_consent_request_policy import (
     AdminConsentRequestPolicyDataCollector,
 )
@@ -69,20 +62,11 @@ from collectors.entra.policies.b2b_policy import B2BPolicyDataCollector
 
 # Roles
 from collectors.entra.roles.cloud_only_admins import CloudOnlyAdminsDataCollector
-from collectors.entra.roles.directory_roles import DirectoryRolesDataCollector
 from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
-
-# Users
-from collectors.entra.users.users import UsersDataCollector
 
 # Exchange - DNS
 from collectors.exchange.dns.dns_security_records import (
     DnsSecurityRecordsDataCollector,
-)
-
-# Exchange - Audit
-from collectors.exchange.audit.admin_audit_log_config import (
-    AdminAuditLogConfigDataCollector,
 )
 
 # Exchange - Organization
@@ -147,17 +131,12 @@ from collectors.exchange.transport.external_in_outlook import (
 )
 from collectors.exchange.transport.transport_rules import TransportRulesDataCollector
 
-# Compliance
-from collectors.compliance.report_submission_policy import (
-    ReportSubmissionPolicyDataCollector,
-)
 
 # Registry mapping data_collector_id to collector class
 DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Applications
     "entra.applications.apps_and_services_settings": AppsAndServicesSettingsDataCollector,
     "entra.applications.forms_settings": FormsSettingsDataCollector,
-    "entra.applications.service_principals": ServicePrincipalsDataCollector,
     # Authentication
     "entra.authentication.authentication_methods": AuthenticationMethodsDataCollector,
     "entra.authentication.mfa_fatigue_protection": MfaFatigueProtectionDataCollector,
@@ -171,7 +150,6 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
     # Domains
-    "entra.domains.domains": DomainsDataCollector,
     "entra.domains.password_policy": PasswordPolicyDataCollector,
     # Governance
     "entra.governance.access_reviews": AccessReviewsDataCollector,
@@ -179,20 +157,15 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Groups
     "entra.groups.groups": GroupsDataCollector,
     # Policies
-    "entra.policies.activity_timeout_policy": ActivityTimeoutPolicyDataCollector,
     "entra.policies.admin_consent_request_policy": AdminConsentRequestPolicyDataCollector,
     "entra.policies.authorization_policy": AuthorizationPolicyDataCollector,
     "entra.policies.b2b_policy": B2BPolicyDataCollector,
     # Roles
     "entra.roles.cloud_only_admins": CloudOnlyAdminsDataCollector,
-    "entra.roles.directory_roles": DirectoryRolesDataCollector,
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,
     # Users
-    "entra.users.users": UsersDataCollector,
     # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
-    # Exchange - Audit
-    "exchange.audit.admin_audit_log_config": AdminAuditLogConfigDataCollector,
     # Exchange - Organization
     "exchange.organization.organization_config": OrganizationConfigDataCollector,
     "exchange.organization.owa_mailbox_policy": OwaMailboxPolicyDataCollector,
@@ -218,8 +191,6 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Exchange - Transport
     "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
     "exchange.transport.transport_rules": TransportRulesDataCollector,
-    # Compliance
-    "compliance.report_submission_policy": ReportSubmissionPolicyDataCollector,
 }
 
 
