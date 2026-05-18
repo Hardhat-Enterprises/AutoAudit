@@ -1,5 +1,5 @@
 import React, { useState, type ChangeEvent, type FormEvent, type ReactElement } from "react";
-import { ArrowRight, Eye, EyeOff, Mail, Building, User, ShieldCheck } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Mail, Building, User, ShieldCheck, Check, X } from "lucide-react";
 import type { SignUpFormData, SignUpSubmitPayload } from "../signUpTypes";
 
 const TERMS_ERROR_MESSAGE = "Please agree to the terms and privacy policy";
@@ -118,7 +118,11 @@ const SignupFormPanel = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
   const apiBaseUrl = import.meta.env.VITE_API_URL;
+
+  const isValidEmail = (email: string): boolean =>
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
 
   const handleAgreeTermsChange = (event: ChangeEvent<HTMLInputElement>) => {
     const checked = event.target.checked;
@@ -132,6 +136,7 @@ const SignupFormPanel = ({
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     onFormChange(name as keyof SignUpFormData, value);
+    if (name === "email") setEmailTouched(true);
     if (error) setError("");
   };
 
@@ -243,6 +248,11 @@ const SignupFormPanel = ({
                   className="py-4 px-4 pl-12 w-full rounded-xl border-2 transition outline-none border-brand-blue/20 bg-surface-2/30 text-[1rem] text-text-strong placeholder:text-text-muted/70 focus:border-brand-blue focus:bg-surface-2/40 focus:shadow-[0_0_0_4px_rgb(var(--brand-blue)/0.12)]"
                 />
               </div>
+              {field.name === "email" && emailTouched && formData.email && !isValidEmail(formData.email) && (
+                <span className="mt-1.5 text-xs text-accent-bad">
+                  Please enter a valid email address
+                </span>
+              )}
             </label>
           ))}
 
@@ -317,6 +327,14 @@ const SignupFormPanel = ({
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+            {formData.confirmPassword && (
+              <span className={`mt-1.5 flex items-center gap-1 text-xs ${formData.password === formData.confirmPassword ? "text-accent-good" : "text-accent-bad"}`}>
+                {formData.password === formData.confirmPassword
+                  ? <><Check size={12} /> Passwords match</>
+                  : <><X size={12} /> Passwords do not match</>
+                }
+              </span>
+            )}
           </label>
 
           <label className="flex gap-2 items-start cursor-pointer text-text-muted">
