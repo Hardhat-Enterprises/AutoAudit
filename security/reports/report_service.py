@@ -436,8 +436,7 @@ def _single_control_mapping(ctrl: Mapping[str, Any]) -> Dict[str, str]:
         "Evidence_Explanation": _pick(n, "evidence explanation", "evidence_explanation"),
         "Impact":               _pick(n, "impact"),
         "Root_Cause":           _pick(n, "root cause", "root_cause"),
-        "Remediation":          _pick(n, "remediation"),
-        "Recommendations":      _pick(n, "recommendations", "recommendation"),
+        "Remediation":          _pick(n, "remediation", "recommendations", "recommendation"),
         "Owner":                _pick(n, "owner"),
         "Target_Date":          _pick(n, "target date", "target_date"),
         "Remediation_Status":   _pick(n, "remediation status", "remediation_status", "status"),
@@ -451,11 +450,21 @@ def _single_control_mapping(ctrl: Mapping[str, Any]) -> Dict[str, str]:
 
 def _bucket_fails_by_severity(controls: list) -> Dict[str, Optional[dict]]:
     """
-    Pick the first FAIL at each severity level.  The template has one finding
-    block per level, so only the first match matters.
+    Pick the first FAIL at each severity level.  Used by legacy callers;
+    internally _group_fails_by_severity is preferred for multi-finding support.
     """
-    order   = ["Critical", "High", "Medium", "Low"]
-    buckets: Dict[str, Optional[dict]] = {s: None for s in order}
+    grouped = _group_fails_by_severity(controls)
+    return {sev: (lst[0] if lst else None) for sev, lst in grouped.items()}
+
+
+def _group_fails_by_severity(controls: list) -> Dict[str, list]:
+    """
+    Group ALL failing controls by severity level, preserving order.
+    Returns a dict with keys Critical/High/Medium/Low, each mapping to a
+    list of dicts (may be empty if no fails at that level).
+    """
+    order: list = ["Critical", "High", "Medium", "Low"]
+    buckets: Dict[str, list] = {s: [] for s in order}
     for ctrl in controls:
         n  = _normalize_keys(ctrl)
         pf = _pick(n, "pass fail", "pass/fail", "passfail").upper()
@@ -464,8 +473,8 @@ def _bucket_fails_by_severity(controls: list) -> Dict[str, Optional[dict]]:
             if "non" in status or "partial" in status:
                 pf = "FAIL"
         sv = _pick(n, "risk rating", "risk_rating", "severity")
-        if pf == "FAIL" and sv in buckets and buckets[sv] is None:
-            buckets[sv] = dict(ctrl)
+        if pf == "FAIL" and sv in buckets:
+            buckets[sv].append(dict(ctrl))
     return buckets
 
 
@@ -528,13 +537,81 @@ _BLOCK_SEVERITY_KEYWORDS = {
 }
 
 
+def _find_block_anchors(children: list, order: list) -> tuple:
+    """Scan children to locate severity block start indices and section-7 stop."""
+    anchors: Dict[str, int] = {}
+    section7_idx: Optional[int] = None
+    for idx, child in enumerate(children):
+        text = "".join(t.text for t in child.iter() if t.tag == _W_T and t.text)
+        if (section7_idx is None
+                and re.match(r"\s*7[\.\s]", text)
+                and "\u2026" not in text
+                and "..." not in text
+                and len(text) < 80):
+            section7_idx = idx
+        for sev, sentinel in _BLOCK_SENTINELS.items():
+            if sev not in anchors:
+                has_num = bool(re.search(r"(?<!\d)" + re.escape(sentinel) + r"(?!\d)", text))
+                has_kw  = any(kw in text for kw in _BLOCK_SEVERITY_KEYWORDS[sev])
+                if has_num and has_kw:
+                    anchors[sev] = idx
+    hard_stop = section7_idx if section7_idx is not None else len(children)
+    return anchors, hard_stop
+
+
+def _block_slice(anchors: dict, hard_stop: int, sev: str, order: list) -> tuple:
+    """Return (start, end) indices for a severity block."""
+    start = anchors[sev]
+    end   = hard_stop
+    sev_idx = order.index(sev)
+    for ns in order[sev_idx + 1:]:
+        if ns in anchors and anchors[ns] < end:
+            end = anchors[ns]
+    return start, end
+
+
+def _renumber_finding_headings(doc: Document) -> None:
+    """
+    After all blocks are inserted, walk section 6 heading paragraphs and
+    renumber them sequentially: 6.1, 6.2, 6.3, ...
+
+    A heading is identified by matching '6.N {anything} - (Severity)'.
+    """
+    body = doc.element.body
+    counter = 0
+    for child in body:
+        if child.tag != _W_P:
+            continue
+        text = "".join(t.text for t in child.iter() if t.tag == _W_T and t.text)
+        # Match heading pattern like "6.1 SomeName - (Critical)"
+        m = re.match(r"^6\.\d+\s+.+\s+-\s+\((Critical|High|Medium|Low)\)\s*$", text)
+        if not m:
+            continue
+        counter += 1
+        new_num = f"6.{counter}"
+        # Rewrite the number in-place across all <w:t> nodes in this paragraph.
+        # The number "6.X" always appears in the first run.
+        for t_node in child.iter():
+            if t_node.tag == _W_T and t_node.text:
+                replaced = re.sub(r"^6\.\d+", new_num, t_node.text)
+                if replaced != t_node.text:
+                    t_node.text = replaced
+                    break  # Only the first occurrence per paragraph
+
+
 def _substitute_finding_blocks(
     doc: Document,
     severity_controls: Dict[str, Optional[dict]],
+    grouped_controls: Optional[Dict[str, list]] = None,
 ) -> None:
     """
     Substitute tokens in each severity block (6.1-6.4), scoped tightly so
     one block's data never leaks into another.
+
+    When *grouped_controls* is supplied (all fails per severity), controls
+    beyond the first are handled by cloning the unfilled template block and
+    inserting filled duplicates immediately after the original.  All heading
+    section numbers (6.1, 6.2, ...) are then renumbered sequentially.
 
     The TOC contains the same '6.1', '6.2' etc. strings and appears before
     the actual headings in the document body.  We skip TOC entries by
@@ -543,47 +620,78 @@ def _substitute_finding_blocks(
 
     Section 7 is the hard stop — nothing past it gets touched here.
     """
-    body     = doc.element.body
+    import copy
+
+    body  = doc.element.body
+    order = ["Critical", "High", "Medium", "Low"]
+
+    # Build per-severity control lists.
+    if grouped_controls is not None:
+        sev_lists: Dict[str, list] = grouped_controls
+    else:
+        sev_lists = {
+            sev: ([ctrl] if ctrl else [])
+            for sev, ctrl in (severity_controls or {}).items()
+        }
+
+    # --- Pass 1: snapshot all unfilled template blocks before any substitution.
     children = list(body)
-    order    = ["Critical", "High", "Medium", "Low"]
+    anchors, hard_stop = _find_block_anchors(children, order)
 
-    anchors: Dict[str, int]     = {}
-    section7_idx: Optional[int] = None
+    unfilled: Dict[str, list] = {}
+    for sev in order:
+        if sev in anchors:
+            start, end = _block_slice(anchors, hard_stop, sev, order)
+            unfilled[sev] = [copy.deepcopy(el) for el in children[start:end]]
 
-    for idx, child in enumerate(children):
-        text = "".join(t.text for t in child.iter() if t.tag == _W_T and t.text)
-
-        if (section7_idx is None
-                and re.match(r"\s*7[\.\s]", text)
-                and "\u2026" not in text
-                and "..." not in text
-                and len(text) < 80):
-            section7_idx = idx
-
-        for sev, sentinel in _BLOCK_SENTINELS.items():
-            if sev not in anchors:
-                has_num = bool(re.search(r"(?<!\d)" + re.escape(sentinel) + r"(?!\d)", text))
-                has_kw  = any(kw in text for kw in _BLOCK_SEVERITY_KEYWORDS[sev])
-                if has_num and has_kw:
-                    anchors[sev] = idx
-
-    hard_stop = section7_idx if section7_idx is not None else len(children)
-
-    for i, sev in enumerate(order):
-        ctrl = severity_controls.get(sev)
-        if not ctrl or sev not in anchors:
+    # --- Pass 2: fill the first block for each severity in-place.
+    for sev in order:
+        ctrls = sev_lists.get(sev, [])
+        if not ctrls or sev not in anchors:
             continue
-
-        start = anchors[sev]
-        end   = hard_stop
-        for ns in order[i + 1:]:
-            if ns in anchors and anchors[ns] < end:
-                end = anchors[ns]
-
-        ctrl_map = _sanitise_mapping(_single_control_mapping(ctrl))
+        start, end = _block_slice(anchors, hard_stop, sev, order)
+        ctrl_map = _sanitise_mapping(_single_control_mapping(ctrls[0]))
         _expand_placeholder_variants(ctrl_map)
         for child in children[start:end]:
             _sub_mapping_in_element(child, ctrl_map)
+
+    # --- Pass 3: for extra controls (beyond first), clone unfilled snapshot,
+    #     fill, and insert after the (already filled) original block.
+    #     Process severities in REVERSE order so insertions into a later
+    #     severity don't shift the anchors of earlier (higher) severities.
+    for sev in reversed(order):
+        ctrls = sev_lists.get(sev, [])
+        if len(ctrls) <= 1 or sev not in anchors or sev not in unfilled:
+            continue
+
+        # Re-read children after any previous insertions.
+        children = list(body)
+        anchors, hard_stop = _find_block_anchors(children, order)
+        if sev not in anchors:
+            continue
+        _, end = _block_slice(anchors, hard_stop, sev, order)
+
+        # Insert each extra control's block in forward order, each time
+        # appending after the last inserted block.
+        # We track the last element inserted so far; new blocks go after it.
+        # Start: the last element of the original (first-control) block.
+        start, _ = _block_slice(anchors, hard_stop, sev, order)
+        last_inserted = children[end - 1]  # last element of the filled block
+
+        snapshot = unfilled[sev]
+        for extra_ctrl in ctrls[1:]:
+            clones = [copy.deepcopy(el) for el in snapshot]
+            extra_map = _sanitise_mapping(_single_control_mapping(extra_ctrl))
+            _expand_placeholder_variants(extra_map)
+            for clone in clones:
+                _sub_mapping_in_element(clone, extra_map)
+            # Insert clones in document order immediately after last_inserted.
+            for clone in clones:
+                last_inserted.addnext(clone)
+                last_inserted = clone
+
+    # --- Pass 4: renumber all 6.x headings sequentially.
+    _renumber_finding_headings(doc)
 
 
 def _substitute_remediation_rows(doc: Document, rows: list, rem_table) -> None:
@@ -794,6 +902,124 @@ _FINDING_ROW_LABELS = {
 }
 
 
+def _inject_evidence_extracts(doc: Document, controls: list) -> None:
+    """
+    For each finding table in section 6, inject a styled evidence extract
+    paragraph immediately after the table.
+
+    The paragraph shows:
+        Evidence file: <File_Name>
+        <Extract text>
+
+    Matching is done by order: finding tables appear in document order,
+    and failing controls are iterated in the same order they were placed
+    (Critical → High → Medium → Low, multiple per severity in insertion order).
+    Only controls with a non-empty Extract are injected.
+    """
+    # Build ordered list of failing controls that have extract data.
+    order_sev = ["Critical", "High", "Medium", "Low"]
+
+    def _sev_key(ctrl):
+        sv = _normalize_keys(ctrl).get("risk rating", "") or _normalize_keys(ctrl).get("severity", "")
+        return order_sev.index(sv) if sv in order_sev else 99
+
+    def _is_fail(ctrl):
+        n  = _normalize_keys(ctrl)
+        pf = _pick(n, "pass fail", "pass/fail", "passfail").upper()
+        if not pf:
+            status = _pick(n, "compliance status", "compliance_status").lower()
+            if "non" in status or "partial" in status:
+                return True
+            return False
+        return pf == "FAIL"
+
+    failing = sorted([c for c in controls if _is_fail(c)], key=_sev_key)
+
+    # Identify finding tables in document order.
+    finding_tables = []
+    for table in doc.tables:
+        left_labels = {row.cells[0].text.strip() for row in table.rows if row.cells}
+        if len(left_labels & _FINDING_ROW_LABELS) >= 4:
+            finding_tables.append(table)
+
+    body = doc.element.body
+
+    for table, ctrl in zip(finding_tables, failing):
+        n        = _normalize_keys(ctrl)
+        extract  = _pick(n, "extract", "evidence extract").strip()
+        filename = _pick(n, "file name", "file_name", "filename").strip()
+
+        if not extract and not filename:
+            continue
+
+        # Build the paragraph XML inline.
+        # Style: 9pt Times New Roman, grey label + monospace-ish extract body.
+        label_line = f"Evidence file: {filename}" if filename else ""
+        body_line  = extract
+
+        ns_w  = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+        ns_w14 = "http://schemas.microsoft.com/office/word/2010/wordml"
+
+        def _make_run(text: str, bold: bool = False, colour: str = "595959") -> "lxml.etree._Element":
+            r = OxmlElement("w:r")
+            rPr = OxmlElement("w:rPr")
+            fonts = OxmlElement("w:rFonts")
+            fonts.set(qn("w:ascii"), "Courier New")
+            fonts.set(qn("w:hAnsi"), "Courier New")
+            fonts.set(qn("w:cs"),    "Courier New")
+            rPr.append(fonts)
+            if bold:
+                rPr.append(OxmlElement("w:b"))
+            col = OxmlElement("w:color")
+            col.set(qn("w:val"), colour)
+            rPr.append(col)
+            sz = OxmlElement("w:sz")
+            sz.set(qn("w:val"), "18")   # 9pt
+            rPr.append(sz)
+            szCs = OxmlElement("w:szCs")
+            szCs.set(qn("w:val"), "18")
+            rPr.append(szCs)
+            r.append(rPr)
+            t = OxmlElement("w:t")
+            t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+            t.text = _sanitise(text)
+            r.append(t)
+            return r
+
+        def _make_para(*runs) -> "lxml.etree._Element":
+            p = OxmlElement("w:p")
+            pPr = OxmlElement("w:pPr")
+            spacing = OxmlElement("w:spacing")
+            spacing.set(qn("w:before"), "40")
+            spacing.set(qn("w:after"),  "40")
+            spacing.set(qn("w:line"),   "240")
+            spacing.set(qn("w:lineRule"), "auto")
+            pPr.append(spacing)
+            ind = OxmlElement("w:ind")
+            ind.set(qn("w:left"), "360")
+            pPr.append(ind)
+            shd = OxmlElement("w:shd")
+            shd.set(qn("w:val"),   "clear")
+            shd.set(qn("w:color"), "auto")
+            shd.set(qn("w:fill"),  "F2F2F2")
+            pPr.append(shd)
+            p.append(pPr)
+            for run in runs:
+                p.append(run)
+            return p
+
+        paras = []
+        if label_line:
+            paras.append(_make_para(_make_run(label_line, bold=True, colour="404040")))
+        if body_line:
+            paras.append(_make_para(_make_run(body_line, colour="595959")))
+
+        # Insert paragraphs immediately after the table element.
+        tbl_el = table._tbl
+        for para in reversed(paras):
+            tbl_el.addnext(para)
+
+
 def _fix_finding_table_widths(doc: Document) -> None:
     for table in doc.tables:
         left_labels = {row.cells[0].text.strip() for row in table.rows if row.cells}
@@ -928,6 +1154,7 @@ def _render_report_doc(
     _expand_placeholder_variants(global_mapping)
 
     severity_controls = _bucket_fails_by_severity(data.get("controls", []))
+    grouped_controls  = _group_fails_by_severity(data.get("controls", []))
     remediation_rows  = data.get("remediation_plan", [])[:8]
     all_controls      = data.get("controls", [])
 
@@ -937,12 +1164,13 @@ def _render_report_doc(
     app_b_table = _find_appendix_b_table(doc)
     ev_table    = _find_evidence_table(doc)
 
-    _substitute_finding_blocks(doc, severity_controls)
+    _substitute_finding_blocks(doc, severity_controls, grouped_controls=grouped_controls)
     _substitute_remediation_rows(doc, remediation_rows, rem_table)
     _substitute_appendix_b(doc, all_controls, app_b_table)
     _substitute_evidence_table(doc, data.get("evidence_register", [])[:10], ev_table)
     _substitute_global(doc, global_mapping)
     _remove_markers(doc)
+    _inject_evidence_extracts(doc, all_controls)
     _fix_finding_table_widths(doc)
 
     return doc, global_mapping
