@@ -20,7 +20,6 @@ import { useAuth } from "../context/AuthContext";
 type AccountPageProps = {
   sidebarWidth?: number;
   isDarkMode?: boolean;
-  onThemeToggle?: () => void;
 };
 
 type AuthUser = {
