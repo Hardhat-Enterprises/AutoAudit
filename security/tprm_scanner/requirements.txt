@@ -6,7 +6,7 @@ pyopenssl==23.2.0
 sslyze>=5.0.3
 rich==10.12.0
 flask==2.3.3
-werkzeug==2.3.7
+werkzeug==3.1.8
 sqlalchemy==1.4.23
 python-dateutil==2.8.2
 jinja2>=3.1.2
