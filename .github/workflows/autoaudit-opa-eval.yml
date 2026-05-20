@@ -48,14 +48,14 @@ jobs:
           python3 engine/legacy/engine/json_to_pdf.py
 
       - name: Upload PDF artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: autoaudit-report
           path: engine/legacy/engine/autoaudit_report.pdf
           if-no-files-found: error
 
       - name: Upload report artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: autoaudit-reports
           path: engine/legacy/engine/autoaudit_reports.json
