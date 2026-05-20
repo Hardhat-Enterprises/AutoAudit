@@ -39,7 +39,7 @@ jobs:
       run: docker build -t compliance-engine-workflows:latest -f docker/engine.Dockerfile .
       
     - name: Run the Anchore Grype scan action
-      uses: anchore/scan-action@v3
+      uses: anchore/scan-action@v7
       id: scan
       
       with:

@@ -152,7 +152,7 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/backend-api:${{ steps.set-env.outputs.ENV_NAME }}
 
       - name: Scan Docker image with Grype
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@v7
         with:
           image: ${{ secrets.DOCKER_USERNAME }}/backend-api:${{ steps.set-env.outputs.ENV_NAME }}
           fail-build: false
