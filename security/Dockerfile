@@ -1,7 +1,7 @@
 # Evidence API Dockerfile
 # Builds a lightweight FastAPI service that powers the Evidence Scanner UI.
 
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
