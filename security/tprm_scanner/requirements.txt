@@ -11,7 +11,7 @@ sqlalchemy==1.4.23
 python-dateutil==2.8.2
 jinja2>=3.1.2
 openai==0.27.0
-pandas>=1.4.0
+pandas>=3.0.3
 numpy>=1.21.0
 plotly==5.5.0
 weasyprint==68.1
