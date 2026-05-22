@@ -1,0 +1,145 @@
+name: "Engine CI/CD"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'engine/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'engine/**'
+  schedule:
+    - cron: '32 23 * * 6'
+
+jobs:
+  analyze:
+    name: Security Analysis on (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['python']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
+
+
+  run-lint:
+    name: Linting Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Lint Code Base
+        uses: github/super-linter@v4
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_BRANCH: "main"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_YAML: false
+          VALIDATE_GITHUB_ACTIONS: false
+          VALIDATE_PYTHON_BLACK: false
+          VALIDATE_PYTHON_FLAKE8: false
+          VALIDATE_PYTHON_ISORT: false
+          VALIDATE_JAVASCRIPT_STANDARD: false
+          VALIDATE_MARKDOWN: false
+          VALIDATE_NATURAL_LANGUAGE: false
+          VALIDATE_MARKDOWN_PRETTIER: false
+
+  test:
+    name: Run Engine Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        working-directory: engine
+        run: pip install -e ".[dev]"
+
+      - name: Run structural checks
+        working-directory: engine
+        run: pytest --tb=line tests/test_wiring.py
+
+  report:
+    name: Report PR status
+    needs: [analyze, run-lint, test]
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const analyze = '${{ needs.analyze.result }}';
+            const lint    = '${{ needs.run-lint.result }}';
+            const test    = '${{ needs.test.result }}';
+
+            const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
+            const allPassed = [analyze, lint, test].every(r => ['success', 'skipped'].includes(r));
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const marker = '<!-- ci-report-engine -->'; // used to find and update the existing comment
+
+            const body = [
+              marker,
+              `### CI: Engine`,
+              ``,
+              `| Job | Result |`,
+              `|---|---|`,
+              `| Security analysis (CodeQL) | ${icon(analyze)} \`${analyze}\` |`,
+              `| Lint | ${icon(lint)} \`${lint}\` |`,
+              `| Tests | ${icon(test)} \`${test}\` |`,
+              ``,
+              allPassed
+                ? `All checks passed.`
+                : `One or more checks failed. [View logs](${runUrl})`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

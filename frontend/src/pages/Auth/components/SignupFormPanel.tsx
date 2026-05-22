@@ -1,11 +1,30 @@
-import React, { useState, type ChangeEvent, type FormEvent, type ReactElement } from "react";
-import { ArrowRight, Eye, EyeOff, Mail, Building, User, ShieldCheck } from "lucide-react";
-import type { SignUpFormData, SignUpSubmitPayload } from "../signUpTypes";
+import React, { ReactElement, useState } from "react";
+import {
+  ArrowRight,
+  Building,
+  Eye,
+  EyeOff,
+  Mail,
+  ShieldCheck,
+  User,
+} from "lucide-react";
 
-const TERMS_ERROR_MESSAGE = "Please agree to the terms and privacy policy";
-const PASSWORD_MISMATCH_MESSAGE = "These passwords do not match";
+const PASSWORD_MISMATCH_MESSAGE = "Passwords do not match.";
+const TERMS_ERROR_MESSAGE = "Please accept Terms & Conditions.";
 
-type SignupInputFieldName = "firstName" | "lastName" | "email" | "organizationName";
+type SignupFormPanelProps = {
+  formData: any;
+  onFormChange: (field: string, value: string) => void;
+  onSubmit: (data: any) => void | Promise<void>;
+  onBackToLogin: () => void;
+  submitError: string;
+};
+
+type SignupInputFieldName =
+  | "firstName"
+  | "lastName"
+  | "email"
+  | "organizationName";
 
 type InputFieldConfig = {
   name: SignupInputFieldName;
@@ -80,27 +99,23 @@ const socialButtons: SocialButtonConfig[] = [
   },
 ];
 
-export type SignupFormPanelProps = {
-  formData: SignUpFormData;
-  onFormChange: (field: keyof SignUpFormData, value: string) => void;
-  onSubmit: (payload: SignUpSubmitPayload) => void | Promise<void>;
-  onBackToLogin: () => void;
-  submitError: string;
-};
-
 type PasswordStrength = {
   label: string;
   level: 1 | 2 | 3 | 4;
 };
 
-export const getPasswordStrength = (password: string): PasswordStrength | null => {
+export const getPasswordStrength = (
+  password: string
+): PasswordStrength | null => {
   if (!password) return null;
   if (password.length < 6) return { label: "Weak", level: 1 };
+
   let score = 0;
   if (password.length >= 10) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
+
   if (score <= 1) return { label: "Weak", level: 1 };
   if (score === 2) return { label: "Fair", level: 2 };
   if (score === 3) return { label: "Good", level: 3 };
@@ -114,25 +129,21 @@ const SignupFormPanel = ({
   onBackToLogin,
   submitError,
 }: SignupFormPanelProps) => {
+  const [error, setError] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [error, setError] = useState("");
-  const apiBaseUrl = import.meta.env.VITE_API_URL;
 
-  const handleAgreeTermsChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const checked = event.target.checked;
-    setAgreeTerms(checked);
-
-    if (checked && error === TERMS_ERROR_MESSAGE) {
-      setError("");
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onFormChange(e.target.name, e.target.value);
   };
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    onFormChange(name as keyof SignUpFormData, value);
-    if (error) setError("");
+  const handleAgreeTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAgreeTerms(e.target.checked);
+  };
+
+  const handleSocialSignUp = (provider: string) => {
+    console.log(`Sign up with ${provider}`);
   };
 
   const validate = (): boolean => {
@@ -140,32 +151,25 @@ const SignupFormPanel = ({
       setError(TERMS_ERROR_MESSAGE);
       return false;
     }
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return false;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError(PASSWORD_MISMATCH_MESSAGE);
       return false;
     }
-    if (error) setError("");
+
+    setError("");
     return true;
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!validate()) return;
-    await onSubmit({ ...formData, agreeTerms: true });
-  };
-
-  const handleSocialSignUp = (provider: string) => {
-    if (!apiBaseUrl) {
-      setError("Missing API configuration. Please set VITE_API_URL.");
-      return;
-    }
-
-    if (provider === "google") {
-      window.location.assign(`${apiBaseUrl}/v1/auth/google/authorize`);
-      return;
-    }
-
-    setError("Unsupported provider.");
+    onSubmit(formData);
   };
 
   const strength = getPasswordStrength(formData.password);
@@ -191,17 +195,24 @@ const SignupFormPanel = ({
     >
       <div className="p-9 w-full h-full max-w-120 rounded-[18px] bg-surface-1/90 shadow-[0_30px_60px_rgb(5_9_20/0.45)]">
         <header className="mb-8">
-          <h2 id="signup-form-heading" className="mb-2 leading-tight text-[2rem] text-text-strong">
+          <h2
+            id="signup-form-heading"
+            className="mb-2 leading-tight text-[2rem] text-text-strong"
+          >
             Create Account
           </h2>
-          <p className="text-text-muted">Start your compliance journey with AutoAudit.</p>
+          <p className="text-text-muted">
+            Start your compliance journey with AutoAudit.
+          </p>
         </header>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {inputFields.slice(0, 2).map((field) => (
               <label key={field.name} className="flex flex-col">
-                <span className="mb-[0.4rem] text-text-muted">{field.label}</span>
+                <span className="mb-[0.4rem] text-text-muted">
+                  {field.label}
+                </span>
                 <div className="relative">
                   <span
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-blue"
@@ -225,7 +236,9 @@ const SignupFormPanel = ({
 
           {inputFields.slice(2).map((field) => (
             <label key={field.name} className="flex flex-col">
-              <span className="mb-[0.4rem] text-text-muted">{field.label}</span>
+              <span className="mb-[0.4rem] text-text-muted">
+                {field.label}
+              </span>
               <div className="relative">
                 <span
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-blue"
@@ -273,17 +286,26 @@ const SignupFormPanel = ({
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+
             {strength && (
               <div className="flex gap-2 items-center mt-1.5">
                 <div className="flex flex-1 gap-1">
                   {([1, 2, 3, 4] as const).map((i) => (
                     <div
                       key={i}
-                      className={`h-1 flex-1 rounded ${i <= strength.level ? strengthBarColor[strength.level] : "bg-text-strong/10"}`}
+                      className={`h-1 flex-1 rounded ${
+                        i <= strength.level
+                          ? strengthBarColor[strength.level]
+                          : "bg-text-strong/10"
+                      }`}
                     />
                   ))}
                 </div>
-                <span className={`w-10 text-right text-xs ${strengthLabelColor[strength.level]}`}>
+                <span
+                  className={`w-10 text-right text-xs ${
+                    strengthLabelColor[strength.level]
+                  }`}
+                >
                   {strength.label}
                 </span>
               </div>
@@ -291,7 +313,9 @@ const SignupFormPanel = ({
           </label>
 
           <label className="flex flex-col">
-            <span className="mb-[0.4rem] text-text-muted">Confirm Password</span>
+            <span className="mb-[0.4rem] text-text-muted">
+              Confirm Password
+            </span>
             <div className="relative">
               <span
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-blue"
@@ -312,7 +336,9 @@ const SignupFormPanel = ({
                 type="button"
                 className="absolute right-4 top-1/2 bg-transparent border-none transition -translate-y-1/2 text-text-muted hover:text-brand-blue"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -362,7 +388,9 @@ const SignupFormPanel = ({
 
         <div
           className={`mb-6 grid gap-4 ${
-            socialButtons.length === 1 ? "grid-cols-1 justify-items-center" : "grid-cols-2"
+            socialButtons.length === 1
+              ? "grid-cols-1 justify-items-center"
+              : "grid-cols-2"
           }`}
         >
           {socialButtons.map((button) => (
@@ -373,7 +401,9 @@ const SignupFormPanel = ({
               onClick={() => handleSocialSignUp(button.provider)}
               disabled={Boolean(button.disabled)}
               aria-disabled={button.disabled ? "true" : "false"}
-              title={button.disabled ? "Coming soon" : `Continue with ${button.label}`}
+              title={
+                button.disabled ? "Coming soon" : `Continue with ${button.label}`
+              }
             >
               <span
                 className="grid place-items-center w-8 h-8 rounded-[10px] bg-surface-2/40"

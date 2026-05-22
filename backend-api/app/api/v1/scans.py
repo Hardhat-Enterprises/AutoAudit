@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from collections import defaultdict
 
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
@@ -14,11 +15,13 @@ from app.models.user import User
 from app.schemas.scan import (
     ScanCreate,
     ScanCreatedResponse,
+    ControlCategoryBreakdown,
     ScanListItem,
     ScanReadinessCheck,
     ScanReadinessResponse,
     ScanRead,
     ScanResultRead,
+    ScanSummary,
 )
 from app.services.benchmark_reader import get_file_reader
 from app.services.celery_client import queue_scan
@@ -230,6 +233,67 @@ async def get_scan(
         )
     return scan
 
+@router.get("/{scan_id}/summary", response_model=ScanSummary)
+async def get_scan_summary(
+    scan_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> ScanSummary:
+    """Get a lightweight  summary for a scan."""
+    result = await db.execute(
+        select(Scan).where(
+            Scan.id == scan_id,
+            Scan.user_id == current_user.id,
+        )
+    )
+    scan = result.scalar_one_or_none()
+    if not scan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Scan {scan_id} not found",
+        )
+
+    results = await db.execute(
+        select(ScanResult.control_id, ScanResult.status).where(
+            ScanResult.scan_id == scan_id
+        )
+    )
+    rows = results.all()
+
+    buckets: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"total": 0, "passed": 0, "failed": 0, "skipped": 0, "error": 0}
+    )
+    for control_id, status_ in rows:
+        prefix = (
+            control_id.split(".")[0]
+            if "." in control_id
+            else control_id.split("-")[0]
+        )
+        buckets[prefix]["total"] += 1
+        if status_ in buckets[prefix]:
+            buckets[prefix][status_] += 1
+
+    categories = [
+        ControlCategoryBreakdown(category=cat, **counts)
+        for cat, counts in sorted(buckets.items())
+    ]
+
+    return ScanSummary(
+        id=scan.id,
+        status=scan.status,
+        framework=scan.framework,
+        benchmark=scan.benchmark,
+        version=scan.version,
+        started_at=scan.started_at,
+        finished_at=scan.finished_at,
+        compliance_score=scan.compliance_score,
+        total_controls=scan.total_controls,
+        passed_count=scan.passed_count,
+        failed_count=scan.failed_count,
+        skipped_count=scan.skipped_count,
+        error_count=scan.error_count,
+        categories=categories,
+    )
 
 @router.get("/{scan_id}/results", response_model=list[ScanResultRead])
 async def get_scan_results(

@@ -52,6 +52,12 @@ def create_app() -> FastAPI:
     def root():
         return {"status": "ok", "message": "AutoAudit API running"}
 
+    @app.get("/liveness")
+    def health_check():
+        return {
+            "status": "healthy",
+        }
+        
     return app
 
 

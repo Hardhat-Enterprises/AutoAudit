@@ -7,8 +7,6 @@ import {
   AlertTriangle,
   Clock3,
   Shield,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -20,7 +18,6 @@ type ChartType = "doughnut" | "pie" | "bar";
 type DashboardProps = {
   sidebarWidth?: number;
   isDarkMode: boolean;
-  onThemeToggle: React.ChangeEventHandler<HTMLInputElement>;
 };
 
 type ApiConnection = {
@@ -75,7 +72,6 @@ function getErrorMessage(err: unknown): string {
 export default function Dashboard({
   sidebarWidth = 220,
   isDarkMode,
-  onThemeToggle,
 }: DashboardProps) {
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -550,7 +546,7 @@ export default function Dashboard({
             </div>
           </div>
 
-          <div
+          {/* <div
             className="flex items-center gap-2 self-end md:self-auto md:gap-3"
             role="group"
             aria-label="Theme toggle"
@@ -573,7 +569,7 @@ export default function Dashboard({
             </label>
 
             <Moon size={18} className={textTertiary} />
-          </div>
+          </div> */}
         </div>
 
         <div

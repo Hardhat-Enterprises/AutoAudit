@@ -4,14 +4,14 @@ version = "0.1.0"
 description = "AutoAudit Celery worker for compliance scanning"
 requires-python = ">=3.10"
 dependencies = [
-    "celery[redis]>=5.3.0",
+    "celery[redis]>=5.6.3",
     "httpx>=0.26.0",
-    "msal>=1.31.0",
+    "msal>=1.36.0",
     "sqlalchemy>=2.0.0",
     "psycopg2-binary>=2.9.9",
-    "pydantic>=2.5.0",
+    "pydantic>=2.13.4",
     "pydantic-settings>=2.1.0",
-    "cryptography>=42.0.0",
+    "cryptography>=48.0.0",
     "dnspython>=2.4.0",
 ]
 
