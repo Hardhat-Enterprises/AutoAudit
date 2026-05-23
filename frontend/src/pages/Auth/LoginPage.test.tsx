@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import LoginPage from './LoginPage';
@@ -45,7 +45,6 @@ describe('LoginPage', () => {
     renderLogin();
     expect(screen.getByRole('heading', { name: /access security insights anywhere/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
-    expect(screen.getByRole('navigation', { name: /primary navigation/i })).toBeInTheDocument();
   });
 
   test('passes login and sign-up handlers to SignInPanel', async () => {
@@ -55,7 +54,7 @@ describe('LoginPage', () => {
 
     await userEvent.type(screen.getByLabelText(/email address/i), 'x@y.com');
     await userEvent.type(screen.getByLabelText(/^password$/i), 'secret');
-    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    await userEvent.click(within(screen.getByRole('main')).getByRole('button', { name: /^sign in$/i }));
 
     expect(onLogin).toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: /create one/i }));

@@ -382,17 +382,19 @@ async def _evaluate_control_async(
     # OPA REST API path: "cis/microsoft_365_foundations/v3_1_0/control_1_1_1"
     #
     # Transform:
+    # - framework: "essential-eight" -> "essential_eight"
     # - benchmark: "microsoft-365-foundations" -> "microsoft_365_foundations"
     # - version: "v3.1.0" -> "v3_1_0"
-    # - control_id: "1.1.1" -> "control_1_1_1"
+    # - control_id: "1.1.1" -> "control_1_1_1", "E8-MAC-2.1" -> "control_e8_mac_2_1"
+    framework_normalized = framework.replace("-", "_")
     benchmark_normalized = benchmark.replace("-", "_")
     version_normalized = version.replace(".", "_")
 
-    # Convert control_id like "1.1.1" to "control_1_1_1"
-    control_suffix = control_id.replace(".", "_")
+    # Convert control_id to a valid Rego identifier (lowercase, hyphens/dots to underscores)
+    control_suffix = control_id.replace(".", "_").replace("-", "_").lower()
     control_package = f"control_{control_suffix}"
 
-    package_path = f"{framework}/{benchmark_normalized}/{version_normalized}/{control_package}"
+    package_path = f"{framework_normalized}/{benchmark_normalized}/{version_normalized}/{control_package}"
 
     # Evaluate policy with OPA
     result = await opa_client.evaluate_policy(package_path, collected_data)

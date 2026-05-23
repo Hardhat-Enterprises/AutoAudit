@@ -101,3 +101,54 @@ class ScanCreatedResponse(BaseModel):
     id: int
     status: str
     message: str
+
+class ControlCategoryBreakdown(BaseModel):
+    """Pass/fail counts grouped by control category prefix."""
+
+    category: str
+    total: int
+    passed: int
+    failed: int
+    skipped: int
+    error: int
+
+
+class ScanSummary(BaseModel):
+    """Lightweight scan summary without full result detail."""
+
+    id: int
+    status: str
+    framework: str
+    benchmark: str
+    version: str
+    started_at: datetime
+    finished_at: datetime | None
+    compliance_score: Decimal | None
+    total_controls: int
+    passed_count: int
+    failed_count: int
+    skipped_count: int
+    error_count: int
+    categories: list[ControlCategoryBreakdown]
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ScanReadinessCheck(BaseModel):
+    """Individual readiness check result."""
+
+    key: str
+    label: str
+    status: str  # pass, fail, warn
+    severity: str  # critical, warning
+    message: str
+
+
+class ScanReadinessResponse(BaseModel):
+    """Pre-scan readiness result."""
+
+    ready: bool
+    summary: str
+    required_permissions: list[str]
+    missing_permissions: list[str]
+    unverified_permissions: list[str]
+    checks: list[ScanReadinessCheck]

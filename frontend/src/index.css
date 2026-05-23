@@ -1,3 +1,228 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* ============================================================================
+   1. DESIGN TOKENS (Dark & Light themes)
+   ============================================================================ */
+
+:root {
+  --primary: 15 23 42;
+  --secondary: 30 41 59;
+
+  /* Surfaces */
+  --surface-1: 15 23 42;
+  --surface-2: 30 41 59;
+  --border-subtle: 51 65 85;
+
+  /* Text */
+  --text-strong: 226 232 240;
+  --text-muted: 148 163 184;
+
+  /* Accents */
+  --accent-teal: 100 223 223;
+  --accent-navy: 0 18 66;
+  --accent-good: 16 185 129;
+  --accent-warn: 249 115 22;
+  --accent-bad: 239 68 68;
+  --brand-blue: 59 130 246;
+  --brand-blue-deep: 37 99 235;
+  --brand-blue-soft: 147 197 253;
+  --brand-cyan: 34 211 238;
+  --landing-text-soft: 176 196 222;
+  --landing-bg-base: 10 22 40;
+  --landing-bg-mid: 15 31 56;
+  --landing-bg-end: 22 42 74;
+  --landing-bg-alt-start: 30 58 95;
+  --landing-bg-alt-mid: 26 58 79;
+  --landing-bg-alt-end: 42 74 95;
+
+  /* Spacing & Radius */
+  --radius-1: 8px;
+  --radius-2: 12px;
+  --radius-3: 16px;
+
+  /* Fonts */
+  --font-header: "League Spartan", ui-sans-serif, system-ui, "Segoe UI",
+    Inter, Arial;
+  --font-body: "Segoe UI", ui-sans-serif, system-ui, Inter, Arial;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Light theme overrides */
+.light {
+  --primary: 248 250 252;
+  --secondary: 255 255 255;
+  --surface-1: 248 250 252;
+  --surface-2: 255 255 255;
+  --border-subtle: 226 232 240;
+  --text-strong: 11 18 32;
+  --text-muted: 71 85 105;
+}
+
+@theme inline {
+  --color-primary: rgb(var(--primary));
+  --color-secondary: rgb(var(--secondary));
+  --color-surface-1: rgb(var(--surface-1));
+  --color-surface-2: rgb(var(--surface-2));
+  --color-border-subtle: rgb(var(--border-subtle));
+  --color-text-strong: rgb(var(--text-strong));
+  --color-text-muted: rgb(var(--text-muted));
+  --color-accent-teal: rgb(var(--accent-teal));
+  --color-accent-navy: rgb(var(--accent-navy));
+  --color-accent-good: rgb(var(--accent-good));
+  --color-accent-warn: rgb(var(--accent-warn));
+  --color-accent-bad: rgb(var(--accent-bad));
+  --color-brand-blue: rgb(var(--brand-blue));
+  --color-brand-blue-deep: rgb(var(--brand-blue-deep));
+  --color-brand-blue-soft: rgb(var(--brand-blue-soft));
+  --color-brand-cyan: rgb(var(--brand-cyan));
+  --color-landing-text-soft: rgb(var(--landing-text-soft));
+  --color-landing-bg-base: rgb(var(--landing-bg-base));
+  --color-landing-bg-mid: rgb(var(--landing-bg-mid));
+  --color-landing-bg-end: rgb(var(--landing-bg-end));
+  --color-landing-bg-alt-start: rgb(var(--landing-bg-alt-start));
+  --color-landing-bg-alt-mid: rgb(var(--landing-bg-alt-mid));
+  --color-landing-bg-alt-end: rgb(var(--landing-bg-alt-end));
+}
+
+/* ============================================================================
+   2. BASE STYLES
+   ============================================================================ */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  :root.light {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
+
+  body.is-resizing *,
+  body.is-resizing *::before,
+  body.is-resizing *::after {
+    transition: none !important;
+  }
+
+  body {
+    background-color: rgb(var(--surface-1));
+    color: rgb(var(--text-strong));
+    font-family: var(--font-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent-teal));
+    outline-offset: 2px;
+  }
+
+  a, button {
+    @apply cursor-pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ============================================================================
+   3. COMPONENT UTILITIES
+   ============================================================================ */
+
+@layer components {
+  .container-max {
+    @apply mx-auto max-w-6xl px-6 py-6;
+  }
+
+  .card {
+    @apply relative overflow-hidden rounded-lg border p-6 shadow-lg;
+    background-color: rgba(var(--surface-2), 0.7);
+    border-color: rgb(var(--border-subtle));
+  }
+
+  .stats-grid {
+    @apply grid gap-5 sm:grid-cols-1 lg:grid-cols-4;
+  }
+
+  .stat-label {
+    @apply mb-1 font-medium text-sm;
+    color: rgb(var(--text-muted));
+  }
+
+  .stat-value {
+    @apply text-[28px] font-bold leading-tight;
+    color: rgb(var(--text-strong));
+  }
+
+  .stat-subtitle {
+    @apply text-xs;
+    color: rgb(var(--text-muted));
+  }
+
+  .tone-good {
+    @apply border-l-4;
+    border-color: rgb(var(--accent-good));
+  }
+
+  .tone-warn {
+    @apply border-l-4;
+    border-color: rgb(var(--accent-warn));
+  }
+
+  .tone-bad {
+    @apply border-l-4;
+    border-color: rgb(var(--accent-bad));
+  }
+
+  .tone-muted {
+    @apply border-l-4;
+    border-color: rgb(var(--border-subtle));
+  }
+
+  .issue-title {
+    @apply flex items-center gap-2;
+  }
+
+  .issue-header {
+    @apply mb-3 flex items-center justify-between;
+  }
+
+  .issue-desc {
+    @apply text-sm;
+    color: rgb(var(--text-muted));
+  }
+
+  .issue-col {
+    @apply flex h-full flex-col gap-5;
+  }
+}
+
+/* ============================================================================
+   4. ANIMATIONS & KEYFRAMES
+   ============================================================================ */
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

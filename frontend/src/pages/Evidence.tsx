@@ -12,7 +12,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getEvidenceReportUrl, getEvidenceStrategies, scanEvidence } from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import './Evidence.css';
 
 // If the validator finds fewer than this number of expected terms for the selected strategy,
 // treat the scan as "not readable / not relevant" and suppress findings in the UI.
@@ -68,10 +67,9 @@ const EvidenceExtract = ({ evidence }: { evidence: unknown }) => {
   if (!text) return <span>—</span>;
 
   return (
-    <div className="evidence-cell">
-      <div className="evidence-block">
-        {/* Styled by .evidence-block__body in Evidence.css (monospace, wrap, max-height scroll). */}
-        <pre className="evidence-block__body">{text}</pre>
+    <div className="flex flex-col gap-1.5">
+      <div className="p-0 bg-transparent border-0">
+        <pre className="overflow-auto py-2.5 px-3 m-0 max-h-40 leading-snug whitespace-pre-wrap rounded-xl border text-[13px] wrap-break-word border-border-subtle bg-surface-1" style={{ fontFamily: '"SFMono-Regular", "Menlo", "Consolas", monospace' }}>{text}</pre>
       </div>
     </div>
   );
@@ -305,53 +303,69 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
     }
   };
 
-  // Map PASS/FAIL/WARNING to CSS badge classes (frontend).
+  // Map PASS/FAIL/WARNING to Tailwind badge classes (frontend).
+  // IMPORTANT: Returns full Tailwind class strings, not CSS class names.
+  // Tailwind needs to see the complete class string at build time, so we cannot
+  // construct classes dynamically (e.g. `bg-${color}-500`).
   const getStatusClass = (status: unknown) => {
     const s = typeof status === 'string' ? status.toUpperCase() : String(status ?? '').toUpperCase();
     switch (s) {
       case 'PASS':
-        return 'status-pass';
+        return 'bg-accent-good/10 border-accent-good/25 text-accent-good';
       case 'FAIL':
-        return 'status-fail';
+        return 'bg-accent-bad/10 border-accent-bad/25 text-accent-bad';
       case 'WARNING':
-        return 'status-warning';
+        return 'bg-accent-warn/10 border-accent-warn/25 text-accent-warn';
       default:
-        return 'status-muted';
+        return 'bg-text-muted/10 border-text-muted/20 text-text-muted';
     }
   };
 
   return (
     <div
-      className={`evidence-scanner ${isDarkMode ? 'dark' : 'light'}`}
+      className={`${isDarkMode ? 'dark' : 'light'} min-h-screen p-4 pl-24 bg-surface-1 text-text-strong transition-colors duration-200 sm:p-6 sm:pl-6 in-[.light]:bg-surface-1`}
       style={{
-        // Layout: keep page content aligned with collapsible sidebar width.
-        marginLeft: `${sidebarWidth}px`,
-        width: `calc(100% - ${sidebarWidth}px)`,
-        transition: 'margin-left 0.4s ease, width 0.4s ease'
-      }}
+  // Layout: keep desktop aligned with sidebar, but allow full width on mobile.
+  marginLeft: sidebarWidth ? `${sidebarWidth}px` : 0,
+  width: sidebarWidth ? `calc(100% - ${sidebarWidth}px)` : '100%',
+  transition: 'margin-left 0.4s ease, width 0.4s ease'
+}}
     >
-      <div className="evidence-container">
-        <div className="brand-wrap">
-          <div className="brand-content">
-            <img src="/AutoAudit.png" alt="AutoAudit Logo" className="brand-logo" />
-            <h1 className="brand-title">Evidence Scanner</h1>
+      <div className="mx-auto w-full max-w-300">
+        <div className="flex justify-start items-center mb-1.5 sm:pl-6">
+          <div className="flex flex-col gap-2 items-start sm:flex-row sm:gap-5 sm:items-center">
+            <img src="/AutoAudit.png" alt="AutoAudit Logo" className="object-contain w-24 h-24 sm:w-40 sm:h-40" />
+            <h1
+              className="m-0 font-bold tracking-wide leading-none text-accent-teal in-[.light]:text-brand-blue"
+              style={{
+                fontFamily: '"League Spartan", system-ui, sans-serif',
+                fontSize: 'clamp(28px, 7vw, 56px)',
+              }}
+            >
+              Evidence Scanner
+            </h1>
           </div>
         </div>
 
-        <p className="evidence-subtitle">
+        <p className="mt-1.5 mb-6 leading-snug text-left text-text-muted text-[15px] sm:ml-6">
           Your Evidence Assistant: Pick a strategy and upload your file. Images, PDF, DOCX, TXT, logs, registry exports
           are supported.
         </p>
 
-        <div className="evidence-card">
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="strategy" className="form-label">
+        <div className="p-6 mb-6 rounded-2xl border transition-all duration-300 border-border-subtle bg-surface-2 shadow-[0_4px_12px_rgb(0_0_0/0.1)]">
+          <div className="grid grid-cols-1 gap-5 mb-5">
+            <div className="flex flex-col">
+              <label htmlFor="strategy" className="block mb-2 text-sm font-semibold text-text-strong">
                 Strategy
               </label>
               <select
                 id="strategy"
-                className="form-select"
+                className="py-3 px-3.5 pr-10 w-full leading-snug bg-no-repeat border transition-all duration-300 appearance-none focus:ring-2 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed border-border-subtle rounded-[10px] text-[15px] bg-surface-1 text-text-strong min-h-11.5 in-[.light]:bg-surface-2 in-[.light]:text-text-strong focus:border-accent-teal focus:ring-accent-teal/20"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '12px 8px',
+                }}
                 value={selectedStrategy}
                 // Disable dropdown while loading strategy list from backend.
                 disabled={isLoadingStrategies}
@@ -365,7 +379,7 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
                 ))}
               </select>
               {selectedStrategyData && (
-                <div className="form-help">
+                <div className="mt-1.5 leading-snug text-text-muted text-[13px]">
                   {selectedStrategyData.description}
                   <br />
                   <strong>Category:</strong> {selectedStrategyData.category} · <strong>Severity:</strong>{' '}
@@ -377,34 +391,38 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
             </div>
           </div>
 
-          <div className="file-group">
-            <label htmlFor="file" className="form-label">
+          <div className="mt-5">
+            <label htmlFor="file" className="block mb-2 text-sm font-semibold text-text-strong">
               Evidence file
             </label>
             <input
               id="file"
               type="file"
-              className="form-file"
+              className="py-3 px-3.5 w-full border transition-all duration-300 cursor-pointer focus:ring-2 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed border-border-subtle rounded-[10px] text-[15px] bg-surface-1 text-text-strong in-[.light]:bg-surface-2 in-[.light]:text-text-strong focus:border-accent-teal focus:ring-accent-teal/20"
               ref={fileInputRef}
               // Require a strategy first (so we can set accept list + UX guidance).
               disabled={!selectedStrategy}
               accept={acceptedFileTypes}
               onChange={handleFileChange}
             />
-            <div className="file-name">{selectedFile ? selectedFile.name : 'Choose an evidence file.'}</div>
-            <div className="file-help">Enabled after you choose a strategy.</div>
+            <div className="mt-1.5 text-text-muted text-[13px]">
+              {selectedFile ? selectedFile.name : 'Choose an evidence file.'}
+            </div>
+            <div className="mt-1 text-xs opacity-70 text-text-muted">
+              Enabled after you choose a strategy.
+            </div>
           </div>
 
-          <div className="actions">
+          <div className="flex flex-wrap gap-3 items-center mt-6">
             <button
-              className="btn btn-primary"
+              className="flex gap-2 justify-center items-center py-3 px-5 w-full font-semibold border transition-all duration-300 cursor-pointer sm:w-auto disabled:opacity-60 disabled:cursor-not-allowed rounded-[10px] text-[15px] bg-accent-teal text-accent-navy border-accent-teal hover:bg-brand-cyan hover:border-brand-cyan hover:shadow-[0_4px_12px_rgb(var(--brand-cyan))] disabled:hover:bg-brand-cyan disabled:hover:border-brand-cyan"
               // Disable until strategy + file selected (and while scanning).
               disabled={!selectedStrategy || !selectedFile || isScanning}
               onClick={handleScan}
             >
               {isScanning ? (
                 <>
-                  <span className="spinner" />
+                  <span className="w-4 h-4 rounded-full border-2 animate-spin border-text-muted border-t-accent-teal" />
                   Scanning...
                 </>
               ) : (
@@ -412,82 +430,96 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
               )}
             </button>
 
-            {error && <span className="status-error">{error}</span>}
+            {error && <span className="text-sm font-semibold text-accent-bad">{error}</span>}
           </div>
         </div>
 
         {results && (
-          <div className="results-card">
-            <div className="results-title-row">
-              <h3 className="results-header">Results</h3>
-              <div className="results-kpis">
+          <div className="overflow-hidden p-6 w-full rounded-2xl border transition-all duration-300 border-border-subtle bg-surface-2 shadow-[0_4px_12px_rgb(0_0_0/0.1)]">
+            <div className="flex flex-wrap gap-4 justify-between items-start mb-4">
+              <h3 className="m-0 text-xl font-semibold text-text-strong">Results</h3>
+              <div className="flex flex-wrap gap-2 items-center">
                 {/* Prefer a single download action instead of repeating a link per row. */}
                 {reportFiles.length > 0 && (
                   <a
                     href={getEvidenceReportUrl(reportFiles[0])}
-                    className="report-link"
+                    className="inline-flex justify-center items-center py-1.5 px-2.5 text-xs font-bold leading-none no-underline rounded-full border border-accent-teal/35 bg-accent-teal/8 text-accent-teal hover:text-brand-cyan hover:bg-accent-teal/14 hover:border-accent-teal/60 focus-visible:outline focus-visible:outline-accent-teal/70 focus-visible:outline-offset-2"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     Download PDF
                   </a>
                 )}
-                <span className="kpi-chip kpi-total">{resultsSummary.total} total</span>
-                <span className="kpi-chip kpi-pass">{resultsSummary.pass} pass</span>
-                <span className="kpi-chip kpi-fail">{resultsSummary.fail} fail</span>
-                <span className="kpi-chip kpi-warn">{resultsSummary.warning} warn</span>
+                <span className="inline-flex justify-center items-center py-1.5 px-2.5 text-xs font-semibold leading-none whitespace-nowrap rounded-full border border-border-subtle bg-border-subtle text-text-strong">
+                  {resultsSummary.total} total
+                </span>
+                <span className="inline-flex justify-center items-center py-1.5 px-2.5 text-xs font-semibold leading-none whitespace-nowrap rounded-full border border-accent-good/25 bg-accent-good/10 text-accent-good">
+                  {resultsSummary.pass} pass
+                </span>
+                <span className="inline-flex justify-center items-center py-1.5 px-2.5 text-xs font-semibold leading-none whitespace-nowrap rounded-full border border-accent-bad/25 bg-accent-bad/10 text-accent-bad">
+                  {resultsSummary.fail} fail
+                </span>
+                <span className="inline-flex justify-center items-center py-1.5 px-2.5 text-xs font-semibold leading-none whitespace-nowrap rounded-full border border-accent-warn/25 bg-accent-warn/10 text-accent-warn">
+                  {resultsSummary.warning} warn
+                </span>
               </div>
             </div>
 
-            <div className="results-meta">
-              <div className="meta-tag">
-                <span>Strategy</span>
-                <span>{selectedStrategy}</span>
+            <div className="flex flex-wrap gap-4 mb-3">
+              <div className="inline-flex gap-2 items-center py-1.5 px-3 min-w-0 text-xs rounded-full border border-border-subtle text-text-muted bg-border-subtle">
+                <span className="font-bold tracking-wider uppercase whitespace-nowrap text-text-muted text-[11px]">Strategy</span>
+                <span className="overflow-hidden font-semibold whitespace-nowrap text-text-strong text-ellipsis max-w-105">{selectedStrategy}</span>
               </div>
-              <div className="meta-tag">
-                <span>File</span>
-                <span>{selectedFile?.name}</span>
+              <div className="inline-flex gap-2 items-center py-1.5 px-3 min-w-0 text-xs rounded-full border border-border-subtle text-text-muted bg-border-subtle">
+                <span className="font-bold tracking-wider uppercase whitespace-nowrap text-text-muted text-[11px]">File</span>
+                <span className="overflow-hidden font-semibold whitespace-nowrap text-text-strong text-ellipsis max-w-105">{selectedFile?.name}</span>
               </div>
             </div>
 
             {results.note && (
-              <div className="note-banner" role="status">
+              <div className="py-3 px-3.5 mb-5 leading-snug border border-l-4 border-border-subtle border-l-accent-teal bg-surface-2 text-text-strong rounded-[10px]" role="status">
                 {/* Backend-supplied note (e.g. "No readable text found"). */}
                 {results.note}
               </div>
             )}
 
             {findings.length > 0 ? (
-              <div className="results-table-wrap">
-                <table className="results-table">
+              <div className="overflow-x-auto overflow-y-visible mt-4 rounded-xl border border-border-subtle bg-surface-2">
+                <table className="w-full text-sm border-collapse min-w-7xl">
                   <thead>
                     <tr>
-                      <th>Test ID</th>
-                      <th>Sub-Strategy</th>
-                      <th>Status</th>
-                      <th>Recommendation</th>
-                      <th>Evidence Extract</th>
+                      <th className="py-3.5 px-4 text-xs font-bold tracking-wider text-left uppercase align-top whitespace-nowrap border-b bg-border-subtle text-text-muted border-border-subtle">Test ID</th>
+                      <th className="py-3.5 px-4 text-xs font-bold tracking-wider text-left uppercase align-top whitespace-nowrap border-b bg-border-subtle text-text-muted border-border-subtle">Sub-Strategy</th>
+                      <th className="py-3.5 px-4 text-xs font-bold tracking-wider text-left uppercase align-top whitespace-nowrap border-b bg-border-subtle text-text-muted border-border-subtle">Status</th>
+                      <th className="py-3.5 px-4 text-xs font-bold tracking-wider text-left uppercase align-top whitespace-nowrap border-b bg-border-subtle text-text-muted border-border-subtle min-w-[320px] max-w-130">Recommendation</th>
+                      <th className="py-3.5 px-4 text-xs font-bold tracking-wider text-left uppercase align-top whitespace-nowrap border-b bg-border-subtle text-text-muted border-border-subtle min-w-130">Evidence Extract</th>
                     </tr>
                   </thead>
                   <tbody>
                     {findings.map((finding: EvidenceFinding, index: number) => {
+                      const isLast = index === findings.length - 1;
+                      const borderClass = isLast ? '' : 'border-b border-border-subtle';
                       return (
-                        <tr className="results-row" key={index}>
-                          <td>
-                            <span className="mono">{finding.test_id || '—'}</span>
+                        <tr className="group" key={index}>
+                          <td className={`px-4 py-3.5 text-left align-top bg-surface-2 text-text-strong ${borderClass} group-hover:bg-border-subtle`}>
+                            <span className="inline-flex items-center py-0.5 px-2 text-xs whitespace-nowrap rounded-lg border border-border-subtle bg-surface-1 text-text-muted" style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }}>
+                              {finding.test_id || '—'}
+                            </span>
                           </td>
-                          <td>{finding.sub_strategy}</td>
-                          <td>
-                            <span className={`result-badge ${getStatusClass(finding.pass_fail)}`}>
+                          <td className={`px-4 py-3.5 text-left align-top bg-surface-2 text-text-strong ${borderClass} group-hover:bg-border-subtle`}>
+                            {finding.sub_strategy}
+                          </td>
+                          <td className={`px-4 py-3.5 text-left align-top bg-surface-2 text-text-strong ${borderClass} group-hover:bg-border-subtle`}>
+                            <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full border text-xs font-bold leading-none whitespace-nowrap ${getStatusClass(finding.pass_fail)}`}>
                               {finding.pass_fail || '—'}
                             </span>
                           </td>
-                          <td>
-                            <div className="cell-clamp" title={finding.recommendation || ''}>
+                          <td className={`px-4 py-3.5 text-left align-top bg-surface-2 text-text-strong ${borderClass} group-hover:bg-border-subtle min-w-[320px] max-w-130 wrap-break-word`}>
+                            <div className="leading-snug line-clamp-3 wrap-break-word" title={finding.recommendation || ''}>
                               {finding.recommendation || '—'}
                             </div>
                           </td>
-                          <td>
+                          <td className={`px-4 py-3.5 text-left align-top bg-surface-2 text-text-strong ${borderClass} group-hover:bg-border-subtle min-w-130`}>
                             <EvidenceExtract evidence={finding.evidence} />
                           </td>
                         </tr>
@@ -497,7 +529,7 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
                 </table>
               </div>
             ) : (
-              <div className="no-findings">
+              <div className="py-10 px-5 italic text-center text-text-muted">
                 {isLowSignalScan
                   ? 'No readable text found (or the file does not match the selected strategy).'
                   : 'No readable text found or no findings.'}

@@ -1,0 +1,124 @@
+name: Run Collector
+
+on:
+  push:
+    branches: [engine-development]
+    
+jobs:
+  run-collector:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
+
+      - name: Run GCP Access Collector
+        env: 
+          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        run: |
+          set -euo pipefail
+          python3 engine/legacy/engine/GCPAccess.py
+          if [ -f iam_policy.json ]; then
+            mv -f iam_policy.json engine/test-configs/iam_policy.json
+          elif [ -f engine/legacy/engine/iam_policy.json ]; then
+            mv -f engine/legacy/engine/iam_policy.json engine/test-configs/iam_policy.json
+          else
+            echo "ERROR: iam_policy.json not found"; exit 1
+          fi
+          if [ -f networks.json ]; then
+            mv -f networks.json engine/test-configs/networks.json
+          elif [ -f engine/legacy/engine/networks.json ]; then
+            mv -f engine/legacy/engine/networks.json engine/test-configs/networks.json
+          else
+            echo "ERROR: networks.json not found"; exit 1
+          fi
+          if [ -f firewalls.json ]; then
+            mv -f firewalls.json engine/test-configs/firewalls.json
+          elif [ -f engine/legacy/engine/firewalls.json ]; then
+            mv -f engine/legacy/engine/firewalls.json engine/test-configs/firewalls.json
+          else
+            echo "ERROR: firewalls.json not found"; exit 1
+          fi
+          if [ -f ComputeInstances.json ]; then
+            mv -f ComputeInstances.json engine/test-configs/ComputeInstances.json
+          elif [ -f engine/legacy/engine/ComputeInstances.json ]; then
+            mv -f engine/legacy/engine/ComputeInstances.json engine/test-configs/ComputeInstances.json
+          else
+            echo "ERROR: ComputeInstances.json not found"; exit 1
+          fi
+
+          if [ -f bigquery_datasets_full.json ]; then
+            mv -f bigquery_datasets_full.json engine/test-configs/bigquery_datasets_full.json
+          elif [ -f engine/legacy/engine/bigquery_datasets_full.json ]; then
+            mv -f engine/legacy/engine/bigquery_datasets_full.json engine/test-configs/bigquery_datasets_full.json
+          else
+            echo "ERROR: bigquery_datasets_full.json not found"; exit 1
+          fi
+
+          if [ -f sql_instances.json ]; then
+            mv -f sql_instances.json engine/test-configs/sql_instances.json
+          elif [ -f engine/legacy/engine/sql_instances.json ]; then
+            mv -f engine/legacy/engine/sql_instances.json engine/test-configs/sql_instances.json
+          else
+            echo "ERROR: sql_instances.json not found"; exit 1
+          fi
+
+          if [ -f dataproc_clusters.json ]; then
+            mv -f dataproc_clusters.json engine/test-configs/dataproc_clusters.json
+          elif [ -f engine/legacy/engine/dataproc_clusters.json ]; then
+            mv -f engine/legacy/engine/dataproc_clusters.json engine/test-configs/dataproc_clusters.json
+          else
+            echo "ERROR: dataproc_clusters.json not found"; exit 1
+          fi
+
+          if [ -f bucket_iam_policies.json ]; then
+            mv -f bucket_iam_policies.json engine/test-configs/bucket_iam_policies.json
+          elif [ -f engine/legacy/engine/bucket_iam_policies.json ]; then
+            mv -f engine/legacy/engine/bucket_iam_policies.json engine/test-configs/bucket_iam_policies.json
+          else
+            echo "ERROR: bucket_iam_policies.json not found"; exit 1
+          fi
+
+          if [ -f dns_zones.json ]; then
+            mv -f dns_zones.json engine/test-configs/dns_zones.json
+          elif [ -f engine/legacy/engine/dns_zones.json ]; then
+            mv -f engine/legacy/engine/dns_zones.json engine/test-configs/dns_zones.json
+          else
+            echo "ERROR: dns_zones.json not found"; exit 1
+          fi
+
+      - name: Commit and push IAM policy & networks config
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/test-configs/iam_policy.json
+          git add engine/test-configs/networks.json
+          git add engine/test-configs/firewalls.json
+          git add engine/test-configs/ComputeInstances.json
+          git add engine/test-configs/sql_instances.json
+          git add engine/test-configs/bigquery_datasets_full.json
+          git add engine/test-configs/dataproc_clusters.json
+          git add engine/test-configs/bucket_iam_policies.json
+          git add engine/test-configs/dns_zones.json
+
+          echo "Staged changes:"
+          git diff --cached --name-only
+          if git diff --cached --quiet; then
+            echo "No changes to commit (either identical content or nothing staged)."
+          else
+            git commit -m "Update iam_policy.json & networks.json & firewalls.json & ComputeInstances.json && sql_instances.json && buckets_iam_policies.json && dataproc_clusters.json && bigquery_datasets_full.json"
+            git push origin engine-development
+          fi
+          
+        

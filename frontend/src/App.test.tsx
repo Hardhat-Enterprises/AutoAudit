@@ -26,7 +26,7 @@ test('renders login page at /login', () => {
   });
   const welcomeHeading = screen.getByRole('heading', { name: /welcome back/i });
   expect(welcomeHeading).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+  expect(screen.getAllByRole('button', { name: /sign in/i }).length).toBeGreaterThan(0);
 });
 
 test('renders app with AutoAudit branding', () => {

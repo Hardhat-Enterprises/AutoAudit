@@ -26,30 +26,28 @@ import { useAuth } from './context/AuthContext';
 import { register as apiRegister } from './api/client';
 
 // Styles
-import './styles/global.css';
+import './index.css';
 
 type RouteWrapperProps = {
   children: React.ReactNode;
-}
+};
 
 type DashboardChildProps = {
   sidebarWidth?: number;
   isDarkMode?: boolean;
-  onThemeToggle?: () => void;
-}
+};
 
 type DashboardLayoutProps = {
   children: React.ReactElement<DashboardChildProps>;
   sidebarWidth: number;
   isDarkMode: boolean;
-  onThemeToggle: () => void;
   onSidebarWidthChange: (width: number) => void;
-}
+};
 
 type SignUpData = {
   email: string;
   password: string;
-}
+};
 
 // Protected Route Component
 const ProtectedRoute: React.FC<RouteWrapperProps> = ({ children }) => {
@@ -63,7 +61,19 @@ const ProtectedRoute: React.FC<RouteWrapperProps> = ({ children }) => {
   }, [isAuthenticated, isLoading, navigate]);
 
   if (isLoading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen bg-slate-900">
+        <div className="text-center">
+          <div className="animate-spin">
+            <svg className="w-8 h-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          </div>
+          <p className="mt-4 text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return isAuthenticated ? <>{children}</> : null;
@@ -86,7 +96,19 @@ const AdminRoute: React.FC<RouteWrapperProps> = ({ children }) => {
   }, [isAuthenticated, isLoading, navigate, user]);
 
   if (isLoading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen bg-slate-900">
+        <div className="text-center">
+          <div className="animate-spin">
+            <svg className="w-8 h-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          </div>
+          <p className="mt-4 text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return isAuthenticated && (user as { role?: string } | null | undefined)?.role === 'admin' ? <>{children}</> : null;
@@ -97,13 +119,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   sidebarWidth,
   isDarkMode,
-  onThemeToggle,
   onSidebarWidthChange,
 }) => {
   return (
     <>
       <Sidebar onWidthChange={onSidebarWidthChange} isDarkMode={isDarkMode} />
-      {React.cloneElement(children, { sidebarWidth, isDarkMode, onThemeToggle })}
+      {React.cloneElement(children, { sidebarWidth, isDarkMode })}
     </>
   );
 };
@@ -130,16 +151,11 @@ function App(): JSX.Element {
 
   // Theme management
   useEffect(() => {
-    const theme = localStorage.getItem('theme') ?? 'dark';
-    const dark = theme === 'dark';
-    setIsDarkMode(dark);
+    localStorage.setItem('theme', 'dark');
+    setIsDarkMode(true);
 
     const root = document.documentElement;
-    if (dark) {
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-    }
+    root.classList.remove('light');
   }, []);
 
   // Scroll restoration:
@@ -174,18 +190,18 @@ function App(): JSX.Element {
     navigate('/dashboard');
   };
 
-  const handleThemeToggle = (): void => {
-    const newThemeIsDark = !isDarkMode;
-    setIsDarkMode(newThemeIsDark);
-    localStorage.setItem('theme', newThemeIsDark ? 'dark' : 'light');
+  // const handleThemeToggle = (): void => {
+  //   const newThemeIsDark = !isDarkMode;
+  //   setIsDarkMode(newThemeIsDark);
+  //   localStorage.setItem('theme', newThemeIsDark ? 'dark' : 'light');
 
-    const root = document.documentElement;
-    if (newThemeIsDark) {
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-    }
-  };
+  //   const root = document.documentElement;
+  //   if (newThemeIsDark) {
+  //     root.classList.remove('light');
+  //   } else {
+  //     root.classList.add('light');
+  //   }
+  // };
 
   const handleSidebarWidthChange = (width: number): void => {
     setSidebarWidth(width);
@@ -251,10 +267,9 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
-                <Dashboard isDarkMode={isDarkMode} onThemeToggle={handleThemeToggle} />
+                <Dashboard isDarkMode={isDarkMode} />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -267,7 +282,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <Evidence />
@@ -283,7 +297,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <SettingsPage />
@@ -299,7 +312,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <AccountPage />
@@ -315,7 +327,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <ConnectionsPage isDarkMode={isDarkMode} />
@@ -331,7 +342,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <ScansPage isDarkMode={isDarkMode} />
@@ -347,7 +357,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <ScanDetailPage isDarkMode={isDarkMode} />
