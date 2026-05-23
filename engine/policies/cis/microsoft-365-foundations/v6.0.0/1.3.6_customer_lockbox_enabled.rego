@@ -31,7 +31,7 @@ default compliant := false
 
 # Compliant when Customer Lockbox is enabled
 compliant if {
-  input.customer_lockbox_enabled == true
+  input.organization_config.CustomerLockboxEnabled == true
 }
 
 msg := "Customer Lockbox is properly enabled" if {
@@ -41,16 +41,15 @@ msg := "Customer Lockbox is properly enabled" if {
 msg := "Customer Lockbox is disabled - Microsoft can access content without approval" if {
   not compliant
 }
-
 result := output if {
+  lockbox_value := input.organization_config.CustomerLockboxEnabled
+
   output := {
     "compliant": compliant,
     "message": msg,
     "affected_resources": [],
     "details": {
-      "customer_lockbox_enabled": input.customer_lockbox_enabled,
-      "oauth_enabled": input.oauth_enabled,
-      "audit_disabled": input.audit_disabled,
+      "customer_lockbox_enabled": lockbox_value,
     },
   }
 }
