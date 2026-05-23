@@ -28,29 +28,30 @@ default result := {
 
 default compliant := false
 
-# Compliant when no policies allow external sharing
+# Compliant when no policies allow external sharing AND are enabled
 compliant if {
-  count(input.policies_allowing_external) == 0
+  count([p | some p in input.policies_allowing_external; p.enabled == true]) == 0
 }
 
 msg := "External calendar sharing is properly disabled" if {
   compliant
 }
 
-msg := sprintf("%d policy(s) allow external calendar sharing", [count(input.policies_allowing_external)]) if {
+msg := sprintf("%d policy(s) allow external calendar sharing (enabled)", [count([p | some p in input.policies_allowing_external; p.enabled == true])]) if {
   not compliant
 }
-
 result := output if {
   external_policies := input.policies_allowing_external
+  enabled_external := [p | some p in external_policies; p.enabled == true]
   
   output := {
     "compliant": compliant,
     "message": msg,
-    "affected_resources": [p.name | some p in external_policies],
+    "affected_resources": [p.name | some p in enabled_external],
     "details": {
       "total_policies": input.total_policies,
       "policies_allowing_external_count": count(external_policies),
+      "policies_allowing_external_enabled_count": count(enabled_external),
       "policies_allowing_external": external_policies,
     },
   }
