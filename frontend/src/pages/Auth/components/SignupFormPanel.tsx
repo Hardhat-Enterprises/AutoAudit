@@ -3,7 +3,7 @@ import { ArrowRight, Eye, EyeOff, Mail, Building, User, ShieldCheck } from "luci
 import type { SignUpFormData, SignUpSubmitPayload } from "../signUpTypes";
 
 const TERMS_ERROR_MESSAGE = "Please agree to the terms and privacy policy";
-const PASSWORD_MISMATCH_MESSAGE = "These passwords do not match";
+const PASSWORD_MISMATCH_MESSAGE = "These passwords do not match"; // pragma: allowlist secret
 
 type SignupInputFieldName = "firstName" | "lastName" | "email" | "organizationName";
 
