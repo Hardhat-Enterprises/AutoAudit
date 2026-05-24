@@ -13,17 +13,18 @@
 #   N_GRAPH=80 N_POWERSHELL=30 bash tests/load/in-cluster/demo.sh
 #
 # Env knobs (with defaults):
-#   WAIT_BETWEEN_SECS  - pause between the two phases (default 60, matches
-#                        the HPA scaleDown stabilizationWindow so backend-api
-#                        returns to min before the second phase starts)
+#   WAIT_BETWEEN_SECS  - pause between the two phases (default 120; 60s was
+#                        too short to see backend-api drop from max back to
+#                        min before phase 2 starts. Tune up if you need
+#                        longer; sped-up demo recordings hide the gap)
 #   N_GRAPH            - synthetic tasks per pulse on controls.graph (default 80)
-#   N_POWERSHELL       - synthetic tasks per pulse on controls.powershell (default 20)
+#   N_POWERSHELL       - synthetic tasks per pulse on controls.powershell (default 25)
 
 set -euo pipefail
 
-WAIT_BETWEEN_SECS="${WAIT_BETWEEN_SECS:-60}"
-N_GRAPH="${N_GRAPH:-150}"
-N_POWERSHELL="${N_POWERSHELL:-50}"
+WAIT_BETWEEN_SECS="${WAIT_BETWEEN_SECS:-120}"
+N_GRAPH="${N_GRAPH:-80}"
+N_POWERSHELL="${N_POWERSHELL:-25}"
 
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 RUN="${REPO_ROOT}/tests/load/in-cluster/run.sh"

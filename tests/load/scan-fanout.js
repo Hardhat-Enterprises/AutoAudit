@@ -18,8 +18,10 @@ import { check, sleep } from 'k6';
 const BASE_URL = __ENV.AUTOAUDIT_BASE_URL || 'http://localhost:8000';
 const TOKEN = __ENV.AUTOAUDIT_TOKEN || '';
 // Per-pulse scan size — tune up if the queues drain faster than scaling can react.
-const N_GRAPH = parseInt(__ENV.N_GRAPH || '120', 10);
-const N_POWERSHELL = parseInt(__ENV.N_POWERSHELL || '60', 10);
+// Defaults are sized so the queues drain within ~2 min of load stopping; bigger
+// values leave too many tasks in the queue past the end of the test window.
+const N_GRAPH = parseInt(__ENV.N_GRAPH || '80', 10);
+const N_POWERSHELL = parseInt(__ENV.N_POWERSHELL || '25', 10);
 const SLEEP_MS = parseInt(__ENV.SLEEP_MS || '2000', 10);
 const CPU_BURN_MS = parseInt(__ENV.CPU_BURN_MS || '200', 10);
 const CALL_PWSH = (__ENV.CALL_POWERSHELL_SERVICE || 'true').toLowerCase() === 'true';
@@ -37,11 +39,10 @@ export const options = {
       preAllocatedVUs: 5,
       maxVUs: 20,
       stages: [
-        { duration: '30s', target: 2 },   // light warm-up
         { duration: '2m', target: 6 },    // ramp into demand — KEDA scales up
-        { duration: '3m', target: 6 },    // hold — pods reach steady state
+        { duration: '2m', target: 6 },    // hold — pods reach steady state
         { duration: '1m', target: 0 },    // ramp down — KEDA scales back down
-        { duration: '2m', target: 0 },    // observe scale-down to min
+        { duration: '4m', target: 0 },    // observe scale-down + queue drain inside the test window so the demo recording captures the full cycle
       ],
     },
   },

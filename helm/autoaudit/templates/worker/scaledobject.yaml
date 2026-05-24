@@ -26,6 +26,12 @@ spec:
   maxReplicaCount: {{ default 5 $queue.keda.maxReplicaCount }}
   pollingInterval: {{ default 10 $queue.keda.pollingInterval }}
   cooldownPeriod: {{ default 60 $queue.keda.cooldownPeriod }}
+  {{- with $queue.keda.behavior }}
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        {{- toYaml . | nindent 8 }}
+  {{- end }}
   triggers:
     - type: redis
       metadata:
