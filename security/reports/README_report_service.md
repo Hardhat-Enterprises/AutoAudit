@@ -11,6 +11,7 @@ produces a Word document or PDF report.
 |------|---------|
 | `report_service.py` | The report generator — this is the only file you need to import |
 | `AutoAudit_Report_Template.docx` | Word template with `{placeholder}` tokens |
+| `generate_report_from_scan.py` | Transforms live API scan results into the dataset schema and generates the report |
 | `run_test.py` | Smoke test runner |
 | `fake_dataset.json` | Sample dataset for local testing |
 
@@ -42,6 +43,136 @@ python report_service.py dataset.json                        # produces .docx
 python report_service.py dataset.json --pdf                  # produces PDF
 python report_service.py dataset.json --pdf --keep-docx      # keeps both
 python report_service.py convert path/to/report.docx         # convert existing docx
+```
+
+---
+
+## Generating a report from a real tenant scan
+
+`generate_report_from_scan.py` connects to the AutoAudit API, fetches real scan
+results, transforms them into the dataset schema, and generates the report.
+All tenant metadata (name, domain, framework version, dates) is derived
+automatically from the scan data — no hardcoded values.
+
+### Prerequisites
+
+1. The full stack must be running (`docker compose --profile all up -d`)
+2. You need a valid bearer token (see Authentication below)
+3. A completed scan must exist (see Running a scan below)
+
+### Authentication
+
+Register and log in to get a token:
+
+```bash
+curl -X POST http://localhost:8000/v1/auth/register \
+    -H 'Content-Type: application/json' \
+    -d '{"email": "you@example.com", "password": "YourPassword1!", "username": "yourname"}'
+
+curl -X POST http://localhost:8000/v1/auth/login \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'username=you@example.com&password=YourPassword1!'
+```
+
+Copy the `access_token` from the response and set it:
+
+```bash
+export TOKEN="eyJ..."
+# or use the env var alternative:
+export AUTOAUDIT_TOKEN="eyJ..."
+```
+
+### Running a scan
+
+Create an M365 connection using the service principal credentials from Bitwarden:
+
+```bash
+curl -X POST http://localhost:8000/v1/m365-connections/ \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $TOKEN" \
+    -d '{
+        "name": "My Tenant",
+        "tenant_id": "<tenant_id>",
+        "client_id": "<client_id>",
+        "client_secret": "<client_secret>"
+    }'
+```
+
+Trigger a scan (use the `id` returned from the connection step):
+
+```bash
+curl -X POST http://localhost:8000/v1/scans/ \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $TOKEN" \
+    -d '{"m365_connection_id": 1, "framework": "cis", "benchmark": "microsoft-365-foundations", "version": "v6.0.0"}'
+```
+
+Poll until `status` is `completed`:
+
+```bash
+curl http://localhost:8000/v1/scans/1 -H "Authorization: Bearer $TOKEN" | python3 -m json.tool | grep '"status"' | head -1
+```
+
+### Live mode (fetches directly from the running API)
+
+```bash
+python generate_report_from_scan.py \
+    --api-url http://localhost:8000 \
+    --token $TOKEN \
+    --scan-id 1
+```
+
+### Offline mode (from saved JSON files)
+
+First save the scan data:
+
+```bash
+curl http://localhost:8000/v1/scans/1 \
+    -H "Authorization: Bearer $TOKEN" > scan_meta.json
+
+curl http://localhost:8000/v1/scans/1/results \
+    -H "Authorization: Bearer $TOKEN" > scan_results.json
+```
+
+Then generate the report:
+
+```bash
+python generate_report_from_scan.py \
+    --results scan_results.json \
+    --meta scan_meta.json
+```
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--api-url URL` | AutoAudit API base URL (live mode) |
+| `--token TOKEN` | Bearer token, or set `AUTOAUDIT_TOKEN` env var |
+| `--scan-id ID` | Scan ID to fetch and report on (live mode) |
+| `--results FILE` | Path to scan results JSON (offline mode) |
+| `--meta FILE` | Path to scan metadata JSON (offline mode, optional) |
+| `--template FILE` | Path to template .docx (default: `AutoAudit_Report_Template.docx`) |
+| `--output DIR` | Output directory (default: `reports_out`) |
+| `--pdf` | Also convert output to PDF |
+| `--keep-docx` | Keep .docx when `--pdf` is set |
+| `--save-dataset` | Save the intermediate transformed JSON for inspection |
+
+### Example output
+
+```
+Fetching scan #1 from http://localhost:8000 ...
+  Status: completed  |  Pass: 38  |  Fail: 22  |  Score: 63.33%
+
+Transforming 140 control results...
+  Tenant  : AutoAudit Sandbox (t8sjf.onmicrosoft.com)
+  Score   : 63.3%  |  Risk: HIGH
+  Pass: 38  |  Fail: 22  |  Critical: 10  |  High: 11
+
+Generating report...
+  Template : AutoAudit_Report_Template.docx
+  Output   : reports_out/
+
+✓ Report written to: reports_out/AutoAudit_Sandbox_24May2026_AutoAudit_Report.docx
 ```
 
 ---
@@ -114,12 +245,12 @@ all resolve to the same field.
 }
 ```
 
-Category fields run from `Cat_1_*` to `Cat_9_*`.  Also supports the nested
+Category fields run from `Cat_1_*` to `Cat_9_*`. Also supports the nested
 shape `summary.categories.Cat_1.Pass` if your dataset uses that instead.
 
 ### controls (list)
 
-Each item maps to one finding block in the report.  The template has one block
+Each item maps to one finding block in the report. The template has one block
 per severity level — Critical, High, Medium, Low — and only the first FAIL at
 each level is used.
 
@@ -238,3 +369,8 @@ Loading dataset : fake_dataset.json
   These limits match the template row count — extend the template if you need more.
 - PDF conversion quality depends on which converter is available. Always review
   the .docx in Word before distributing the PDF version.
+- Fields such as `{ISO_Mapping}`, `{Impact}`, `{Root_Cause}`, and `{Observations}`
+  in the detailed findings section require enrichment data from the CIS→ISO mapping
+  and GRC pipeline. These are not populated by `generate_report_from_scan.py` as
+  that data is not yet wired into the scan results API — this is a separate
+  integration task.
