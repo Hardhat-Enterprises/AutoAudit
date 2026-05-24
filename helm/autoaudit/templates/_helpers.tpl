@@ -111,10 +111,12 @@ PostgreSQL host (internal service name).
 {{- end }}
 
 {{/*
-Redis host (internal service name).
+Redis host. Namespace-qualified so it resolves from any namespace (e.g.
+KEDA running in its own namespace querying the Redis Service for the
+ScaledObject trigger). Works identically for in-namespace callers.
 */}}
 {{- define "autoaudit.redis.host" -}}
-{{- printf "%s-redis" (include "autoaudit.fullname" .) }}
+{{- printf "%s-redis.%s" (include "autoaudit.fullname" .) .Release.Namespace }}
 {{- end }}
 
 {{/*

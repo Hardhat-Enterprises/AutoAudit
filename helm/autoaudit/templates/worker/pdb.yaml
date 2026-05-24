@@ -7,7 +7,10 @@ whole pool of one queue while still allowing rolling updates.
 {{- range $queue := .Values.worker.queues }}
 {{- if $queue.podDisruptionBudget.enabled }}
 {{- $component := printf "worker-%s" (regexReplaceAll "[^a-z0-9]+" (lower $queue.name) "-") -}}
-{{- $deploymentName := printf "%s-%s" (include "autoaudit.fullname" $) $component -}}
+{{- /* Keep newline before --- so consecutive iterations stay separated as
+       distinct YAML documents (the `{{- end }}` strips trailing whitespace
+       of the previous iteration, collapsing into the next ---). */}}
+{{- $deploymentName := printf "%s-%s" (include "autoaudit.fullname" $) $component }}
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget

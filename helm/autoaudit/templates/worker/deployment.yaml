@@ -6,7 +6,10 @@ pool, concurrency, resources, and replica count so heterogeneous workloads
 {{- range $queue := .Values.worker.queues }}
 {{- $ctx := dict "context" $ "queue" $queue -}}
 {{- $component := printf "worker-%s" (regexReplaceAll "[^a-z0-9]+" (lower $queue.name) "-") -}}
-{{- $deploymentName := printf "%s-%s" (include "autoaudit.fullname" $) $component -}}
+{{- /* Keep newline before --- so consecutive iterations stay separated as
+       distinct YAML documents (the `{{- end }}` strips trailing whitespace
+       of the previous iteration, collapsing into the next ---). */}}
+{{- $deploymentName := printf "%s-%s" (include "autoaudit.fullname" $) $component }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -63,22 +66,22 @@ spec:
               exec:
                 # Warm shutdown: stop accepting new tasks and let in-flight ones finish.
                 # Kubernetes still enforces terminationGracePeriodSeconds as the upper bound.
+                # MUST use --destination — without it, `control shutdown` broadcasts to
+                # every worker on the broker and kills sibling pods (cascading restart loop).
+                # Hostname pattern matches `--hostname={{ $queue.name }}@%h` in command above.
                 command:
                   - sh
                   - -c
-                  - "celery -A worker.celery_app control shutdown || true"
+                  - 'celery -A worker.celery_app control shutdown --destination={{ $queue.name }}@$HOSTNAME || true'
           livenessProbe:
+            # Wrapped in `sh -c` because exec probes pass args directly with no
+            # shell — without this, "$(hostname)" is sent literally as part of
+            # the destination string and the probe never gets a reply.
             exec:
               command:
-                - celery
-                - -A
-                - worker.celery_app
-                - inspect
-                - ping
-                - --destination
-                - {{ $queue.name }}@$(hostname)
-                - --timeout
-                - "10"
+                - sh
+                - -c
+                - 'celery -A worker.celery_app inspect ping --destination {{ $queue.name }}@$HOSTNAME --timeout 10'
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 15
@@ -86,15 +89,9 @@ spec:
           readinessProbe:
             exec:
               command:
-                - celery
-                - -A
-                - worker.celery_app
-                - inspect
-                - ping
-                - --destination
-                - {{ $queue.name }}@$(hostname)
-                - --timeout
-                - "5"
+                - sh
+                - -c
+                - 'celery -A worker.celery_app inspect ping --destination {{ $queue.name }}@$HOSTNAME --timeout 5'
             initialDelaySeconds: 15
             periodSeconds: 15
             timeoutSeconds: 10

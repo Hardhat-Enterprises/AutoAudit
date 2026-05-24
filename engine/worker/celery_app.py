@@ -30,6 +30,11 @@ celery_app.conf.update(
     enable_utc=True,
     # Task tracking
     task_track_started=True,
+    # Broadcast task lifecycle events (received/started/succeeded/failed) to
+    # the broker so celery-exporter can scrape per-queue success / failure /
+    # runtime metrics. Cheap: events go to a transient pubsub-style channel.
+    worker_send_task_events=True,
+    task_send_sent_event=True,
     # The orchestrator and any un-routed task lands here.
     task_default_queue=QUEUE_DEFAULT,
     # Retry settings

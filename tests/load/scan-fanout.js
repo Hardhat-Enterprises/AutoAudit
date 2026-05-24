@@ -21,7 +21,7 @@ const TOKEN = __ENV.AUTOAUDIT_TOKEN || '';
 const N_GRAPH = parseInt(__ENV.N_GRAPH || '120', 10);
 const N_POWERSHELL = parseInt(__ENV.N_POWERSHELL || '60', 10);
 const SLEEP_MS = parseInt(__ENV.SLEEP_MS || '2000', 10);
-const CPU_BURN_MS = parseInt(__ENV.CPU_BURN_MS || '50', 10);
+const CPU_BURN_MS = parseInt(__ENV.CPU_BURN_MS || '200', 10);
 const CALL_PWSH = (__ENV.CALL_POWERSHELL_SERVICE || 'true').toLowerCase() === 'true';
 
 if (!TOKEN) {

@@ -36,8 +36,8 @@ export const options = {
     },
   },
   thresholds: {
-    http_req_failed: ['rate<0.02'],          // <2% errors
-    http_req_duration: ['p(95)<500'],        // p95 under 500ms
+    http_req_failed: ['rate<0.02'],                          // <2% errors
+    http_req_duration: ['p(95)<500', 'p(99)<800'],           // listing p(99) here forces k6 to collect it (otherwise the summary's p(99) is undefined)
   },
 };
 

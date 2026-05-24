@@ -93,6 +93,12 @@ backendApi:
     targetCPUUtilizationPercentage: 70
     # -- Optional memory target. Omit to scale on CPU only.
     targetMemoryUtilizationPercentage: null
+    # -- Optional HorizontalPodAutoscaler `behavior` block — controls scale-up
+    # and scale-down stabilization windows and rate-limit policies. Default
+    # Kubernetes behavior keeps a 5-min scale-down window which is often too
+    # slow for demos. Schema: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#configurable-scaling-behavior
+    # Example overlay in helm/autoaudit/values-scaling.yaml.
+    behavior: {}
   # -- PodDisruptionBudget config. Recommended when autoscaling is enabled.
   podDisruptionBudget:
     enabled: false
@@ -258,6 +264,8 @@ frontend:
     minReplicas: 2
     maxReplicas: 4
     targetCPUUtilizationPercentage: 70
+    # See backendApi.autoscaling.behavior for documentation.
+    behavior: {}
   podDisruptionBudget:
     enabled: false
     minAvailable: 1
@@ -298,6 +306,8 @@ opa:
     minReplicas: 3
     maxReplicas: 10
     targetCPUUtilizationPercentage: 60
+    # See backendApi.autoscaling.behavior for documentation.
+    behavior: {}
   podDisruptionBudget:
     enabled: false
     minAvailable: 2
@@ -346,6 +356,8 @@ powershellService:
     minReplicas: 2
     maxReplicas: 6
     targetCPUUtilizationPercentage: 70
+    # See backendApi.autoscaling.behavior for documentation.
+    behavior: {}
   podDisruptionBudget:
     enabled: false
     minAvailable: 1

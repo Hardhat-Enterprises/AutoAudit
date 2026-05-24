@@ -154,12 +154,12 @@
       "gridPos": { "x": 0, "y": 19, "w": 8, "h": 7 },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{namespace=\"$namespace\", handler!~\"/metrics|/healthz.*\"}[1m]))",
+          "expr": "sum(rate(http_requests_total{namespace=\"$namespace\", job=\"autoaudit-backend-api\", handler!~\"/metrics|/healthz.*\"}[1m]))",
           "legendFormat": "all handlers",
           "refId": "A"
         },
         {
-          "expr": "sum by (handler) (rate(http_requests_total{namespace=\"$namespace\", handler!~\"/metrics|/healthz.*\"}[1m]))",
+          "expr": "sum by (handler) (rate(http_requests_total{namespace=\"$namespace\", job=\"autoaudit-backend-api\", handler!~\"/metrics|/healthz.*\"}[1m]))",
           "legendFormat": "{{handler}}",
           "refId": "B"
         }
@@ -169,19 +169,24 @@
     {
       "id": 22,
       "type": "timeseries",
-      "title": "Backend-api: p95 / p99 latency",
+      "title": "Backend-api: p90 / p95 / p99 latency",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "x": 8, "y": 19, "w": 8, "h": 7 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"$namespace\", handler!~\"/metrics|/healthz.*\"}[1m])))",
-          "legendFormat": "p95",
+          "expr": "histogram_quantile(0.90, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"$namespace\", job=\"autoaudit-backend-api\", handler!~\"/metrics|/healthz.*\"}[1m])))",
+          "legendFormat": "p90",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"$namespace\", handler!~\"/metrics|/healthz.*\"}[1m])))",
-          "legendFormat": "p99",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"$namespace\", job=\"autoaudit-backend-api\", handler!~\"/metrics|/healthz.*\"}[1m])))",
+          "legendFormat": "p95",
           "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"$namespace\", job=\"autoaudit-backend-api\", handler!~\"/metrics|/healthz.*\"}[1m])))",
+          "legendFormat": "p99",
+          "refId": "C"
         }
       ],
       "fieldConfig": { "defaults": { "unit": "s", "min": 0 }, "overrides": [] }
@@ -302,7 +307,7 @@
       "gridPos": { "x": 0, "y": 43, "w": 12, "h": 7 },
       "targets": [
         {
-          "expr": "sum(rate(http_request_duration_seconds_count{namespace=\"$namespace\", pod=~\"autoaudit-opa-.*\", code=~\"2..\"}[1m]))",
+          "expr": "sum(rate(http_request_duration_seconds_count{namespace=\"$namespace\", pod=~\"autoaudit-opa-.*\", code=~\"2..\", handler!~\"health|metrics\"}[1m]))",
           "legendFormat": "decisions/sec",
           "refId": "A"
         }
@@ -317,12 +322,44 @@
       "gridPos": { "x": 12, "y": 43, "w": 12, "h": 7 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"$namespace\", pod=~\"autoaudit-opa-.*\"}[1m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"$namespace\", pod=~\"autoaudit-opa-.*\", handler!~\"health|metrics\"}[1m])))",
           "legendFormat": "p95",
           "refId": "A"
         }
       ],
       "fieldConfig": { "defaults": { "unit": "s", "min": 0 }, "overrides": [] }
+    },
+    {
+      "id": 43,
+      "type": "timeseries",
+      "title": "PowerShell service: CPU per pod",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Per-pod CPU. Compare against HPA target (70% of request). Each pod approaching threshold drives a scale-up event.",
+      "gridPos": { "x": 0, "y": 57, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"autoaudit-powershell-service-.*\", container=\"powershell-service\"}[1m])",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "min": 0, "decimals": 2 }, "overrides": [] }
+    },
+    {
+      "id": 53,
+      "type": "timeseries",
+      "title": "OPA: CPU per pod",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Per-pod CPU. Compare against HPA target (60% of request). Per-call work is short so curves track decision rate cleanly.",
+      "gridPos": { "x": 12, "y": 57, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"autoaudit-opa-.*\", container=\"opa\"}[1m])",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "min": 0, "decimals": 2 }, "overrides": [] }
     }
   ]
 }

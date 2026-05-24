@@ -458,11 +458,21 @@ def synthetic_evaluate(
     sleep_ms: int = 1000,
     cpu_burn_ms: int = 0,
     call_powershell_service: bool = False,
+    call_opa: bool = True,
 ) -> dict:
-    """No-op evaluator that simulates a control evaluation's wall time.
+    """No-op evaluator that simulates a real control evaluation's wall time
+    and downstream hops.
 
     Used by the synthetic-scan endpoint to drive worker / powershell-service
-    scaling without invoking real collectors or OPA.
+    / OPA scaling without needing real M365 credentials. Mirrors what a real
+    `evaluate_control` task does at the I/O level: optional collector-side
+    hop (powershell-service) and an OPA decision call.
+
+    `call_opa=True` issues a POST to OPA's `/v1/data/<package>/result` with
+    a stub input so OPA's HTTP histogram + decision logs see real traffic.
+    The package path defaults to a known-existing CIS M365 control; override
+    with the `SYNTHETIC_OPA_PACKAGE_PATH` env var if a different one is
+    baked into the OPA image.
     """
     if not _synthetic_enabled():
         return {"skipped": True, "reason": "SYNTHETIC_ENABLED not set"}
@@ -488,9 +498,29 @@ def synthetic_evaluate(
     else:
         time.sleep(sleep_ms / 1000.0)
 
+    called_opa = False
+    if call_opa:
+        opa_url = settings.OPA_URL
+        package_path = os.environ.get(
+            "SYNTHETIC_OPA_PACKAGE_PATH",
+            "cis/microsoft_365_foundations/v6_0_0/control_1_1_1",
+        )
+        if opa_url:
+            try:
+                with httpx.Client(timeout=10.0) as client:
+                    client.post(
+                        f"{opa_url.rstrip('/')}/v1/data/{package_path}/result",
+                        json={"input": {}},
+                    )
+                called_opa = True
+            except Exception:
+                # Same rationale — load generation, swallow failures.
+                pass
+
     return {
         "ok": True,
         "sleep_ms": sleep_ms,
         "cpu_burn_ms": cpu_burn_ms,
         "called_powershell": call_powershell_service,
+        "called_opa": called_opa,
     }

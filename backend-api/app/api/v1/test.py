@@ -38,6 +38,14 @@ class SyntheticScanRequest(BaseModel):
             "powershell-service to drive its HPA in lockstep."
         ),
     )
+    call_opa: bool = Field(
+        True,
+        description=(
+            "If true, each synthetic_evaluate task issues a POST to OPA's "
+            "/v1/data/<package>/result so OPA decision metrics populate. "
+            "Mirrors what a real evaluate_control task does."
+        ),
+    )
 
 
 def _require_synthetic_enabled() -> None:
@@ -58,7 +66,11 @@ async def synthetic_scan(
     # module (which would pull collector/policy code into the API image).
     client = Celery("autoaudit_synthetic", broker=settings.REDIS_URL)
 
-    common = {"sleep_ms": request.sleep_ms, "cpu_burn_ms": request.cpu_burn_ms}
+    common = {
+        "sleep_ms": request.sleep_ms,
+        "cpu_burn_ms": request.cpu_burn_ms,
+        "call_opa": request.call_opa,
+    }
 
     for _i in range(request.n_graph):
         client.send_task(

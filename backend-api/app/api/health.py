@@ -57,7 +57,10 @@ async def _check_redis(timeout: float = 2.0) -> tuple[Literal["ok", "error"], st
         return "ok", None
     except Exception as exc:
         logger.warning("healthz: Redis check failed: %s", exc)
-        return "error", str(exc)
+        # str(exc) is empty for some redis.asyncio connection failures; fall
+        # back to the exception class so /healthz output is always debuggable.
+        msg = str(exc) or f"{type(exc).__name__}"
+        return "error", msg
 
 
 async def _check_opa(timeout: float = 2.0) -> tuple[Literal["ok", "error"], str | None]:

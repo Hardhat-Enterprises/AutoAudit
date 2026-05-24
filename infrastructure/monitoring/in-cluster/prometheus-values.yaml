@@ -1,0 +1,169 @@
+# Values overlay for the prometheus-community/prometheus chart.
+#
+# This is the in-namespace Prometheus that scrapes AutoAudit pods directly.
+# We deliberately do NOT install kube-prometheus-stack (the operator-based
+# chart) — that would add cluster-wide PodMonitor/ServiceMonitor CRDs we
+# don't need, since values-scaling.yaml has `monitoring.podMonitor.enabled:
+# false`.
+#
+# Usage:
+#   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+#   helm repo update
+#   helm install prometheus prometheus-community/prometheus \
+#     -n autoaudit -f infrastructure/monitoring/in-cluster/prometheus-values.yaml
+#
+# Bits we keep:
+#   * server                  — the Prometheus binary
+#   * kube-state-metrics      — provides kube_deployment_*, kube_hpa_* metrics
+#                               that the autoaudit-scaling dashboard queries
+# Bits we drop (not needed for the demo, save the node some resources):
+#   * alertmanager            — no alerting in the demo
+#   * pushgateway             — nothing pushes
+#   * prometheus-node-exporter — host-level metrics not used by the dashboard
+#
+# The chart's built-in kubernetes scrape configs (kubelet, cAdvisor,
+# kube-state-metrics, apiserver) come for free. We add extra jobs below for
+# AutoAudit pods and KEDA.
+
+alertmanager:
+  enabled: false
+
+prometheus-pushgateway:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: false
+
+kube-state-metrics:
+  enabled: true
+  # Watch cluster-wide so kube_horizontalpodautoscaler_status_* etc work for
+  # any HPA in the autoaudit namespace. (kube-state-metrics needs cluster
+  # read access; this is the standard install and doesn't touch other
+  # tenants' workloads.)
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+server:
+  # Light footprint — demo, not production.
+  persistentVolume:
+    enabled: false
+  retention: 2h
+  # 15s scrape gives 4 samples/min, so the dashboard's `rate(...[1m])` queries
+  # produce stable values. With the default 30s only 2 samples land in a 1m
+  # window — rate() is gappy and panels often show "no data" during normal load.
+  global:
+    scrape_interval: 15s
+    evaluation_interval: 15s
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  service:
+    type: ClusterIP
+
+# Custom scrape jobs for AutoAudit + KEDA. Pod scraping uses
+# kubernetes_sd_configs + label selection (`app.kubernetes.io/component`)
+# because the chart deploys without prometheus.io/scrape annotations.
+extraScrapeConfigs: |
+  - job_name: 'autoaudit-backend-api'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [autoaudit]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+        action: keep
+        regex: backend-api
+      - source_labels: [__meta_kubernetes_pod_container_port_number]
+        action: keep
+        regex: "8000"
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+    metrics_path: /metrics
+
+  - job_name: 'autoaudit-opa'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [autoaudit]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+        action: keep
+        regex: opa
+      - source_labels: [__meta_kubernetes_pod_container_port_number]
+        action: keep
+        regex: "8181"
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+    metrics_path: /metrics
+
+  - job_name: 'autoaudit-powershell-service'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [autoaudit]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+        action: keep
+        regex: powershell-service
+      - source_labels: [__meta_kubernetes_pod_container_port_number]
+        action: keep
+        regex: "8001"
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+    metrics_path: /metrics
+
+  - job_name: 'autoaudit-celery-exporter'
+    # danihodovic/celery-exporter — see infrastructure/monitoring/in-cluster/celery-exporter.yaml
+    # Exposes celery_task_succeeded_total / celery_task_failed_total / celery_task_runtime_*
+    # consumed by the dashboard's "Celery tasks/sec by queue" panel.
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [autoaudit]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+        action: keep
+        regex: celery-exporter
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+    metrics_path: /metrics
+
+  - job_name: 'keda'
+    # Scrape both KEDA operator pods (each on :8080/metrics):
+    #  - keda-operator                  → keda_scaler_metrics_value + keda_scaler_active
+    #    (powers the queue-depth panel; requires prometheus.operator.enabled=true)
+    #  - keda-operator-metrics-apiserver → keda_internal_metricsservice_* (gRPC stats)
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [keda]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: keda-operator|keda-operator-metrics-apiserver
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        target_label: app
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__address__]
+        regex: '(.+):.+'
+        replacement: '${1}:8080'
+        target_label: __address__
+    metrics_path: /metrics

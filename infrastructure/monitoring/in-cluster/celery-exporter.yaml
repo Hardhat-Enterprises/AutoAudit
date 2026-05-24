@@ -1,0 +1,74 @@
+---
+# danihodovic/celery-exporter — scrapes Celery worker lifecycle events from
+# the Redis broker and exposes per-queue task counters + runtime histograms
+# at :9808/metrics.
+#
+# Requires the worker to broadcast events (set in engine/worker/celery_app.py
+# via worker_send_task_events=True; needs -E flag if started without that
+# config). Without events, the exporter is up but reports zero series for
+# task counters.
+#
+# Usage:
+#   kubectl apply -f infrastructure/monitoring/in-cluster/celery-exporter.yaml
+#
+# Prometheus scrape: covered by the autoaudit-celery-exporter job added in
+# infrastructure/monitoring/in-cluster/prometheus-values.yaml.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-exporter
+  namespace: autoaudit
+  labels:
+    app.kubernetes.io/name: celery-exporter
+    app.kubernetes.io/part-of: autoaudit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celery-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: celery-exporter
+        app.kubernetes.io/part-of: autoaudit
+    spec:
+      containers:
+        - name: celery-exporter
+          image: ghcr.io/danihodovic/celery-exporter:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: autoaudit-secrets
+                  key: redis-password
+            - name: CE_BROKER_URL
+              value: "redis://:$(REDIS_PASSWORD)@autoaudit-redis.autoaudit:6379/0"
+          ports:
+            - name: http-metrics
+              containerPort: 9808
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: celery-exporter
+  namespace: autoaudit
+  labels:
+    app.kubernetes.io/name: celery-exporter
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: celery-exporter
+  ports:
+    - name: http-metrics
+      port: 9808
+      targetPort: 9808
+      protocol: TCP

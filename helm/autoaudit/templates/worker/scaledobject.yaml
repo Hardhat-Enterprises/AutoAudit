@@ -7,7 +7,10 @@ Requires KEDA installed in the cluster (keda.sh/v1alpha1).
 {{- range $queue := .Values.worker.queues }}
 {{- if $queue.keda.enabled }}
 {{- $component := printf "worker-%s" (regexReplaceAll "[^a-z0-9]+" (lower $queue.name) "-") -}}
-{{- $deploymentName := printf "%s-%s" (include "autoaudit.fullname" $) $component -}}
+{{- /* Keep newline before --- so consecutive iterations stay separated as
+       distinct YAML documents (the `{{- end }}` strips trailing whitespace
+       of the previous iteration, collapsing into the next ---). */}}
+{{- $deploymentName := printf "%s-%s" (include "autoaudit.fullname" $) $component }}
 ---
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject

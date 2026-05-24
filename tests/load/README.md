@@ -7,7 +7,7 @@ HPAs / KEDA ScaledObjects scale up under recordable, repeatable load.
 
 - k6 installed (`brew install k6` / `choco install k6` / [k6.io/docs/get-started/installation/](https://k6.io/docs/get-started/installation/)).
 - Chart deployed with `synthetic.enabled=true` and the relevant `autoscaling.enabled=true` / `keda.enabled=true` per workload.
-- Authenticated session: most scripts need a JWT. Set the `AUTOAUDIT_TOKEN` env var to a Bearer token from `POST /v1/auth/jwt/login`.
+- Authenticated session: most scripts need a JWT. Set the `AUTOAUDIT_TOKEN` env var to a Bearer token from `POST /v1/auth/login`.
 - `AUTOAUDIT_BASE_URL` defaults to `http://localhost:8000`. Set to your AKS ingress URL for cluster runs.
 
 ## Scripts
@@ -23,7 +23,7 @@ HPAs / KEDA ScaledObjects scale up under recordable, repeatable load.
 ```bash
 # 1. log in and grab a token
 export AUTOAUDIT_TOKEN=$(
-  curl -s -X POST "$AUTOAUDIT_BASE_URL/v1/auth/jwt/login" \
+  curl -s -X POST "$AUTOAUDIT_BASE_URL/v1/auth/login" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     -d "username=admin@example.com&password=admin" \
     | jq -r .access_token
