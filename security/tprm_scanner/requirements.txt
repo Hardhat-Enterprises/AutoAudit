@@ -9,7 +9,7 @@ flask==2.3.3
 werkzeug==2.3.7
 sqlalchemy==1.4.23
 python-dateutil==2.8.2
-jinja2>=3.1.2
+jinja2>=3.1.6
 openai==0.27.0
 pandas>=1.4.0
 numpy>=1.21.0
