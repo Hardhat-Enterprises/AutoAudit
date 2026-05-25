@@ -3,7 +3,7 @@
 requests==2.26.0
 dnspython==2.3.0
 pyopenssl==23.2.0
-sslyze>=5.0.3
+sslyze>=6.3.1
 rich==10.12.0
 flask==2.3.3
 werkzeug==2.3.7
