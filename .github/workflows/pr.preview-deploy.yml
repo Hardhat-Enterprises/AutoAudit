@@ -63,7 +63,7 @@ jobs:
 
       - name: Remove triggering label
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.removeLabel({
@@ -329,7 +329,7 @@ jobs:
             "$WORKER_IMAGE"
 
       - name: Post or update PR comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const prNumber = parseInt('${{ needs.gate.outputs.pr-number }}');
@@ -398,7 +398,7 @@ jobs:
 
       - name: Mark PR comment as expired
         if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const prNumber = parseInt('${{ needs.gate.outputs.pr-number }}');

@@ -37,7 +37,7 @@ jobs:
 
       - name: Remove teardown-preview label
         if: github.event_name == 'pull_request' && github.event.action == 'labeled'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.removeLabel({
@@ -50,7 +50,7 @@ jobs:
       # Known risk: listComments only returns the first page so teardown may miss the preview comment on PRs with >30 comments.
       - name: Find preview comment and extract run ID
         id: find-run
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const prNumber = parseInt('${{ steps.pr.outputs.number }}');
@@ -99,7 +99,7 @@ jobs:
 
       - name: Update PR comment — teardown complete
         if: steps.find-run.outputs.comment-id != ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.updateComment({
