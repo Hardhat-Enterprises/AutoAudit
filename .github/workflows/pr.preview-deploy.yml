@@ -102,7 +102,7 @@ jobs:
           echo "WORKER_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/worker:pr-${{ needs.gate.outputs.pr-number }}" >> "$GITHUB_ENV"
 
       - name: Build and push backend image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: backend-api/Dockerfile
@@ -112,7 +112,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend
 
       - name: Build and push worker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./engine
           file: engine/Dockerfile
@@ -128,7 +128,7 @@ jobs:
 
       - name: Build and push PowerShell service image
         if: needs.gate.outputs.m365 == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./engine/powershell
           file: engine/powershell/Dockerfile
