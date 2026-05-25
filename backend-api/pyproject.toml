@@ -16,7 +16,7 @@ dependencies = [
     "alembic>=1.13.0",
     # OAuth helpers (Google SSO)
     "httpx>=0.27.0",
-    "httpx-oauth>=0.15.0",
+    "httpx-oauth>=0.17.0",
     # Microsoft Graph (client credentials via MSAL)
     "msal>=1.31.0",
     # Multipart upload support for evidence/file endpoints

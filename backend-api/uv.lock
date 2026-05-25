@@ -232,7 +232,7 @@ requires-dist = [
     { name = "fastapi-users", extras = ["sqlalchemy"], specifier = ">=13.0.0" },
     { name = "fpdf2", marker = "extra == 'evidence'", specifier = ">=2.8.1" },
     { name = "httpx", specifier = ">=0.27.0" },
-    { name = "httpx-oauth", specifier = ">=0.15.0" },
+    { name = "httpx-oauth", specifier = ">=0.17.0" },
     { name = "msal", specifier = ">=1.31.0" },
     { name = "opencv-python", marker = "extra == 'evidence'", specifier = ">=4.10.0.84" },
     { name = "pillow", marker = "extra == 'evidence'", specifier = ">=12.2.0" },
@@ -924,14 +924,14 @@ wheels = [
 
 [[package]]
 name = "httpx-oauth"
-version = "0.16.1"
+version = "0.17.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2f/07/db4ad128da3926be22eec586aa87dafd8840c9eb03fe88505fbed016b5c6/httpx_oauth-0.16.1.tar.gz", hash = "sha256:7402f061f860abc092ea4f5c90acfc576a40bbb79633c1d2920f1ca282c296ee", size = 44148, upload-time = "2024-12-20T07:23:02.589Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7f/91/8b9f58cbf6e8914577183731233e66d3e586f1397b23190f46a929206b96/httpx_oauth-0.17.0.tar.gz", hash = "sha256:d279997ea80e7fc6f713acc8ed0fcc07ec319bae939753a2579d1fb7a753167b", size = 124506, upload-time = "2026-05-13T14:47:08.744Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/4b/2b81e876abf77b4af3372aff731f4f6722840ebc7dcfd85778eaba271733/httpx_oauth-0.16.1-py3-none-any.whl", hash = "sha256:2fcad82f80f28d0473a0fc4b4eda223dc952050af7e3a8c8781342d850f09fb5", size = 38056, upload-time = "2024-12-20T07:23:00.394Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/23/db1df57aeb6b96ad6c2c3b84bf45d22fc3293949cee7c506cbd5aa1805a3/httpx_oauth-0.17.0-py3-none-any.whl", hash = "sha256:8098e48dfeb97d0f35a83aa7bfaf18d2e7dcd9f3962f19f60fc0ec939e5d6bd2", size = 38083, upload-time = "2026-05-13T14:47:07.659Z" },
 ]
 
 [[package]]
