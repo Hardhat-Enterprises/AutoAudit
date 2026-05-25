@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # The original workflow built a Docker image and scanned it.
       # Replaced by a directory scan (see below) because Docker Hub is no longer configured.
