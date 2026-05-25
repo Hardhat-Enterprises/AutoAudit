@@ -10,7 +10,7 @@
     "@testing-library/user-event": "^13.5.0",
     "apexcharts": "^5.12.0",
     "lucide-react": "^0.542.0",
-    "react": "^19.1.1",
+    "react": "^19.2.6",
     "react-apexcharts": "^1.9.0",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.1",
@@ -41,7 +41,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@types/node": "^25.5.0",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
     "oxlint": "^1.66.0",
