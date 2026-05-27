@@ -1,5 +1,7 @@
 """Integration tests for manual verification endpoints."""
 
+import os
+
 import httpx
 
 BASE = "http://localhost:8000/v1"
@@ -9,8 +11,14 @@ def token():
     r = httpx.post(
         f"{BASE}/auth/login",
         data={
-            "username": "admin@example.com",
-            "password": "admin",
+            "username": os.getenv(
+                "AUTOAUDIT_TEST_USERNAME",
+                "admin@example.com",
+            ),
+            "password": os.getenv(
+                "AUTOAUDIT_TEST_PASSWORD",
+                "admin",  # nosec B105
+            ),
         },
         timeout=10,
     )
