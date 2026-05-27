@@ -2,12 +2,15 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
-from app.models.user import User
+from app.models.compliance import Scan
 from app.models.manual_scan_result_detail import ManualScanResultDetail
+from app.models.scan_result import ScanResult
+from app.models.user import User
 from app.schemas.manual_scan_result_detail import (
     ManualScanResultDetailCreate,
     ManualScanResultDetailRead,
@@ -33,13 +36,42 @@ async def create_manual_verification(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Submit a manual verification for a scan result."""
+    result = await db.execute(
+        select(ScanResult).where(ScanResult.id == data.scan_result_id)
+    )
+    scan_result = result.scalar_one_or_none()
+
+    if not scan_result:
+        raise HTTPException(status_code=404, detail="Scan result not found")
+
+    owner_result = await db.execute(
+        select(Scan).where(Scan.id == scan_result.scan_id)
+    )
+    scan = owner_result.scalar_one_or_none()
+
+    if not scan or scan.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to verify this scan result",
+        )
+
     detail = ManualScanResultDetail(
         scan_result_id=data.scan_result_id,
         user_id=current_user.id,
         comment=data.comment,
     )
+
     db.add(detail)
-    await db.commit()
+
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Manual verification already exists for this scan result",
+        )
+
     await db.refresh(detail)
     return detail
 
@@ -55,8 +87,10 @@ async def get_manual_verification(
         select(ManualScanResultDetail).where(ManualScanResultDetail.id == detail_id)
     )
     detail = result.scalar_one_or_none()
+
     if not detail:
         raise HTTPException(status_code=404, detail="Manual verification not found")
+
     _check_ownership(detail, current_user)
     return detail
 
@@ -74,8 +108,13 @@ async def get_manual_verification_by_scan_result(
         )
     )
     detail = result.scalar_one_or_none()
+
     if not detail:
-        raise HTTPException(status_code=404, detail="Manual verification not found for this scan result")
+        raise HTTPException(
+            status_code=404,
+            detail="Manual verification not found for this scan result",
+        )
+
     _check_ownership(detail, current_user)
     return detail
 
@@ -92,8 +131,10 @@ async def update_manual_verification(
         select(ManualScanResultDetail).where(ManualScanResultDetail.id == detail_id)
     )
     detail = result.scalar_one_or_none()
+
     if not detail:
         raise HTTPException(status_code=404, detail="Manual verification not found")
+
     _check_ownership(detail, current_user)
 
     if update.comment is not None:
@@ -115,8 +156,10 @@ async def delete_manual_verification(
         select(ManualScanResultDetail).where(ManualScanResultDetail.id == detail_id)
     )
     detail = result.scalar_one_or_none()
+
     if not detail:
         raise HTTPException(status_code=404, detail="Manual verification not found")
+
     _check_ownership(detail, current_user)
 
     await db.delete(detail)
