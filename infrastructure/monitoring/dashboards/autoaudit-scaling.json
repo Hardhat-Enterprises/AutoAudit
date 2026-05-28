@@ -1,0 +1,435 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "AutoAudit workload scaling — pod counts, HPA / KEDA signals, and per-workload metrics during synthetic load runs. Pairs with tests/load/*.js.",
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["autoaudit", "scaling"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "Prometheus", "value": "Prometheus" },
+        "label": "Datasource",
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus"
+      },
+      {
+        "current": { "selected": false, "text": "autoaudit", "value": "autoaudit" },
+        "label": "Namespace",
+        "name": "namespace",
+        "type": "constant",
+        "query": "autoaudit"
+      }
+    ]
+  },
+  "time": { "from": "now-30m", "to": "now" },
+  "title": "AutoAudit — Scaling Demo",
+  "uid": "autoaudit-scaling",
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Pod counts",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 3,
+      "type": "gauge",
+      "title": "Current pod count vs HPA / KEDA max",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "One gauge per workload. Each gauge's max equals the maxReplicas configured on the HPA (or maxReplicaCount on the KEDA ScaledObject). Thresholds shade green / amber / red as the workload approaches its ceiling — useful for confirming the demo really did push something to its limit.",
+      "gridPos": { "x": 0, "y": 1, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "label_replace(label_replace(sum by (deployment) (kube_deployment_status_replicas_available{namespace=\"$namespace\", deployment=~\"autoaudit-(backend-api|frontend|opa|powershell-service|worker-.+)\"}), \"deployment\", \"$1\", \"deployment\", \"autoaudit-(.*)\"), \"deployment\", \"worker-$1\", \"deployment\", \"worker-controls-(.*)\")",
+          "legendFormat": "{{deployment}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "orientation": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "red", "value": 85 }
+            ]
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "backend-api" }, "properties": [{ "id": "max", "value": 8 }] },
+          { "matcher": { "id": "byName", "options": "frontend" }, "properties": [{ "id": "max", "value": 3 }] },
+          { "matcher": { "id": "byName", "options": "opa" }, "properties": [{ "id": "max", "value": 6 }] },
+          { "matcher": { "id": "byName", "options": "powershell-service" }, "properties": [{ "id": "max", "value": 6 }] },
+          { "matcher": { "id": "byName", "options": "worker-default" }, "properties": [{ "id": "max", "value": 2 }] },
+          { "matcher": { "id": "byName", "options": "worker-graph" }, "properties": [{ "id": "max", "value": 5 }] },
+          { "matcher": { "id": "byName", "options": "worker-powershell" }, "properties": [{ "id": "max", "value": 5 }] }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "type": "row",
+      "title": "HPA / KEDA scaling signals",
+      "gridPos": { "x": 0, "y": 9, "w": 24, "h": 1 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 11,
+      "type": "table",
+      "title": "HPA: current vs desired replicas",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Snapshot table for cross-checking against your cluster-viewer app. Desired > Current means the HPA is asking for more pods; the numbers meeting means scaling has settled. Names are normalised (autoaudit- and keda-hpa-autoaudit- prefixes stripped, worker-controls- shortened to worker-) so they match the pod-count gauge above.",
+      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "label_replace(label_replace(label_replace(kube_horizontalpodautoscaler_status_desired_replicas{namespace=\"$namespace\"}, \"horizontalpodautoscaler\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-autoaudit-(.*)\"), \"horizontalpodautoscaler\", \"$1\", \"horizontalpodautoscaler\", \"autoaudit-(.*)\"), \"horizontalpodautoscaler\", \"worker-$1\", \"horizontalpodautoscaler\", \"worker-controls-(.*)\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "expr": "label_replace(label_replace(label_replace(kube_horizontalpodautoscaler_status_current_replicas{namespace=\"$namespace\"}, \"horizontalpodautoscaler\", \"$1\", \"horizontalpodautoscaler\", \"keda-hpa-autoaudit-(.*)\"), \"horizontalpodautoscaler\", \"$1\", \"horizontalpodautoscaler\", \"autoaudit-(.*)\"), \"horizontalpodautoscaler\", \"worker-$1\", \"horizontalpodautoscaler\", \"worker-controls-(.*)\")",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "horizontalpodautoscaler",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": ["horizontalpodautoscaler", "Value #A", "Value #B"]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "horizontalpodautoscaler": 0,
+              "Value #A": 1,
+              "Value #B": 2
+            },
+            "renameByName": {
+              "horizontalpodautoscaler": "Service",
+              "Value #A": "Desired",
+              "Value #B": "Current"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [{ "field": "Service", "desc": false }]
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": { "show": false, "reducer": ["sum"], "fields": "" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "filterable": false },
+          "unit": "short",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Desired" },
+            "properties": [{ "id": "custom.align", "value": "center" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Current" },
+            "properties": [{ "id": "custom.align", "value": "center" }]
+          }
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "KEDA queue depth (Redis lists)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Pending tasks per worker queue. The headline 'work waiting' signal — KEDA scales pods until this drains.",
+      "gridPos": { "x": 12, "y": 10, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "redis_db_keys{db=\"db0\"} unless on() vector(0)",
+          "legendFormat": "redis db0 keys (proxy for queue depth)",
+          "refId": "A"
+        },
+        {
+          "expr": "keda_scaler_metrics_value{namespace=\"$namespace\"}",
+          "legendFormat": "{{scaledObject}} — {{scaler}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] }
+    },
+    {
+      "id": 20,
+      "type": "row",
+      "title": "Backend-api",
+      "gridPos": { "x": 0, "y": 18, "w": 24, "h": 1 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Backend-api: requests/sec",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "x": 0, "y": 19, "w": 8, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{namespace=\"$namespace\", job=\"autoaudit-backend-api\", handler!~\"/metrics|/healthz.*\"}[1m]))",
+          "legendFormat": "all handlers",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (handler) (rate(http_requests_total{namespace=\"$namespace\", job=\"autoaudit-backend-api\", handler!~\"/metrics|/healthz.*\"}[1m]))",
+          "legendFormat": "{{handler}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "min": 0 }, "overrides": [] }
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Backend-api: p90 / p95 / p99 latency",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Uses the FastAPI instrumentator's high-resolution histogram. The default `http_request_duration_seconds` only has 0.1/0.5/1.0/+Inf buckets and clips everything above 1s — the `_highr_` variant has buckets up to 60s.",
+      "gridPos": { "x": 8, "y": 19, "w": 8, "h": 7 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.90, sum by (le) (rate(http_request_duration_highr_seconds_bucket{namespace=\"$namespace\", job=\"autoaudit-backend-api\"}[1m])))",
+          "legendFormat": "p90",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_highr_seconds_bucket{namespace=\"$namespace\", job=\"autoaudit-backend-api\"}[1m])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_request_duration_highr_seconds_bucket{namespace=\"$namespace\", job=\"autoaudit-backend-api\"}[1m])))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "min": 0 }, "overrides": [] }
+    },
+    {
+      "id": 23,
+      "type": "timeseries",
+      "title": "Backend-api: CPU per pod (% of limit)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Per-pod CPU usage as a percentage of the container's CPU limit. 100% = pod is at its CPU ceiling. Pod labels are trimmed to the unique 5-char suffix so all replicas fit on one line.",
+      "gridPos": { "x": 16, "y": 19, "w": 8, "h": 7 },
+      "targets": [
+        {
+          "expr": "label_replace(100 * rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"autoaudit-backend-api-.*\", container=\"backend-api\"}[1m]) / on (namespace, pod, container) group_left kube_pod_container_resource_limits{namespace=\"$namespace\", container=\"backend-api\", resource=\"cpu\"}, \"pod\", \"$1\", \"pod\", \".*-([a-z0-9]{5})$\")",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "decimals": 0 }, "overrides": [] }
+    },
+    {
+      "id": 30,
+      "type": "row",
+      "title": "Worker — per-queue throughput",
+      "gridPos": { "x": 0, "y": 26, "w": 24, "h": 1 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "Worker pods per queue",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "x": 0, "y": 27, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum by (deployment) (kube_deployment_status_replicas_available{namespace=\"$namespace\", deployment=~\"autoaudit-worker-.+\"})",
+          "legendFormat": "{{deployment}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "decimals": 0, "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "fillOpacity": 20 } }, "overrides": [] }
+    },
+    {
+      "id": 32,
+      "type": "timeseries",
+      "title": "Celery tasks/sec by queue",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Per-queue succeed / fail rate from celery-exporter (danihodovic/celery-exporter consuming worker task events from Redis).",
+      "gridPos": { "x": 12, "y": 27, "w": 12, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum by (queue_name) (rate(celery_task_succeeded_total{namespace=\"$namespace\"}[1m]))",
+          "legendFormat": "{{queue_name}} — succeeded",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (queue_name) (rate(celery_task_failed_total{namespace=\"$namespace\"}[1m]))",
+          "legendFormat": "{{queue_name}} — failed",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops", "min": 0 }, "overrides": [] }
+    },
+    {
+      "id": 40,
+      "type": "row",
+      "title": "PowerShell service",
+      "gridPos": { "x": 0, "y": 34, "w": 24, "h": 1 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 41,
+      "type": "timeseries",
+      "title": "Active pwsh subprocesses (per pod)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Custom gauge from engine/powershell/service/metrics.py. Each line = one pod's currently-running pwsh subprocesses. Pod labels are trimmed to the unique 5-char suffix so all replicas fit on one line.",
+      "gridPos": { "x": 0, "y": 35, "w": 8, "h": 7 },
+      "targets": [
+        {
+          "expr": "label_replace(pwsh_active_subprocesses{namespace=\"$namespace\"}, \"pod\", \"$1\", \"pod\", \".*-([a-z0-9]{5})$\")",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "decimals": 0, "custom": { "drawStyle": "line", "fillOpacity": 15 } }, "overrides": [] }
+    },
+    {
+      "id": 42,
+      "type": "timeseries",
+      "title": "pwsh executions/sec by module + outcome",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "x": 8, "y": 35, "w": 8, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum by (module, outcome) (rate(pwsh_executions_total{namespace=\"$namespace\"}[1m]))",
+          "legendFormat": "{{module}} / {{outcome}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops", "min": 0 }, "overrides": [] }
+    },
+    {
+      "id": 50,
+      "type": "row",
+      "title": "OPA",
+      "gridPos": { "x": 0, "y": 42, "w": 24, "h": 1 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 51,
+      "type": "timeseries",
+      "title": "OPA decisions/sec",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "From OPA's native /metrics — http_request_duration_seconds_count for /v1/data eval requests.",
+      "gridPos": { "x": 0, "y": 43, "w": 8, "h": 7 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_request_duration_seconds_count{namespace=\"$namespace\", pod=~\"autoaudit-opa-.*\", code=~\"2..\", handler!~\"health|metrics\"}[1m]))",
+          "legendFormat": "decisions/sec",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops", "min": 0 }, "overrides": [] }
+    },
+    {
+      "id": 52,
+      "type": "timeseries",
+      "title": "OPA: p95 eval latency",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "x": 8, "y": 43, "w": 8, "h": 7 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"$namespace\", pod=~\"autoaudit-opa-.*\", handler!~\"health|metrics\"}[1m])))",
+          "legendFormat": "p95",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "min": 0 }, "overrides": [] }
+    },
+    {
+      "id": 43,
+      "type": "timeseries",
+      "title": "PowerShell service: CPU per pod (% of limit)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Per-pod CPU usage as a percentage of the container's CPU limit. 100% = pod is at its CPU ceiling. Pod labels are trimmed to the unique 5-char suffix so all replicas fit on one line.",
+      "gridPos": { "x": 16, "y": 35, "w": 8, "h": 7 },
+      "targets": [
+        {
+          "expr": "label_replace(100 * rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"autoaudit-powershell-service-.*\", container=\"powershell-service\"}[1m]) / on (namespace, pod, container) group_left kube_pod_container_resource_limits{namespace=\"$namespace\", container=\"powershell-service\", resource=\"cpu\"}, \"pod\", \"$1\", \"pod\", \".*-([a-z0-9]{5})$\")",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "decimals": 0 }, "overrides": [] }
+    },
+    {
+      "id": 53,
+      "type": "timeseries",
+      "title": "OPA: CPU per pod (% of limit)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "description": "Per-pod CPU usage as a percentage of the container's CPU limit. 100% = pod is at its CPU ceiling. Pod labels are trimmed to the unique 5-char suffix so all replicas fit on one line.",
+      "gridPos": { "x": 16, "y": 43, "w": 8, "h": 7 },
+      "targets": [
+        {
+          "expr": "label_replace(100 * rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"autoaudit-opa-.*\", container=\"opa\"}[1m]) / on (namespace, pod, container) group_left kube_pod_container_resource_limits{namespace=\"$namespace\", container=\"opa\", resource=\"cpu\"}, \"pod\", \"$1\", \"pod\", \".*-([a-z0-9]{5})$\")",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "decimals": 0 }, "overrides": [] }
+    }
+  ]
+}

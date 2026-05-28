@@ -1,0 +1,24 @@
+{{/*
+KEDA TriggerAuthentication that pulls the Redis password from the existing
+secret. Rendered only when at least one queue has KEDA enabled, so clusters
+without KEDA installed don't get a stray CRD reference.
+*/}}
+{{- $kedaEnabled := false -}}
+{{- range $queue := .Values.worker.queues -}}
+  {{- if $queue.keda.enabled -}}
+    {{- $kedaEnabled = true -}}
+  {{- end -}}
+{{- end -}}
+{{- if $kedaEnabled }}
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-redis-auth
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "worker") | nindent 4 }}
+spec:
+  secretTargetRef:
+    - parameter: password
+      name: {{ include "autoaudit.secretName" . }}
+      key: redis-password
+{{- end }}

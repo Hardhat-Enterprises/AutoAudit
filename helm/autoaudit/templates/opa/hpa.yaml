@@ -1,0 +1,28 @@
+{{- if .Values.opa.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-opa
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "opa") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "autoaudit.fullname" . }}-opa
+  minReplicas: {{ .Values.opa.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.opa.autoscaling.maxReplicas }}
+  metrics:
+    {{- with .Values.opa.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ . }}
+    {{- end }}
+  {{- with .Values.opa.autoscaling.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

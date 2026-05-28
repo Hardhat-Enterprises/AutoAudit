@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-opa
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "opa") | nindent 4 }}
+spec:
+  {{- if not .Values.opa.autoscaling.enabled }}
+  replicas: {{ .Values.opa.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "autoaudit.selectorLabels" (dict "context" . "component" "opa") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "autoaudit.componentLabels" (dict "context" . "component" "opa") | nindent 8 }}
+    spec:
+      {{- include "autoaudit.imagePullSecrets" . | nindent 6 }}
+      {{- with .Values.opa.lifecycle.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
+      {{- end }}
+      {{- with .Values.opa.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.opa.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: opa
+          image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.opa.image.repository "tag" (.Values.opa.image.tag | default .Values.global.imageTag | default .Chart.AppVersion)) }}
+          imagePullPolicy: {{ .Values.opa.image.pullPolicy | default .Values.global.imagePullPolicy | default "IfNotPresent" }}
+          args:
+            - run
+            - --server
+            - --addr=0.0.0.0:8181
+            - --log-level=info
+            - /policies
+          ports:
+            - name: http
+              containerPort: 8181
+              protocol: TCP
+          {{- with .Values.opa.lifecycle.preStopSleepSeconds }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep {{ . }}"]
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          {{- with .Values.opa.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

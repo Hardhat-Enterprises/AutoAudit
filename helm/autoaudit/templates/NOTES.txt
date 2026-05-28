@@ -1,0 +1,42 @@
+AutoAudit has been deployed!
+
+{{- if .Values.gateway.enabled }}
+
+Application URL:
+{{- if .Values.gateway.hostnames }}
+  {{- range .Values.gateway.hostnames }}
+  https://{{ . }}
+  {{- end }}
+  API: https://{{ first .Values.gateway.hostnames }}/api/v1/
+{{- else }}
+  Gateway is enabled but no hostnames are configured.
+  Set gateway.hostnames in your values to access the application.
+{{- end }}
+{{- end }}
+
+Services deployed:
+  - Backend API ({{ .Values.backendApi.replicaCount }} replica(s))
+  - Celery Worker ({{ .Values.worker.replicaCount }} replica(s))
+  - Frontend ({{ .Values.frontend.replicaCount }} replica(s))
+  - OPA ({{ .Values.opa.replicaCount }} replica(s))
+  - PostgreSQL (1 replica)
+  - Redis (1 replica)
+  - PowerShell Service ({{ .Values.powershellService.replicaCount }} replica(s))
+
+Database migrations run automatically when the backend-api container starts.
+
+{{- if .Release.IsInstall }}
+Default admin credentials:
+  Email: admin@example.com
+  Retrieve the generated password:
+    kubectl get secret {{ include "autoaudit.fullname" . }}-admin -n {{ .Release.Namespace }} -o jsonpath='{.data.admin-password}' | base64 -d
+  WARNING: Change this password immediately after first login.
+{{- end }}
+
+Secrets:
+  The chart expects a Kubernetes Secret named "{{ include "autoaudit.secretName" . }}"
+  with keys: postgresql-password, jwt-secret-key, encryption-key, redis-password.
+{{- if not .Values.secrets.existingSecret }}
+  WARNING: No existing secret is configured. Set secrets.existingSecret to the name
+  of a pre-created Kubernetes Secret containing the required keys.
+{{- end }}

@@ -1,0 +1,17 @@
+{{- if .Values.backendApi.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-backend-api
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "backend-api") | nindent 4 }}
+spec:
+  {{- if .Values.backendApi.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.backendApi.podDisruptionBudget.minAvailable }}
+  {{- else }}
+  maxUnavailable: {{ default 1 .Values.backendApi.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "autoaudit.selectorLabels" (dict "context" . "component" "backend-api") | nindent 6 }}
+{{- end }}

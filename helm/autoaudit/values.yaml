@@ -1,0 +1,428 @@
+# -- Global settings
+global:
+  # -- Container registry prefix (e.g., registry.example.com)
+  imageRegistry: ""
+  # -- Image pull secrets for private registries
+  imagePullSecrets: []
+
+# -- External Kubernetes Secret containing application secrets.
+# This secret must be created before installing the chart (e.g., via
+# a secrets operator (e.g., External Secrets Operator, Sealed Secrets),
+# Terraform, or manually with kubectl create secret).
+#
+# Required keys:
+#   postgresql-password  - PostgreSQL user password
+#   jwt-secret-key       - JWT signing key for authentication
+#   encryption-key       - Fernet key for encrypting M365 credentials at rest
+#   redis-password       - Redis AUTH password
+secrets:
+  # -- Name of the pre-existing Kubernetes Secret
+  existingSecret: ""
+
+# -- PostgreSQL configuration
+postgresql:
+  image:
+    repository: postgres
+    tag: "17"
+    pullPolicy: ""
+  persistence:
+    size: 10Gi
+    # -- Storage class (leave empty for cluster default)
+    storageClass: ""
+  database: autoaudit
+  user: autoaudit
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# -- Redis configuration
+redis:
+  image:
+    repository: redis
+    tag: alpine
+    pullPolicy: ""
+  persistence:
+    # -- Enable persistent storage for Redis (recommended for production, not needed for PoC)
+    enabled: false
+    size: 2Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+# -- Backend API (FastAPI)
+backendApi:
+  # -- Initial replicas. Ignored when autoscaling.enabled is true (HPA owns replica count).
+  replicaCount: 2
+  image:
+    repository: autoaudit/backend-api
+    # -- Defaults to Chart.appVersion if empty
+    tag: ""
+    pullPolicy: ""
+  service:
+    type: ClusterIP
+    port: 8000
+  env:
+    APP_ENV: prod
+    API_PREFIX: /v1
+    ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+    # -- Public URL for OAuth redirects (set to https://{hostname}/api)
+    BACKEND_PUBLIC_URL: ""
+    # -- Frontend URL for CORS (set to https://{hostname})
+    FRONTEND_URL: ""
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  # -- HorizontalPodAutoscaler config. Disabled by default for backwards compatibility.
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    # -- Optional memory target. Omit to scale on CPU only.
+    targetMemoryUtilizationPercentage: null
+    # -- Optional HorizontalPodAutoscaler `behavior` block — controls scale-up
+    # and scale-down stabilization windows and rate-limit policies. Default
+    # Kubernetes behavior keeps a 5-min scale-down window which is often too
+    # slow for demos. Schema: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#configurable-scaling-behavior
+    # Example overlay in helm/autoaudit/values-scaling.yaml.
+    behavior: {}
+  # -- PodDisruptionBudget config. Recommended when autoscaling is enabled.
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
+    # maxUnavailable: 1  # mutually exclusive with minAvailable
+  # -- Pod-level lifecycle settings for graceful shutdown.
+  lifecycle:
+    # Allow time for /healthz to flip to 503 and the load balancer to drain before SIGTERM.
+    terminationGracePeriodSeconds: 30
+    preStopSleepSeconds: 5
+  # -- Topology spread + anti-affinity defaults.
+  # Set topologySpreadConstraints to [] and affinity to {} to disable.
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: backend-api
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: backend-api
+  # -- Startup probe — covers slow first-request DB/Redis warmup.
+  startupProbe:
+    enabled: true
+    failureThreshold: 30
+    periodSeconds: 2
+
+# -- Celery worker — split into one Deployment per queue so each can scale,
+# size, and choose its pool independently. The chart renders one Deployment +
+# one ScaledObject + one PDB per entry in worker.queues.
+worker:
+  image:
+    repository: autoaudit/worker
+    tag: ""
+    pullPolicy: ""
+  # -- Default log level applied to every queue (override per-queue via celery.logLevel).
+  logLevel: info
+  # -- Per-queue worker definitions. The first entry should be the default queue
+  # that orchestrator + un-routed tasks use; ensure its name matches the
+  # task_default_queue setting in engine/worker/celery_app.py.
+  queues:
+    - name: default
+      # -- Celery pool type: prefork (CPU-bound, stable), gevent (IO-bound, high concurrency), solo (single-threaded).
+      pool: prefork
+      concurrency: 4
+      # -- Initial replicas. Ignored when keda.enabled is true.
+      replicaCount: 1
+      resources:
+        requests:
+          cpu: 250m
+          memory: 384Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi
+      # -- KEDA ScaledObject config. Scales pods on Redis list length (= Celery queue depth).
+      keda:
+        enabled: false
+        minReplicaCount: 1
+        maxReplicaCount: 5
+        # -- Pollers will scale up by 1 pod for every `listLength` items in the queue.
+        listLength: "5"
+        pollingInterval: 10
+        cooldownPeriod: 60
+      podDisruptionBudget:
+        enabled: false
+        maxUnavailable: 1
+
+    - name: controls.graph
+      # gevent for high-concurrency IO-bound Microsoft Graph calls.
+      pool: gevent
+      concurrency: 50
+      replicaCount: 1
+      resources:
+        requests:
+          cpu: 250m
+          memory: 384Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi
+      keda:
+        enabled: false
+        minReplicaCount: 1
+        maxReplicaCount: 8
+        listLength: "10"
+        pollingInterval: 5
+        cooldownPeriod: 60
+      podDisruptionBudget:
+        enabled: false
+        maxUnavailable: 1
+
+    - name: controls.powershell
+      # prefork for the bounded-capacity PowerShell collector path. Concurrency
+      # capped low because the powershell-service is the actual bottleneck.
+      pool: prefork
+      concurrency: 4
+      replicaCount: 1
+      resources:
+        requests:
+          cpu: 500m
+          memory: 512Mi
+        limits:
+          cpu: "2"
+          memory: 1Gi
+      keda:
+        enabled: false
+        minReplicaCount: 1
+        maxReplicaCount: 4
+        listLength: "4"
+        pollingInterval: 10
+        cooldownPeriod: 120
+      podDisruptionBudget:
+        enabled: false
+        maxUnavailable: 1
+  # -- Pod-level lifecycle settings applied to every queue Deployment.
+  lifecycle:
+    # Long enough for in-flight Celery tasks to finish on warm shutdown.
+    terminationGracePeriodSeconds: 60
+  # -- Topology spread + anti-affinity defaults applied to every queue Deployment.
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: worker
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 50
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: worker
+
+# -- Frontend (nginx serving static build)
+frontend:
+  # -- Initial replicas. Ignored when autoscaling.enabled is true.
+  replicaCount: 2
+  image:
+    repository: autoaudit/frontend
+    tag: ""
+    pullPolicy: ""
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 70
+    # See backendApi.autoscaling.behavior for documentation.
+    behavior: {}
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
+  lifecycle:
+    terminationGracePeriodSeconds: 30
+    preStopSleepSeconds: 5
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: frontend
+  affinity: {}
+
+# -- Open Policy Agent
+opa:
+  # -- Default replicas raised from 1 → 3 so a single node loss doesn't blackout
+  # the policy plane. Ignored when autoscaling.enabled is true.
+  replicaCount: 3
+  image:
+    # -- Custom OPA image with policies baked in
+    repository: autoaudit/opa
+    tag: ""
+    pullPolicy: ""
+  service:
+    type: ClusterIP
+    port: 8181
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  autoscaling:
+    enabled: false
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 60
+    # See backendApi.autoscaling.behavior for documentation.
+    behavior: {}
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 2
+  lifecycle:
+    terminationGracePeriodSeconds: 30
+    preStopSleepSeconds: 5
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: opa
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: opa
+
+# -- PowerShell service for M365 cmdlet execution
+powershellService:
+  # -- Initial replicas. Ignored when autoscaling.enabled is true.
+  replicaCount: 2
+  image:
+    repository: autoaudit/powershell-service
+    tag: ""
+    pullPolicy: ""
+  service:
+    type: ClusterIP
+    port: 8001
+  nodeSelector:
+    kubernetes.io/arch: amd64
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    # See backendApi.autoscaling.behavior for documentation.
+    behavior: {}
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
+  lifecycle:
+    # Longer than the 120s pwsh subprocess timeout so an in-flight cmdlet has a
+    # chance to finish before SIGKILL.
+    terminationGracePeriodSeconds: 130
+    preStopSleepSeconds: 5
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: powershell-service
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: powershell-service
+
+# -- Gateway API configuration
+gateway:
+  enabled: true
+  parentRef:
+    # -- Name of the existing Gateway resource
+    name: ""
+    # -- Namespace of the Gateway (if different from release namespace)
+    namespace: ""
+  # -- Hostnames for the application (e.g., [autoaudit.example.com, www.autoaudit.example.com])
+  hostnames: []
+
+# -- Service account
+serviceAccount:
+  create: true
+  # -- Override the service account name
+  name: ""
+  # -- Additional annotations (e.g., for workload identity on your platform)
+  annotations: {}
+
+# -- Monitoring integration. Renders PodMonitor CRDs (consumed by
+# kube-prometheus-stack or Azure Monitor managed Prometheus) so each workload's
+# /metrics endpoint is scraped automatically.
+monitoring:
+  podMonitor:
+    # -- Set true once a Prometheus operator is installed in the cluster.
+    enabled: false
+    # -- Optional namespace selector for the Prometheus that should pick this up.
+    # Empty = same namespace as the chart.
+    namespace: ""
+    # -- Labels added to every PodMonitor (used for the Prometheus operator's
+    # matchLabels selector — match these to your Prometheus instance config).
+    additionalLabels: {}
+    # -- Default scrape interval for all PodMonitors.
+    interval: 30s
+    scrapeTimeout: 10s
+
+# -- Synthetic load levers used to demonstrate scaling. Adds a /v1/test/synthetic-scan
+# endpoint, a worker.tasks.synthetic_evaluate task, and a /execute/synthetic
+# endpoint on powershell-service. These exist purely to drive load-tests of the
+# scaling stack and are gated by both this Helm flag AND a runtime check in the
+# backend (refuses synthetic routes if APP_ENV=prod).
+synthetic:
+  enabled: false

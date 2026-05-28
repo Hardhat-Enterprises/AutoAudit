@@ -5,6 +5,7 @@ Run this script to create the default admin user:
     python -m app.db.init_db
 """
 import asyncio
+import os
 
 from sqlalchemy import select
 
@@ -22,7 +23,7 @@ async def init_db():
     - This script will create OR update a default admin user for local development.
     """
     admin_email = "admin@example.com"
-    admin_password = "admin"
+    admin_password = os.environ.get("INITIAL_ADMIN_PASSWORD", "admin")
 
     password_helper = PasswordHelper()
 

@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-backend-api
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "backend-api") | nindent 4 }}
+spec:
+  {{- if not .Values.backendApi.autoscaling.enabled }}
+  replicas: {{ .Values.backendApi.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "autoaudit.selectorLabels" (dict "context" . "component" "backend-api") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "autoaudit.componentLabels" (dict "context" . "component" "backend-api") | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "autoaudit.serviceAccountName" . }}
+      {{- include "autoaudit.imagePullSecrets" . | nindent 6 }}
+      {{- with .Values.backendApi.lifecycle.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
+      {{- end }}
+      {{- with .Values.backendApi.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backendApi.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: backend-api
+          image: {{ include "autoaudit.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.backendApi.image.repository "tag" (.Values.backendApi.image.tag | default .Values.global.imageTag | default .Chart.AppVersion)) }}
+          imagePullPolicy: {{ .Values.backendApi.image.pullPolicy | default .Values.global.imagePullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            {{- include "autoaudit.backendApi.env" . | nindent 12 }}
+            - name: INITIAL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "autoaudit.fullname" . }}-admin
+                  key: admin-password
+          {{- with .Values.backendApi.lifecycle.preStopSleepSeconds }}
+          lifecycle:
+            preStop:
+              exec:
+                # Hold long enough for the load balancer endpoint cache to drain
+                # before SIGTERM. /healthz already starts returning 503 once
+                # SIGTERM lands; this sleep covers the gap before that.
+                command: ["sh", "-c", "sleep {{ . }}"]
+          {{- end }}
+          {{- if .Values.backendApi.startupProbe.enabled }}
+          startupProbe:
+            httpGet:
+              path: /healthz/live
+              port: http
+            failureThreshold: {{ .Values.backendApi.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.backendApi.startupProbe.periodSeconds }}
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              # Process-only check — must NOT depend on DB/Redis/OPA, otherwise
+              # downstream outages cascade into pod restarts.
+              path: /healthz/live
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              # Dependency-aware — pulls the pod out of the Service endpoint
+              # pool when DB/Redis/OPA can't be reached.
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+          {{- with .Values.backendApi.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

@@ -1,0 +1,103 @@
+{{/*
+One Deployment per entry in .Values.worker.queues. Each queue gets its own
+pool, concurrency, resources, and replica count so heterogeneous workloads
+(IO-bound Graph calls vs CPU-bound PowerShell calls) can scale independently.
+*/}}
+{{- range $queue := .Values.worker.queues }}
+{{- $ctx := dict "context" $ "queue" $queue -}}
+{{- $component := printf "worker-%s" (regexReplaceAll "[^a-z0-9]+" (lower $queue.name) "-") -}}
+{{- /* Keep newline before --- so consecutive iterations stay separated as
+       distinct YAML documents (the `{{- end }}` strips trailing whitespace
+       of the previous iteration, collapsing into the next ---). */}}
+{{- $deploymentName := printf "%s-%s" (include "autoaudit.fullname" $) $component }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $deploymentName }}
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" $ "component" $component) | nindent 4 }}
+    autoaudit.io/worker-queue: {{ $queue.name | quote }}
+spec:
+  {{- /* Omit replicas when KEDA owns scaling so HPA/ScaledObject don't fight a fixed value. */}}
+  {{- if not $queue.keda.enabled }}
+  replicas: {{ default 1 $queue.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "autoaudit.selectorLabels" (dict "context" $ "component" $component) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "autoaudit.componentLabels" (dict "context" $ "component" $component) | nindent 8 }}
+        autoaudit.io/worker-queue: {{ $queue.name | quote }}
+    spec:
+      serviceAccountName: {{ include "autoaudit.serviceAccountName" $ }}
+      {{- include "autoaudit.imagePullSecrets" $ | nindent 6 }}
+      {{- with $.Values.worker.lifecycle.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
+      {{- end }}
+      {{- with $.Values.worker.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.worker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: worker
+          image: {{ include "autoaudit.image" (dict "registry" $.Values.global.imageRegistry "repository" $.Values.worker.image.repository "tag" ($.Values.worker.image.tag | default $.Values.global.imageTag | default $.Chart.AppVersion)) }}
+          imagePullPolicy: {{ $.Values.worker.image.pullPolicy | default $.Values.global.imagePullPolicy | default "IfNotPresent" }}
+          command:
+            - celery
+            - -A
+            - worker.celery_app
+            - worker
+            - --pool={{ $queue.pool }}
+            - --concurrency={{ $queue.concurrency }}
+            - --queues={{ $queue.name }}
+            - --hostname={{ $queue.name }}@%h
+            - --loglevel={{ $.Values.worker.logLevel | default "info" }}
+          env:
+            {{- include "autoaudit.worker.env" $ | nindent 12 }}
+          lifecycle:
+            preStop:
+              exec:
+                # Warm shutdown: stop accepting new tasks and let in-flight ones finish.
+                # Kubernetes still enforces terminationGracePeriodSeconds as the upper bound.
+                # MUST use --destination — without it, `control shutdown` broadcasts to
+                # every worker on the broker and kills sibling pods (cascading restart loop).
+                # Hostname pattern matches `--hostname={{ $queue.name }}@%h` in command above.
+                command:
+                  - sh
+                  - -c
+                  - 'celery -A worker.celery_app control shutdown --destination={{ $queue.name }}@$HOSTNAME || true'
+          livenessProbe:
+            # Wrapped in `sh -c` because exec probes pass args directly with no
+            # shell — without this, "$(hostname)" is sent literally as part of
+            # the destination string and the probe never gets a reply.
+            exec:
+              command:
+                - sh
+                - -c
+                - 'celery -A worker.celery_app inspect ping --destination {{ $queue.name }}@$HOSTNAME --timeout 10'
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - 'celery -A worker.celery_app inspect ping --destination {{ $queue.name }}@$HOSTNAME --timeout 5'
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 2
+          {{- with $queue.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

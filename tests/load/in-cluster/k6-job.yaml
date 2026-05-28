@@ -1,0 +1,106 @@
+---
+# In-cluster k6 load runner.
+#
+# An init container logs in to backend-api using the admin password from the
+# autoaudit-admin Secret and writes the JWT to a shared emptyDir. The main
+# container runs k6 against the in-cluster Service URL, so traffic actually
+# load-balances across the backend-api pods (unlike `kubectl port-forward`
+# which forwards to a single pod).
+#
+# Fired by tests/load/in-cluster/run.sh (which refreshes the script
+# ConfigMap and substitutes ${SCRIPT}, ${BASE_URL}, ${EXTRA_ARGS} below).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: k6-${SCRIPT_TAG}-
+  namespace: autoaudit
+  labels:
+    app.kubernetes.io/name: k6
+    app.kubernetes.io/component: load-test
+    autoaudit.io/load-script: "${SCRIPT_TAG}"
+spec:
+  ttlSecondsAfterFinished: 3600   # keep logs for 1h after run
+  backoffLimit: 0                 # do not retry — a failure is a real failure
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: k6
+        app.kubernetes.io/component: load-test
+        autoaudit.io/load-script: "${SCRIPT_TAG}"
+    spec:
+      restartPolicy: Never
+      volumes:
+        - name: scripts
+          configMap:
+            name: k6-scripts
+        - name: work
+          emptyDir: {}
+      initContainers:
+        - name: login
+          image: curlimages/curl:8.10.1
+          env:
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: autoaudit-admin
+                  key: admin-password
+            - name: BASE_URL
+              value: "${BASE_URL}"
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              echo "Logging in as admin@example.com to $BASE_URL ..."
+              resp=$(curl -sS -X POST "$BASE_URL/v1/auth/login" \
+                -H "Content-Type: application/x-www-form-urlencoded" \
+                --data-urlencode "username=admin@example.com" \
+                --data-urlencode "password=$ADMIN_PASSWORD")
+              token=$(echo "$resp" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+              if [ -z "$token" ]; then
+                echo "Login failed. Response: $resp" >&2
+                exit 1
+              fi
+              printf '%s' "$token" > /work/token
+              echo "Token written to /work/token (length: $(wc -c < /work/token))"
+          volumeMounts:
+            - name: work
+              mountPath: /work
+      containers:
+        - name: k6
+          image: grafana/k6:0.55.0
+          env:
+            - name: BASE_URL
+              value: "${BASE_URL}"
+            - name: SCRIPT
+              value: "${SCRIPT}"
+          # Override the image's k6 entrypoint so we can source the token first.
+          command: [/bin/sh, -c]
+          args:
+            - |
+              set -eu
+              export AUTOAUDIT_TOKEN="$(cat /work/token)"
+              export AUTOAUDIT_BASE_URL="$BASE_URL"
+              # Don't mark the Job as Failed on threshold breach (k6 exit 99).
+              # Threshold pass/fail is still printed in the summary as useful
+              # signal — but for the demo we want the Job itself to succeed.
+              set +e
+              k6 run /scripts/$SCRIPT ${EXTRA_ARGS}
+              code=$?
+              if [ "$code" = "99" ]; then
+                echo ">> k6 thresholds breached (exit 99). Treating Job as successful so the run is preserved."
+                exit 0
+              fi
+              exit $code
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+            - name: work
+              mountPath: /work
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

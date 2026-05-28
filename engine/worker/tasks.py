@@ -2,11 +2,20 @@
 
 import asyncio
 import json
+import os
+import time
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
-from worker.celery_app import celery_app
+import httpx
+
+from worker.celery_app import (
+    QUEUE_CONTROLS_GRAPH,
+    QUEUE_CONTROLS_POWERSHELL,
+    QUEUE_DEFAULT,
+    celery_app,
+)
 from worker.config import settings
 from worker.db import (
     get_db_session,
@@ -48,7 +57,31 @@ def get_control_metadata(metadata: dict, control_id: str) -> dict | None:
     return None
 
 
-@celery_app.task(name="worker.tasks.run_scan")
+# Same prefix split used in _evaluate_control_async to choose the M365 client.
+# Tasks routed to controls.powershell run on workers with --pool=prefork and a
+# small concurrency, since the powershell-service is the bottleneck. Graph
+# tasks run on workers with --pool=gevent and high concurrency since they're
+# IO-bound HTTP calls.
+_POWERSHELL_PREFIXES = ("exchange.", "compliance.", "teams.")
+_POWERSHELL_PREFIX_EXCEPTIONS = ("exchange.dns.",)
+
+
+def queue_for_collector(collector_id: str | None) -> str:
+    """Return the Celery queue name for a control's collector.
+
+    Graph collectors are IO-bound and parallel-friendly; PowerShell collectors
+    are bounded by the powershell-service and should not flood it.
+    """
+    if not collector_id:
+        return QUEUE_DEFAULT
+    if collector_id.startswith(_POWERSHELL_PREFIX_EXCEPTIONS):
+        return QUEUE_CONTROLS_GRAPH
+    if collector_id.startswith(_POWERSHELL_PREFIXES):
+        return QUEUE_CONTROLS_POWERSHELL
+    return QUEUE_CONTROLS_GRAPH
+
+
+@celery_app.task(name="worker.tasks.run_scan", queue=QUEUE_DEFAULT)
 def run_scan(scan_id: int) -> dict:
     """Orchestrator task: Dispatches control evaluation tasks.
 
@@ -161,14 +194,17 @@ def run_scan(scan_id: int) -> dict:
                     session.commit()
                 continue
 
-            evaluate_control.delay(
-                scan_id=scan_id,
-                result_id=result["id"],
-                control=control,
-                credentials=credentials,
-                framework=scan["framework"],
-                benchmark=scan["benchmark"],
-                version=scan["version"],
+            evaluate_control.apply_async(
+                kwargs={
+                    "scan_id": scan_id,
+                    "result_id": result["id"],
+                    "control": control,
+                    "credentials": credentials,
+                    "framework": scan["framework"],
+                    "benchmark": scan["benchmark"],
+                    "version": scan["version"],
+                },
+                queue=queue_for_collector(collector_id),
             )
             dispatched += 1
         else:
@@ -213,6 +249,9 @@ def run_scan(scan_id: int) -> dict:
     bind=True,
     max_retries=3,
     default_retry_delay=60,
+    # Default queue used only if a caller forgets to pass queue= to apply_async;
+    # run_scan always routes via queue_for_collector(), so this is a safety net.
+    queue=QUEUE_CONTROLS_GRAPH,
 )
 def evaluate_control(
     self,
@@ -400,3 +439,88 @@ async def _evaluate_control_async(
     result = await opa_client.evaluate_policy(package_path, collected_data)
 
     return result
+
+
+# --- Synthetic load lever ---------------------------------------------------
+#
+# Drives the worker / powershell-service scaling demos without needing real
+# M365 credentials. Gated by SYNTHETIC_ENABLED env var; the chart only sets
+# this when synthetic.enabled=true. The task does NOT touch the database, so
+# enqueueing a million of them is cheap.
+
+
+def _synthetic_enabled() -> bool:
+    return os.environ.get("SYNTHETIC_ENABLED", "").lower() in {"1", "true", "yes"}
+
+
+@celery_app.task(name="worker.tasks.synthetic_evaluate")
+def synthetic_evaluate(
+    sleep_ms: int = 1000,
+    cpu_burn_ms: int = 0,
+    call_powershell_service: bool = False,
+    call_opa: bool = True,
+) -> dict:
+    """No-op evaluator that simulates a real control evaluation's wall time
+    and downstream hops.
+
+    Used by the synthetic-scan endpoint to drive worker / powershell-service
+    / OPA scaling without needing real M365 credentials. Mirrors what a real
+    `evaluate_control` task does at the I/O level: optional collector-side
+    hop (powershell-service) and an OPA decision call.
+
+    `call_opa=True` issues a POST to OPA's `/v1/data/<package>/result` with
+    a stub input so OPA's HTTP histogram + decision logs see real traffic.
+    The package path defaults to a known-existing CIS M365 control; override
+    with the `SYNTHETIC_OPA_PACKAGE_PATH` env var if a different one is
+    baked into the OPA image.
+    """
+    if not _synthetic_enabled():
+        return {"skipped": True, "reason": "SYNTHETIC_ENABLED not set"}
+
+    if cpu_burn_ms > 0:
+        deadline = time.monotonic() + cpu_burn_ms / 1000.0
+        while time.monotonic() < deadline:
+            pass  # busy loop — drives CPU-based HPA on the worker pod
+
+    if call_powershell_service:
+        url = settings.POWERSHELL_SERVICE_URL
+        if url:
+            try:
+                with httpx.Client(timeout=30.0) as client:
+                    client.post(
+                        f"{url.rstrip('/')}/execute/synthetic",
+                        json={"sleep_ms": sleep_ms, "cpu_burn_ms": cpu_burn_ms},
+                    )
+            except Exception:
+                # The point is to drive load — failures here are expected
+                # under demo load and shouldn't fail the task.
+                pass
+    else:
+        time.sleep(sleep_ms / 1000.0)
+
+    called_opa = False
+    if call_opa:
+        opa_url = settings.OPA_URL
+        package_path = os.environ.get(
+            "SYNTHETIC_OPA_PACKAGE_PATH",
+            "cis/microsoft_365_foundations/v6_0_0/control_1_1_1",
+        )
+        if opa_url:
+            try:
+                with httpx.Client(timeout=10.0) as client:
+                    client.post(
+                        f"{opa_url.rstrip('/')}/v1/data/{package_path}/result",
+                        json={"input": {}},
+                    )
+                called_opa = True
+            except Exception:
+                # Same rationale — load generation, swallow failures.
+                pass
+
+    return {
+        "ok": True,
+        "sleep_ms": sleep_ms,
+        "cpu_burn_ms": cpu_burn_ms,
+        "called_powershell": call_powershell_service,
+        "called_opa": called_opa,
+    }

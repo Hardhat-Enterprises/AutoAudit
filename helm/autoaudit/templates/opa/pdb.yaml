@@ -1,0 +1,17 @@
+{{- if .Values.opa.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-opa
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "opa") | nindent 4 }}
+spec:
+  {{- if .Values.opa.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.opa.podDisruptionBudget.minAvailable }}
+  {{- else }}
+  maxUnavailable: {{ default 1 .Values.opa.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "autoaudit.selectorLabels" (dict "context" . "component" "opa") | nindent 6 }}
+{{- end }}

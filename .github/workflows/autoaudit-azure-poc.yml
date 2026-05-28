@@ -1,0 +1,85 @@
+name: Build and Push to ACR
+
+on:
+  workflow_dispatch:
+  # Temporary: trigger on push so the workflow can run from a non-default branch.
+  # Remove this once the workflow file exists on main.
+  push:
+    branches:
+      - feature/proof-of-concept-deployment-26t1-imp-dha-003
+
+jobs:
+  build-and-push:
+    name: Build and push container images
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_TAG: placeholder
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        run: echo "IMAGE_TAG=$(date +%Y%m%d)-$(echo ${{ github.sha }} | cut -c1-7)" >> "$GITHUB_ENV"
+
+      - name: Login to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io
+          username: ${{ secrets.POC_ACR_CLIENT_ID }}
+          password: ${{ secrets.POC_ACR_CLIENT_SECRET }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push backend-api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend-api/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io/autoaudit/backend-api:${{ env.IMAGE_TAG }}
+            ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io/autoaudit/backend-api:latest
+
+      - name: Build and push worker
+        uses: docker/build-push-action@v6
+        with:
+          context: ./engine
+          file: engine/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io/autoaudit/worker:${{ env.IMAGE_TAG }}
+            ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io/autoaudit/worker:latest
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: frontend/Dockerfile.prod
+          build-args: |
+            VITE_API_URL=/api
+          push: true
+          tags: |
+            ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io/autoaudit/frontend:${{ env.IMAGE_TAG }}
+            ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io/autoaudit/frontend:latest
+
+      - name: Build and push powershell-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./engine/powershell
+          file: engine/powershell/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io/autoaudit/powershell-service:${{ env.IMAGE_TAG }}
+            ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io/autoaudit/powershell-service:latest
+
+      - name: Build and push opa
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: engine/opa/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io/autoaudit/opa:${{ env.IMAGE_TAG }}
+            ${{ secrets.POC_ACR_REGISTRY_NAME }}.azurecr.io/autoaudit/opa:latest

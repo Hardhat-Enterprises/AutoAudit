@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "autoaudit.fullname" . }}-opa
+  labels:
+    {{- include "autoaudit.componentLabels" (dict "context" . "component" "opa") | nindent 4 }}
+spec:
+  type: {{ .Values.opa.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.opa.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "autoaudit.selectorLabels" (dict "context" . "component" "opa") | nindent 4 }}

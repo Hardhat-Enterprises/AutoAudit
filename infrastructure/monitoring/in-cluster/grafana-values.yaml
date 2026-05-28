@@ -1,0 +1,60 @@
+# Values overlay for the grafana/grafana chart.
+#
+# Configures:
+#   * A Prometheus datasource pointing at the prometheus chart's server Service
+#   * The sidecar dashboard loader that auto-picks-up any ConfigMap in the
+#     namespace labeled `grafana_dashboard: "1"`
+#   * No persistence (demo only)
+#   * Default admin password set to `admin` (rotate before any non-demo use)
+#
+# Usage:
+#   helm repo add grafana https://grafana.github.io/helm-charts
+#   helm repo update
+#   helm install grafana grafana/grafana \
+#     -n autoaudit -f infrastructure/monitoring/in-cluster/grafana-values.yaml
+#
+# Access via port-forward:
+#   kubectl -n autoaudit port-forward svc/grafana 3001:80
+#   then browse http://localhost:3001 (admin / admin)
+
+adminUser: admin
+adminPassword: admin
+
+persistence:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+service:
+  type: ClusterIP
+
+# Datasource — provisioned at startup so we don't have to click through the UI.
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus-server.autoaudit.svc.cluster.local
+        access: proxy
+        isDefault: true
+        editable: false
+
+# Sidecar that watches for dashboard ConfigMaps in this namespace and
+# auto-loads them. We apply the autoaudit-scaling.json wrapped in a
+# ConfigMap separately (see infrastructure/monitoring/in-cluster/README).
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    labelValue: "1"
+    searchNamespace: autoaudit
+    folder: /tmp/dashboards
+    provider:
+      foldersFromFilesStructure: false

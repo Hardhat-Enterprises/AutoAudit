@@ -7,4 +7,5 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "pydantic",
+    "prometheus-client>=0.20.0",
 ]

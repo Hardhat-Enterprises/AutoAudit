@@ -13,12 +13,17 @@ celery_app = Celery(
     broker=settings.REDIS_URL,
 )
 
-# Task routing
+# Task routing — must agree with engine/worker/celery_app.py.
+# The orchestrator lands in `default`; the per-control fan-out tasks
+# the worker dispatches will land on `controls.graph` or `controls.powershell`
+# based on the collector_id (see engine/worker/tasks.py:queue_for_collector).
+QUEUE_DEFAULT = "default"
+
 celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
-    task_default_queue="autoaudit",
+    task_default_queue=QUEUE_DEFAULT,
 )
 
 
@@ -34,7 +39,7 @@ def queue_scan(scan_id: int) -> AsyncResult:
     return celery_app.send_task(
         "worker.tasks.run_scan",
         args=[scan_id],
-        queue="autoaudit",
+        queue=QUEUE_DEFAULT,
     )
 
 

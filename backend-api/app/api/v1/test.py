@@ -1,9 +1,94 @@
-from fastapi import APIRouter, Depends
+from celery import Celery
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+
 from app.core.auth import get_current_user
-from app.core.permissions import require_admin, require_auditor_or_above, RoleChecker
-from app.models.user import User, Role
+from app.core.config import get_settings
+from app.core.permissions import RoleChecker, require_admin, require_auditor_or_above
+from app.models.user import Role, User
+
+settings = get_settings()
 
 router = APIRouter(prefix="/test", tags=["Test"])
+
+
+# --- Synthetic load lever ---------------------------------------------------
+#
+# These endpoints exist solely to drive load tests of the scaling stack. They
+# are gated by both:
+#   * Helm: synthetic.enabled=true (controls whether SYNTHETIC_ENABLED reaches
+#     the pod env)
+#   * Runtime: APP_ENV != "prod" (so even an accidental flag flip in a prod
+#     namespace is still rejected)
+# A request that fails either gate gets a 404, not a 403, so probes can't be
+# used to detect whether the lever exists.
+
+
+class SyntheticScanRequest(BaseModel):
+    n_graph: int = Field(0, ge=0, le=2000, description="Tasks to enqueue on controls.graph")
+    n_powershell: int = Field(
+        0, ge=0, le=500, description="Tasks to enqueue on controls.powershell"
+    )
+    sleep_ms: int = Field(1000, ge=0, le=120000, description="Sleep per task (ms)")
+    cpu_burn_ms: int = Field(0, ge=0, le=10000, description="Tight-loop CPU per task (ms)")
+    call_powershell_service: bool = Field(
+        False,
+        description=(
+            "If true, controls.powershell tasks call /execute/synthetic on the "
+            "powershell-service to drive its HPA in lockstep."
+        ),
+    )
+    call_opa: bool = Field(
+        True,
+        description=(
+            "If true, each synthetic_evaluate task issues a POST to OPA's "
+            "/v1/data/<package>/result so OPA decision metrics populate. "
+            "Mirrors what a real evaluate_control task does."
+        ),
+    )
+
+
+def _require_synthetic_enabled() -> None:
+    if settings.APP_ENV.lower() == "prod" or not settings.SYNTHETIC_ENABLED:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.post("/synthetic-scan", summary="Enqueue synthetic worker tasks for load demos")
+async def synthetic_scan(
+    request: SyntheticScanRequest,
+    _: User = Depends(get_current_user),
+):
+    """Enqueue N synthetic_evaluate tasks across the worker queues. Gated to
+    non-prod environments only; see module docstring."""
+    _require_synthetic_enabled()
+
+    # We construct a thin Celery client here rather than importing the worker
+    # module (which would pull collector/policy code into the API image).
+    client = Celery("autoaudit_synthetic", broker=settings.REDIS_URL)
+
+    common = {
+        "sleep_ms": request.sleep_ms,
+        "cpu_burn_ms": request.cpu_burn_ms,
+        "call_opa": request.call_opa,
+    }
+
+    for _i in range(request.n_graph):
+        client.send_task(
+            "worker.tasks.synthetic_evaluate",
+            kwargs={**common, "call_powershell_service": False},
+            queue="controls.graph",
+        )
+    for _i in range(request.n_powershell):
+        client.send_task(
+            "worker.tasks.synthetic_evaluate",
+            kwargs={**common, "call_powershell_service": request.call_powershell_service},
+            queue="controls.powershell",
+        )
+
+    return {
+        "queued": {"graph": request.n_graph, "powershell": request.n_powershell},
+        "params": common,
+    }
 
 
 @router.get("/public", summary="Test public endpoint")

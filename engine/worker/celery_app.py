@@ -4,6 +4,14 @@ from celery import Celery
 
 from worker.config import settings
 
+# Queue names. Workers run with --queues=<one of these> so each Deployment
+# only consumes its own queue and can be scaled independently. Adding a new
+# queue here also requires a new entry in helm/autoaudit/values.yaml under
+# `worker.queues:` so Helm renders a Deployment for it.
+QUEUE_DEFAULT = "default"
+QUEUE_CONTROLS_GRAPH = "controls.graph"
+QUEUE_CONTROLS_POWERSHELL = "controls.powershell"
+
 # Create Celery app
 celery_app = Celery(
     "autoaudit",
@@ -22,12 +30,17 @@ celery_app.conf.update(
     enable_utc=True,
     # Task tracking
     task_track_started=True,
-    # Task routing
-    task_default_queue="autoaudit",
+    # Broadcast task lifecycle events (received/started/succeeded/failed) to
+    # the broker so celery-exporter can scrape per-queue success / failure /
+    # runtime metrics. Cheap: events go to a transient pubsub-style channel.
+    worker_send_task_events=True,
+    task_send_sent_event=True,
+    # The orchestrator and any un-routed task lands here.
+    task_default_queue=QUEUE_DEFAULT,
     # Retry settings
     task_acks_late=True,
     task_reject_on_worker_lost=True,
-    # Concurrency (for gevent pool)
+    # Concurrency (overridden per-Deployment via the worker --concurrency CLI flag).
     worker_concurrency=10,
 )
 

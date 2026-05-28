@@ -34,3 +34,7 @@ env/
 
 # Engine legacy generated outputs
 engine/legacy/engine/autoaudit_reports.json
+
+# Per-developer docker compose overlay (auto-loaded by compose; not for sharing)
+docker-compose.override.yml
+docker-compose.override.yaml

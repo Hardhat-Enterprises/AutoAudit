@@ -1,0 +1,283 @@
+# values-scaling.yaml
+#
+# Values overlay for exercising the horizontal-scaling features added in
+# commit 4265e01a ("add horizontal scaling, PDBs, and observability for PoC").
+# This overlay turns ON every autoscaling/disruption/synthetic knob the chart
+# supports and tunes them for the single-node (baseline) → 3-node (demo run)
+# AKS cluster `np-aue1-aks-admin`.
+#
+# Usage:
+#   helm upgrade --install autoaudit ./helm/autoaudit \
+#     -n autoaudit --create-namespace \
+#     -f ./helm/autoaudit/values-scaling.yaml
+#
+# Prerequisites (not in this file — install separately):
+#   1. KEDA installed in cluster, namespace-scoped to `autoaudit`:
+#        helm repo add kedacore https://kedacore.github.io/charts
+#        helm install keda kedacore/keda -n keda --create-namespace \
+#          --set watchNamespace=autoaudit
+#   2. metrics-server already present (confirmed on the target cluster).
+#   3. Plain Prometheus + Grafana running in the `autoaudit` namespace
+#      (the chart's PodMonitor templates are disabled below — we scrape via
+#      static jobs in prometheus.yml instead of relying on the operator).
+#   4. A pre-existing Kubernetes Secret named `autoaudit-secrets` with
+#      postgresql-password, jwt-secret-key, encryption-key, redis-password.
+
+global:
+  imageRegistry: autoaudit.azurecr.io
+  imageTag: latest
+  imagePullPolicy: Always
+
+secrets:
+  existingSecret: autoaudit-secrets
+
+# ---- Datastores ----
+# Slightly above PoC sizing — these are not the scaling targets, just need
+# to keep up with the load the scaling targets generate.
+postgresql:
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+redis:
+  # Persistence stays off for the demo (faster pod restarts, queue is
+  # ephemeral by design). KEDA only needs LLEN, not durability.
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+# ---- Backend API ----
+# HPA-driven 1 → 5 on CPU. Min 1 (not 2) so the baseline state on a single
+# node is honest; HPA brings up the second pod within ~30s of load arriving.
+backendApi:
+  replicaCount: 1
+  env:
+    # Synthetic endpoints refuse to serve when APP_ENV=prod. Keep dev for the demo.
+    APP_ENV: dev
+    API_PREFIX: /v1
+    ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+    BACKEND_PUBLIC_URL: ""
+    FRONTEND_URL: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+    # Demo profile: react fast in both directions so the scaling curve is
+    # visible within a single 5–10 minute run. K8s default scaleDown is 5
+    # min stabilization — too slow to see drop-back during a demo.
+    behavior: &demoHpaBehavior
+      scaleUp:
+        stabilizationWindowSeconds: 0
+        policies:
+          - type: Percent
+            value: 100
+            periodSeconds: 15
+          - type: Pods
+            value: 4
+            periodSeconds: 15
+        selectPolicy: Max
+      scaleDown:
+        stabilizationWindowSeconds: 60
+        policies:
+          - type: Percent
+            value: 100
+            periodSeconds: 30
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+# ---- Worker queues ----
+# All three queues KEDA-scaled. Concurrency lowered from chart defaults so
+# a fully-scaled state fits comfortably in 3 nodes alongside the other
+# tenants on this cluster.
+worker:
+  logLevel: info
+  queues:
+    - name: default
+      pool: prefork
+      concurrency: 2
+      replicaCount: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      keda:
+        enabled: true
+        minReplicaCount: 1
+        maxReplicaCount: 2
+        listLength: "5"
+        pollingInterval: 10
+        cooldownPeriod: 60
+        behavior: *demoHpaBehavior
+      podDisruptionBudget:
+        enabled: true
+        maxUnavailable: 1
+
+    - name: controls.graph
+      # gevent for IO-bound Graph calls. Concurrency dropped from 50 → 20
+      # because the synthetic task is cheap and 50×4 pods would just spin.
+      pool: gevent
+      concurrency: 20
+      replicaCount: 1
+      resources:
+        requests:
+          cpu: 150m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      keda:
+        enabled: true
+        minReplicaCount: 1
+        maxReplicaCount: 5
+        listLength: "10"
+        pollingInterval: 5
+        cooldownPeriod: 60
+        behavior: *demoHpaBehavior
+      podDisruptionBudget:
+        enabled: true
+        maxUnavailable: 1
+
+    - name: controls.powershell
+      pool: prefork
+      concurrency: 3
+      replicaCount: 1
+      resources:
+        requests:
+          cpu: 250m
+          memory: 384Mi
+        limits:
+          cpu: "1"
+          memory: 768Mi
+      keda:
+        enabled: true
+        minReplicaCount: 1
+        maxReplicaCount: 5
+        listLength: "4"
+        pollingInterval: 10
+        cooldownPeriod: 60
+        behavior: *demoHpaBehavior
+      podDisruptionBudget:
+        enabled: true
+        maxUnavailable: 1
+
+# ---- Frontend ----
+frontend:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+    behavior: *demoHpaBehavior
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+# ---- OPA ----
+# Min 2 (one above the single-node baseline) so the PDB minAvailable:1 is
+# meaningful and the HPA scale-up curve has somewhere to start. Single-node
+# scheduling: both replicas land on the one node initially; on a 3-node
+# scale-up the soft anti-affinity spreads them.
+opa:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 75m
+      memory: 96Mi
+    limits:
+      cpu: 400m
+      memory: 192Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 60
+    behavior: *demoHpaBehavior
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+# ---- PowerShell service ----
+# Note: end-to-end Exchange/PowerShell cmdlet execution from inside Kubernetes
+# is not yet supported (the worker spawns pwsh subprocess containers via
+# Docker Desktop in local-dev). For the scaling demo we rely on the
+# /execute/synthetic endpoint (gated by synthetic.enabled below) which
+# exercises the CPU/metrics path without needing Exchange auth.
+powershellService:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    behavior: *demoHpaBehavior
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+# ---- Gateway ----
+# Disabled for the initial testing pass — we drive k6 via `kubectl port-forward`
+# to avoid touching DNS / TLS for the rh-gateway. Flip to true and supply a
+# hostname when we're ready for the panel demo from a browser.
+gateway:
+  enabled: false
+  parentRef:
+    name: rh-gateway
+    namespace: traefik-system
+  hostnames: []
+
+serviceAccount:
+  create: true
+
+# ---- Monitoring ----
+# PodMonitor templates disabled — this cluster has no prometheus-operator
+# (CRDs absent). The /metrics endpoints on backend-api, opa, and
+# powershell-service still serve; we point our in-namespace Prometheus at
+# them via static scrape jobs in prometheus.yml.
+monitoring:
+  podMonitor:
+    enabled: false
+
+# ---- Synthetic load levers ----
+# Required for the k6 load scripts in tests/load/. Also gated at runtime by
+# APP_ENV != prod (see backendApi.env above).
+synthetic:
+  enabled: true

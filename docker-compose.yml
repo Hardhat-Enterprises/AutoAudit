@@ -127,6 +127,11 @@ services:
 
       # Optional: Path to policies directory (default: /app/policies)
       - POLICIES_DIR=/app/policies
+
+      # Opt-in: enables the synthetic load endpoints for scaling tests.
+      # Off by default — set `SYNTHETIC_ENABLED=true` in your shell (or .env)
+      # before `docker compose up`. App-side is also gated by `APP_ENV != prod`.
+      - SYNTHETIC_ENABLED=${SYNTHETIC_ENABLED:-}
     volumes:
       # Mount policies directory for benchmark/control discovery API
       - ./engine/policies:/app/policies:ro
@@ -152,6 +157,20 @@ services:
           memory: 1G
           cpus: "2.0"
     container_name: autoaudit-worker
+    # Local single-worker overrides the image's default `--queues=default` so
+    # it drains every queue the chart now splits into separate Deployments
+    # (`default`, `controls.graph`, `controls.powershell`). In K8s the chart
+    # renders one Deployment per queue with `--queues=<one>`, so this only
+    # affects local docker compose.
+    command:
+      - celery
+      - -A
+      - worker.celery_app
+      - worker
+      - --pool=prefork
+      - --concurrency=4
+      - --loglevel=info
+      - --queues=default,controls.graph,controls.powershell
     environment:
       # Required: Database connection (PostgreSQL - worker uses sync driver)
       - DATABASE_URL=postgresql+asyncpg://autoaudit:autoaudit_dev_password@db:5432/autoaudit
@@ -168,6 +187,11 @@ services:
       # Optional: PowerShell service URL for Exchange/Teams cmdlets
       # When set, worker uses HTTP service instead of spawning Docker containers
       - POWERSHELL_SERVICE_URL=http://powershell-service:8001
+
+      # Opt-in: enables the synthetic load endpoints / tasks for scaling tests.
+      # Off by default — set `SYNTHETIC_ENABLED=true` in your shell (or .env)
+      # before `docker compose up`. App-side is also gated by `APP_ENV != prod`.
+      - SYNTHETIC_ENABLED=${SYNTHETIC_ENABLED:-}
     volumes:
       - ./engine:/app/engine:ro
       - ./engine/policies:/app/policies:ro
@@ -214,6 +238,11 @@ services:
       context: ./engine/powershell
       dockerfile: Dockerfile
     container_name: autoaudit-powershell-service
+    environment:
+      # Opt-in: enables the /execute/synthetic endpoint for scaling tests.
+      # Off by default — set `SYNTHETIC_ENABLED=true` in your shell (or .env)
+      # before `docker compose up`. App-side is also gated by `APP_ENV != prod`.
+      - SYNTHETIC_ENABLED=${SYNTHETIC_ENABLED:-}
     ports:
       - "8001:8001"
     healthcheck:

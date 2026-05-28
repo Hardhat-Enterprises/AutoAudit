@@ -30,6 +30,9 @@ COPY --chown=appuser:appuser backend-api/alembic.ini backend-api/entrypoint.sh .
 # Copy evidence scanner assets/logic
 COPY --chown=appuser:appuser security ./security
 
+# Copy OPA policies (used by benchmark reader to discover available benchmarks)
+COPY engine/policies ./policies
+
 # Make entrypoint executable
 RUN chmod +x entrypoint.sh
 

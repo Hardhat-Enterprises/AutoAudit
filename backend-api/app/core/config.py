@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     # Policies directory (for benchmark/control metadata)
     POLICIES_DIR: str = "/app/policies"
 
+    # Synthetic load endpoints (used to drive scaling demos). Defence in depth:
+    # the chart's `synthetic.enabled` Helm flag must be set, AND the runtime
+    # check below blocks the routes when APP_ENV=prod regardless of the flag.
+    SYNTHETIC_ENABLED: bool = False
+
     class Config:
         env_file = ".env"
 
