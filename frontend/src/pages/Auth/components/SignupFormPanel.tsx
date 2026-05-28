@@ -9,8 +9,8 @@ import {
   User,
 } from "lucide-react";
 
-const PASSWORD_MISMATCH_MESSAGE = "Passwords do not match.";
-const TERMS_ERROR_MESSAGE = "Please accept Terms & Conditions.";
+const TERMS_ERROR_MESSAGE = "Please agree to the terms and privacy policy";
+const PASSWORD_MISMATCH_MESSAGE = "These passwords do not match"; // pragma: allowlist secret
 
 type SignupFormPanelProps = {
   formData: any;
