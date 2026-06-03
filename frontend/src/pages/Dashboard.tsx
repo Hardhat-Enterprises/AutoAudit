@@ -13,7 +13,12 @@ import {
 } from "lucide-react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getBenchmarks, getConnections, getScans, getScan } from "../api/client";
+import {
+  getBenchmarks,
+  getConnections,
+  getScans,
+  getScan,
+} from "../api/client";
 import { formatDateTimePartsAEST } from "../utils/helpers";
 
 type ChartType = "doughnut" | "pie" | "bar";
@@ -88,9 +93,9 @@ export default function Dashboard({
   const [connections, setConnections] = useState<ApiConnection[]>([]);
   const [benchmarks, setBenchmarksState] = useState<ApiBenchmark[]>([]);
 
-  const [scanDetailsById, setScanDetailsById] = useState<Record<number, ApiScanDetail>>(
-    {}
-  );
+  const [scanDetailsById, setScanDetailsById] = useState<
+    Record<number, ApiScanDetail>
+  >({});
   const [scanDetailsError, setScanDetailsError] = useState<string | null>(null);
 
   const chartTypeOptions = [
@@ -99,9 +104,12 @@ export default function Dashboard({
     { value: "bar", label: "Compliance Trend (Bar)" },
   ];
 
-  const [selectedChartType, setSelectedChartType] = useState<ChartType>("doughnut");
-  const [selectedConnectionId, setSelectedConnectionId] = useState<string>("all");
-  const [selectedBenchmarkKey, setSelectedBenchmarkKey] = useState<string>("all");
+  const [selectedChartType, setSelectedChartType] =
+    useState<ChartType>("doughnut");
+  const [selectedConnectionId, setSelectedConnectionId] =
+    useState<string>("all");
+  const [selectedBenchmarkKey, setSelectedBenchmarkKey] =
+    useState<string>("all");
 
   useEffect(() => {
     async function loadDashboard() {
@@ -115,20 +123,30 @@ export default function Dashboard({
           getBenchmarks(token),
         ]);
         setScans((scansData as ApiScanSummary[] | null | undefined) || []);
-        setConnections((connectionsData as ApiConnection[] | null | undefined) || []);
-        setBenchmarksState((benchmarksData as ApiBenchmark[] | null | undefined) || []);
+        setConnections(
+          (connectionsData as ApiConnection[] | null | undefined) || [],
+        );
+        setBenchmarksState(
+          (benchmarksData as ApiBenchmark[] | null | undefined) || [],
+        );
 
         // Prefer the latest completed scan as the default context.
-        const completed = ((scansData as ApiScanSummary[] | null | undefined) || []).filter(
-          (s) => s.status === "completed"
-        );
+        const completed = (
+          (scansData as ApiScanSummary[] | null | undefined) || []
+        ).filter((s) => s.status === "completed");
         const latestCompleted = completed.length > 0 ? completed[0] : null; // API sorts started_at desc
         if (latestCompleted) {
           if (latestCompleted.m365_connection_id) {
             setSelectedConnectionId(String(latestCompleted.m365_connection_id));
           }
-          if (latestCompleted.framework && latestCompleted.benchmark && latestCompleted.version) {
-            setSelectedBenchmarkKey(`${latestCompleted.framework}|${latestCompleted.benchmark}|${latestCompleted.version}`);
+          if (
+            latestCompleted.framework &&
+            latestCompleted.benchmark &&
+            latestCompleted.version
+          ) {
+            setSelectedBenchmarkKey(
+              `${latestCompleted.framework}|${latestCompleted.benchmark}|${latestCompleted.version}`,
+            );
           }
         }
       } catch (err: unknown) {
@@ -143,7 +161,7 @@ export default function Dashboard({
 
   const benchmarkOptions = useMemo(() => {
     const m365 = (benchmarks || []).filter(
-      (b) => String(b.platform || "").toLowerCase() === "m365"
+      (b) => String(b.platform || "").toLowerCase() === "m365",
     );
     const opts = m365.map((b) => ({
       value: `${b.framework || ""}|${b.slug || ""}|${b.version || ""}`,
@@ -164,12 +182,13 @@ export default function Dashboard({
     let out = scans || [];
     if (selectedConnectionId !== "all") {
       out = out.filter(
-        (s) => String(s.m365_connection_id || "") === selectedConnectionId
+        (s) => String(s.m365_connection_id || "") === selectedConnectionId,
       );
     }
     if (selectedBenchmarkKey !== "all") {
       out = out.filter(
-        (s) => `${s.framework}|${s.benchmark}|${s.version}` === selectedBenchmarkKey
+        (s) =>
+          `${s.framework}|${s.benchmark}|${s.version}` === selectedBenchmarkKey,
       );
     }
     return out;
@@ -182,7 +201,11 @@ export default function Dashboard({
     return filteredScans[0];
   }, [filteredScans]);
 
-  const chartModel = useMemo<{ chartType: ChartType; labels: string[]; values: number[] }>(() => {
+  const chartModel = useMemo<{
+    chartType: ChartType;
+    labels: string[];
+    values: number[];
+  }>(() => {
     const s = latestRelevantScan;
     const passed = Number(s?.passed_count || 0);
     const failed = Number(s?.failed_count || 0);
@@ -212,14 +235,14 @@ export default function Dashboard({
     }
 
     // Default: Pass / Fail (+ optional Error / Skipped)
-    const labels = ['Pass', 'Fail'];
+    const labels = ["Pass", "Fail"];
     const values = [passed, failed];
     if (errors > 0) {
-      labels.push('Error');
+      labels.push("Error");
       values.push(errors);
     }
     if (skipped > 0) {
-      labels.push('Skipped');
+      labels.push("Skipped");
       values.push(skipped);
     }
     return { chartType: selectedChartType, labels, values };
@@ -245,7 +268,9 @@ export default function Dashboard({
         const detail = (await getScan(token, id)) as ApiScanDetail;
         setScanDetailsById((prev) => ({ ...prev, [id]: detail }));
       } catch (err: unknown) {
-        setScanDetailsError(getErrorMessage(err) || "Failed to load scan details");
+        setScanDetailsError(
+          getErrorMessage(err) || "Failed to load scan details",
+        );
       }
     }
 
@@ -269,7 +294,8 @@ export default function Dashboard({
       return Number.isFinite(num) ? num.toLocaleString() : "—";
     };
 
-    const compliancePct = evaluated > 0 ? Math.round((passed / evaluated) * 100) : null;
+    const compliancePct =
+      evaluated > 0 ? Math.round((passed / evaluated) * 100) : null;
     const complianceTone = hasScan ? "good" : "neutral";
     const failedTone = failed > 0 ? "bad" : hasTotal ? "good" : "neutral";
 
@@ -277,82 +303,109 @@ export default function Dashboard({
       s?.connection_name ||
       (s?.m365_connection_id ? `Connection #${s.m365_connection_id}` : "—");
     const isCompleted = String(s?.status || "").toLowerCase() === "completed";
-    const lastScanLabel = (isCompleted ? (s?.finished_at || s?.started_at) : (s?.started_at || s?.finished_at)) || null;
-    const dt = lastScanLabel ? formatDateTimePartsAEST(lastScanLabel) : { date: '-', time: '-' };
-    const lastTime = dt.time !== '-' ? dt.time : '—';
-    const lastDate = dt.date !== '-' ? dt.date : '—';
+    const lastScanLabel =
+      (isCompleted
+        ? s?.finished_at || s?.started_at
+        : s?.started_at || s?.finished_at) || null;
+    const dt = lastScanLabel
+      ? formatDateTimePartsAEST(lastScanLabel)
+      : { date: "-", time: "-" };
+    const lastTime = dt.time !== "-" ? dt.time : "—";
+    const lastDate = dt.date !== "-" ? dt.date : "—";
 
     const subtitle = !hasScan
-      ? 'No scans yet'
-      : `${isCompleted ? 'Latest completed scan' : 'Latest scan'}${hasTotal ? ` • ${formatCount(evaluated)} evaluated` : ''}`;
+      ? "No scans yet"
+      : `${isCompleted ? "Latest completed scan" : "Latest scan"}${hasTotal ? ` • ${formatCount(evaluated)} evaluated` : ""}`;
 
     const kpis = [
       {
-        label: compliancePct === null ? 'Compliance —' : `Compliance ${compliancePct}%`,
+        label:
+          compliancePct === null
+            ? "Compliance —"
+            : `Compliance ${compliancePct}%`,
         tone: complianceTone,
         icon: CheckCircle2,
       },
       {
-        label: hasTotal ? `${formatCount(failed)} failed` : 'Failed —',
+        label: hasTotal ? `${formatCount(failed)} failed` : "Failed —",
         tone: failedTone,
         icon: AlertTriangle,
       },
       {
-        label: hasTotal ? `${formatCount(total)} total` : 'Total —',
-        tone: 'neutral',
+        label: hasTotal ? `${formatCount(total)} total` : "Total —",
+        tone: "neutral",
         icon: Shield,
       },
       {
         label: `Updated ${lastTime}`,
-        tone: 'neutral',
+        tone: "neutral",
         icon: Clock3,
       },
     ];
 
     const groups = [
       {
-        title: 'Evaluation',
+        title: "Evaluation",
         items: [
-          { label: 'Evaluated', value: hasTotal ? `${formatCount(evaluated)} of ${formatCount(total)}` : '—' },
-          { label: 'Passed', value: hasTotal ? formatCount(passed) : '—' },
-          { label: 'Failed', value: hasTotal ? formatCount(failed) : '—' },
+          {
+            label: "Evaluated",
+            value: hasTotal
+              ? `${formatCount(evaluated)} of ${formatCount(total)}`
+              : "—",
+          },
+          { label: "Passed", value: hasTotal ? formatCount(passed) : "—" },
+          { label: "Failed", value: hasTotal ? formatCount(failed) : "—" },
         ],
       },
       {
-        title: 'Quality',
+        title: "Quality",
         items: [
-          { label: 'Errors', value: hasTotal ? formatCount(errors) : '—' },
-          { label: 'Skipped', value: hasTotal ? formatCount(skipped) : '—' },
-          { label: 'Pending', value: hasTotal ? formatCount(pending) : '—' },
+          { label: "Errors", value: hasTotal ? formatCount(errors) : "—" },
+          { label: "Skipped", value: hasTotal ? formatCount(skipped) : "—" },
+          { label: "Pending", value: hasTotal ? formatCount(pending) : "—" },
         ],
       },
       {
-        title: 'Context',
+        title: "Context",
         items: [
-          { label: 'Connection', value: hasScan ? connectionLabel : '—' },
-          { label: 'Date', value: hasScan ? lastDate : '—' },
+          { label: "Connection", value: hasScan ? connectionLabel : "—" },
+          { label: "Date", value: hasScan ? lastDate : "—" },
         ],
       },
-    ].map(group => ({
-      ...group,
-      items: group.items.filter(item => item.value !== '—'),
-    })).filter(group => group.items.length > 0);
+    ]
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => item.value !== "—"),
+      }))
+      .filter((group) => group.items.length > 0);
 
     return { subtitle, kpis, groups };
   }, [latestRelevantScan]);
 
   const nextFixes = useMemo(() => {
     const results = latestScanDetails?.results || [];
-    const failed = results.filter((r) => (r?.status || "").toLowerCase() === "failed");
-    const errors = results.filter((r) => (r?.status || "").toLowerCase() === "error");
+    const failed = results.filter(
+      (r) => (r?.status || "").toLowerCase() === "failed",
+    );
+    const errors = results.filter(
+      (r) => (r?.status || "").toLowerCase() === "error",
+    );
     const byControlId = (a: ApiScanResultItem, b: ApiScanResultItem) =>
-      String(a?.control_id || "").localeCompare(String(b?.control_id || ""), undefined, {
-        numeric: true,
-      });
+      String(a?.control_id || "").localeCompare(
+        String(b?.control_id || ""),
+        undefined,
+        {
+          numeric: true,
+        },
+      );
     return {
       failedCount: failed.length,
       errorCount: errors.length,
-      topItems: failed.slice().sort(byControlId).slice(0, 6).concat(errors.slice().sort(byControlId).slice(0, 2)),
+      topItems: failed
+        .slice()
+        .sort(byControlId)
+        .slice(0, 6)
+        .concat(errors.slice().sort(byControlId).slice(0, 2)),
     };
   }, [latestScanDetails]);
 
@@ -361,25 +414,28 @@ export default function Dashboard({
   }, [filteredScans]);
 
   function statusTone(status: unknown) {
-    switch (String(status || '').toLowerCase()) {
-      case 'completed':
-        return 'success';
-      case 'failed':
-        return 'error';
-      case 'running':
-        return 'running';
+    switch (String(status || "").toLowerCase()) {
+      case "completed":
+        return "success";
+      case "failed":
+        return "error";
+      case "running":
+        return "running";
       default:
-        return 'pending';
+        return "pending";
     }
   }
 
   const handleRunNewScan = () => {
     const preselect = {
       m365_connection_id:
-        selectedConnectionId !== "all" ? Number(selectedConnectionId) : undefined,
-      benchmark_key: selectedBenchmarkKey !== "all" ? selectedBenchmarkKey : undefined,
+        selectedConnectionId !== "all"
+          ? Number(selectedConnectionId)
+          : undefined,
+      benchmark_key:
+        selectedBenchmarkKey !== "all" ? selectedBenchmarkKey : undefined,
     };
-    navigate('/scans', { state: { openNewScan: true, preselect } });
+    navigate("/scans", { state: { openNewScan: true, preselect } });
   };
 
   const handleExportReport = () => {
@@ -392,20 +448,23 @@ export default function Dashboard({
   };
 
   return (
-    <div className={`dashboard ${isDarkMode ? 'dark' : 'light'}`} style={{ 
-      marginLeft: `${sidebarWidth}px`, 
-      width: `calc(100% - ${sidebarWidth}px)`,
-      transition: 'margin-left 0.4s ease, width 0.4s ease'
-    }}>
+    <div
+      className={`dashboard ${isDarkMode ? "dark" : "light"}`}
+      style={{
+        marginLeft: `${sidebarWidth}px`,
+        width: `calc(100% - ${sidebarWidth}px)`,
+        transition: "margin-left 0.4s ease, width 0.4s ease",
+      }}
+    >
       <div className="dashboard-container">
         <div className="dashboard-header">
           <div className="header-content">
             <div className="logo-container">
               <picture>
                 <source srcSet="/AutoAudit.webp" type="image/webp" />
-                <img 
-                  src="/AutoAudit.png" 
-                  alt="AutoAudit Logo" 
+                <img
+                  src="/AutoAudit.png"
+                  alt="AutoAudit Logo"
                   className="logo-image"
                   loading="lazy"
                   width="56"
@@ -418,19 +477,25 @@ export default function Dashboard({
               <p>Microsoft 365 Compliance Platform</p>
             </div>
           </div>
-          
+
           <div className="theme-toggle" role="group" aria-label="Theme toggle">
-            <Sun size={18} className={`theme-label ${!isDarkMode ? 'active' : ''}`} />
+            <Sun
+              size={18}
+              className={`theme-label ${!isDarkMode ? "active" : ""}`}
+            />
             <label className="toggle-switch">
-              <input 
-                type="checkbox" 
-                checked={isDarkMode} 
+              <input
+                type="checkbox"
+                checked={isDarkMode}
                 onChange={onThemeToggle}
                 aria-label="Toggle theme"
               />
               <span className="slider"></span>
             </label>
-            <Moon size={18} className={`theme-label ${isDarkMode ? 'active' : ''}`} />
+            <Moon
+              size={18}
+              className={`theme-label ${isDarkMode ? "active" : ""}`}
+            />
           </div>
         </div>
 
@@ -451,15 +516,25 @@ export default function Dashboard({
               isDarkMode={isDarkMode}
             />
           </div>
-          
+
           <div className="toolbar-right">
-            <button className="toolbar-button secondary" onClick={handleExportReport} disabled={!latestRelevantScan?.id}>
+            <button
+              className="toolbar-button secondary"
+              onClick={handleExportReport}
+              disabled={!latestRelevantScan?.id}
+            >
               Export Report
             </button>
-            <button className="toolbar-button secondary" onClick={handleEvidenceScanner}>
+            <button
+              className="toolbar-button secondary"
+              onClick={handleEvidenceScanner}
+            >
               Evidence Scanner
             </button>
-            <button className="toolbar-button primary" onClick={handleRunNewScan}>
+            <button
+              className="toolbar-button primary"
+              onClick={handleRunNewScan}
+            >
               Run New Scan
             </button>
           </div>
@@ -499,11 +574,11 @@ export default function Dashboard({
           </div>
           {summary.groups.length > 0 && (
             <div className="summary-groups">
-              {summary.groups.map(group => (
+              {summary.groups.map((group) => (
                 <div className="summary-group" key={group.title}>
                   <div className="summary-group-title">{group.title}</div>
                   <div className="summary-group-list">
-                    {group.items.map(item => (
+                    {group.items.map((item) => (
                       <div className="summary-row" key={item.label}>
                         <span className="summary-row-label">{item.label}</span>
                         <span className="summary-row-value">{item.value}</span>
@@ -524,17 +599,20 @@ export default function Dashboard({
                   <span className="issue-icon">▷</span>
                   <h4>Scan Results</h4>
                 </div>
-              <Dropdown
-                value={selectedChartType}
-                onChange={(value) => setSelectedChartType(value as ChartType)}
-                options={chartTypeOptions}
-                isDarkMode={isDarkMode}
-              />
+                <Dropdown
+                  value={selectedChartType}
+                  onChange={(value) => setSelectedChartType(value as ChartType)}
+                  options={chartTypeOptions}
+                  isDarkMode={isDarkMode}
+                />
               </div>
               <div className="chart-surface">
                 <ComplianceChart
                   isDarkMode={isDarkMode}
                   sidebarWidth={sidebarWidth}
+                  chartType={chartModel.chartType}
+                  labels={chartModel.labels}
+                  values={chartModel.values}
                 />
               </div>
             </div>
@@ -545,7 +623,10 @@ export default function Dashboard({
                   <h3>Recent Scans</h3>
                   <p>Latest activity for your selected connection/benchmark</p>
                 </div>
-                <button className="toolbar-button secondary" onClick={() => navigate('/scans')}>
+                <button
+                  className="toolbar-button secondary"
+                  onClick={() => navigate("/scans")}
+                >
                   Open Scans
                 </button>
               </div>
@@ -553,7 +634,10 @@ export default function Dashboard({
               {recentScans.length === 0 ? (
                 <div className="panel-empty">
                   <p>No scans found for the current filters.</p>
-                  <button className="toolbar-button primary" onClick={handleRunNewScan}>
+                  <button
+                    className="toolbar-button primary"
+                    onClick={handleRunNewScan}
+                  >
                     Run a Scan
                   </button>
                 </div>
@@ -569,16 +653,20 @@ export default function Dashboard({
                       </tr>
                     </thead>
                     <tbody>
-                      {recentScans.map(s => {
-                        const dt = formatDateTimePartsAEST(s.started_at || s.finished_at);
+                      {recentScans.map((s) => {
+                        const dt = formatDateTimePartsAEST(
+                          s.started_at || s.finished_at,
+                        );
                         const passed = Number(s.passed_count || 0);
                         const failed = Number(s.failed_count || 0);
                         const errors = Number(s.error_count || 0);
                         return (
                           <tr key={s.id}>
                             <td>
-                              <span className={`status-pill ${statusTone(s.status)}`}>
-                                {String(s.status || 'pending').toUpperCase()}
+                              <span
+                                className={`status-pill ${statusTone(s.status)}`}
+                              >
+                                {String(s.status || "pending").toUpperCase()}
                               </span>
                             </td>
                             <td>
@@ -591,11 +679,19 @@ export default function Dashboard({
                               <div className="result-pills">
                                 <span className="pill good">{passed} pass</span>
                                 <span className="pill bad">{failed} fail</span>
-                                {errors > 0 && <span className="pill warn">{errors} err</span>}
+                                {errors > 0 && (
+                                  <span className="pill warn">
+                                    {errors} err
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className="right">
-                              <button className="link-button" onClick={() => navigate(`/scans/${s.id}`)} type="button">
+                              <button
+                                className="link-button"
+                                onClick={() => navigate(`/scans/${s.id}`)}
+                                type="button"
+                              >
                                 View
                               </button>
                             </td>
@@ -619,10 +715,15 @@ export default function Dashboard({
                   <h4>What you should change next</h4>
                 </div>
                 <span className="issue-count">
-                  {latestRelevantScan ? Number(latestRelevantScan.failed_count || 0) + Number(latestRelevantScan.error_count || 0) : '—'}
+                  {latestRelevantScan
+                    ? Number(latestRelevantScan.failed_count || 0) +
+                      Number(latestRelevantScan.error_count || 0)
+                    : "—"}
                 </span>
               </div>
-              <p className="issue-desc">Top failing controls from the latest scan</p>
+              <p className="issue-desc">
+                Top failing controls from the latest scan
+              </p>
               {scanDetailsError ? (
                 <div className="fix-empty">
                   <p>{scanDetailsError}</p>
@@ -645,18 +746,21 @@ export default function Dashboard({
                     <button
                       key={`${r.control_id || idx}`}
                       className="fix-item"
-                      onClick={() => latestRelevantScan?.id && navigate(`/scans/${latestRelevantScan.id}`)}
+                      onClick={() =>
+                        latestRelevantScan?.id &&
+                        navigate(`/scans/${latestRelevantScan.id}`)
+                      }
                       type="button"
                     >
-                      <span className="fix-id">{r.control_id || '—'}</span>
-                      <span className="fix-msg">{r.message || 'No message provided'}</span>
+                      <span className="fix-id">{r.control_id || "—"}</span>
+                      <span className="fix-msg">
+                        {r.message || "No message provided"}
+                      </span>
                     </button>
                   ))}
                 </div>
               )}
             </div>
-
-          
           </div>
         </div>
       </div>
