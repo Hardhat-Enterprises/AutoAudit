@@ -10,7 +10,12 @@ import {
 } from "lucide-react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getBenchmarks, getConnections, getScans, getScan } from "../api/client";
+import {
+  getBenchmarks,
+  getConnections,
+  getScans,
+  getScan,
+} from "../api/client";
 import { RelativeTime } from "../components/RelativeTime";
 
 type ChartType = "doughnut" | "pie" | "bar";
@@ -314,7 +319,10 @@ export default function Dashboard({
     const kpis = [
       {
         id: "compliance",
-        label: compliancePct === null ? "Compliance —" : `Compliance ${compliancePct}%`,
+        label:
+          compliancePct === null
+            ? "Compliance —"
+            : `Compliance ${compliancePct}%`,
         tone: complianceTone,
         icon: CheckCircle2,
       },
@@ -497,9 +505,15 @@ export default function Dashboard({
     : "border-[rgb(var(--border-subtle))] bg-[rgb(var(--border-subtle))]";
 
   const textPrimary = isDarkMode ? "text-white" : "text-[rgb(30_41_59)]";
-  const textSecondary = isDarkMode ? "text-[rgb(203_213_225)]" : "text-[rgb(var(--text-muted))]";
-  const textTertiary = isDarkMode ? "text-[rgb(var(--text-muted))]" : "text-[rgb(var(--text-muted))]";
-  const hoverRow = isDarkMode ? "hover:bg-[rgb(var(--surface-2)/0.55)]" : "hover:bg-[rgb(var(--surface-1))]";
+  const textSecondary = isDarkMode
+    ? "text-[rgb(203_213_225)]"
+    : "text-[rgb(var(--text-muted))]";
+  const textTertiary = isDarkMode
+    ? "text-[rgb(var(--text-muted))]"
+    : "text-[rgb(var(--text-muted))]";
+  const hoverRow = isDarkMode
+    ? "hover:bg-[rgb(var(--surface-2)/0.55)]"
+    : "hover:bg-[rgb(var(--surface-1))]";
 
   const secondaryButton = isDarkMode
     ? "border border-[rgb(var(--brand-blue)/0.16)] bg-[rgb(var(--surface-2)/0.78)] text-white hover:bg-[rgb(var(--border-subtle)/0.9)]"
@@ -650,7 +664,9 @@ export default function Dashboard({
         </div>
 
         {isLoading && (
-          <div className={`flex items-center gap-2.5 rounded-xl px-4 py-3 ${panelBase}`}>
+          <div
+            className={`flex items-center gap-2.5 rounded-xl px-4 py-3 ${panelBase}`}
+          >
             <Loader2 size={18} className="animate-spin" />
             <span>Loading latest results…</span>
           </div>
@@ -818,7 +834,9 @@ export default function Dashboard({
               ) : (
                 <div
                   className={`overflow-hidden rounded-[10px] border ${
-                    isDarkMode ? "border-[rgb(var(--brand-blue)/0.16)]" : "border-border-subtle"
+                    isDarkMode
+                      ? "border-[rgb(var(--brand-blue)/0.16)]"
+                      : "border-border-subtle"
                   }`}
                 >
                   <div className="overflow-x-auto">
@@ -891,7 +909,10 @@ export default function Dashboard({
                                     : "border-border-subtle text-[rgb(30_41_59)]"
                                 }`}
                               >
-                                <RelativeTime value={s.started_at || s.finished_at} preset="recentScanCell" />
+                                <RelativeTime
+                                  value={s.started_at || s.finished_at}
+                                  preset="recentScanCell"
+                                />
                               </td>
 
                               <td

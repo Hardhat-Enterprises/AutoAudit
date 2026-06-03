@@ -13,20 +13,30 @@ export type AuthUser = {
   id?: number | string | null;
   email?: string | null;
   username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  organization_name?: string | null;
   name?: string | null;
   role?: string | null;
   is_active?: boolean | null;
-}
+};
 
 export type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string, remember?: boolean) => Promise<AuthUser>;
-  loginWithAccessToken: (accessToken: string, remember?: boolean) => Promise<AuthUser>;
+  login: (
+    email: string,
+    password: string,
+    remember?: boolean,
+  ) => Promise<AuthUser>;
+  loginWithAccessToken: (
+    accessToken: string,
+    remember?: boolean,
+  ) => Promise<AuthUser>;
   logout: () => void;
-}
+};
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -44,7 +54,10 @@ function safeJsonParse(value: string | null): unknown {
 
 function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(TOKEN_KEY) || window.sessionStorage.getItem(TOKEN_KEY);
+  return (
+    window.localStorage.getItem(TOKEN_KEY) ||
+    window.sessionStorage.getItem(TOKEN_KEY)
+  );
 }
 
 function getStoredUser(): AuthUser | null {
@@ -66,7 +79,11 @@ function clearStoredAuth(): void {
   window.sessionStorage.removeItem(USER_KEY);
 }
 
-function persistAuth(accessToken: string, userData: AuthUser, remember: boolean): void {
+function persistAuth(
+  accessToken: string,
+  userData: AuthUser,
+  remember: boolean,
+): void {
   if (typeof window === "undefined") return;
   const storage = remember ? window.localStorage : window.sessionStorage;
   const other = remember ? window.sessionStorage : window.localStorage;
@@ -80,7 +97,7 @@ function persistAuth(accessToken: string, userData: AuthUser, remember: boolean)
 
 type AuthProviderProps = {
   children: ReactNode;
-}
+};
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
@@ -108,9 +125,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(userData as AuthUser);
 
         const inLocal =
-          typeof window !== "undefined" && window.localStorage.getItem(TOKEN_KEY) === token;
+          typeof window !== "undefined" &&
+          window.localStorage.getItem(TOKEN_KEY) === token;
         const storage =
-          typeof window !== "undefined" && inLocal ? window.localStorage : window.sessionStorage;
+          typeof window !== "undefined" && inLocal
+            ? window.localStorage
+            : window.sessionStorage;
         if (typeof window !== "undefined") {
           storage.setItem(USER_KEY, JSON.stringify(userData));
         }
@@ -128,7 +148,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     void validateToken();
   }, [token]);
 
-  async function login(email: string, password: string, remember = true): Promise<AuthUser> {
+  async function login(
+    email: string,
+    password: string,
+    remember = true,
+  ): Promise<AuthUser> {
     const response = await apiLogin(email, password);
     const accessToken = response.access_token;
 
@@ -141,7 +165,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return userData;
   }
 
-  async function loginWithAccessToken(accessToken: string, remember = false): Promise<AuthUser> {
+  async function loginWithAccessToken(
+    accessToken: string,
+    remember = false,
+  ): Promise<AuthUser> {
     if (!accessToken) {
       throw new Error("Access token is required");
     }

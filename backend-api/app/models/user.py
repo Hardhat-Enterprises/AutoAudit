@@ -37,6 +37,21 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         nullable=False
     )
 
+    first_name: Mapped[str | None] = mapped_column(
+            String(100),
+            nullable=True
+        )
+
+    last_name: Mapped[str | None] = mapped_column(
+            String(100),
+            nullable=True
+    )
+
+    organization_name: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
+
     # Inherited from SQLAlchemyBaseUserTable:
     # - email: str
     # - hashed_password: str
