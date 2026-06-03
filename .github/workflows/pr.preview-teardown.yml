@@ -1,0 +1,118 @@
+name: Preview Teardown
+
+on:
+  pull_request:
+    types: [closed, labeled]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to tear down (for manual testing)"
+        required: true
+        default: "1"
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  actions: write
+
+jobs:
+  teardown:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.action == 'closed') ||
+      (github.event_name == 'pull_request' && github.event.action == 'labeled' &&
+       github.event.label.name == 'teardown-preview')
+
+    steps:
+      - name: Resolve PR number
+        id: pr
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "number=${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=${{ inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Remove teardown-preview label
+        if: github.event_name == 'pull_request' && github.event.action == 'labeled'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              name: 'teardown-preview'
+            });
+
+      # Known risk: listComments only returns the first page so teardown may miss the preview comment on PRs with >30 comments.
+      - name: Find preview comment and extract run ID
+        id: find-run
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const preview = comments.data.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('<!-- autoaudit-preview -->')
+            );
+
+            if (!preview) {
+              core.setOutput('run-id', '');
+              core.setOutput('comment-id', '');
+              console.log('No preview comment found for PR #' + prNumber);
+              return;
+            }
+
+            const match = preview.body.match(/<!-- run-id: (\d+) -->/);
+            const runId = match ? match[1] : '';
+            core.setOutput('run-id', runId);
+            core.setOutput('comment-id', String(preview.id));
+            console.log('Found run ID: ' + runId + ', comment ID: ' + preview.id);
+
+      - name: Cancel preview workflow run
+        if: steps.find-run.outputs.run-id != ''
+        run: |
+          RUN_ID="${{ steps.find-run.outputs.run-id }}"
+          echo "Cancelling workflow run $RUN_ID..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${RUN_ID}/cancel")
+          echo "Cancel API response status: $HTTP_STATUS"
+          # 202 = accepted, 409 = already completed — both are fine
+          if [ "$HTTP_STATUS" = "202" ] || [ "$HTTP_STATUS" = "409" ]; then
+            echo "Run cancelled successfully (or was already completed)."
+          else
+            echo "WARNING: Unexpected status $HTTP_STATUS — run may not have been cancelled."
+          fi
+
+      - name: Update PR comment — teardown complete
+        if: steps.find-run.outputs.comment-id != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: parseInt('${{ steps.find-run.outputs.comment-id }}'),
+              body: [
+                '<!-- autoaudit-preview -->',
+                '<!-- run-id: torn-down -->',
+                '## Preview Environment',
+                '',
+                'Preview environment for this PR has been **torn down**.',
+                '',
+                `> [Workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${{ github.run_id }})`
+              ].join('\n'),
+            });

@@ -777,11 +777,23 @@ export default function Dashboard({
                 />
               </div>
 
-              <div className="flex overflow-hidden relative justify-center items-center w-full z-1 min-h-75">
-                <ComplianceChart
-                  isDarkMode={isDarkMode}
-                  sidebarWidth={sidebarWidth}
-                />
+              <div className="relative z-[1] h-[clamp(300px,34vh,380px)] min-h-[300px] w-full overflow-hidden">
+                {chartModel.values.every((v) => v === 0) ? (
+                  <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                    <div className="mb-3 text-3xl">📊</div>
+                    <p className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
+                      No compliance data available
+                    </p>
+                    <p className="max-w-sm text-sm text-gray-500 dark:text-gray-400">
+                      Run a scan or change the selected filters to view results.
+                    </p>
+                  </div>
+                ) : (
+                  <ComplianceChart
+                    isDarkMode={isDarkMode}
+                    sidebarWidth={sidebarWidth}
+                  />
+                )}
               </div>
             </div>
 

@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/v1"
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://autoaudit:autoaudit_dev_password@localhost:5432/autoaudit"
+    DATABASE_URL: str = "postgresql+asyncpg://autoaudit:autoaudit_dev_password@localhost:5432/autoaudit"  # pragma: allowlist secret
 
     # Authentication
     SECRET_KEY: str = "change-this-to-a-secure-random-string-in-production"

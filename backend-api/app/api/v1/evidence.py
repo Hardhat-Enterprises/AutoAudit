@@ -184,9 +184,13 @@ async def scan(
 
 
 @router.get("/reports/{filename}")
-async def download_report(filename: str):
+async def download_report(
+    filename: str,
+    current_user: User = Depends(get_current_user),
+    ):
     """
     Backend API: download a generated report file.
+    Requires authentication. Protected against path traversal.
 
     The frontend links to this URL using:
       - frontend/src/api/client.js -> getEvidenceReportUrl()

@@ -29,8 +29,12 @@ from collectors.entra.conditional_access.conditional_access_policies import (
 from collectors.entra.conditional_access.legacy_auth_block import (
     LegacyAuthBlockDataCollector,
 )
+from collectors.entra.conditional_access.e8_mfa_enforcement import (
+    E8MfaEnforcementDataCollector,
+)
 
 # Devices
+from collectors.entra.devices.asr_rules import ASRRulesDataCollector
 from collectors.entra.devices.device_management_settings import (
     DeviceManagementSettingsDataCollector,
 )
@@ -148,7 +152,9 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Conditional Access
     "entra.conditional_access.policies": ConditionalAccessPoliciesDataCollector,
     "entra.conditional_access.legacy_auth_block": LegacyAuthBlockDataCollector,
+    "entra.conditional_access.e8_mfa_enforcement": E8MfaEnforcementDataCollector,
     # Devices
+    "entra.devices.asr_rules": ASRRulesDataCollector,
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
