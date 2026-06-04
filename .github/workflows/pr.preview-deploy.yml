@@ -1,0 +1,430 @@
+name: Preview Deploy
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to simulate (for manual testing)"
+        required: true
+        default: "1"
+      m365:
+        description: "Include PowerShell service for M365 scans"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  packages: write
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 0 — Gate: validate trigger, resolve PR number, remove consumed label
+  # ─────────────────────────────────────────────────────────────────────────────
+  gate:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       (github.event.label.name == 'deploy-preview' ||
+        github.event.label.name == 'deploy-preview-m365'))
+    outputs:
+      pr-number: ${{ steps.pr.outputs.number }}
+      short-sha: ${{ steps.sha.outputs.short }}
+      m365: ${{ steps.pr.outputs.m365 }}
+
+    steps:
+      - name: Resolve PR number
+        id: pr
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "number=${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+            if [ "${{ github.event.label.name }}" = "deploy-preview-m365" ]; then
+              echo "m365=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "m365=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "number=${{ inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+            echo "m365=${{ inputs.m365 }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve short SHA
+        id: sha
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "short=$(echo '${{ github.event.pull_request.head.sha }}' | cut -c1-7)" >> "$GITHUB_OUTPUT"
+          else
+            echo "short=$(echo '${{ github.sha }}' | cut -c1-7)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Remove triggering label
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              name: context.payload.label.name,
+            });
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 1 — Build backend and worker images, push to GHCR
+  # Uses GitHub Actions cache (type=gha) for layer reuse so no Docker Hub token needed
+  # Only GITHUB_TOKEN is required (packages: write permission above)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-images:
+    runs-on: ubuntu-latest
+    needs: gate
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set lowercase image names
+        run: |
+          echo "BACKEND_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/backend:pr-${{ needs.gate.outputs.pr-number }}" >> "$GITHUB_ENV"
+          echo "WORKER_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/worker:pr-${{ needs.gate.outputs.pr-number }}" >> "$GITHUB_ENV"
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend-api/Dockerfile
+          push: true
+          tags: ${{ env.BACKEND_IMAGE }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build and push worker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./engine
+          file: engine/Dockerfile
+          push: true
+          tags: ${{ env.WORKER_IMAGE }}
+          cache-from: type=gha,scope=worker
+          cache-to: type=gha,mode=max,scope=worker
+
+      - name: Set lowercase PowerShell image name
+        if: needs.gate.outputs.m365 == 'true'
+        run: |
+          echo "POWERSHELL_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/powershell:pr-${{ needs.gate.outputs.pr-number }}" >> "$GITHUB_ENV"
+
+      - name: Build and push PowerShell service image
+        if: needs.gate.outputs.m365 == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./engine/powershell
+          file: engine/powershell/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.POWERSHELL_IMAGE }}
+          cache-from: type=gha,scope=powershell
+          cache-to: type=gha,mode=max,scope=powershell
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 2 — Run the full stack on the Actions runner and expose via Cloudflare
+  # Quick Tunnels (trycloudflare.com, no account, no token required).
+  #
+  # Architecture:
+  #   1. Both CF tunnels start immediately (they serve 502 until origin is ready)
+  #   2. Tunnel URLs are captured so the backend and frontend are configured once
+  #      with the correct public URLs, no container restarts needed
+  #   3. The job sleeps (keeping everything alive) until cancelled by teardown
+  #      or the 6-hour GitHub Actions job timeout is reached
+  # ─────────────────────────────────────────────────────────────────────────────
+  run-preview:
+    runs-on: ubuntu-latest
+    needs: [gate, build-images]
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set lowercase image names
+        run: |
+          echo "BACKEND_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/backend:pr-${{ needs.gate.outputs.pr-number }}" >> "$GITHUB_ENV"
+          echo "WORKER_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/worker:pr-${{ needs.gate.outputs.pr-number }}" >> "$GITHUB_ENV"
+          echo "PREVIEW_ENC_KEY=${{ secrets.PREVIEW_ENCRYPTION_KEY }}" >> "$GITHUB_ENV"
+          echo "PREVIEW_SECRET_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Set lowercase PowerShell image name
+        if: needs.gate.outputs.m365 == 'true'
+        run: |
+          echo "POWERSHELL_IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/powershell:pr-${{ needs.gate.outputs.pr-number }}" >> "$GITHUB_ENV"
+
+      - name: Pull pre-built images from GHCR
+        run: |
+          docker pull "$BACKEND_IMAGE"
+          docker pull "$WORKER_IMAGE"
+          if [ "${{ needs.gate.outputs.m365 }}" = "true" ]; then
+            docker pull "$POWERSHELL_IMAGE"
+          fi
+
+      - name: Install cloudflared
+        run: |
+          curl -fsSL \
+            https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb \
+            -o /tmp/cloudflared.deb
+          sudo dpkg -i /tmp/cloudflared.deb
+
+      - name: Start Cloudflare Quick Tunnels and capture URLs
+        id: tunnels
+        run: |
+          # Start both tunnels immediately — CF generates URLs before the origin is up,
+          # so we can configure the backend and frontend correctly from the first start.
+          cloudflared tunnel --url http://localhost:8000 \
+            --logfile /tmp/cf-backend.log \
+            --no-autoupdate 2>/dev/null &
+
+          cloudflared tunnel --url http://localhost:3000 \
+            --logfile /tmp/cf-frontend.log \
+            --no-autoupdate 2>/dev/null &
+
+          BACKEND_URL=""
+          FRONTEND_URL=""
+          for i in $(seq 1 30); do
+            sleep 2
+            if [ -z "$BACKEND_URL" ]; then
+              BACKEND_URL=$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' /tmp/cf-backend.log 2>/dev/null | head -1 || true)
+            fi
+            if [ -z "$FRONTEND_URL" ]; then
+              FRONTEND_URL=$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' /tmp/cf-frontend.log 2>/dev/null | head -1 || true)
+            fi
+            if [ -n "$BACKEND_URL" ] && [ -n "$FRONTEND_URL" ]; then
+              break
+            fi
+          done
+
+          if [ -z "$BACKEND_URL" ]; then
+            echo "ERROR: Could not get backend tunnel URL"
+            cat /tmp/cf-backend.log
+            exit 1
+          fi
+          if [ -z "$FRONTEND_URL" ]; then
+            echo "ERROR: Could not get frontend tunnel URL"
+            cat /tmp/cf-frontend.log
+            exit 1
+          fi
+
+          echo "Backend tunnel:  $BACKEND_URL"
+          echo "Frontend tunnel: $FRONTEND_URL"
+          echo "backend-url=$BACKEND_URL" >> "$GITHUB_OUTPUT"
+          echo "frontend-url=$FRONTEND_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Start infrastructure services
+        run: COMPOSE_PROJECT_NAME=autoaudit docker compose up -d db redis opa
+
+      - name: Wait for infrastructure healthchecks
+        run: |
+          echo "Waiting for PostgreSQL..."
+          timeout 60 bash -c 'until docker exec autoaudit-db pg_isready -U autoaudit; do sleep 2; done'
+
+          echo "Waiting for Redis..."
+          timeout 30 bash -c 'until docker exec autoaudit-redis redis-cli ping | grep -q PONG; do sleep 2; done'
+
+          echo "Waiting for OPA..."
+          timeout 30 bash -c 'until curl -sf http://localhost:8181/health > /dev/null; do sleep 2; done'
+
+      - name: Start PowerShell service
+        if: needs.gate.outputs.m365 == 'true'
+        run: |
+          docker run -d \
+            --name autoaudit-powershell-service \
+            --network autoaudit_default \
+            -p 8001:8001 \
+            "$POWERSHELL_IMAGE"
+
+      - name: Wait for PowerShell service health
+        if: needs.gate.outputs.m365 == 'true'
+        run: timeout 120 bash -c 'until curl -sf http://localhost:8001/health > /dev/null; do sleep 3; done'
+
+      - name: Start backend container
+        run: |
+          docker run -d \
+            --name autoaudit-backend-api \
+            --network autoaudit_default \
+            -p 8000:8000 \
+            -e APP_ENV=preview \
+            -e DATABASE_URL=postgresql+asyncpg://autoaudit:autoaudit_dev_password@db:5432/autoaudit \
+            -e SECRET_KEY="$PREVIEW_SECRET_KEY" \
+            -e ENCRYPTION_KEY="$PREVIEW_ENC_KEY" \
+            -e REDIS_URL=redis://redis:6379 \
+            -e OPA_URL=http://opa:8181 \
+            -e BACKEND_PUBLIC_URL="${{ steps.tunnels.outputs.backend-url }}" \
+            -e FRONTEND_URL="${{ steps.tunnels.outputs.frontend-url }}" \
+            -v "${{ github.workspace }}/engine/policies:/app/policies:ro" \
+            "$BACKEND_IMAGE"
+
+      - name: Wait for backend health (includes Alembic migrations)
+        run: |
+          echo "Waiting for backend API to be ready..."
+          timeout 120 bash -c '
+            until curl -sf http://localhost:8000/health > /dev/null 2>&1 || \
+                  curl -sf http://localhost:8000/ > /dev/null 2>&1; do
+              sleep 3
+            done
+          '
+          echo "Backend is ready."
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          VITE_API_URL="${{ steps.tunnels.outputs.backend-url }}" npm run build
+
+      - name: Serve frontend static files
+        working-directory: frontend
+        run: |
+          npx serve -s dist -l 3000 &
+          sleep 3
+
+      - name: Start worker container
+        run: |
+          PS_URL=""
+          if [ "${{ needs.gate.outputs.m365 }}" = "true" ]; then
+            PS_URL="-e POWERSHELL_SERVICE_URL=http://autoaudit-powershell-service:8001"
+          fi
+          docker run -d \
+            --name autoaudit-worker \
+            --network autoaudit_default \
+            -e DATABASE_URL=postgresql+asyncpg://autoaudit:autoaudit_dev_password@db:5432/autoaudit \
+            -e REDIS_URL=redis://redis:6379 \
+            -e OPA_URL=http://opa:8181 \
+            -e ENCRYPTION_KEY="$PREVIEW_ENC_KEY" \
+            $PS_URL \
+            -v "${{ github.workspace }}/engine:/app/engine:ro" \
+            -v "${{ github.workspace }}/engine/policies:/app/policies:ro" \
+            "$WORKER_IMAGE"
+
+      - name: Post or update PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ needs.gate.outputs.pr-number }}');
+            const backendUrl = '${{ steps.tunnels.outputs.backend-url }}';
+            const frontendUrl = '${{ steps.tunnels.outputs.frontend-url }}';
+            const runId = '${{ github.run_id }}';
+            const sha = '${{ github.sha }}'.slice(0, 7);
+
+            const m365 = '${{ needs.gate.outputs.m365 }}' === 'true';
+            const rows = [
+              `| Frontend | ${frontendUrl} |`,
+              `| Backend  | ${backendUrl} |`,
+            ];
+            if (m365) rows.push('| PowerShell | running (M365 enabled) |');
+
+            const body = [
+              '<!-- autoaudit-preview -->',
+              `<!-- run-id: ${runId} -->`,
+              '## Preview Environment',
+              '',
+              '| | URL |',
+              '|---|---|',
+              ...rows,
+              '',
+              `> Running on GitHub Actions · expires in up to 6 hours · SHA: ${sha}`,
+              `> Add \`teardown-preview\` label to stop early · [Workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId})`
+            ].join('\n');
+
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const existing = comments.data.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('<!-- autoaudit-preview -->')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+            }
+
+      - name: Keep-alive (preview stays up until cancelled or 6h timeout)
+        run: |
+          echo "Preview is live."
+          echo "  Frontend: ${{ steps.tunnels.outputs.frontend-url }}"
+          echo "  Backend:  ${{ steps.tunnels.outputs.backend-url }}"
+          echo "Sleeping until cancelled by teardown workflow or 6-hour timeout..."
+          for i in $(seq 1 360); do
+            sleep 60
+          done
+          echo "6-hour timeout reached. Preview shutting down."
+
+      - name: Mark PR comment as expired
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ needs.gate.outputs.pr-number }}');
+            const runId = '${{ github.run_id }}';
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            const existing = comments.data.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('<!-- autoaudit-preview -->')
+            );
+            if (!existing) return;
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body: [
+                '<!-- autoaudit-preview -->',
+                `<!-- run-id: ${runId} -->`,
+                '## Preview Environment',
+                '',
+                '> **Preview has expired.** The tunnel URLs above no longer resolve.',
+                '> Add `deploy-preview` to spin up a fresh environment.',
+                '',
+                `> [Workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId})`
+              ].join('\n'),
+            });

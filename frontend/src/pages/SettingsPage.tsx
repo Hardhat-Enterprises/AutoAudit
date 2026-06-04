@@ -69,12 +69,12 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
 
   return (
     <div
-      className={`min-h-screen bg-surface-1 p-6 text-text-strong transition-colors duration-300 ${!isDarkMode ? "light" : ""}`}
+      className={`min-h-screen bg-surface-1 p-4 pl-24 text-text-strong transition-colors duration-300 sm:p-6 sm:pl-6 ${!isDarkMode ? "light" : ""}`}
       style={{
-        marginLeft: `${sidebarWidth}px`,
-        width: `calc(100% - ${sidebarWidth}px)`,
-        transition: "margin-left 0.4s ease, width 0.4s ease",
-      }}
+  marginLeft: sidebarWidth ? `${sidebarWidth}px` : 0,
+  width: sidebarWidth ? `calc(100% - ${sidebarWidth}px)` : "100%",
+  transition: "margin-left 0.4s ease, width 0.4s ease",
+    }}
     >
       <div className="flex flex-col gap-6 mx-auto max-w-250">
         <div className="flex justify-between items-center">
@@ -133,18 +133,15 @@ export default function SettingsPage({ sidebarWidth = 220, isDarkMode = true }: 
               </label>
             </div>
 
-            <div className="flex flex-wrap gap-3 justify-end mt-4">
+            <div className="flex flex-col gap-3 mt-4 sm:flex-row sm:justify-end">
               <button
                 type="button"
-                className="inline-flex gap-2 justify-center items-center py-2 px-4 text-sm font-medium rounded-lg border transition-all duration-300 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed border-border-subtle bg-surface-2 text-text-strong hover:bg-border-subtle disabled:hover:translate-y-0"
-                onClick={handleReset}
-                disabled={!hasChanges || isSaving}
-              >
+                className="inline-flex gap-2 justify-center items-center py-2 px-4 w-full text-sm font-medium rounded-lg border transition-all duration-300 sm:w-auto hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed border-border-subtle bg-surface-2 text-text-strong hover:bg-border-subtle disabled:hover:translate-y-0">
                 Reset
               </button>
               <button
                 type="button"
-                className="inline-flex gap-2 justify-center items-center py-2 px-4 text-sm font-semibold text-white rounded-lg border shadow-lg transition-all duration-300 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed border-[rgb(var(--accent-teal)/0.4)] bg-accent-teal hover:brightness-105 disabled:hover:translate-y-0"
+                className="inline-flex gap-2 justify-center items-center py-2 px-4 w-full text-sm font-semibold text-white rounded-lg border shadow-lg transition-all duration-300 sm:w-auto hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed border-[rgb(var(--accent-teal)/0.4)] bg-accent-teal hover:brightness-105 disabled:hover:translate-y-0"
                 onClick={handleSave}
                 disabled={!hasChanges || isSaving}
               >

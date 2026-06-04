@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const navLinks = [
@@ -20,60 +20,119 @@ const LandingHeader = ({
   hiddenLinks = [],
   showSignIn = true,
 }: LandingHeaderProps) => {
-  const hiddenLinkSet = new Set(hiddenLinks.map((link) => link.toLowerCase()));
+  const hiddenLinkSet = new Set(hiddenLinks.map((l) => l.toLowerCase()));
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="landing-header sticky top-0 z-50 flex items-center justify-between border-b border-brand-blue/10 bg-surface-1/95 px-[5%] py-2 backdrop-blur-xl">
-      <Link
-        className="inline-flex items-center"
-        to="/#main-content"
-        aria-label="AutoAudit home"
-      >
-        <picture>
-          <source srcSet="/AutoAudit.webp" type="image/webp" />
-          <img
-            src="/AutoAudit.png"
-            alt="AutoAudit"
-            loading="lazy"
-            className="block w-auto transition-transform duration-200 h-17.5 hover:scale-[1.03]"
-          />
-        </picture>
-      </Link>
+    <>
+      {/* HEADER */}
+      <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-slate-900">
+        
+        {/* Left Section */}
+        <div className="flex items-center gap-3">
+          
+          {/* Hamburger Button - Mobile Only */}
+          <button
+            className="md:hidden text-white text-2xl"
+            onClick={() => setIsOpen(true)}
+            aria-label="Open navigation menu"
+          >
+            ☰
+          </button>
 
-      <nav className="flex flex-wrap gap-6 justify-end items-center" aria-label="Primary navigation">
-        {navLinks
-          .filter((link) => !hiddenLinkSet.has(link.label.toLowerCase()))
-          .map((link) =>
-            link.href.startsWith("/") ? (
+          {/* Logo */}
+          <Link to="/#main-content">
+            <img
+              src="/AutoAudit.png"
+              alt="AutoAudit"
+              className="h-8 w-auto"
+            />
+          </Link>
+        </div>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-6 text-white">
+          {navLinks
+            .filter(
+              (link) => !hiddenLinkSet.has(link.label.toLowerCase())
+            )
+            .map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
-                className="relative py-1 text-sm font-medium transition-colors duration-200 text-text-muted after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-brand-blue after:transition-all hover:text-text-strong hover:after:w-full"
+                className="hover:text-blue-400 transition-colors"
               >
                 {link.label}
               </Link>
-            ) : (
-              <a
-                key={link.label}
-                href={link.href}
-                className="relative py-1 text-sm font-medium transition-colors duration-200 text-text-muted after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-brand-blue after:transition-all hover:text-text-strong hover:after:w-full"
-              >
-                {link.label}
-              </a>
-            ),
+            ))}
+
+          {showSignIn && (
+            <button
+              className="btn-primary"
+              onClick={onSignInClick}
+            >
+              Sign In
+            </button>
           )}
-        {showSignIn && (
-          <button
-            type="button"
-            data-testid="sign-in-header"
-            onClick={onSignInClick}
-            className="py-2.5 px-5 text-sm font-semibold rounded-full transition duration-200 hover:-translate-y-0.5 bg-linear-to-br from-brand-blue to-brand-blue-deep text-text-strong hover:from-brand-cyan hover:to-brand-blue hover:shadow-[0_10px_25px_rgb(var(--brand-blue)/0.35)]"
-          >
-            Sign In
-          </button>
-        )}
-      </nav>
-    </header>
+        </nav>
+      </header>
+
+      {/* MOBILE SIDEBAR */}
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex md:hidden">
+          
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Sidebar */}
+          <div className="relative w-64 bg-slate-900 h-full p-6 z-50 shadow-lg transition-transform duration-300">
+            
+            {/* Close Button */}
+            <button
+              className="text-white text-2xl absolute top-4 right-4"
+              onClick={() => setIsOpen(false)}
+              aria-label="Close navigation menu"
+            >
+              ✕
+            </button>
+
+            {/* Mobile Navigation */}
+            <nav className="flex flex-col gap-4 text-white mt-12">
+              {navLinks
+                .filter(
+                  (link) =>
+                    !hiddenLinkSet.has(link.label.toLowerCase())
+                )
+                .map((link) => (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className="hover:text-blue-400 transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+
+              {showSignIn && (
+                <button
+                  className="mt-4 w-full rounded-full bg-blue-600 px-4 py-3 text-white shadow-lg shadow-blue-500/40 hover:bg-blue-700 transition-colors"
+                  onClick={() => {
+                    setIsOpen(false);
+                    onSignInClick?.();
+                  }}
+                >
+                  Sign In
+                </button>
+              )}
+            </nav>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

@@ -9,7 +9,7 @@ class WorkerSettings(BaseSettings):
     """Worker configuration loaded from environment variables."""
 
     # Database
-    DATABASE_URL: str = "postgresql://autoaudit:autoaudit_dev_password@localhost:5432/autoaudit"
+    DATABASE_URL: str = "postgresql://autoaudit:autoaudit_dev_password@localhost:5432/autoaudit"  # pragma: allowlist secret
 
     # Redis (Celery broker)
     REDIS_URL: str = "redis://localhost:6379/0"

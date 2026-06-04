@@ -314,6 +314,52 @@ Use descriptive branch names that indicate what you're working on:
 - `docs/update-readme` - Documentation changes
 - `refactor/cleanup-api-routes` - Code improvements
 
+## Pre-commit Hooks
+
+This repo uses [pre-commit](https://pre-commit.com) to catch secrets and enforce basic code quality before commits reach the repo. All contributors must install the hooks after cloning.
+
+### Setup
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+The hooks will now run automatically on every `git commit`.
+
+### What the hooks do
+
+| Hook | Purpose |
+|------|---------|
+| `detect-secrets` | Blocks commits containing potential credentials or API keys |
+| `detect-private-key` | Blocks commits containing private keys |
+| `ruff` | Python linting with auto-fix |
+| `ruff-format` | Python formatting |
+| `trailing-whitespace` | Removes trailing whitespace |
+| `end-of-file-fixer` | Ensures files end with a newline |
+| `check-yaml` | Validates YAML syntax |
+| `check-merge-conflict` | Blocks accidental merge conflict markers |
+
+### Excluded paths
+
+The following paths are excluded from secret scanning as they contain only dev placeholders or generated content:
+- `**/test**` - Test files
+- `**/alembic/versions/**` - Database migration files
+- `**/*.example` - Example config files
+- `docs/**` - Documentation
+
+### False positives
+
+If detect-secrets flags something that is not a real secret, add an inline comment to suppress it:
+
+```python
+DATABASE_URL = "postgresql://user:devpassword@localhost/db"  # pragma: allowlist secret
+```
+
+### Note on existing findings
+
+The `.secrets.baseline` documents 7 existing findings in the codebase. None are real credentials — they are dev placeholder values in config files and docker-compose. Any new secrets added in future commits will be caught and blocked.
+
 ## Pull Request Guidelines
 
 Good pull requests make the review process smoother for everyone:

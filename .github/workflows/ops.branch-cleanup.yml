@@ -1,0 +1,38 @@
+name: "Delete Merged Branch"
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  delete-branch:
+    name: Delete branch after merge
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref != 'main'
+    steps:
+      - name: Delete merged branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+
+          if [ "$BRANCH" = "main" ]; then
+            echo "Skipping: branch is protected (main)"
+            exit 0
+          fi
+
+          echo "Deleting branch: $BRANCH"
+
+          if gh api --method DELETE \
+            "repos/${{ github.repository }}/git/refs/heads/$BRANCH" 2>/dev/null; then
+            echo "Deleted: $BRANCH"
+          else
+            echo "Branch $BRANCH not found or already deleted — skipping"
+          fi

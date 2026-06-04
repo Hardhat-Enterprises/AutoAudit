@@ -1,32 +1,32 @@
-import React, { useState, useEffect, JSX } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, JSX } from "react";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 
 // Dashboard Components
-import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
-import Evidence from './pages/Evidence';
-import SettingsPage from './pages/SettingsPage';
-import AccountPage from './pages/AccountPage';
-import StyleGuide from './pages/StyleGuide';
-import ConnectionsPage from './pages/Connections/ConnectionsPage';
-import ScansPage from './pages/Scans/ScansPage';
-import ScanDetailPage from './pages/Scans/ScanDetailPage';
+import Sidebar from "./components/Sidebar";
+import Dashboard from "./pages/Dashboard";
+import Evidence from "./pages/Evidence";
+import SettingsPage from "./pages/SettingsPage";
+import AccountPage from "./pages/AccountPage";
+import StyleGuide from "./pages/StyleGuide";
+import ConnectionsPage from "./pages/Connections/ConnectionsPage";
+import ScansPage from "./pages/Scans/ScansPage";
+import ScanDetailPage from "./pages/Scans/ScanDetailPage";
 
 // Authentication & Landing Components
-import LandingPage from './pages/Landing/LandingPage';
-import AboutUs from './pages/Landing/AboutUs';
-import ContactPage from './pages/Contact/ContactPage';
-import LoginPage from './pages/Auth/LoginPage';
-import SignUpPage from './pages/Auth/SignUpPage';
-import ContactAdminPage from './pages/Admin/ContactAdminPage';
-import GoogleCallbackPage from './pages/Auth/GoogleCallbackPage';
+import LandingPage from "./pages/Landing/LandingPage";
+import AboutUs from "./pages/Landing/AboutUs";
+import ContactPage from "./pages/Contact/ContactPage";
+import LoginPage from "./pages/Auth/LoginPage";
+import SignUpPage from "./pages/Auth/SignUpPage";
+import ContactAdminPage from "./pages/Admin/ContactAdminPage";
+import GoogleCallbackPage from "./pages/Auth/GoogleCallbackPage";
 
 // Auth Context
-import { useAuth } from './context/AuthContext';
-import { register as apiRegister } from './api/client';
+import { useAuth } from "./context/AuthContext";
+import { register as apiRegister } from "./api/client";
 
 // Styles
-import './index.css';
+import "./index.css";
 
 type RouteWrapperProps = {
   children: React.ReactNode;
@@ -35,20 +35,23 @@ type RouteWrapperProps = {
 type DashboardChildProps = {
   sidebarWidth?: number;
   isDarkMode?: boolean;
-  onThemeToggle?: () => void;
 };
 
 type DashboardLayoutProps = {
   children: React.ReactElement<DashboardChildProps>;
   sidebarWidth: number;
   isDarkMode: boolean;
-  onThemeToggle: () => void;
   onSidebarWidthChange: (width: number) => void;
 };
 
 type SignUpData = {
+  firstName: string;
+  lastName: string;
   email: string;
+  organizationName: string;
   password: string;
+  confirmPassword: string;
+  agreeTerms: boolean;
 };
 
 const LoadingScreen = (): JSX.Element => (
@@ -89,7 +92,7 @@ const ProtectedRoute: React.FC<RouteWrapperProps> = ({ children }) => {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [isAuthenticated, isLoading, navigate]);
 
@@ -109,12 +112,12 @@ const AdminRoute: React.FC<RouteWrapperProps> = ({ children }) => {
     if (isLoading) return;
 
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
-    if ((user as { role?: string } | null | undefined)?.role !== 'admin') {
-      navigate('/dashboard');
+    if ((user as { role?: string } | null | undefined)?.role !== "admin") {
+      navigate("/dashboard");
     }
   }, [isAuthenticated, isLoading, navigate, user]);
 
@@ -122,9 +125,10 @@ const AdminRoute: React.FC<RouteWrapperProps> = ({ children }) => {
     return <LoadingScreen />;
   }
 
-  return isAuthenticated && (user as { role?: string } | null | undefined)?.role === 'admin'
-    ? <>{children}</>
-    : null;
+  return isAuthenticated &&
+    (user as { role?: string } | null | undefined)?.role === "admin" ? (
+    <>{children}</>
+  ) : null;
 };
 
 // Dashboard Layout Component with sidebar
@@ -132,13 +136,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   sidebarWidth,
   isDarkMode,
-  onThemeToggle,
   onSidebarWidthChange,
 }) => {
   return (
     <>
       <Sidebar onWidthChange={onSidebarWidthChange} isDarkMode={isDarkMode} />
-      {React.cloneElement(children, { sidebarWidth, isDarkMode, onThemeToggle })}
+      {React.cloneElement(children, { sidebarWidth, isDarkMode })}
     </>
   );
 };
@@ -148,39 +151,43 @@ function App(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const showPublicEnhancements = ['/', '/about', '/contact'].includes(location.pathname);
+  const showPublicEnhancements = ["/", "/about", "/contact"].includes(
+    location.pathname,
+  );
 
   // Dashboard state
   const getInitialSidebarWidth = (): number => {
-    if (typeof window === 'undefined') return 220;
+    if (typeof window === "undefined") return 220;
 
     try {
-      const stored = window.localStorage.getItem('sidebarExpanded');
+      const stored = window.localStorage.getItem("sidebarExpanded");
 
       if (stored === null) return 220;
 
-      return stored === 'true' ? 220 : 80;
+      return stored === "true" ? 220 : 80;
     } catch {
       return 220;
     }
   };
 
-  const [sidebarWidth, setSidebarWidth] = useState<number>(getInitialSidebarWidth);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(
+    getInitialSidebarWidth,
+  );
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
   // Theme management
   useEffect(() => {
-    const theme = localStorage.getItem('theme') ?? 'dark';
-    const dark = theme === 'dark';
+    const theme = localStorage.getItem("theme") ?? "dark";
+    const dark = theme === "dark";
 
     setIsDarkMode(dark);
 
     const root = document.documentElement;
 
     if (dark) {
-      root.classList.remove('light');
+      root.classList.remove("light");
     } else {
-      root.classList.add('light');
+      root.classList.add("light");
     }
   }, []);
 
@@ -188,7 +195,7 @@ function App(): JSX.Element {
   useEffect(() => {
     if (location.hash) return;
 
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname, location.hash]);
 
   // Authentication handlers
@@ -198,39 +205,46 @@ function App(): JSX.Element {
     remember: boolean = true,
   ): Promise<void> => {
     await auth.login(email, password, remember);
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   const handleUserLogout = (): void => {
     auth.logout();
-    navigate('/');
+    navigate("/");
   };
 
   const handleSignUp = async (signUpData: SignUpData): Promise<void> => {
-    const email = signUpData.email;
-    const password = signUpData.password;
+    const { firstName, lastName, email, organizationName, password } =
+      signUpData;
 
-    if (!email || !password) {
-      throw new Error('Email and password are required');
+    if (!firstName || !lastName || !email || !organizationName || !password) {
+      throw new Error("All fields are required");
     }
 
-    await apiRegister(email, password);
+    await apiRegister({
+      firstName,
+      lastName,
+      email,
+      organizationName,
+      password,
+    });
+
     await auth.login(email, password, true);
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   const handleThemeToggle = (): void => {
     const newThemeIsDark = !isDarkMode;
 
     setIsDarkMode(newThemeIsDark);
-    localStorage.setItem('theme', newThemeIsDark ? 'dark' : 'light');
+    localStorage.setItem("theme", newThemeIsDark ? "dark" : "light");
 
     const root = document.documentElement;
 
     if (newThemeIsDark) {
-      root.classList.remove('light');
+      root.classList.remove("light");
     } else {
-      root.classList.add('light');
+      root.classList.add("light");
     }
   };
 
@@ -244,17 +258,17 @@ function App(): JSX.Element {
         {/* Public Routes */}
         <Route
           path="/"
-          element={<LandingPage onSignInClick={() => navigate('/login')} />}
+          element={<LandingPage onSignInClick={() => navigate("/login")} />}
         />
 
         <Route
           path="/about"
-          element={<AboutUs onSignInClick={() => navigate('/login')} />}
+          element={<AboutUs onSignInClick={() => navigate("/login")} />}
         />
 
         <Route
           path="/contact"
-          element={<ContactPage onSignIn={() => navigate('/login')} />}
+          element={<ContactPage onSignIn={() => navigate("/login")} />}
         />
 
         <Route
@@ -262,7 +276,7 @@ function App(): JSX.Element {
           element={
             <LoginPage
               onLogin={handleUserLogin}
-              onSignUpClick={() => navigate('/signup')}
+              onSignUpClick={() => navigate("/signup")}
             />
           }
         />
@@ -274,7 +288,7 @@ function App(): JSX.Element {
           element={
             <SignUpPage
               onSignUp={handleSignUp}
-              onBackToLogin={() => navigate('/login')}
+              onBackToLogin={() => navigate("/login")}
             />
           }
         />
@@ -296,10 +310,9 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
-                <Dashboard isDarkMode={isDarkMode} onThemeToggle={handleThemeToggle} />
+                <Dashboard isDarkMode={isDarkMode} />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -312,7 +325,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <Evidence />
@@ -328,7 +340,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <SettingsPage />
@@ -344,7 +355,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <AccountPage />
@@ -360,7 +370,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <ConnectionsPage isDarkMode={isDarkMode} />
@@ -376,7 +385,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <ScansPage isDarkMode={isDarkMode} />
@@ -392,7 +400,6 @@ function App(): JSX.Element {
               <DashboardLayout
                 sidebarWidth={sidebarWidth}
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle}
                 onSidebarWidthChange={handleSidebarWidthChange}
               >
                 <ScanDetailPage isDarkMode={isDarkMode} />
@@ -406,7 +413,7 @@ function App(): JSX.Element {
         {/* Fallback Route */}
         <Route
           path="*"
-          element={<LandingPage onSignInClick={() => navigate('/login')} />}
+          element={<LandingPage onSignInClick={() => navigate("/login")} />}
         />
       </Routes>
 
