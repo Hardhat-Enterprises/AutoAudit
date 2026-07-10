@@ -42,6 +42,11 @@ def admin_user() -> User:
     return make_user(role=Role.ADMIN.value, user_id=2)
 
 
+@pytest.fixture
+def auditor_user() -> User:
+    return make_user(role=Role.AUDITOR.value, user_id=3)
+
+
 def _make_execute_result(items: list | None = None, single=None):
     result = MagicMock()
     scalars = MagicMock()
