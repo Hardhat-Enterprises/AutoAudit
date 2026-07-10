@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
+from app.core.permissions import require_auditor_or_above
 from app.db.session import get_async_session
 from app.models.user import User
 from app.models.m365_connection import M365Connection
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/m365-connections", tags=["M365 Connections"])
 @router.post("/", response_model=M365ConnectionRead, status_code=status.HTTP_201_CREATED)
 async def create_connection(
     connection_data: M365ConnectionCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_auditor_or_above),
     db: AsyncSession = Depends(get_async_session),
 ) -> M365Connection:
     """Create a new M365 connection for the current user."""
@@ -93,7 +94,7 @@ async def get_connection(
 async def update_connection(
     connection_id: int,
     update_data: M365ConnectionUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_auditor_or_above),
     db: AsyncSession = Depends(get_async_session),
 ) -> M365Connection:
     """Update an M365 connection."""
@@ -163,7 +164,7 @@ async def update_connection(
 @router.delete("/{connection_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_connection(
     connection_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_auditor_or_above),
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete an M365 connection (hard delete)."""
@@ -187,7 +188,7 @@ async def delete_connection(
 @router.post("/{connection_id}/test", response_model=M365ConnectionTestResult)
 async def test_connection(
     connection_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_auditor_or_above),
     db: AsyncSession = Depends(get_async_session),
 ) -> M365ConnectionTestResult:
     """Test an M365 connection by attempting to authenticate."""
