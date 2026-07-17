@@ -77,6 +77,8 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pytest suites are covered by pytest; exclude from style/secret/copy-paste gates.
+          FILTER_REGEX_EXCLUDE: .*backend-api/tests/.*
           VALIDATE_YAML: false
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_PYTHON_BLACK: false

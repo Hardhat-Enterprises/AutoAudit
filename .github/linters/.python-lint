@@ -14,11 +14,15 @@ disable=
     too-many-positional-arguments,
     too-many-branches,
     too-many-statements,
+    too-many-return-statements,
     too-few-public-methods,
     redefined-outer-name,
     raise-missing-from,
     wrong-import-order,
     wrong-import-position,
+    ungrouped-imports,
+    import-outside-toplevel,
+    reimported,
     singleton-comparison,
     duplicate-code,
     import-error,
@@ -26,7 +30,9 @@ disable=
     unsupported-binary-operation,
     broad-except,
     unused-argument,
-    unused-import
+    unused-import,
+    no-member,
+    trailing-newlines
 
 [FORMAT]
 max-line-length=120

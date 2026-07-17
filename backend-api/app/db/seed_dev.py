@@ -50,7 +50,7 @@ FAILED_SEED_NOTES = "Simulated scan failure for local UI testing (seed data)."
 # Placeholder Entra app values — not valid for real API calls; UI and PDF export only.
 SEED_TENANT_ID = "00000000-0000-0000-0000-000000000001"
 SEED_CLIENT_ID = "00000000-0000-0000-0000-000000000002"
-SEED_CLIENT_SECRET_PLAINTEXT = "local-dev-placeholder-secret-not-for-production"
+SEED_CLIENT_SECRET_PLAINTEXT = "local-dev-placeholder-secret-not-for-production"  # nosec B105
 
 
 def _metadata_path(policies_dir: Path) -> Path:
