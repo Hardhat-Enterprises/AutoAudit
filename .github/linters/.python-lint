@@ -11,7 +11,6 @@ disable=
     line-too-long,
     too-many-locals,
     too-many-arguments,
-    too-many-positional-arguments,
     too-many-branches,
     too-many-statements,
     too-many-return-statements,

@@ -21,6 +21,28 @@ from app.services.m365_graph import M365ConnectionError, validate_m365_connectio
 router = APIRouter(prefix="/m365-connections", tags=["M365 Connections"])
 
 
+async def _get_owned_connection(
+    db: AsyncSession,
+    *,
+    connection_id: int,
+    user_id: int,
+) -> M365Connection:
+    """Load an M365 connection owned by the given user, or raise 404."""
+    result = await db.execute(
+        select(M365Connection).where(
+            M365Connection.id == connection_id,
+            M365Connection.user_id == user_id,
+        )
+    )
+    connection = result.scalar_one_or_none()
+    if not connection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection {connection_id} not found",
+        )
+    return connection
+
+
 @router.post("/", response_model=M365ConnectionRead, status_code=status.HTTP_201_CREATED)
 async def create_connection(
     connection_data: M365ConnectionCreate,
@@ -75,19 +97,9 @@ async def get_connection(
     db: AsyncSession = Depends(get_async_session),
 ) -> M365Connection:
     """Get a specific M365 connection by ID."""
-    result = await db.execute(
-        select(M365Connection).where(
-            M365Connection.id == connection_id,
-            M365Connection.user_id == current_user.id,
-        )
+    return await _get_owned_connection(
+        db, connection_id=connection_id, user_id=current_user.id
     )
-    connection = result.scalar_one_or_none()
-    if not connection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Connection {connection_id} not found",
-        )
-    return connection
 
 
 @router.put("/{connection_id}", response_model=M365ConnectionRead)
@@ -98,18 +110,9 @@ async def update_connection(
     db: AsyncSession = Depends(get_async_session),
 ) -> M365Connection:
     """Update an M365 connection."""
-    result = await db.execute(
-        select(M365Connection).where(
-            M365Connection.id == connection_id,
-            M365Connection.user_id == current_user.id,
-        )
+    connection = await _get_owned_connection(
+        db, connection_id=connection_id, user_id=current_user.id
     )
-    connection = result.scalar_one_or_none()
-    if not connection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Connection {connection_id} not found",
-        )
 
     # If tenant_id or client_id changes, require a new secret (can't validate new app without it)
     tenant_changed = update_data.tenant_id is not None and update_data.tenant_id != connection.tenant_id
@@ -168,18 +171,9 @@ async def delete_connection(
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete an M365 connection (hard delete)."""
-    result = await db.execute(
-        select(M365Connection).where(
-            M365Connection.id == connection_id,
-            M365Connection.user_id == current_user.id,
-        )
+    connection = await _get_owned_connection(
+        db, connection_id=connection_id, user_id=current_user.id
     )
-    connection = result.scalar_one_or_none()
-    if not connection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Connection {connection_id} not found",
-        )
 
     await db.delete(connection)
     await db.commit()
@@ -192,18 +186,9 @@ async def test_connection(
     db: AsyncSession = Depends(get_async_session),
 ) -> M365ConnectionTestResult:
     """Test an M365 connection by attempting to authenticate."""
-    result = await db.execute(
-        select(M365Connection).where(
-            M365Connection.id == connection_id,
-            M365Connection.user_id == current_user.id,
-        )
+    connection = await _get_owned_connection(
+        db, connection_id=connection_id, user_id=current_user.id
     )
-    connection = result.scalar_one_or_none()
-    if not connection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Connection {connection_id} not found",
-        )
 
     # Decrypt credentials
     client_secret = decrypt(connection.encrypted_client_secret)

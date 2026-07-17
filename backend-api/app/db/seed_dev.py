@@ -28,7 +28,7 @@ from datetime import datetime
 from pathlib import Path
 
 # Same default as backend-api/.env.example and docker-compose (local dev only).
-_DEFAULT_DEV_ENCRYPTION_KEY = "Ps-HiS3ww5QzQPc_Mdu5-JyA_jCNbdFHMdiwWSlAfgM="
+_DEFAULT_DEV_ENCRYPTION_KEY = "Ps-HiS3ww5QzQPc_Mdu5-JyA_jCNbdFHMdiwWSlAfgM="  # gitleaks:allow
 
 from sqlalchemy import select
 
