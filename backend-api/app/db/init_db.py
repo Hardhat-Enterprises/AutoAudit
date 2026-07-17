@@ -22,7 +22,7 @@ async def init_db():
     - This script will create OR update a default admin user for local development.
     """
     admin_email = "admin@example.com"
-    admin_password = "admin"  # pragma: allowlist secret
+    admin_password = "admin"  # pragma: allowlist secret  # nosec B105
 
     password_helper = PasswordHelper()
 

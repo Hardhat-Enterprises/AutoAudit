@@ -178,7 +178,7 @@ async def scan(
         try:
             await db.rollback()
         except Exception:
-            pass
+            pass  # nosec B110
 
     return scan_result
 

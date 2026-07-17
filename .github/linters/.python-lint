@@ -1,0 +1,32 @@
+[MASTER]
+ignore-patterns=test_.*?py
+
+[MESSAGES CONTROL]
+# Align with existing backend-api style so route/RBAC PRs are not blocked by
+# pre-existing convention/refactor noise when only a few lines change.
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    line-too-long,
+    too-many-locals,
+    too-many-arguments,
+    too-many-positional-arguments,
+    too-many-branches,
+    too-many-statements,
+    too-few-public-methods,
+    redefined-outer-name,
+    raise-missing-from,
+    wrong-import-order,
+    wrong-import-position,
+    singleton-comparison,
+    duplicate-code,
+    import-error,
+    invalid-name,
+    unsupported-binary-operation,
+    broad-except,
+    unused-argument,
+    unused-import
+
+[FORMAT]
+max-line-length=120

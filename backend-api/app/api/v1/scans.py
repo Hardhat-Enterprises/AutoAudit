@@ -1,10 +1,11 @@
 """Scan API endpoints."""
 
+from collections import defaultdict
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from collections import defaultdict
 
 from app.core.auth import get_current_user
 from app.core.permissions import require_auditor_or_above
