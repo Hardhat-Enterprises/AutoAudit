@@ -177,7 +177,7 @@ async def google_authorize() -> RedirectResponse:
         value=state,
         max_age=600,
         httponly=True,
-        secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
+        secure=True,
         samesite="lax",
         path=f"{settings.API_PREFIX}/auth/google/callback",
     )
