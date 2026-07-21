@@ -24,7 +24,7 @@ if SECURITY_DIR and str(SECURITY_DIR.parent) not in sys.path:
     sys.path.insert(0, str(SECURITY_DIR.parent))
 
 # Reuse existing evidence logic from security package
-from security.evidence_ui import app as evidence_ui
+from security.evidence_ui import app as evidence_ui  # type: ignore[import-not-found]
 
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
@@ -148,7 +148,10 @@ async def scan(
             response_payload["validator"] = validator_payload
     elif isinstance(scan_result, JSONResponse):
         try:
-            payload = json.loads((scan_result.body or b"{}").decode("utf-8"))
+            body = scan_result.body or b"{}"
+            if isinstance(body, memoryview):
+                body = body.tobytes()
+            payload = json.loads(body.decode("utf-8"))
         except Exception:
             payload = None
         if isinstance(payload, dict):
@@ -177,7 +180,7 @@ async def scan(
     except Exception:
         try:
             await db.rollback()
-        except Exception:
+        except Exception:  # nosec B110
             pass
 
     return scan_result
