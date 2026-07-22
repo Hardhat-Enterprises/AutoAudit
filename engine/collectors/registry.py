@@ -35,6 +35,9 @@ from collectors.entra.conditional_access.e8_mfa_enforcement import (
 
 # Devices
 from collectors.entra.devices.asr_rules import ASRRulesDataCollector
+from collectors.entra.devices.configuration_policies import (
+    ConfigurationPoliciesDataCollector,
+)
 from collectors.entra.devices.device_management_settings import (
     DeviceManagementSettingsDataCollector,
 )
@@ -155,6 +158,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.conditional_access.e8_mfa_enforcement": E8MfaEnforcementDataCollector,
     # Devices
     "entra.devices.asr_rules": ASRRulesDataCollector,
+    "entra.devices.configuration_policies": ConfigurationPoliciesDataCollector,
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
