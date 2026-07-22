@@ -136,7 +136,8 @@ const SignupFormPanel = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFormChange(e.target.name, e.target.value);
+    const fieldName = e.target.name as keyof SignUpFormData;
+    onFormChange(fieldName, e.target.value);
   };
 
   const handleAgreeTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
