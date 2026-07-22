@@ -92,9 +92,11 @@ def client_factory(
         test_app.dependency_overrides[get_async_session] = override_get_async_session
 
         if user is not None:
+            # Bind to a non-optional local so mypy accepts the nested override return type.
+            current_user: User = user
 
             async def override_get_current_user() -> User:
-                return user
+                return current_user
 
             test_app.dependency_overrides[get_current_user] = override_get_current_user
         else:
