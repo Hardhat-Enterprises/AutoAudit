@@ -177,7 +177,7 @@ async def google_authorize() -> RedirectResponse:
         value=state,
         max_age=600,
         httponly=True,
-        secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
+        secure=True,
         samesite="lax",
         path=f"{settings.API_PREFIX}/auth/google/callback",
     )
@@ -313,5 +313,8 @@ async def google_callback(
     response.delete_cookie(
         GOOGLE_OAUTH_STATE_COOKIE,
         path=f"{settings.API_PREFIX}/auth/google/callback",
+        secure=True,
+        httponly=True,
+        samesite="lax",
     )
     return response
