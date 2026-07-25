@@ -280,7 +280,7 @@ async def google_callback(
             status_code=status.HTTP_302_FOUND,
         )
 
-       try:
+    try:
         user = await user_manager.oauth_callback(
             oauth_name="google",
             access_token=google_access_token,
