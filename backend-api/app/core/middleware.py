@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from starlette.middleware.base import BaseHTTPMiddleware
 
-logger = logging.getLogger("api")
+logger = logging.getLogger("api")  # type: ignore[attr-defined]  # pylint: disable=no-member
 
 REQUEST_ID_HEADER = "X-Request-ID"
 MAX_REQUEST_ID_LENGTH = 128
