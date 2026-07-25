@@ -6,11 +6,11 @@ Run this script to create the default admin user:
 """
 import asyncio
 
+from fastapi_users.password import PasswordHelper
 from sqlalchemy import select
 
 from app.db.session import async_session_maker
-from app.models.user import User, Role
-from fastapi_users.password import PasswordHelper
+from app.models.user import Role, User
 
 
 async def init_db():
@@ -22,7 +22,7 @@ async def init_db():
     - This script will create OR update a default admin user for local development.
     """
     admin_email = "admin@example.com"
-    admin_password = "admin"  # pragma: allowlist secret
+    admin_password = "admin"  # pragma: allowlist secret  # nosec B105
 
     password_helper = PasswordHelper()
 
@@ -31,10 +31,12 @@ async def init_db():
         result = await session.execute(
             select(User).where(User.email == admin_email)
         )
+
         # Be resilient to relationship eager-loads that can duplicate rows.
         existing_user = result.unique().scalar_one_or_none()
 
         created = False
+
         if existing_user:
             admin_user = existing_user
         else:

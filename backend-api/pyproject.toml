@@ -40,3 +40,8 @@ evidence = [
     "fpdf2>=2.8.1",
     "tabulate>=0.10.0",
 ]
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.4",
+]
