@@ -19,6 +19,27 @@ from app.services.encryption import decrypt, encrypt
 router = APIRouter(prefix="/aws-connections", tags=["AWS Connections"])
 
 
+async def _get_user_connection(
+    connection_id: int,
+    user_id: int,
+    db: AsyncSession,
+) -> AWSConnection:
+    """Fetch an AWS connection by ID scoped to the given user, or raise 404."""
+    result = await db.execute(
+        select(AWSConnection).where(
+            AWSConnection.id == connection_id,
+            AWSConnection.user_id == user_id,
+        )
+    )
+    connection = result.scalar_one_or_none()
+    if not connection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection {connection_id} not found",
+        )
+    return connection
+
+
 @router.post("/", response_model=AWSConnectionRead, status_code=status.HTTP_201_CREATED)
 async def create_connection(
     connection_data: AWSConnectionCreate,
@@ -61,19 +82,7 @@ async def get_connection(
     db: AsyncSession = Depends(get_async_session),
 ) -> AWSConnection:
     """Get a specific AWS connection by ID."""
-    result = await db.execute(
-        select(AWSConnection).where(
-            AWSConnection.id == connection_id,
-            AWSConnection.user_id == current_user.id,
-        )
-    )
-    connection = result.scalar_one_or_none()
-    if not connection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Connection {connection_id} not found",
-        )
-    return connection
+    return await _get_user_connection(connection_id, current_user.id, db)
 
 
 @router.put("/{connection_id}", response_model=AWSConnectionRead)
@@ -84,20 +93,8 @@ async def update_connection(
     db: AsyncSession = Depends(get_async_session),
 ) -> AWSConnection:
     """Update an AWS connection."""
-    result = await db.execute(
-        select(AWSConnection).where(
-            AWSConnection.id == connection_id,
-            AWSConnection.user_id == current_user.id,
-        )
-    )
-    connection = result.scalar_one_or_none()
-    if not connection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Connection {connection_id} not found",
-        )
+    connection = await _get_user_connection(connection_id, current_user.id, db)
 
-    # Update only provided fields
     if update_data.name is not None:
         connection.name = update_data.name
     if update_data.account_id is not None:
@@ -123,19 +120,7 @@ async def delete_connection(
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete an AWS connection (hard delete)."""
-    result = await db.execute(
-        select(AWSConnection).where(
-            AWSConnection.id == connection_id,
-            AWSConnection.user_id == current_user.id,
-        )
-    )
-    connection = result.scalar_one_or_none()
-    if not connection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Connection {connection_id} not found",
-        )
-
+    connection = await _get_user_connection(connection_id, current_user.id, db)
     await db.delete(connection)
     await db.commit()
 
@@ -147,25 +132,11 @@ async def test_connection(
     db: AsyncSession = Depends(get_async_session),
 ) -> AWSConnectionTestResult:
     """Test an AWS connection by verifying the credentials are valid."""
-    result = await db.execute(
-        select(AWSConnection).where(
-            AWSConnection.id == connection_id,
-            AWSConnection.user_id == current_user.id,
-        )
-    )
-    connection = result.scalar_one_or_none()
-    if not connection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Connection {connection_id} not found",
-        )
+    connection = await _get_user_connection(connection_id, current_user.id, db)
 
-    # Decrypt credentials
-    secret_access_key = decrypt(connection.encrypted_secret_access_key)
+    # Decrypt credentials — boto3 integration to be added for live validation
+    _secret_access_key = decrypt(connection.encrypted_secret_access_key)
 
-    # Placeholder: AWS credential validation will be implemented
-    # when the AWS SDK (boto3) integration is added.
-    # For now, return a success response confirming the connection is stored.
     return AWSConnectionTestResult(
         success=True,
         message="AWS connection credentials are stored. Live validation requires boto3 integration.",
