@@ -5,6 +5,7 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.errors import not_found_handler, NotFound
+from app.schemas.health import ReadinessResponse
 settings = get_settings()
 
 
@@ -39,7 +40,17 @@ def create_app() -> FastAPI:
         return {
             "status": "healthy",
         }
-        
+
+    @app.get(
+        "/readiness",
+        response_model=ReadinessResponse,
+        tags=["Health"],
+        summary="Check whether the API is ready to serve requests",
+    )
+    def readiness_check() -> ReadinessResponse:
+        return ReadinessResponse()
+
+
     return app
 
 app = create_app()
