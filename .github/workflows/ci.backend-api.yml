@@ -90,9 +90,25 @@ jobs:
           VALIDATE_MARKDOWN_PRETTIER: false
           VALIDATE_NATURAL_LANGUAGE: false
 
+  test:
+    name: Pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install and run pytest
+        working-directory: backend-api
+        run: |
+          uv sync --extra dev
+          uv run pytest tests/ -q
+
   report:
     name: Report PR status
-    needs: [analyze, run-lint]
+    needs: [analyze, run-lint, test]
     if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
@@ -112,9 +128,10 @@ jobs:
 
             const analyze = '${{ needs.analyze.result }}';
             const lint    = '${{ needs.run-lint.result }}';
+            const test    = '${{ needs.test.result }}';
 
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
-            const allPassed = [analyze, lint].every(r => ['success', 'skipped'].includes(r));
+            const allPassed = [analyze, lint, test].every(r => ['success', 'skipped'].includes(r));
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const marker = '<!-- ci-report-backend-api -->'; // used to find and update the existing comment
 
@@ -126,6 +143,7 @@ jobs:
               `|---|---|`,
               `| Security analysis (CodeQL + Bandit) | ${icon(analyze)} \`${analyze}\` |`,
               `| Lint | ${icon(lint)} \`${lint}\` |`,
+              `| Pytest | ${icon(test)} \`${test}\` |`,
               ``,
               allPassed
                 ? `All checks passed.`
