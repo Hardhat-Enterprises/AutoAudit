@@ -39,6 +39,10 @@ class DeviceRegistrationPolicyDataCollector(BaseDataCollector):
         azure_ad_registration = policy.get("azureADRegistration", {})
         local_admin_password = policy.get("localAdminPassword", {})
 
+        # Extract local administrator assignment settings
+        local_admins = azure_ad_join.get("localAdmins", {})
+        registering_users = local_admins.get("registeringUsers", {})
+
         return {
             "device_registration_policy": policy,
             "azure_ad_join_settings": azure_ad_join,
@@ -51,4 +55,6 @@ class DeviceRegistrationPolicyDataCollector(BaseDataCollector):
             "laps_enabled": local_admin_password.get("isEnabled"),
             "user_device_quota": policy.get("userDeviceQuota"),
             "multi_factor_auth_configuration": policy.get("multiFactorAuthConfiguration"),
+            "local_admin_registering_users_type": registering_users.get("@odata.type"),
+            "enable_global_admins": local_admins.get("enableGlobalAdmins"),
         }
