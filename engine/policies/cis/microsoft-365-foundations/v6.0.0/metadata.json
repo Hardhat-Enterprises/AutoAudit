@@ -136,9 +136,9 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "exchange.organization.sharing_policy",
-      "policy_file": null,
+      "policy_file": "1.3.3_external_calendar_sharing_blocked.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": "Collector exists but control logic not defined"
     },
