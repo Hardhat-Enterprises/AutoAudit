@@ -21,7 +21,7 @@ router.include_router(
     prefix="",
 )
 
-# Login endpoint
+# Login and Logout endpoints using secure HttpOnly cookies via auth_backend
 router.include_router(
     fastapi_users.get_auth_router(auth_backend),
     prefix="",
@@ -305,11 +305,22 @@ async def google_callback(
 
     # fastapi-users JWTStrategy.write_token is async in the version used by the backend container.
     autoaudit_token = await get_jwt_strategy().write_token(user)
-    redirect_url = _frontend_google_callback_url(
-        {"access_token": autoaudit_token, "token_type": "bearer"}
-    )
-
+    
+    # Redirect to frontend without the token in the URL fragment
+    redirect_url = _frontend_google_callback_url({}) 
     response = RedirectResponse(redirect_url, status_code=status.HTTP_302_FOUND)
+    
+    # Set the token in a secure, HttpOnly cookie
+    response.set_cookie(
+        key="autoaudit_jwt",
+        value=autoaudit_token,
+        httponly=True,
+        secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
+        samesite="lax", 
+        max_age=3600, 
+    )
+    
+    # Clean up the OAuth state cookie
     response.delete_cookie(
         GOOGLE_OAUTH_STATE_COOKIE,
         path=f"{settings.API_PREFIX}/auth/google/callback",
