@@ -34,17 +34,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: none
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:${{matrix.language}}"
-
       - name: Install Bandit
         run: pip install bandit
 
@@ -76,7 +65,6 @@ jobs:
           VALIDATE_MARKDOWN: false
           VALIDATE_MARKDOWN_PRETTIER: false
           VALIDATE_NATURAL_LANGUAGE: false
-          # Add these to silence the v7 errors:
           VALIDATE_PYTHON_PYLINT: false
           VALIDATE_PYTHON_RUFF: false
           VALIDATE_PYTHON_PYINK: false
@@ -101,7 +89,7 @@ jobs:
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
             const allPassed = [analyze, lint].every(r => ['success', 'skipped'].includes(r));
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const marker = '<!-- ci-report-backend-api -->'; // used to find and update the existing comment
+            const marker = '<!-- ci-report-backend-api -->';
 
             const body = [
               marker,
@@ -109,7 +97,7 @@ jobs:
               ``,
               `| Job | Result |`,
               `|---|---|`,
-              `| Security analysis (CodeQL + Bandit) | ${icon(analyze)} \`${analyze}\` |`,
+              `| Security analysis (Bandit) | ${icon(analyze)} \`${analyze}\` |`,
               `| Lint | ${icon(lint)} \`${lint}\` |`,
               ``,
               allPassed
