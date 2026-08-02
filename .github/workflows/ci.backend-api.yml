@@ -35,10 +35,10 @@ jobs:
           python-version: '3.11'
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4  # <-- Change from v3 to v4
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
+          build-mode: none # <-- Add this line to prevent CodeQL build crashes for interpreted Python
 
       - if: matrix.build-mode == 'manual'
         shell: bash
