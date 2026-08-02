@@ -20,8 +20,8 @@ def create_app() -> FastAPI:
     # CORS must be added last so it runs first and wraps all responses including errors.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # permissive for dev; adjust in prod
-        allow_credentials=False,  # must be False when using wildcard origins
+        allow_origins=["http://localhost:3000"],  # Explicit origin required when credentials are True
+        allow_credentials=True,                   # Must be True to allow HttpOnly auth cookies
         allow_methods=["*"],
         allow_headers=["*"],
     )
