@@ -781,9 +781,9 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "entra.devices.device_management_settings",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.3_disable_global_admin_local_admin.rego",
       "requires_permissions": ["Policy.Read.All"],
       "notes": null
     },
