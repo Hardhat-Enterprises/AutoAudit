@@ -35,7 +35,7 @@ jobs:
           python-version: '3.11'
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4  # <-- Change from v3 to v4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -51,7 +51,7 @@ jobs:
           exit 1
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4 # <-- Change from v3 to v4
         with:
           category: "/language:${{matrix.language}}"
 
@@ -71,7 +71,7 @@ jobs:
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: github/super-linter@v7 # <-- Change from v4 to v7
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
