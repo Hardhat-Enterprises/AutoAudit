@@ -8,6 +8,9 @@ on:
     paths:
       - 'infrastructure/monitoring/alerts/**'
 
+permissions:
+  contents: read
+
 jobs:
   validate_alerts:
     runs-on: ubuntu-latest
