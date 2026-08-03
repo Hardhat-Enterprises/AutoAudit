@@ -2,72 +2,46 @@
 
 This guide documents secure coding practices for contributors to the AutoAudit codebase, grounded in patterns already used across the project and the security tooling that runs in CI.
 
-
- ### Authentication \& Authorization
+## Authentication & Authorization
 
 AutoAudit uses FastAPI's dependency injection system to enforce authentication and role-based access control (RBAC) consistently across the backend. Follow these patterns when adding new endpoints.
 
-
 ### Authenticating a route
 
-
-Never manually parse tokens or check headers directly in a route. Use the existing `get\_current\_user` dependency:
-
+Never manually parse tokens or check headers directly in a route. Use the existing `get_current_user` dependency:
 
 ```python
-
-from app.core.auth import get\_current\_user
-
+from app.core.auth import get_current_user
 
 @router.get("/protected")
-
-async def protected\_route(user: User = Depends(get\_current\_user)):
-
-&#x20;   return {"user": user.email}
-
-​```
+async def protected_route(user: User = Depends(get_current_user)):
+    return {"user": user.email}
+```
 
 ### Enforcing role-based access
 
-
 Use the convenience functions in `app/core/permissions.py` rather than writing role checks inline:
 
+- `require_admin` — restricts to admin users only
+- `require_auditor_or_above` — allows auditor or admin
+- `require_viewer_or_above` — allows any authenticated user
 
-\- `require\_admin` — restricts to admin users only
+```python
+from app.core.permissions import require_admin
 
-\- `require\_auditor\_or\_above` — allows auditor or admin
-
-\- `require\_viewer\_or\_above` — allows any authenticated user
-
-
-
-​```python
-
-from app.core.permissions import require\_admin
-
-
-@router.delete("/tenants/{tenant\_id}")
-
-async def delete\_tenant(tenant\_id: str, user: User = Depends(require\_admin)):
-
-&#x20;   ...
-
-​```
+@router.delete("/tenants/{tenant_id}")
+async def delete_tenant(tenant_id: str, user: User = Depends(require_admin)):
+    ...
+```
 
 If you need a custom role combination not covered by the existing functions, use the `RoleChecker` class rather than duplicating the pattern:
 
-
-
 ```python
-
 from app.core.permissions import RoleChecker
-
 from app.models.user import Role
 
-
-require\_custom = RoleChecker(\[Role.ADMIN, Role.AUDITOR])
-
-​```
+require_custom = RoleChecker([Role.ADMIN, Role.AUDITOR])
+```
 
 ### Why this matters
 
@@ -83,10 +57,10 @@ Never commit real credentials, API keys, tokens, or connection strings containin
 
 This repo uses `detect-secrets` as a pre-commit hook to catch potential credentials before they're committed. Make sure it's installed after cloning:
 
-​```bash
+```bash
 pip install pre-commit
 pre-commit install
-​```
+```
 
 If `detect-secrets` blocks a commit, don't bypass it — check whether it's a real secret first.
 
@@ -94,9 +68,9 @@ If `detect-secrets` blocks a commit, don't bypass it — check whether it's a re
 
 Sometimes a placeholder or example value gets flagged even though it isn't a real credential (e.g. a dev-only default password in `docker-compose.yml`). If you're certain it's not sensitive, suppress it with an inline comment rather than disabling the hook:
 
-​```python
+```python
 DATABASE_URL = "postgresql://user:devpassword@localhost/db"  # pragma: allowlist secret
-​```
+```
 
 Existing findings are tracked in `.secrets.baseline` — check there before assuming something is a new issue.
 
@@ -107,4 +81,3 @@ For local development, use environment variables loaded from a `.env` file (alre
 ### Why this matters
 
 A leaked secret in git history can be extracted long after the file is "fixed" in a later commit — removing a value from the current version of a file does not remove it from history. Prevention at commit time is far cheaper than rotating credentials after a leak.
-
