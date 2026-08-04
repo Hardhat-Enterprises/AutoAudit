@@ -73,6 +73,8 @@ def build_script(
     cmdlet: str,
     params: Dict[str, Any],
     tenant_id: str,
+    tenant_name: Optional[str],
+    client_id: Optional[str],
 ) -> str:
     """Build the PowerShell script to execute.
 
@@ -133,6 +135,36 @@ try {{
     Disconnect-MicrosoftTeams -ErrorAction SilentlyContinue
 }}
 '''
+    elif module == "SharePoint":
+            cert_path = os.environ.get("SPO_CERT_PATH")
+            if not cert_path:
+                raise ValueError(
+                    "SharePoint module requires SPO_CERT_PATH"
+                    "to be configured on the PowerShell service"
+                )
+
+            return f'''
+$ErrorActionPreference = "Stop"
+Import-Module PnP.PowerShell
+$certPassword = ConvertTo-SecureString $env:SHAREPOINT_CERT_PASSWORD -AsPlainText -Force
+try {{
+    Connect-PnPOnline `
+        -Url "https://{tenant_name}-admin.sharepoint.com" `
+        -ClientId "{client_id}" `
+        -Tenant "{tenant_name}.onmicrosoft.com" `
+        -CertificatePath "{cert_path}" `
+        -CertificatePassword $certPassword
+
+    $result = {cmdlet}{param_str}
+    if ($null -eq $result) {{
+        Write-Output 'null'
+    }} else {{
+        $result | ConvertTo-Json -Depth 10
+    }}
+}} finally {{
+    Disconnect-PnPOnline -ErrorAction SilentlyContinue
+}}
+'''
     else:
         raise ValueError(f"Unsupported module: {module}")
 
@@ -140,10 +172,14 @@ try {{
 def execute_cmdlet(
     module: str,
     cmdlet: str,
-    params: Dict[str, Any],
+    params: Optional[Dict[str, Any]],
     tenant_id: str,
-    token: str,
+    token: Optional[str] = None,
     graph_token: Optional[str] = None,
+    tenant_name: Optional[str] = None,
+    sharepoint_cert_password: Optional[str] = None,
+    client_id: Optional[str] = None,
+
 ) -> Dict[str, Any]:
     """Execute a PowerShell cmdlet and return the result.
 
@@ -165,14 +201,22 @@ def execute_cmdlet(
     if module == "Teams" and not graph_token:
         raise ValueError("Teams module requires graph_token")
 
+    if module == "SharePoint" and not sharepoint_cert_password and not client_id:
+        raise ValueError("SharePoint module requires sharepoint_cert, sharepoint_cert_password and client_id")
+
     # Build the script
-    script = build_script(module, cmdlet, params, tenant_id)
+    if module == "SharePoint":
+        script = build_script(module, cmdlet, params, tenant_id,tenant_name, client_id)
+    else:
+        script = build_script(module, cmdlet, params, tenant_id)
 
     # Set up environment with tokens
     env = os.environ.copy()
     if module == "Teams":
         env["GRAPH_TOKEN"] = graph_token
         env["TEAMS_TOKEN"] = token
+    elif module == "SharePoint":
+        env["SHAREPOINT_CERT_PASSWORD"] = sharepoint_cert_password
     else:
         env["EXO_TOKEN"] = token
 

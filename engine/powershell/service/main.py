@@ -36,6 +36,9 @@ async def execute(request: ExecuteRequest):
             tenant_id=request.tenant_id,
             token=request.token,
             graph_token=request.graph_token,
+            tenant_name=request.tenant_name,
+            sharepoint_cert_password=request.sharepoint_cert_password,
+            client_id=request.client_id,
         )
         return ExecuteResponse(success=True, data=result)
     except ValueError as e:
@@ -47,3 +50,4 @@ async def execute(request: ExecuteRequest):
     except Exception as e:
         # Unexpected error
         return ExecuteResponse(success=False, error=f"Unexpected error: {e}")
+    
