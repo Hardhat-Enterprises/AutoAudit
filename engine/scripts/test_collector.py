@@ -11,8 +11,12 @@ Usage:
 
 Environment Variables:
     M365_TENANT_ID: Azure AD tenant ID
+    M365_TENANT_NAME: Azure AD tenant name
     M365_CLIENT_ID: App registration client ID
     M365_CLIENT_SECRET: App registration client secret
+    SHAREPOINT_CERT_PASSWORD: Password to open the certificate
+    SHAREPOINT_CERT_PATH: Path to the certificate
+    
 """
 
 import argparse
@@ -23,12 +27,14 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from engine.collectors.sharepoint_client import SharePointClient
+
 # Add parent to path for imports when running as module
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from collectors.registry import DATA_COLLECTORS, get_collector
 from collectors.graph_client import GraphClient
-from collectors.powershell_base import BasePowerShellCollector
+from engine.collectors.powershell_base import BasePowerShellCollector
 from collectors.powershell_client import PowerShellClient, PowerShellExecutionError
 
 
@@ -46,11 +52,14 @@ def list_collectors() -> None:
         print()
 
 
-def get_credentials() -> tuple[str, str, str]:
+def get_credentials(service:str) -> tuple[str, str, str, str, str, str]:
     """Get M365 credentials from environment variables."""
     tenant_id = os.environ.get("M365_TENANT_ID")
     client_id = os.environ.get("M365_CLIENT_ID")
     client_secret = os.environ.get("M365_CLIENT_SECRET")
+    tenant_name = os.environ.get("M365_TENANT_NAME")
+    sharepoint_cert_password = os.environ.get("SHAREPOINT_CERT_PASSWORD")
+    sharepoint_cert_path = os.environ.get("SHAREPOINT_CERT_PATH")
 
     missing = []
     if not tenant_id:
@@ -59,8 +68,15 @@ def get_credentials() -> tuple[str, str, str]:
         missing.append("M365_CLIENT_ID")
     if not client_secret:
         missing.append("M365_CLIENT_SECRET")
+    if service == "SharePoint":
+        if not tenant_name:
+            missing.append("M365_TENANT_NAME")
+        if not sharepoint_cert_password:
+            missing.append("SHAREPOINT_CERT_PASSWORD")
+        if not sharepoint_cert_path:
+            missing.append("SHAREPOINT_CERT_PATH")
 
-    if missing:
+    if missing and service != "SharePoint":
         print("Error: Missing required environment variables:")
         for var in missing:
             print(f"  - {var}")
@@ -69,8 +85,20 @@ def get_credentials() -> tuple[str, str, str]:
         print("  export M365_CLIENT_ID=<your-client-id>")
         print("  export M365_CLIENT_SECRET=<your-client-secret>")
         sys.exit(1)
+    elif missing and service == "SharePoint":
+        print("Error: Missing required environment variables:")
+        for var in missing:
+            print(f"  - {var}")
+        print("\nSet these variables before running the script:")
+        print("  export M365_TENANT_ID=<your-tenant-id>")
+        print("  export M365_CLIENT_ID=<your-client-id>")
+        print("  export M365_CLIENT_SECRET=<your-client-secret>")
+        print("  export M365_TENANT_NAME=<your-tenant-name>")
+        print("  export SHAREPOINT_CERT_PASSWORD=<your-sharepoint-cert-password>")
+        print("  export SHAREPOINT_CERT_PATH=<your-sharepoint-cert-path>")
+        sys.exit(1)
 
-    return tenant_id, client_id, client_secret
+    return tenant_id, client_id, client_secret, tenant_name, sharepoint_cert_password, sharepoint_cert_path
 
 
 async def test_collector(
@@ -91,6 +119,7 @@ async def test_collector(
         Dict containing collector_id, timestamp, elapsed_seconds, and data
     """
     # Validate collector exists
+    service = collector_id.split(".")[0]
     if collector_id not in DATA_COLLECTORS:
         print(f"Error: Unknown collector '{collector_id}'")
         print("\nAvailable collectors:")
@@ -99,7 +128,10 @@ async def test_collector(
         sys.exit(1)
 
     # Get credentials
-    tenant_id, client_id, client_secret = get_credentials()
+    if service == "sharepoint":
+        tenant_id, client_id, client_secret, tenant_name, sharepoint_cert_password, sharepoint_cert_path = get_credentials("SharePoint")
+    else:
+        tenant_id, client_id, client_secret, tenant_name, sharepoint_cert_password, sharepoint_cert_path = get_credentials("SharePoint")
 
     if verbose:
         print(f"Tenant ID: {tenant_id}")
@@ -110,8 +142,14 @@ async def test_collector(
 
     # Create collector and appropriate client
     collector = get_collector(collector_id)
-    if isinstance(collector, BasePowerShellCollector):
-        client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
+    if isinstance(collector, BasePowerShellCollector) :
+        if service == "sharepoint":
+            client = SharePointClient(
+                tenant_id, client_id, client_secret,
+                tenant_name=tenant_name,sharepoint_cert_password=sharepoint_cert_password,
+                sharepoint_cert_path=sharepoint_cert_path)
+        else:
+            client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
     else:
         client = GraphClient(tenant_id, client_id, client_secret)
 

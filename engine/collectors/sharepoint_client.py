@@ -29,7 +29,7 @@ class SharePointClient:
     """Client for SharePoint Online REST API using client secret auth."""
 
     def __init__(self, tenant_id: str, client_id: str, client_secret: str, 
-                    tenant_name: str, sharepoint_cert_password: str):
+                tenant_name: str, sharepoint_cert_password: str, sharepoint_cert_path: str):
         
         """Initialize SharePoint client.
 
@@ -45,6 +45,7 @@ class SharePointClient:
         self.tenant_name = tenant_name
         self.admin_url = f"https://{tenant_name}-admin.sharepoint.com"
         self.sharepoint_cert_password = sharepoint_cert_password
+        self.sharepoint_cert_path = sharepoint_cert_path
         self._access_token: str | None = None
         self._graph_access_token: str | None = None
         self.service_url = "http://localhost:8001"
@@ -113,11 +114,17 @@ class SharePointClient:
                                                 tenant_name=self.tenant_name,
                                                 client_secret=self.client_secret,
                                                 service_url=self.service_url,
-                                                sharepoint_cert_password=self.sharepoint_cert_password
-                                            )
-
+                                                sharepoint_cert_password=self.sharepoint_cert_password,
+                                                sharepoint_cert_path=self.sharepoint_cert_path
+        )
         result = await power_shell_client.run_cmdlet("SharePoint", "Get-PnPTenant")
-        print(f"EnableAzureADB2BIntegration:{result["EnableAzureADB2BIntegration"]}")
+        if not isinstance(result, dict):
+            raise RuntimeError(
+                "Get-PnPTenant returned an invalid result. "
+                f"Expected dict, received {type(result).__name__}."
+            )
+
+        return result
 
 
 

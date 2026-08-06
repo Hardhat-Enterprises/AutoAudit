@@ -139,6 +139,9 @@ from collectors.exchange.transport.external_in_outlook import (
 from collectors.exchange.transport.transport_rules import TransportRulesDataCollector
 
 
+# Sharepoint 
+from collectors.sharepoint.spo_tenant import SpoTenantDataCollector
+
 # Registry mapping data_collector_id to collector class
 DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Applications
@@ -201,6 +204,8 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Exchange - Transport
     "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
     "exchange.transport.transport_rules": TransportRulesDataCollector,
+    # Sharepoint
+    "sharepoint.spo_tenant": SpoTenantDataCollector
 }
 
 

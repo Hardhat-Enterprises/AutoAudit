@@ -1501,11 +1501,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
-      "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "policy_file": "7.2.2_enable_azure_ad_b2b_integration.rego",
+      "requires_permissions": ["SharePoint.Admin","SharePointTenantSettings.Read.All"],
+      "notes": null
     },
     {
       "control_id": "7.2.3",

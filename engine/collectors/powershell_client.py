@@ -52,6 +52,7 @@ class PowerShellClient:
         client_secret: str,
         tenant_name: Optional[str],
         sharepoint_cert_password: Optional[str],
+        sharepoint_cert_path: Optional[str],
         service_url: str | None = None
     ):
         """Initialize PowerShell client.

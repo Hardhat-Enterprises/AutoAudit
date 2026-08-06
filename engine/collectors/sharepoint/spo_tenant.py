@@ -20,11 +20,11 @@ REST Endpoints: /_api/SPOTenant or SharePoint Admin API
 
 from typing import Any
 
-from collectors.base import BaseDataCollector
-from collectors.sharepoint_client import SharePointClient
+from engine.collectors.powershell_base import BasePowerShellCollector
+from engine.collectors.sharepoint_client import SharePointClient
 
 
-class SpoTenantDataCollector(BaseDataCollector):
+class SpoTenantDataCollector(BasePowerShellCollector):
     """Collects SPO tenant settings for CIS compliance evaluation.
 
     This collector retrieves tenant-wide SharePoint settings including
@@ -43,5 +43,50 @@ class SpoTenantDataCollector(BaseDataCollector):
             - default_sharing_link_type: Default sharing link type
             - default_link_permission: Default link permission level
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+
+        """Collect SharePoint Online tenant settings.
+
+        Args:
+            client: Authenticated SharePoint client.
+
+        Returns:
+            Dictionary containing the complete tenant settings and selected
+            normalized properties used by CIS policies.
+
+        Raises:
+            RuntimeError: If tenant settings cannot be retrieved.
+        """
+        tenant_settings = await client.get_tenant_settings()
+
+        if not isinstance(tenant_settings, dict):
+            raise RuntimeError(
+                "Invalid SharePoint tenant settings response. "
+                f"Expected dict, received {type(tenant_settings).__name__}."
+            )
+
+        azure_ad_b2b_enabled = self._to_bool(
+            tenant_settings.get("EnableAzureADB2BIntegration")
+        )
+
+        return {
+            "tenant_settings": tenant_settings,
+            "azure_ad_b2b_integration_enabled": azure_ad_b2b_enabled,
+        }
+
+    @staticmethod
+    def _to_bool(value: Any) -> bool:
+        """Convert a PowerShell result to a Boolean value.
+
+        PowerShell services may return Boolean values as actual Booleans
+        or as strings such as "True" and "False".
+        """
+        if isinstance(value, bool):
+            return value
+
+        if isinstance(value, str):
+            return value.strip().lower() == "true"
+
+        if isinstance(value, int):
+            return value == 1
+
+        return False
