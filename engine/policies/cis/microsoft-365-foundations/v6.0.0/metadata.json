@@ -784,7 +784,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.device_registration_policy",
       "policy_file": "5.1.4.3_disable_global_admin_local_admin.rego",
-      "requires_permissions": ["Policy.Read.All"],
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
       "notes": null
     },
     {
