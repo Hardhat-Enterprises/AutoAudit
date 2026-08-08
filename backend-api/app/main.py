@@ -5,6 +5,8 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.errors import not_found_handler, NotFound
+from prometheus_fastapi_instrumentator import Instrumentator # <-- 1. Added import
+
 settings = get_settings()
 
 
@@ -40,6 +42,9 @@ def create_app() -> FastAPI:
             "status": "healthy",
         }
         
+    # Initialize Prometheus Instrumentator and expose the /metrics endpoint
+    Instrumentator().instrument(app).expose(app) # <-- 2. Added instrumentation
+
     return app
 
 app = create_app()
