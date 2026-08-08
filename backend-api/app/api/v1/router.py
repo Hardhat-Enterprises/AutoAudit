@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 from app.api.v1 import (
     auth,
+    aws_connections,
+    azure_connections,
     benchmarks,
     contact,
     evidence,
@@ -24,6 +26,8 @@ api_router.include_router(platforms.router)
 
 # Cloud connection routes
 api_router.include_router(m365_connections.router)
+api_router.include_router(aws_connections.router)
+api_router.include_router(azure_connections.router)
 
 # Scan routes
 api_router.include_router(scans.router)
