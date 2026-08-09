@@ -122,6 +122,9 @@ from collectors.exchange.protection.hosted_outbound_spam_filter import (
 from collectors.exchange.protection.malware_filter_policy import (
     MalwareFilterPolicyDataCollector,
 )
+from collectors.exchange.protection.priority_account_protection import (
+    PriorityAccountProtectionDataCollector,
+)
 from collectors.exchange.protection.safe_attachment_policy import (
     SafeAttachmentPolicyDataCollector,
 )
@@ -195,6 +198,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "exchange.protection.hosted_content_filter": HostedContentFilterDataCollector,
     "exchange.protection.hosted_outbound_spam_filter": HostedOutboundSpamFilterDataCollector,
     "exchange.protection.malware_filter_policy": MalwareFilterPolicyDataCollector,
+    "exchange.protection.priority_account_protection": PriorityAccountProtectionDataCollector,
     "exchange.protection.safe_attachment_policy": SafeAttachmentPolicyDataCollector,
     "exchange.protection.safe_links_policy": SafeLinksPolicyDataCollector,
     "exchange.protection.teams_protection_policy": TeamsProtectionPolicyDataCollector,
