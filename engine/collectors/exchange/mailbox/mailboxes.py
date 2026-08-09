@@ -21,17 +21,25 @@ class MailboxesDataCollector(BasePowerShellCollector):
     async def collect(self, client: PowerShellClient) -> dict[str, Any]:
         """Collect shared mailboxes and their associated user information."""
 
-        mailboxes = await client.run_cmdlet(
+        mailboxes_raw = await client.run_cmdlet(
             "ExchangeOnline",
             "Get-EXOMailbox",
             RecipientTypeDetails="SharedMailbox",
             ResultSize="Unlimited",
         )
 
-        if mailboxes is None:
+        mailboxes: list[dict[str, Any]]
+
+        if mailboxes_raw is None:
             mailboxes = []
-        elif isinstance(mailboxes, dict):
-            mailboxes = [mailboxes]
+        elif isinstance(mailboxes_raw, dict):
+            mailboxes = [mailboxes_raw]
+        elif isinstance(mailboxes_raw, list):
+            mailboxes = [
+                mailbox for mailbox in mailboxes_raw if isinstance(mailbox, dict)
+            ]
+        else:
+            mailboxes = []
 
         enriched_mailboxes = []
 
@@ -47,19 +55,19 @@ class MailboxesDataCollector(BasePowerShellCollector):
                 )
 
             enriched_mailboxes.append(
-            {
-                "display_name": mailbox.get("DisplayName"),
-                "user_principal_name": mailbox.get("UserPrincipalName"),
-                "external_directory_object_id": mailbox.get(
-                    "ExternalDirectoryObjectId"
-                ),
-                "account_disabled": (
-                    user_account.get("AccountDisabled")
-                    if isinstance(user_account, dict)
-                    else None
-                ),
-            }
-        )
+                {
+                    "display_name": mailbox.get("DisplayName"),
+                    "user_principal_name": mailbox.get("UserPrincipalName"),
+                    "external_directory_object_id": mailbox.get(
+                        "ExternalDirectoryObjectId"
+                    ),
+                    "account_disabled": (
+                        user_account.get("AccountDisabled")
+                        if isinstance(user_account, dict)
+                        else None
+                    ),
+                }
+            )
 
         return {
             "shared_mailboxes": enriched_mailboxes,
