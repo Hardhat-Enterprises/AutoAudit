@@ -35,7 +35,6 @@ class PriorityAccountProtectionDataCollector(BasePowerShellCollector):
         #tenant_settings is required for v6.0.0 control 2.4.1
         #accounts is required for v6.0.0 control 2.4.2
         tenant_settings = await client.run_cmdlet("ExchangeOnline", "Get-EmailTenantSettings")
-        print("Running cmdlet")
         accounts = await client.run_cmdlet("ExchangeOnline", "Get-User", IsVIP=True)
 
         # Handle no accounts, a single account, or a list of accounts
@@ -44,8 +43,6 @@ class PriorityAccountProtectionDataCollector(BasePowerShellCollector):
         elif isinstance(accounts, dict):
             accounts = [accounts]
 
-        #We build in a protection to return None rather than false in case there are any permissions issues or other failures in pulling the tenant settings. 
-        #This allows the rego policy to distinguish between a scan failure or a configuration noncompliance and return a "couldn't determine compliance" result if the setting pull fails
         return {
             "protection_enabled": (
                 tenant_settings.get("EnablePriorityAccountProtection")
