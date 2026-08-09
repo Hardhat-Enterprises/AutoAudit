@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     from app.models.compliance import Scan
     from app.models.evidence_validation import EvidenceValidation
     from app.models.m365_connection import M365Connection
-    from app.models.aws_connection import AWSConnection
     from app.models.azure_connection import AzureConnection
     from app.models.contact import ContactSubmission, SubmissionHistory, SubmissionNote
     from app.models.oauth_account import OAuthAccount
@@ -74,9 +73,6 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         lazy="selectin",
     )
     m365_connections: Mapped[list["M365Connection"]] = relationship(
-        back_populates="user"
-    )
-    aws_connections: Mapped[list["AWSConnection"]] = relationship(
         back_populates="user"
     )
     azure_connections: Mapped[list["AzureConnection"]] = relationship(
