@@ -78,8 +78,20 @@ class SharePointClient:
         Returns:
             Dict containing tenant configuration properties.
         """
-        # TODO: Implement REST API call
-        raise NotImplementedError("SharePoint client not yet implemented")
+        token = await self._get_access_token()
+        url = f"{self.admin_url}/_api/SPOTenant"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json;odata=verbose",
+        }
+
+        async with httpx.AsyncClient() as http_client:
+            response = await http_client.get(url, headers=headers, timeout=30.0)
+            response.raise_for_status()
+            payload = response.json()
+
+        # Classic SharePoint REST API wraps the actual object under "d"
+        return payload.get("d", payload)
 
     async def get_site_properties(self, site_url: str) -> dict[str, Any]:
         """Get site properties via REST API.

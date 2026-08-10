@@ -13,6 +13,7 @@ Environment Variables:
     M365_TENANT_ID: Azure AD tenant ID
     M365_CLIENT_ID: App registration client ID
     M365_CLIENT_SECRET: App registration client secret
+    M365_SHAREPOINT_TENANT_NAME: SharePoint tenant name (e.g. 'contoso' for contoso.sharepoint.com)
 """
 
 import argparse
@@ -30,6 +31,7 @@ from collectors.registry import DATA_COLLECTORS, get_collector
 from collectors.graph_client import GraphClient
 from collectors.powershell_base import BasePowerShellCollector
 from collectors.powershell_client import PowerShellClient, PowerShellExecutionError
+from collectors.sharepoint_client import SharePointClient
 
 
 def list_collectors() -> None:
@@ -73,24 +75,52 @@ def get_credentials() -> tuple[str, str, str]:
     return tenant_id, client_id, client_secret
 
 
+def get_sharepoint_tenant_name() -> str:
+    """Get the SharePoint tenant name from environment variables."""
+    tenant_name = os.environ.get("M365_SHAREPOINT_TENANT_NAME")
+    if not tenant_name:
+        print("Error: Missing required environment variable for SharePoint collectors:")
+        print("  - M365_SHAREPOINT_TENANT_NAME")
+        print("\nSet it before running a sharepoint.* collector:")
+        print("  export M365_SHAREPOINT_TENANT_NAME=<your-tenant-name>  # e.g. 'contoso'")
+        sys.exit(1)
+    return tenant_name
+
+
+def build_client(
+    collector,
+    collector_id: str,
+    tenant_id: str,
+    client_id: str,
+    client_secret: str,
+    service_url: str | None,
+    ps_client: PowerShellClient | None = None,
+    sp_client: SharePointClient | None = None,
+    graph_client: GraphClient | None = None,
+):
+    """Build (or reuse) the appropriate client for a given collector."""
+    if isinstance(collector, BasePowerShellCollector):
+        if ps_client is None:
+            ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
+        return ps_client, ps_client, sp_client, graph_client
+    elif collector_id.startswith("sharepoint."):
+        if sp_client is None:
+            tenant_name = get_sharepoint_tenant_name()
+            sp_client = SharePointClient(tenant_id, client_id, client_secret, tenant_name)
+        return sp_client, ps_client, sp_client, graph_client
+    else:
+        if graph_client is None:
+            graph_client = GraphClient(tenant_id, client_id, client_secret)
+        return graph_client, ps_client, sp_client, graph_client
+
+
 async def test_collector(
     collector_id: str,
     output_dir: Path | None = None,
     verbose: bool = False,
     service_url: str | None = None,
 ) -> dict:
-    """Run a collector and return/save results.
-
-    Args:
-        collector_id: The collector ID to run (e.g., 'entra.roles.cloud_only_admins')
-        output_dir: Optional directory to save JSON output
-        verbose: If True, print additional debug info
-        service_url: Optional PowerShell HTTP service URL
-
-    Returns:
-        Dict containing collector_id, timestamp, elapsed_seconds, and data
-    """
-    # Validate collector exists
+    """Run a collector and return/save results."""
     if collector_id not in DATA_COLLECTORS:
         print(f"Error: Unknown collector '{collector_id}'")
         print("\nAvailable collectors:")
@@ -98,7 +128,6 @@ async def test_collector(
             print(f"  {cid}")
         sys.exit(1)
 
-    # Get credentials
     tenant_id, client_id, client_secret = get_credentials()
 
     if verbose:
@@ -108,14 +137,11 @@ async def test_collector(
             print(f"Using PowerShell service: {service_url}")
         print()
 
-    # Create collector and appropriate client
     collector = get_collector(collector_id)
-    if isinstance(collector, BasePowerShellCollector):
-        client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
-    else:
-        client = GraphClient(tenant_id, client_id, client_secret)
+    client, _, _, _ = build_client(
+        collector, collector_id, tenant_id, client_id, client_secret, service_url
+    )
 
-    # Run collection
     print(f"Running collector: {collector_id}")
     print(f"Collector class: {collector.__class__.__name__}")
     print("-" * 50)
@@ -138,7 +164,6 @@ async def test_collector(
             traceback.print_exc()
         sys.exit(1)
 
-    # Build output structure
     output = {
         "collector_id": collector_id,
         "timestamp": datetime.now().isoformat(),
@@ -146,12 +171,10 @@ async def test_collector(
         "data": result,
     }
 
-    # Pretty print to console
     print("-" * 50)
     print("Result:")
     print(json.dumps(output, indent=2, default=str))
 
-    # Save to file if output_dir specified
     if output_dir:
         output_dir.mkdir(parents=True, exist_ok=True)
         filename = f"{collector_id.replace('.', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -176,20 +199,18 @@ async def test_all_collectors(
 
     tenant_id, client_id, client_secret = get_credentials()
     graph_client = GraphClient(tenant_id, client_id, client_secret)
-    ps_client = None  # Lazy init PowerShell client
+    ps_client = None
+    sp_client = None
 
     results = []
     for collector_id in sorted(DATA_COLLECTORS.keys()):
         print(f"\n{collector_id}:")
         collector = get_collector(collector_id)
 
-        # Use appropriate client based on collector type
-        if isinstance(collector, BasePowerShellCollector):
-            if ps_client is None:
-                ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
-            client = ps_client
-        else:
-            client = graph_client
+        client, ps_client, sp_client, graph_client = build_client(
+            collector, collector_id, tenant_id, client_id, client_secret, service_url,
+            ps_client, sp_client, graph_client,
+        )
 
         start = datetime.now()
         try:
@@ -221,7 +242,6 @@ async def test_all_collectors(
             "error": error,
         })
 
-    # Print summary
     print("\n" + "=" * 60)
     print("Summary:")
     ok_count = sum(1 for r in results if r["status"] == "OK")
@@ -233,7 +253,6 @@ async def test_all_collectors(
     print(f"  PowerShell Errors: {ps_error_count}")
     print(f"  Other Errors: {error_count}")
 
-    # Save summary if output_dir specified
     if output_dir:
         output_dir.mkdir(parents=True, exist_ok=True)
         filepath = output_dir / f"test_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -270,39 +289,15 @@ Environment Variables:
   M365_TENANT_ID      Azure AD tenant ID
   M365_CLIENT_ID      App registration client ID
   M365_CLIENT_SECRET  App registration client secret
+  M365_SHAREPOINT_TENANT_NAME  SharePoint tenant name (e.g. 'contoso')
         """,
     )
-    parser.add_argument(
-        "--collector", "-c",
-        help="Collector ID to run (e.g., 'entra.roles.cloud_only_admins')",
-    )
-    parser.add_argument(
-        "--output", "-o",
-        type=Path,
-        help="Output directory for JSON files",
-    )
-    parser.add_argument(
-        "--list", "-l",
-        action="store_true",
-        help="List available collectors",
-    )
-    parser.add_argument(
-        "--all", "-a",
-        action="store_true",
-        help="Test all collectors and report status",
-    )
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Show verbose output including credentials (masked) and stack traces",
-    )
-    parser.add_argument(
-        "--use-service",
-        type=str,
-        default=None,
-        metavar="URL",
-        help="Use PowerShell HTTP service instead of Docker (e.g., http://localhost:8001)",
-    )
+    parser.add_argument("--collector", "-c", help="Collector ID to run (e.g., 'entra.roles.cloud_only_admins')")
+    parser.add_argument("--output", "-o", type=Path, help="Output directory for JSON files")
+    parser.add_argument("--list", "-l", action="store_true", help="List available collectors")
+    parser.add_argument("--all", "-a", action="store_true", help="Test all collectors and report status")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Show verbose output including credentials (masked) and stack traces")
+    parser.add_argument("--use-service", type=str, default=None, metavar="URL", help="Use PowerShell HTTP service instead of Docker (e.g., http://localhost:8001)")
 
     args = parser.parse_args()
 
