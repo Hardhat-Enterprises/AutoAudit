@@ -1,9 +1,23 @@
 name: Run Collector
 
+# DISABLED as of this commit - do not re-enable the push trigger until:
+#   1. The GCP_CREDENTIALS secret (a long-lived service account JSON key)
+#      has been rotated/deleted in GCP IAM and replaced with Workload
+#      Identity Federation (OIDC) auth, per Workstream 4 (secrets and
+#      identity).
+#   2. This workflow no longer commits live GCP infrastructure data
+#      (IAM policies, firewall rules, SQL/BigQuery/Dataproc details, DNS
+#      zones) into the repository. Auto-committing a full infra snapshot
+#      on every push, even with a properly scoped credential, exposes
+#      more about the project's attack surface than a test fixture needs.
+# See the Workstream 4 findings writeup for details. Restore the push
+# trigger only after both are addressed and reviewed.
 on:
-  push:
-    branches: [engine-development]
-    
+  workflow_dispatch: {}
+# on:
+#   push:
+#     branches: [engine-development]
+
 jobs:
   run-collector:
     runs-on: ubuntu-latest
