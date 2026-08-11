@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "etag": "BwY9aQGbYhE=",
+  "bindings": [
+    {
+      "role": "roles/compute.serviceAgent",
+      "members": [
+        "serviceAccount:service-100000000000@compute-system.iam.gserviceaccount.com"
+      ]
+    },
+    {
+      "role": "roles/editor",
+      "members": [
+        "serviceAccount:100000000000@cloudservices.gserviceaccount.com",
+        "serviceAccount:sa-noperms@example-project-123456.iam.gserviceaccount.com",
+        "serviceAccount:100000000000-compute@developer.gserviceaccount.com"
+      ]
+    },
+    {
+      "role": "roles/owner",
+      "members": [
+        "user:owner@example.com"
+      ]
+    }
+  ]
+}
