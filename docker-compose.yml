@@ -18,6 +18,13 @@
 #
 # To test collectors with PowerShell service:
 #   cd engine && uv run python -m scripts.test_collector -c exchange.organization.organization_config --use-service http://localhost:8001
+#
+# NOTE: If you're upgrading an existing local environment after this change,
+# your postgres_data volume still has the OLD password baked in, and any
+# saved connections in your dev DB were encrypted with the OLD ENCRYPTION_KEY.
+# Reset your local state with:
+#   docker compose down -v
+# before starting with the new .env values. This is dev-only data — safe to discard.
 
 services:
   # =============================================================================
