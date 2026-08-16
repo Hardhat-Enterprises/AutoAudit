@@ -32,7 +32,7 @@ Also worth flagging: `.secrets.baseline` is supposed to document known findings 
 
 ## 4a. Critical finding - live GCP service account private key in history
 
-`engine/test-sa-key.json`, added in commit `4fe952c` (2025-09-03, "added code in collecter to extract compute networks config"), contains a full unencrypted RSA private key for a GCP service account. Unlike the docker-compose credentials, this isn't a placeholder, it's a real key that's been sitting in a public repo for close to a year. **This has not yet been escalated for revocation as of 2026-08-16.** Flagging it here as the single most urgent action item from this audit — it needs to be raised with whoever has GCP admin access as soon as possible, independent of this doc's review timeline.
+`engine/test-sa-key.json`, added in commit `4fe952c` (2025-09-03, "added code in collecter to extract compute networks config"), contains a full unencrypted RSA private key for a GCP service account. Unlike the docker-compose credentials, this isn't a placeholder, it's a real key that's been sitting in a public repo for close to a year. **This has not yet been escalated for revocation as of 2026-08-16.** Flagging it here as the single most urgent action item from this audit, it needs to be raised with whoever has GCP admin access as soon as possible, independent of this doc's review timeline.
 
 ## 5. One more thing I found, but isn't mine to fix
 
