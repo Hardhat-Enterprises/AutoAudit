@@ -51,7 +51,7 @@ compliant_setting(setting) if {
 }
 
 compliant if {
-  some policy in input.value
+  some policy in input.data.configuration_policies
   some setting in policy.settings
   compliant_setting(setting)
 }

@@ -13,7 +13,7 @@ amsi_setting(scope_value) := {
     "settingInstance": {
         "settingDefinitionId": amsi_setting_id,
         "choiceSettingValue": {
-            "value": "enabled_1",
+            "value": sprintf("%s_1", [amsi_setting_id]),
             "children": [
                 {
                     "choiceSettingValue": {
@@ -38,11 +38,13 @@ configuration_policy(settings) := {
 
 test_compliant_scope_1 if {
     result := data.essential_eight.asd_essential_eight.v2025.control_e8_mac_1_3.result with input as {
-        "value": [
-            configuration_policy([
-                amsi_setting("amsi_scan_scope_1"),
-            ]),
-        ],
+        "data": {
+            "configuration_policies": [
+                configuration_policy([
+                    amsi_setting("amsi_scan_scope_1"),
+                ]),
+            ],
+        },
     }
 
     result.compliant == true
@@ -56,11 +58,13 @@ test_compliant_scope_1 if {
 
 test_compliant_scope_2 if {
     result := data.essential_eight.asd_essential_eight.v2025.control_e8_mac_1_3.result with input as {
-        "value": [
-            configuration_policy([
-                amsi_setting("amsi_scan_scope_2"),
-            ]),
-        ],
+        "data": {
+            "configuration_policies": [
+                configuration_policy([
+                    amsi_setting("amsi_scan_scope_2"),
+                ]),
+            ],
+        },
     }
 
     result.compliant == true
@@ -74,11 +78,13 @@ test_compliant_scope_2 if {
 
 test_non_compliant_invalid_scope if {
     result := data.essential_eight.asd_essential_eight.v2025.control_e8_mac_1_3.result with input as {
-        "value": [
-            configuration_policy([
-                amsi_setting("amsi_scan_scope_0"),
-            ]),
-        ],
+        "data": {
+            "configuration_policies": [
+                configuration_policy([
+                    amsi_setting("amsi_scan_scope_0"),
+                ]),
+            ],
+        },
     }
 
     result.compliant == false
@@ -92,9 +98,11 @@ test_non_compliant_invalid_scope if {
 
 test_non_compliant_missing_setting if {
     result := data.essential_eight.asd_essential_eight.v2025.control_e8_mac_1_3.result with input as {
-        "value": [
-            configuration_policy([]),
-        ],
+        "data": {
+            "configuration_policies": [
+                configuration_policy([]),
+            ],
+        },
     }
 
     result.compliant == false
