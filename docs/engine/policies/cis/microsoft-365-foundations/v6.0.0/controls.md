@@ -54,7 +54,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 1.2.2 | L1 | Ensure sign-in to shared mailboxes is blocked | Automated | Not Started | `exchange.mailbox.mailboxes` | Not Started | Collector exists but control logic not defined |
 | 1.3.1 | L1 | Ensure the 'Password expiration policy' is set to 'Set passwords to never expire (recommended)' | Automated | Automated | `entra.domains.password_policy` | Implemented | |
 | 1.3.2 | L2 | Ensure 'Idle session timeout' is set to '3 hours (or less)' for unmanaged devices | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires CA policy coverage verification |
-| 1.3.3 | L2 | Ensure 'External sharing' of calendars is not available | Automated | Not Started | `exchange.organization.sharing_policy` | Not Started | Collector exists but control logic not defined |
+| 1.3.3 | L2 | Ensure 'External sharing' of calendars is not available | Automated | Automated | `exchange.organization.sharing_policy` | Implemented | `Get-SharingPolicy` Domains; flags Anonymous/wildcard + CalendarSharing on enabled policies; see metadata notes |
 | 1.3.4 | L1 | Ensure 'User owned apps and services' is restricted | Automated | Automated | `entra.applications.apps_and_services_settings` | Implemented | |
 | 1.3.5 | L1 | Ensure internal phishing protection for Forms is enabled | Automated | Automated | `entra.applications.forms_settings` | Implemented | |
 | 1.3.6 | L2 | Ensure the customer lockbox feature is enabled | Automated | Automated | `exchange.organization.organization_config` | Implemented | |

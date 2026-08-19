@@ -15,6 +15,79 @@ from collectors.powershell_base import BasePowerShellCollector
 from collectors.powershell_client import PowerShellClient
 
 
+def _normalize_domains(domains: Any) -> list[str]:
+    if domains is None:
+        return []
+    if isinstance(domains, str):
+        s = domains.strip()
+        if not s:
+            return []
+        for sep in (";", ","):
+            if sep in s:
+                return [p.strip() for p in s.split(sep) if p.strip()]
+        return [s]
+    if isinstance(domains, list):
+        out: list[str] = []
+        for item in domains:
+            if not isinstance(item, str):
+                continue
+            chunk = item.strip()
+            if not chunk:
+                continue
+            if ";" in chunk or "," in chunk:
+                sep = ";" if ";" in chunk else ","
+                out.extend(p.strip() for p in chunk.split(sep) if p.strip())
+            else:
+                out.append(chunk)
+        return out
+    return []
+
+
+def _calendar_external_sharing_violation(domain_entry: str) -> str | None:
+    """Return a reason code for non-compliant Domains entries.
+
+    SharingPolicy Domains are ``domain:Capability`` pairs. Only Anonymous and wildcard
+    entries with CalendarSharing capabilities are flagged; named SMTP partner domains
+    are not evaluated here.
+    """
+    if ":" not in domain_entry:
+        return None
+    domain_part, cap = domain_entry.split(":", 1)
+    domain_part = domain_part.strip()
+    cap = cap.strip()
+    if not domain_part or not cap:
+        return None
+    if "calendarsharing" not in cap.lower():
+        return None
+    low = domain_part.lower()
+    if low == "anonymous":
+        return "anonymous_calendar_sharing"
+    if low == "*":
+        return "wildcard_calendar_sharing"
+    return None
+
+
+def _violations_for_policies(policies: list[Any]) -> list[dict[str, Any]]:
+    violations: list[dict[str, Any]] = []
+    for policy in policies:
+        if not isinstance(policy, dict):
+            continue
+        if policy.get("Enabled") is False:
+            continue
+        name = policy.get("Name") or "Unknown"
+        for entry in _normalize_domains(policy.get("Domains")):
+            reason = _calendar_external_sharing_violation(entry)
+            if reason:
+                violations.append(
+                    {
+                        "policy_name": name,
+                        "domain_entry": entry,
+                        "reason": reason,
+                    }
+                )
+    return violations
+
+
 class SharingPolicyDataCollector(BasePowerShellCollector):
     """Collects sharing policy settings for CIS compliance evaluation.
 
@@ -29,37 +102,29 @@ class SharingPolicyDataCollector(BasePowerShellCollector):
             Dict containing:
             - sharing_policies: List of sharing policies
             - default_policy: The default sharing policy
-            - policies_allowing_external: Policies that allow external sharing
+            - calendar_sharing_violations: Non-compliant calendar sharing rules
+            - external_calendar_sharing_restricted: True if no violations found
         """
         policies = await client.run_cmdlet("ExchangeOnline", "Get-SharingPolicy")
 
-        # Handle None, single policy, or list
         if policies is None:
             policies = []
         elif isinstance(policies, dict):
             policies = [policies]
 
-        # Find default policy
-        default_policy = next(
-            (p for p in policies if p.get("Default")),
-            policies[0] if policies else None
-        )
+        default_policy = None
+        if policies:
+            default_policy = next(
+                (p for p in policies if p.get("Default")),
+                policies[0],
+            )
 
-        # Check for policies allowing external sharing
-        # Domains field contains sharing rules - if it has entries, sharing is enabled
-        policies_allowing_external = []
-        for policy in policies:
-            domains = policy.get("Domains", [])
-            if domains:
-                policies_allowing_external.append({
-                    "name": policy.get("Name"),
-                    "domains": domains,
-                    "enabled": policy.get("Enabled"),
-                })
+        violations = _violations_for_policies(policies)
 
         return {
             "sharing_policies": policies,
             "total_policies": len(policies),
             "default_policy": default_policy,
-            "policies_allowing_external": policies_allowing_external,
+            "calendar_sharing_violations": violations,
+            "external_calendar_sharing_restricted": len(violations) == 0,
         }
