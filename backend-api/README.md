@@ -41,6 +41,17 @@ Automated GCP compliance assessment tool built with FastAPI. This API provides a
    - API Documentation: http://localhost:8000/docs | http://localhost:8000/redoc
    - Root Endpoint: http://localhost:8000/
 
+## Running tests
+
+Install the `dev` extra, then run the pytest suite from `backend-api/`:
+
+```bash
+uv sync --extra dev
+uv run pytest tests/ -q
+```
+
+Use `-v` instead of `-q` for more detail. CI runs the same command on changes under `backend-api/**`.
+
 ## 📁 Project Structure
 
 ```
@@ -57,7 +68,7 @@ backend-api/
 │   │
 │   └── main.py               # FastAPI app
 │
-├── tests/                    # Test scripts
+├── tests/                    # Pytest suite (fixtures + endpoint smoke tests)
 │
 ├── .env.example              # Environment variables template
 ├── pyproject.toml            # Project dependencies & metadata

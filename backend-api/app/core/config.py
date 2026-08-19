@@ -1,9 +1,11 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     # The below settings are defaults, and not duplicates of .env
     # The contents of .env overrides what is defined here.
+    model_config = SettingsConfigDict(env_file=".env")
+
     APP_ENV: str = "dev"
     API_PREFIX: str = "/v1"
 
@@ -36,9 +38,6 @@ class Settings(BaseSettings):
 
     # Policies directory (for benchmark/control metadata)
     POLICIES_DIR: str = "/app/policies"
-
-    class Config:
-        env_file = ".env"
 
 
 def get_settings() -> Settings:

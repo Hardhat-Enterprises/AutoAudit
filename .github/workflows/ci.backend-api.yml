@@ -59,7 +59,8 @@ jobs:
         run: pip install bandit
 
       - name: Run Bandit scan on backend-api
-        run: bandit -r backend-api -f txt
+        # Exclude pytest suites: Bandit B101 flags assert, which is expected in tests.
+        run: bandit -r backend-api -x backend-api/tests -f txt
 
   run-lint:
     name: Linting Code
@@ -76,6 +77,8 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pytest suites are covered by pytest; exclude from style/secret/copy-paste gates.
+          FILTER_REGEX_EXCLUDE: .*backend-api/tests/.*
           VALIDATE_YAML: false
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_PYTHON_BLACK: false
@@ -87,22 +90,48 @@ jobs:
           VALIDATE_MARKDOWN_PRETTIER: false
           VALIDATE_NATURAL_LANGUAGE: false
 
+  test:
+    name: Pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install and run pytest
+        working-directory: backend-api
+        run: |
+          uv sync --extra dev
+          uv run pytest tests/ -q
+
   report:
     name: Report PR status
-    needs: [analyze, run-lint]
+    needs: [analyze, run-lint, test]
     if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      issues: write
     steps:
       - uses: actions/github-script@v7
         with:
           script: |
+            // Fork PRs get a read-only GITHUB_TOKEN; commenting on the upstream PR is forbidden.
+            const headRepo = context.payload.pull_request?.head?.repo?.full_name;
+            const baseRepo = `${context.repo.owner}/${context.repo.repo}`;
+            if (headRepo && headRepo !== baseRepo) {
+              core.info(`Skipping PR comment for fork PR (${headRepo} → ${baseRepo}).`);
+              return;
+            }
+
             const analyze = '${{ needs.analyze.result }}';
             const lint    = '${{ needs.run-lint.result }}';
+            const test    = '${{ needs.test.result }}';
 
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
-            const allPassed = [analyze, lint].every(r => ['success', 'skipped'].includes(r));
+            const allPassed = [analyze, lint, test].every(r => ['success', 'skipped'].includes(r));
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const marker = '<!-- ci-report-backend-api -->'; // used to find and update the existing comment
 
@@ -114,32 +143,38 @@ jobs:
               `|---|---|`,
               `| Security analysis (CodeQL + Bandit) | ${icon(analyze)} \`${analyze}\` |`,
               `| Lint | ${icon(lint)} \`${lint}\` |`,
+              `| Pytest | ${icon(test)} \`${test}\` |`,
               ``,
               allPassed
                 ? `All checks passed.`
                 : `One or more checks failed. [View logs](${runUrl})`,
             ].join('\n');
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const existing = comments.find(c => c.body.includes(marker));
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body,
               });
+
+              const existing = comments.find(c => c.body.includes(marker));
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            } catch (err) {
+              // Do not fail the workflow when the token cannot write comments.
+              core.warning(`Could not post CI status comment: ${err.message || err}`);
             }
