@@ -65,6 +65,13 @@ type ConnectionsPageProps = {
 const inputBaseClass =
   "w-full rounded-lg border px-3.5 py-2.5 text-sm transition focus:outline-none disabled:cursor-not-allowed disabled:opacity-60";
 
+const formCardClass = "mb-6 rounded-xl border p-4 sm:p-6";
+
+const formActionClass = "flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end";
+
+const connectionActionGroupClass =
+  "flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap md:w-auto";
+
 const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
   sidebarWidth = 220,
   isDarkMode = true,
@@ -83,9 +90,8 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
     client_secret: "",
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [editingConnection, setEditingConnection] = useState<Connection | null>(
-    null,
-  );
+  const [editingConnection, setEditingConnection] =
+    useState<Connection | null>(null);
   const [editFormData, setEditFormData] = useState<EditFormData>({
     name: "",
     tenant_id: "",
@@ -98,6 +104,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
   const [testResults, setTestResults] = useState<Record<string, TestResult>>(
     {},
   );
+
   const pageTheme = isDarkMode
     ? {
         page: "bg-primary text-white",
@@ -122,10 +129,10 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
     err: unknown,
     fallbackMessage: string,
   ): string {
-    // Backend returns 400 Bad Request when M365 auth cannot be established.
     if (err instanceof APIError && err.status === 400) {
       return "Authentication not established. Please check your tenant ID, client ID, and client secret and try again.";
     }
+
     if (
       err &&
       typeof err === "object" &&
@@ -134,6 +141,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
     ) {
       return "Authentication not established. Please check your tenant ID, client ID, and client secret and try again.";
     }
+
     if (
       err &&
       typeof err === "object" &&
@@ -142,6 +150,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
     ) {
       return (err as { message: string }).message;
     }
+
     return fallbackMessage;
   }
 
@@ -152,11 +161,13 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
   async function loadData(): Promise<void> {
     setIsLoading(true);
     setError(null);
+
     try {
       const [platformsData, connectionsData] = await Promise.all([
         getPlatforms(token),
         getConnections(token),
       ]);
+
       setPlatforms(platformsData);
       setConnections(connectionsData);
     } catch (err) {
@@ -187,6 +198,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
         client_id: formData.client_id,
         client_secret: formData.client_secret,
       });
+
       setConnections((prev) => [...prev, newConnection]);
       setFormData({
         name: "",
@@ -206,9 +218,11 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
   async function handleTestConnection(connection: Connection): Promise<void> {
     setTestingId(connection.id);
     setError(null);
+
     try {
       const result = await testConnection(token, connection.id);
       setTestResults((prev) => ({ ...prev, [connection.id]: result }));
+
       if (!result?.success) {
         setError(result?.message || "Connection test failed");
       }
@@ -230,7 +244,6 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
       name: connection.name,
       tenant_id: connection.tenant_id,
       client_id: connection.client_id,
-      // Never expose the actual secret; show a mask so it doesn't look blank.
       client_secret: CLIENT_SECRET_MASK,
     });
   }
@@ -239,8 +252,6 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
     const { name } = e.target;
     let { value } = e.target;
 
-    // If the user starts typing while the masked placeholder is present,
-    // ensure we don't keep the mask characters in state.
     if (
       name === "client_secret" &&
       editFormData.client_secret === CLIENT_SECRET_MASK &&
@@ -248,6 +259,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
     ) {
       value = value.slice(CLIENT_SECRET_MASK.length);
     }
+
     setEditFormData((prev) => ({ ...prev, [name]: value }));
   }
 
@@ -255,6 +267,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
     e: React.FormEvent<HTMLFormElement>,
   ): Promise<void> {
     e.preventDefault();
+
     if (!editingConnection) return;
 
     setIsEditing(true);
@@ -266,7 +279,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
         tenant_id: editFormData.tenant_id,
         client_id: editFormData.client_id,
       };
-      // Only include client_secret if user entered a new one
+
       if (
         editFormData.client_secret &&
         editFormData.client_secret !== CLIENT_SECRET_MASK
@@ -279,6 +292,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
         editingConnection.id,
         updateData,
       );
+
       setConnections((prev) =>
         prev.map((conn) =>
           conn.id === editingConnection.id ? updatedConnection : conn,
@@ -325,24 +339,31 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
   }
 
   const buttonPrimary =
-    "inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60";
-  const buttonSecondary = `inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+    "inline-flex items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60";
+
+  const buttonSecondary = `inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
     isDarkMode
       ? "border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700"
       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
   }`;
+
   const buttonDanger =
-    "inline-flex items-center gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-500 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex items-center justify-center gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-500 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60";
+
+  const pageOffsetStyle = {
+    marginLeft: sidebarWidth === 0 ? "80px" : `${sidebarWidth}px`,
+    width:
+      sidebarWidth === 0
+        ? "calc(100% - 80px)"
+        : `calc(100% - ${sidebarWidth}px)`,
+    transition: "margin-left 0.4s ease, width 0.4s ease",
+  };
 
   if (isLoading) {
     return (
       <div
-        className={`min-h-screen p-6 transition-colors duration-300 ${pageTheme.page}`}
-        style={{
-          marginLeft: `${sidebarWidth}px`,
-          width: `calc(100% - ${sidebarWidth}px)`,
-          transition: "margin-left 0.4s ease, width 0.4s ease",
-        }}
+        className={`min-h-screen px-3 py-5 transition-colors duration-300 sm:px-4 md:px-6 ${pageTheme.page}`}
+        style={pageOffsetStyle}
       >
         <div className="mx-auto max-w-5xl">
           <div
@@ -358,19 +379,17 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
 
   return (
     <div
-      className={`min-h-screen p-6 transition-colors duration-300 ${pageTheme.page}`}
-      style={{
-        marginLeft: `${sidebarWidth}px`,
-        width: `calc(100% - ${sidebarWidth}px)`,
-        transition: "margin-left 0.4s ease, width 0.4s ease",
-      }}
+      className={`min-h-screen px-3 py-5 transition-colors duration-300 sm:px-4 md:px-6 ${pageTheme.page}`}
+      style={pageOffsetStyle}
     >
       <div className="mx-auto w-full max-w-7xl">
-        <div className="flex gap-4 justify-between items-start mb-6">
-          <div className="flex gap-4 items-start">
-            <Link2 size={24} className="mt-1 text-blue-400" />
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 gap-3 items-start sm:gap-4">
+            <Link2 size={24} className="mt-1 shrink-0 text-blue-400" />
             <div>
-              <h1 className={`text-2xl font-bold ${pageTheme.strong}`}>
+              <h1
+                className={`text-xl font-bold sm:text-2xl ${pageTheme.strong}`}
+              >
                 Cloud Platforms
               </h1>
               <p className={`text-sm ${pageTheme.muted}`}>
@@ -380,7 +399,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
           </div>
 
           <button
-            className={buttonPrimary}
+            className={`${buttonPrimary} w-full sm:w-auto`}
             onClick={() => setShowForm(!showForm)}
           >
             <Plus size={16} />
@@ -389,14 +408,14 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
         </div>
 
         {error && (
-          <div className="flex gap-2 items-center py-3 px-4 mb-6 text-red-500 rounded-lg border border-red-500/30 bg-red-500/10">
-            <AlertCircle size={18} />
+          <div className="mb-6 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-500">
+            <AlertCircle size={18} className="shrink-0" />
             <span className="text-sm">{error}</span>
           </div>
         )}
 
         {showForm && (
-          <div className={`mb-6 rounded-xl border p-6 ${pageTheme.card}`}>
+          <div className={`${formCardClass} ${pageTheme.card}`}>
             <h3 className={`mb-5 text-lg font-semibold ${pageTheme.strong}`}>
               New Connection
             </h3>
@@ -511,7 +530,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                 </div>
               </div>
 
-              <div className="flex gap-3 justify-end pt-2">
+              <div className={formActionClass}>
                 <button
                   type="button"
                   className={buttonSecondary}
@@ -544,7 +563,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
         )}
 
         {editingConnection && (
-          <div className={`mb-6 rounded-xl border p-6 ${pageTheme.card}`}>
+          <div className={`${formCardClass} ${pageTheme.card}`}>
             <h3 className={`mb-5 text-lg font-semibold ${pageTheme.strong}`}>
               Edit Connection
             </h3>
@@ -631,7 +650,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                 />
               </div>
 
-              <div className="flex gap-3 justify-end mt-2">
+              <div className={formActionClass}>
                 <button
                   type="button"
                   className={buttonSecondary}
@@ -677,10 +696,10 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
             connections.map((connection) => (
               <div
                 key={connection.id}
-                className={`flex flex-col gap-4 rounded-xl border p-5 transition hover:border-blue-400 md:flex-row md:items-center md:justify-between ${pageTheme.card}`}
+                className={`flex flex-col gap-4 rounded-xl border p-4 transition hover:border-blue-400 md:flex-row md:items-center md:justify-between md:p-5 ${pageTheme.card}`}
               >
-                <div className="flex-1">
-                  <div className="flex gap-3 items-center mb-2">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                     <h4
                       className={`text-base font-semibold ${pageTheme.strong}`}
                     >
@@ -688,17 +707,17 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                     </h4>
 
                     {testingId === connection.id ? (
-                      <span className="inline-flex gap-1 items-center py-1 px-2.5 text-xs font-medium text-orange-500 rounded-full bg-orange-500/15">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2.5 py-1 text-xs font-medium text-orange-500">
                         <Loader2 size={12} className="animate-spin" />
                         <span>Testing</span>
                       </span>
                     ) : testResults[connection.id]?.success === true ? (
-                      <span className="inline-flex gap-1 items-center py-1 px-2.5 text-xs font-medium text-emerald-500 rounded-full bg-emerald-500/15">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-500">
                         <CheckCircle2 size={12} />
                         <span>Connected</span>
                       </span>
                     ) : testResults[connection.id]?.success === false ? (
-                      <span className="inline-flex gap-1 items-center py-1 px-2.5 text-xs font-medium text-red-500 rounded-full bg-red-500/15">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2.5 py-1 text-xs font-medium text-red-500">
                         <XCircle size={12} />
                         <span>Failed</span>
                       </span>
@@ -706,7 +725,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                   </div>
 
                   <div
-                    className={`flex flex-wrap gap-x-4 gap-y-2 text-sm ${pageTheme.muted}`}
+                    className={`flex flex-col gap-2 text-sm ${pageTheme.muted} sm:flex-row sm:flex-wrap sm:gap-x-4`}
                   >
                     <span>
                       <strong className="text-slate-400">Tenant ID:</strong>{" "}
@@ -733,7 +752,7 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = ({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                <div className={connectionActionGroupClass}>
                   <button
                     className={buttonSecondary}
                     onClick={() => handleTestConnection(connection)}

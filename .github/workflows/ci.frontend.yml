@@ -1,0 +1,167 @@
+name: "Frontend CI/CD"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+  schedule:
+    - cron: '32 23 * * 6'
+
+jobs:
+  analyze:
+    name: Security Analysis on (${{ matrix.language }})
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript-typescript']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - if: matrix.build-mode == 'manual'
+        shell: bash
+        run: |
+          echo 'If you are using a "manual" build mode for one or more of the' \
+            'languages you are analyzing, replace this with the commands to build' \
+            'your code, for example:'
+          echo '  make bootstrap'
+          echo '  make release'
+          exit 1
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
+
+  run-lint:
+    name: Linting frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Run oxlint
+        run: npm run lint
+        working-directory: frontend
+
+  build-and-test:
+    name: Build and Test Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Run unit tests
+        if: always()
+        run: npm test -- --reporter=verbose
+        env:
+          VITE_API_URL: http://localhost:8000
+
+      - name: Build
+        if: always()
+        run: npm run build
+
+  report:
+    name: Report PR status
+    needs: [analyze, run-lint, build-and-test]
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const analyze   = '${{ needs.analyze.result }}';
+            const lint      = '${{ needs.run-lint.result }}';
+            const buildTest = '${{ needs.build-and-test.result }}';
+
+            const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
+            const allPassed = [analyze, lint, buildTest].every(r => ['success', 'skipped'].includes(r));
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const marker = '<!-- ci-report-frontend -->'; // used to find and update the existing comment
+
+            const body = [
+              marker,
+              `### CI: Frontend`,
+              ``,
+              `| Job | Result |`,
+              `|---|---|`,
+              `| Security analysis (CodeQL) | ${icon(analyze)} \`${analyze}\` |`,
+              `| Lint | ${icon(lint)} \`${lint}\` |`,
+              `| Build and test | ${icon(buildTest)} \`${buildTest}\` |`,
+              ``,
+              allPassed
+                ? `All checks passed.`
+                : `One or more checks failed. [View logs](${runUrl})`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

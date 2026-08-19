@@ -10,7 +10,7 @@
 // - POST /v1/evidence/scan        -> run scan on uploaded file
 // - GET  /v1/evidence/reports/:id -> download a generated report
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { getEvidenceReportUrl, getEvidenceStrategies, scanEvidence } from '../api/client';
+import { downloadEvidenceReport, getEvidenceReportUrl, getEvidenceStrategies, scanEvidence } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 // If the validator finds fewer than this number of expected terms for the selected strategy,
@@ -441,14 +441,12 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
               <div className="flex flex-wrap gap-2 items-center">
                 {/* Prefer a single download action instead of repeating a link per row. */}
                 {reportFiles.length > 0 && (
-                  <a
-                    href={getEvidenceReportUrl(reportFiles[0])}
-                    className="inline-flex justify-center items-center py-1.5 px-2.5 text-xs font-bold leading-none no-underline rounded-full border border-accent-teal/35 bg-accent-teal/8 text-accent-teal hover:text-brand-cyan hover:bg-accent-teal/14 hover:border-accent-teal/60 focus-visible:outline focus-visible:outline-accent-teal/70 focus-visible:outline-offset-2"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    className="report-link"
+                    onClick={() => downloadEvidenceReport(token, reportFiles[0])}
                   >
                     Download PDF
-                  </a>
+                  </button>
                 )}
                 <span className="inline-flex justify-center items-center py-1.5 px-2.5 text-xs font-semibold leading-none whitespace-nowrap rounded-full border border-border-subtle bg-border-subtle text-text-strong">
                   {resultsSummary.total} total

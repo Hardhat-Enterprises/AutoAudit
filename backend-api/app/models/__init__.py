@@ -8,6 +8,7 @@ from app.models.gcp_connection import GCPConnection
 from app.models.aws_connection import AWSConnection
 from app.models.platform import Platform
 from app.models.scan_result import ScanResult
+from app.models.manual_scan_result_detail import ManualScanResultDetail
 from app.models.compliance import Scan
 from app.models.evidence_validation import EvidenceValidation
 from app.models.contact import ContactSubmission, SubmissionNote, SubmissionHistory
@@ -24,6 +25,7 @@ __all__ = [
     "AWSConnection",
     "Platform",
     "ScanResult",
+    "ManualScanResultDetail",
     "Scan",
     "EvidenceValidation",
     "ContactSubmission",

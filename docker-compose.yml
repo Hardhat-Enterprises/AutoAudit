@@ -29,7 +29,7 @@ services:
     container_name: autoaudit-db
     environment:
       POSTGRES_USER: autoaudit
-      POSTGRES_PASSWORD: autoaudit_dev_password
+      POSTGRES_PASSWORD: autoaudit_dev_password  # pragma: allowlist secret
       POSTGRES_DB: autoaudit
     ports:
       - "5432:5432"
@@ -57,7 +57,12 @@ services:
     restart: unless-stopped
 
   opa:
-    image: openpolicyagent/opa:latest-debug
+    image: openpolicyagent/opa:1.13.1-debug
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
     container_name: autoaudit-opa
     command: ["run", "--server", "--addr=0.0.0.0:8181", "--log-level=info", "/policies"]
     ports:
@@ -80,6 +85,16 @@ services:
     build:
       context: .
       dockerfile: backend-api/Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/test/public"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     container_name: autoaudit-backend-api
     environment:
       # Application environment
@@ -131,6 +146,11 @@ services:
     build:
       context: ./engine
       dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2.0"
     container_name: autoaudit-worker
     environment:
       # Required: Database connection (PostgreSQL - worker uses sync driver)
@@ -165,6 +185,16 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     container_name: autoaudit-frontend
     environment:
       - VITE_API_URL=http://localhost:8000
@@ -173,6 +203,11 @@ services:
     restart: unless-stopped
 
   powershell-service:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
     profiles: ["powershell", "all"]
     platform: linux/amd64
     build:

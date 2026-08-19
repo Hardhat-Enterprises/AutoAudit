@@ -1,0 +1,126 @@
+name: "Security CI/CD"
+
+# The security/ module holds the TPRM Scanner from T2 2025 and is no longer actively maintained.
+# This workflow is kept so any accidental changes to security/ are still scanned,
+# but it is not expected to run under normal development.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'security/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'security/**'
+  schedule:
+    - cron: '32 23 * * 6'
+
+jobs:
+  analyze:
+    name: Security Analysis on (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['python']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
+
+  run-lint:
+    name: Linting Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Lint Code Base
+        uses: github/super-linter@v4
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_BRANCH: "main"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_YAML: false
+          VALIDATE_GITHUB_ACTIONS: false
+          VALIDATE_PYTHON_BLACK: false
+          VALIDATE_PYTHON_FLAKE8: false
+          VALIDATE_PYTHON_ISORT: false
+          VALIDATE_JAVASCRIPT_STANDARD: false
+          VALIDATE_HTML: false
+          VALIDATE_MARKDOWN: false
+          VALIDATE_NATURAL_LANGUAGE: false
+
+  report:
+    name: Report PR status
+    needs: [analyze, run-lint]
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const analyze = '${{ needs.analyze.result }}';
+            const lint    = '${{ needs.run-lint.result }}';
+
+            const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
+            const allPassed = [analyze, lint].every(r => ['success', 'skipped'].includes(r));
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const marker = '<!-- ci-report-security -->'; // used to find and update the existing comment
+
+            const body = [
+              marker,
+              `### CI: Security`,
+              ``,
+              `| Job | Result |`,
+              `|---|---|`,
+              `| Security analysis (CodeQL) | ${icon(analyze)} \`${analyze}\` |`,
+              `| Lint | ${icon(lint)} \`${lint}\` |`,
+              ``,
+              allPassed
+                ? `All checks passed.`
+                : `One or more checks failed. [View logs](${runUrl})`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

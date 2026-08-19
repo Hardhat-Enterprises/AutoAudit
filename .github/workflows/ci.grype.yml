@@ -1,0 +1,65 @@
+name: Grype Dependency Vulnerability Scan
+
+# Scans dependency manifests across the repo for known vulnerabilities and uploads results to the GitHub Security tab.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'backend-api/**'
+      - 'engine/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'backend-api/**'
+      - 'engine/**'
+  schedule:
+    - cron: '37 20 * * 4'
+
+permissions:
+  contents: read
+
+jobs:
+  grype-scan:
+    name: Scan dependencies for vulnerabilities
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # The original workflow built a Docker image and scanned it.
+      # Replaced by a directory scan (see below) because Docker Hub is no longer configured.
+      # Restore these steps once a Docker build pipeline is back in place.
+      #
+      # - name: Build the Docker image
+      #   run: docker build -t compliance-engine-workflows:latest -f docker/engine.Dockerfile .
+      #
+      # - name: Run Grype image scan
+      #   uses: anchore/scan-action@v3
+      #   id: scan
+      #   with:
+      #     image: docker:compliance-engine-workflows:latest
+      #     fail-build: true
+      #     severity-cutoff: critical
+
+      # Grype and checks all dependency files in th repo (pyproject.toml, requirements.txt, package-lock.json) against vulnerability databases without needing a built image.
+      - name: Run Grype directory scan
+        uses: anchore/scan-action@v6
+        id: scan
+        with:
+          path: "."
+          fail-build: false
+          output-format: sarif
+          output-file: grype-report.sarif
+
+      - name: Upload vulnerability report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: grype-report.sarif

@@ -7,12 +7,15 @@ import {
   AlertTriangle,
   Clock3,
   Shield,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getBenchmarks, getConnections, getScans, getScan } from "../api/client";
+import {
+  getBenchmarks,
+  getConnections,
+  getScans,
+  getScan,
+} from "../api/client";
 import { RelativeTime } from "../components/RelativeTime";
 
 type ChartType = "doughnut" | "pie" | "bar";
@@ -20,7 +23,6 @@ type ChartType = "doughnut" | "pie" | "bar";
 type DashboardProps = {
   sidebarWidth?: number;
   isDarkMode: boolean;
-  onThemeToggle: React.ChangeEventHandler<HTMLInputElement>;
 };
 
 type ApiConnection = {
@@ -75,7 +77,6 @@ function getErrorMessage(err: unknown): string {
 export default function Dashboard({
   sidebarWidth = 220,
   isDarkMode,
-  onThemeToggle,
 }: DashboardProps) {
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -87,9 +88,9 @@ export default function Dashboard({
   const [connections, setConnections] = useState<ApiConnection[]>([]);
   const [benchmarks, setBenchmarksState] = useState<ApiBenchmark[]>([]);
 
-  const [scanDetailsById, setScanDetailsById] = useState<Record<number, ApiScanDetail>>(
-    {}
-  );
+  const [scanDetailsById, setScanDetailsById] = useState<
+    Record<number, ApiScanDetail>
+  >({});
   const [scanDetailsError, setScanDetailsError] = useState<string | null>(null);
 
   const chartTypeOptions = [
@@ -98,9 +99,12 @@ export default function Dashboard({
     { value: "bar", label: "Compliance Trend (Bar)" },
   ];
 
-  const [selectedChartType, setSelectedChartType] = useState<ChartType>("doughnut");
-  const [selectedConnectionId, setSelectedConnectionId] = useState<string>("all");
-  const [selectedBenchmarkKey, setSelectedBenchmarkKey] = useState<string>("all");
+  const [selectedChartType, setSelectedChartType] =
+    useState<ChartType>("doughnut");
+  const [selectedConnectionId, setSelectedConnectionId] =
+    useState<string>("all");
+  const [selectedBenchmarkKey, setSelectedBenchmarkKey] =
+    useState<string>("all");
 
   useEffect(() => {
     async function loadDashboard() {
@@ -116,12 +120,16 @@ export default function Dashboard({
         ]);
 
         setScans((scansData as ApiScanSummary[] | null | undefined) || []);
-        setConnections((connectionsData as ApiConnection[] | null | undefined) || []);
-        setBenchmarksState((benchmarksData as ApiBenchmark[] | null | undefined) || []);
-
-        const completed = ((scansData as ApiScanSummary[] | null | undefined) || []).filter(
-          (s) => s.status === "completed"
+        setConnections(
+          (connectionsData as ApiConnection[] | null | undefined) || [],
         );
+        setBenchmarksState(
+          (benchmarksData as ApiBenchmark[] | null | undefined) || [],
+        );
+
+        const completed = (
+          (scansData as ApiScanSummary[] | null | undefined) || []
+        ).filter((s) => s.status === "completed");
         const latestCompleted = completed.length > 0 ? completed[0] : null;
 
         if (latestCompleted) {
@@ -134,7 +142,7 @@ export default function Dashboard({
             latestCompleted.version
           ) {
             setSelectedBenchmarkKey(
-              `${latestCompleted.framework}|${latestCompleted.benchmark}|${latestCompleted.version}`
+              `${latestCompleted.framework}|${latestCompleted.benchmark}|${latestCompleted.version}`,
             );
           }
         }
@@ -150,7 +158,7 @@ export default function Dashboard({
 
   const benchmarkOptions = useMemo(() => {
     const m365 = (benchmarks || []).filter(
-      (b) => String(b.platform || "").toLowerCase() === "m365"
+      (b) => String(b.platform || "").toLowerCase() === "m365",
     );
 
     const opts = m365.map((b) => ({
@@ -175,13 +183,14 @@ export default function Dashboard({
 
     if (selectedConnectionId !== "all") {
       out = out.filter(
-        (s) => String(s.m365_connection_id || "") === selectedConnectionId
+        (s) => String(s.m365_connection_id || "") === selectedConnectionId,
       );
     }
 
     if (selectedBenchmarkKey !== "all") {
       out = out.filter(
-        (s) => `${s.framework}|${s.benchmark}|${s.version}` === selectedBenchmarkKey
+        (s) =>
+          `${s.framework}|${s.benchmark}|${s.version}` === selectedBenchmarkKey,
       );
     }
 
@@ -195,7 +204,11 @@ export default function Dashboard({
     return filteredScans[0];
   }, [filteredScans]);
 
-  const chartModel = useMemo<{ chartType: ChartType; labels: string[]; values: number[] }>(() => {
+  const chartModel = useMemo<{
+    chartType: ChartType;
+    labels: string[];
+    values: number[];
+  }>(() => {
     const s = latestRelevantScan;
     const passed = Number(s?.passed_count || 0);
     const failed = Number(s?.failed_count || 0);
@@ -256,7 +269,9 @@ export default function Dashboard({
         const detail = (await getScan(token, id)) as ApiScanDetail;
         setScanDetailsById((prev) => ({ ...prev, [id]: detail }));
       } catch (err: unknown) {
-        setScanDetailsError(getErrorMessage(err) || "Failed to load scan details");
+        setScanDetailsError(
+          getErrorMessage(err) || "Failed to load scan details",
+        );
       }
     }
 
@@ -280,7 +295,8 @@ export default function Dashboard({
       return Number.isFinite(num) ? num.toLocaleString() : "—";
     };
 
-    const compliancePct = evaluated > 0 ? Math.round((passed / evaluated) * 100) : null;
+    const compliancePct =
+      evaluated > 0 ? Math.round((passed / evaluated) * 100) : null;
     const complianceTone = hasScan ? "good" : "neutral";
     const failedTone = failed > 0 ? "bad" : hasTotal ? "good" : "neutral";
 
@@ -290,8 +306,9 @@ export default function Dashboard({
 
     const isCompleted = String(s?.status || "").toLowerCase() === "completed";
     const lastScanLabel =
-      (isCompleted ? s?.finished_at || s?.started_at : s?.started_at || s?.finished_at) ||
-      null;
+      (isCompleted
+        ? s?.finished_at || s?.started_at
+        : s?.started_at || s?.finished_at) || null;
 
     const subtitle = !hasScan
       ? "No scans yet"
@@ -302,7 +319,10 @@ export default function Dashboard({
     const kpis = [
       {
         id: "compliance",
-        label: compliancePct === null ? "Compliance —" : `Compliance ${compliancePct}%`,
+        label:
+          compliancePct === null
+            ? "Compliance —"
+            : `Compliance ${compliancePct}%`,
         tone: complianceTone,
         icon: CheckCircle2,
       },
@@ -339,7 +359,9 @@ export default function Dashboard({
         items: [
           {
             label: "Evaluated",
-            value: hasTotal ? `${formatCount(evaluated)} of ${formatCount(total)}` : "—",
+            value: hasTotal
+              ? `${formatCount(evaluated)} of ${formatCount(total)}`
+              : "—",
           },
           { label: "Passed", value: hasTotal ? formatCount(passed) : "—" },
           { label: "Failed", value: hasTotal ? formatCount(failed) : "—" },
@@ -380,13 +402,21 @@ export default function Dashboard({
 
   const nextFixes = useMemo(() => {
     const results = latestScanDetails?.results || [];
-    const failed = results.filter((r) => (r?.status || "").toLowerCase() === "failed");
-    const errors = results.filter((r) => (r?.status || "").toLowerCase() === "error");
+    const failed = results.filter(
+      (r) => (r?.status || "").toLowerCase() === "failed",
+    );
+    const errors = results.filter(
+      (r) => (r?.status || "").toLowerCase() === "error",
+    );
 
     const byControlId = (a: ApiScanResultItem, b: ApiScanResultItem) =>
-      String(a?.control_id || "").localeCompare(String(b?.control_id || ""), undefined, {
-        numeric: true,
-      });
+      String(a?.control_id || "").localeCompare(
+        String(b?.control_id || ""),
+        undefined,
+        {
+          numeric: true,
+        },
+      );
 
     return {
       failedCount: failed.length,
@@ -462,7 +492,6 @@ export default function Dashboard({
 
   const pageBg = isDarkMode ? "text-white" : "bg-[rgb(var(--surface-1))] text-[rgb(30_41_59)]";
 
-
   const panelBase = isDarkMode
     ? "border border-[rgb(var(--brand-blue)/0.16)] bg-[rgb(var(--surface-1)/0.72)]"
     : "border border-[rgb(var(--border-subtle))] bg-white";
@@ -476,9 +505,15 @@ export default function Dashboard({
     : "border-[rgb(var(--border-subtle))] bg-[rgb(var(--border-subtle))]";
 
   const textPrimary = isDarkMode ? "text-white" : "text-[rgb(30_41_59)]";
-  const textSecondary = isDarkMode ? "text-[rgb(203_213_225)]" : "text-[rgb(var(--text-muted))]";
-  const textTertiary = isDarkMode ? "text-[rgb(var(--text-muted))]" : "text-[rgb(var(--text-muted))]";
-  const hoverRow = isDarkMode ? "hover:bg-[rgb(var(--surface-2)/0.55)]" : "hover:bg-[rgb(var(--surface-1))]";
+  const textSecondary = isDarkMode
+    ? "text-[rgb(203_213_225)]"
+    : "text-[rgb(var(--text-muted))]";
+  const textTertiary = isDarkMode
+    ? "text-[rgb(var(--text-muted))]"
+    : "text-[rgb(var(--text-muted))]";
+  const hoverRow = isDarkMode
+    ? "hover:bg-[rgb(var(--surface-2)/0.55)]"
+    : "hover:bg-[rgb(var(--surface-1))]";
 
   const secondaryButton = isDarkMode
     ? "border border-[rgb(var(--brand-blue)/0.16)] bg-[rgb(var(--surface-2)/0.78)] text-white hover:bg-[rgb(var(--border-subtle)/0.9)]"
@@ -490,8 +525,11 @@ export default function Dashboard({
   const handleRunNewScan = () => {
     const preselect = {
       m365_connection_id:
-        selectedConnectionId !== "all" ? Number(selectedConnectionId) : undefined,
-      benchmark_key: selectedBenchmarkKey !== "all" ? selectedBenchmarkKey : undefined,
+        selectedConnectionId !== "all"
+          ? Number(selectedConnectionId)
+          : undefined,
+      benchmark_key:
+        selectedBenchmarkKey !== "all" ? selectedBenchmarkKey : undefined,
     };
     navigate("/scans", { state: { openNewScan: true, preselect } });
   };
@@ -505,31 +543,37 @@ export default function Dashboard({
     navigate("/evidence-scanner");
   };
 
+  const pageOffsetStyle = {
+    marginLeft: sidebarWidth === 0 ? "80px" : `${sidebarWidth}px`,
+    width:
+      sidebarWidth === 0
+        ? "calc(100% - 80px)"
+        : `calc(100% - ${sidebarWidth}px)`,
+    transition: "margin-left 0.4s ease, width 0.4s ease",
+  };
+
   return (
     <div
-      className={`${pageBg} min-h-screen px-6 py-5 transition-colors duration-300`}
+      className={`${pageBg} min-h-screen px-4 py-4 transition-colors duration-300 md:px-6 md:py-5`}
       style={{
-  marginLeft: `${sidebarWidth}px`,
-  width: `calc(100% - ${sidebarWidth}px)`,
-  transition: "margin-left 0.4s ease, width 0.4s ease",
-  background: isDarkMode
-    ? "radial-gradient(1200px 650px at 280px 0px, rgb(var(--brand-blue)/0.22), transparent 60%), radial-gradient(900px 540px at calc(100% - 260px) 80px, rgb(var(--accent-good)/0.14), transparent 65%), #0a1628"
-    : undefined,
-}}
-
+        ...pageOffsetStyle,
+        background: isDarkMode
+          ? "radial-gradient(1200px 650px at 280px 0px, rgb(var(--brand-blue)/0.22), transparent 60%), radial-gradient(900px 540px at calc(100% - 260px) 80px, rgb(var(--accent-good)/0.14), transparent 65%), #0a1628"
+          : undefined,
+      }}
     >
-      <div className="flex flex-col gap-6 mx-auto max-w-330">
-        <div className="flex flex-col gap-4 justify-between items-start mb-0 md:flex-row md:items-center">
-          <div className="flex gap-4 items-center">
+      <div className="mx-auto flex w-full max-w-330 flex-col gap-6">
+        <div className="mb-0 flex flex-col gap-4 items-start justify-between md:flex-row md:items-center">
+          <div className="flex items-center gap-3 sm:gap-4">
             <div
-              className={`flex h-14 w-14 items-center justify-center rounded-[14px] ${panelBase}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-[14px] sm:h-14 sm:w-14 ${panelBase}`}
             >
               <picture>
                 <source srcSet="/AutoAudit.webp" type="image/webp" />
                 <img
                   src="/AutoAudit.png"
                   alt="AutoAudit Logo"
-                  className="object-contain w-14 h-14 rounded-xl"
+                  className="h-11 w-11 rounded-xl object-contain sm:h-14 sm:w-14"
                   loading="lazy"
                   width="56"
                   height="56"
@@ -538,15 +582,15 @@ export default function Dashboard({
             </div>
 
             <div>
-              <h1 className={`m-0 text-[24px] font-bold ${textPrimary}`}>AutoAudit</h1>
-              <p className={`m-0 text-[14px] ${textSecondary}`}>
+              <h1 className={`m-0 text-[21px] font-bold leading-tight sm:text-[24px] ${textPrimary}`}>AutoAudit</h1>
+              <p className={`m-0 text-[12px] leading-tight sm:text-[14px] ${textSecondary}`}>
                 Microsoft 365 Compliance Platform
               </p>
             </div>
           </div>
 
-          <div
-            className="flex gap-3 items-center self-end md:self-auto"
+          {/* <div
+            className="flex items-center gap-2 self-end md:self-auto md:gap-3"
             role="group"
             aria-label="Theme toggle"
           >
@@ -568,13 +612,13 @@ export default function Dashboard({
             </label>
 
             <Moon size={18} className={textTertiary} />
-          </div>
+          </div> */}
         </div>
 
         <div
-          className={`relative z-50 grid items-center gap-4 overflow-visible rounded-xl px-6 py-4 shadow-[0_0_0_1px_rgb(var(--brand-blue)/0.06)] md:grid-cols-[minmax(0,1fr)_auto] ${panelBase}`}
+          className={`relative z-50 grid items-center gap-4 overflow-visible rounded-xl px-4 py-4 shadow-[0_0_0_1px_rgb(var(--brand-blue)/0.06)] md:grid-cols-[minmax(0,1fr)_auto] md:px-6 ${panelBase}`}
         >
-          <div className="flex overflow-visible flex-wrap flex-1 gap-3 items-center min-w-0">
+          <div className="flex flex-col overflow-visible flex-1 gap-3 items-stretch min-w-0 sm:flex-row sm:flex-wrap sm:items-center">
             <span className={`text-[14px] font-medium ${textPrimary}`}>Connection</span>
             <Dropdown
               value={selectedConnectionId}
@@ -583,7 +627,9 @@ export default function Dashboard({
               isDarkMode={isDarkMode}
             />
 
-            <span className={`text-[14px] font-medium ${textPrimary}`}>Benchmark</span>
+            <span className={`text-[14px] font-medium ${textPrimary}`}>
+              Benchmark
+            </span>
             <Dropdown
               value={selectedBenchmarkKey}
               onChange={setSelectedBenchmarkKey}
@@ -592,9 +638,9 @@ export default function Dashboard({
             />
           </div>
 
-          <div className="flex flex-wrap gap-3 justify-end items-center max-sm:w-full max-sm:flex-col">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
             <button
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
+              className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition sm:w-auto ${secondaryButton}`}
               onClick={handleExportReport}
               disabled={!latestRelevantScan?.id}
             >
@@ -602,7 +648,7 @@ export default function Dashboard({
             </button>
 
             <button
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
+              className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition sm:w-auto ${secondaryButton}`}
               onClick={handleEvidenceScanner}
             >
               Evidence Scanner
@@ -618,7 +664,9 @@ export default function Dashboard({
         </div>
 
         {isLoading && (
-          <div className={`flex items-center gap-2.5 rounded-xl px-4 py-3 ${panelBase}`}>
+          <div
+            className={`flex items-center gap-2.5 rounded-xl px-4 py-3 ${panelBase}`}
+          >
             <Loader2 size={18} className="animate-spin" />
             <span>Loading latest results…</span>
           </div>
@@ -642,8 +690,12 @@ export default function Dashboard({
         >
           <div className="flex flex-wrap gap-4 justify-between items-start">
             <div>
-              <h3 className={`m-0 text-[18px] font-bold ${textPrimary}`}>Scan Snapshot</h3>
-              <p className={`mt-1 text-[13px] ${textSecondary}`}>{summary.subtitle}</p>
+              <h3 className={`m-0 text-[18px] font-bold ${textPrimary}`}>
+                Scan Snapshot
+              </h3>
+              <p className={`mt-1 text-[13px] ${textSecondary}`}>
+                {summary.subtitle}
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-2 items-center">
@@ -678,7 +730,9 @@ export default function Dashboard({
                         key={item.label}
                         className="flex gap-2.5 justify-between items-center text-[13px]"
                       >
-                        <span className={`whitespace-nowrap font-medium ${textSecondary}`}>
+                        <span
+                          className={`whitespace-nowrap font-medium ${textSecondary}`}
+                        >
                           {item.label}
                         </span>
                         <span
@@ -700,7 +754,7 @@ export default function Dashboard({
             <div
               className={`relative flex min-h-0 flex-col gap-4 overflow-visible rounded-xl p-6 shadow-[0_0_0_1px_rgb(var(--brand-blue)/0.05)] ${panelBase}`}
             >
-              <div className="flex relative justify-between items-center z-5">
+              <div className="relative z-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-1 gap-3 items-center min-w-0">
                   <span
                     className={`inline-flex h-6 w-6 items-center justify-center rounded-md ${
@@ -711,9 +765,10 @@ export default function Dashboard({
                   >
                     ▷
                   </span>
-                  <h4 className={`m-0 text-[14px] font-medium ${textPrimary}`}>Scan Results</h4>
+                  <h4 className={`m-0 text-[14px] font-medium ${textPrimary}`}>
+                    Scan Results
+                  </h4>
                 </div>
-
                 <Dropdown
                   value={selectedChartType}
                   onChange={(value) => setSelectedChartType(value as ChartType)}
@@ -722,25 +777,39 @@ export default function Dashboard({
                 />
               </div>
 
-              <div className="flex overflow-hidden relative justify-center items-center w-full z-1 min-h-75">
-                <ComplianceChart
-                  isDarkMode={isDarkMode}
-                  sidebarWidth={sidebarWidth}
-                />
+              <div className="relative z-[1] h-[clamp(300px,34vh,380px)] min-h-[300px] w-full overflow-hidden">
+                {chartModel.values.every((v) => v === 0) ? (
+                  <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                    <div className="mb-3 text-3xl">📊</div>
+                    <p className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
+                      No compliance data available
+                    </p>
+                    <p className="max-w-sm text-sm text-gray-500 dark:text-gray-400">
+                      Run a scan or change the selected filters to view results.
+                    </p>
+                  </div>
+                ) : (
+                  <ComplianceChart
+                    isDarkMode={isDarkMode}
+                    sidebarWidth={sidebarWidth}
+                  />
+                )}
               </div>
             </div>
 
             <div className={`rounded-xl p-4.5 ${panelBase}`}>
               <div className="flex flex-wrap gap-3 justify-between items-start mb-3">
                 <div>
-                  <h3 className={`m-0 text-[16px] font-bold ${textPrimary}`}>Recent Scans</h3>
+                  <h3 className={`m-0 text-[16px] font-bold ${textPrimary}`}>
+                    Recent Scans
+                  </h3>
                   <p className={`mt-1 text-[12px] ${textSecondary}`}>
                     Latest activity for your selected connection/benchmark
                   </p>
                 </div>
 
                 <button
-                  className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition ${secondaryButton}`}
+                  className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium transition sm:w-auto ${secondaryButton}`}
                   onClick={() => navigate("/scans")}
                 >
                   Open Scans
@@ -756,7 +825,7 @@ export default function Dashboard({
                   </p>
 
                   <button
-                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-semibold transition ${primaryButton}`}
+                    className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[14px] font-semibold transition sm:w-auto ${primaryButton}`}
                     onClick={handleRunNewScan}
                   >
                     Run a Scan
@@ -765,11 +834,13 @@ export default function Dashboard({
               ) : (
                 <div
                   className={`overflow-hidden rounded-[10px] border ${
-                    isDarkMode ? "border-[rgb(var(--brand-blue)/0.16)]" : "border-border-subtle"
+                    isDarkMode
+                      ? "border-[rgb(var(--brand-blue)/0.16)]"
+                      : "border-border-subtle"
                   }`}
                 >
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
+                    <table className="min-w-[620px] w-full border-collapse">
                       <thead>
                         <tr className={tertiaryPanel}>
                           <th
@@ -838,7 +909,10 @@ export default function Dashboard({
                                     : "border-border-subtle text-[rgb(30_41_59)]"
                                 }`}
                               >
-                                <RelativeTime value={s.started_at || s.finished_at} preset="recentScanCell" />
+                                <RelativeTime
+                                  value={s.started_at || s.finished_at}
+                                  preset="recentScanCell"
+                                />
                               </td>
 
                               <td
@@ -849,10 +923,16 @@ export default function Dashboard({
                                 }`}
                               >
                                 <div className="flex flex-wrap gap-2">
-                                  <span className={resultPillClasses("good")}>{passed} pass</span>
-                                  <span className={resultPillClasses("bad")}>{failed} fail</span>
+                                  <span className={resultPillClasses("good")}>
+                                    {passed} pass
+                                  </span>
+                                  <span className={resultPillClasses("bad")}>
+                                    {failed} fail
+                                  </span>
                                   {errors > 0 && (
-                                    <span className={resultPillClasses("warn")}>{errors} err</span>
+                                    <span className={resultPillClasses("warn")}>
+                                      {errors} err
+                                    </span>
                                   )}
                                 </div>
                               </td>
@@ -933,25 +1013,33 @@ export default function Dashboard({
 
               {scanDetailsError ? (
                 <div className={`mt-3 rounded-[10px] border p-3 ${mutedPanel}`}>
-                  <p className={`m-0 text-[13px] leading-[1.4] ${textSecondary}`}>
+                  <p
+                    className={`m-0 text-[13px] leading-[1.4] ${textSecondary}`}
+                  >
                     {scanDetailsError}
                   </p>
                 </div>
               ) : !latestRelevantScan?.id ? (
                 <div className={`mt-3 rounded-[10px] border p-3 ${mutedPanel}`}>
-                  <p className={`m-0 text-[13px] leading-[1.4] ${textSecondary}`}>
+                  <p
+                    className={`m-0 text-[13px] leading-[1.4] ${textSecondary}`}
+                  >
                     No scan selected.
                   </p>
                 </div>
               ) : !latestScanDetails ? (
                 <div className={`mt-3 rounded-[10px] border p-3 ${mutedPanel}`}>
-                  <p className={`m-0 text-[13px] leading-[1.4] ${textSecondary}`}>
+                  <p
+                    className={`m-0 text-[13px] leading-[1.4] ${textSecondary}`}
+                  >
                     Loading control results…
                   </p>
                 </div>
               ) : nextFixes.topItems.length === 0 ? (
                 <div className={`mt-3 rounded-[10px] border p-3 ${mutedPanel}`}>
-                  <p className={`m-0 text-[13px] leading-[1.4] ${textSecondary}`}>
+                  <p
+                    className={`m-0 text-[13px] leading-[1.4] ${textSecondary}`}
+                  >
                     No failed/error controls in this scan.
                   </p>
                 </div>
@@ -960,13 +1048,14 @@ export default function Dashboard({
                   {nextFixes.topItems.map((r, idx) => (
                     <button
                       key={`${r.control_id || idx}`}
-                      className={`grid w-full grid-cols-[72px_minmax(0,1fr)] items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition ${
+                      className={`grid w-full grid-cols-[56px_minmax(0,1fr)] items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition sm:grid-cols-[72px_minmax(0,1fr)] ${
                         isDarkMode
                           ? "border-[rgb(var(--brand-blue)/0.16)] bg-[rgb(var(--surface-2)/0.78)] text-white hover:border-[rgb(var(--brand-blue)/0.45)] hover:bg-[rgb(var(--brand-blue)/0.1)]"
                           : "border-border-subtle bg-border-subtle text-[rgb(30_41_59)] hover:border-brand-blue-soft hover:bg-[rgb(239_246_255)]"
                       }`}
                       onClick={() =>
-                        latestRelevantScan?.id && navigate(`/scans/${latestRelevantScan.id}`)
+                        latestRelevantScan?.id &&
+                        navigate(`/scans/${latestRelevantScan.id}`)
                       }
                       type="button"
                     >

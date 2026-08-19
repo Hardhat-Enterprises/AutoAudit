@@ -130,3 +130,10 @@ class GraphClient:
     async def get_domains(self) -> list[dict[str, Any]]:
         """Get all domains."""
         return await self.get_all_pages("/domains")
+
+    async def get_user_license_details(self, user_id: str) -> list[dict[str, Any]]:
+        """Get license assignments and service plans for a user."""
+        return await self.get_all_pages(
+            f"/users/{user_id}/licenseDetails",
+            params={"$select": "id,skuId,skuPartNumber,servicePlans"},
+        )

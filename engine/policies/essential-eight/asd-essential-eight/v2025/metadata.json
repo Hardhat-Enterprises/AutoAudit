@@ -1,0 +1,243 @@
+{
+  "framework": "essential-eight",
+  "benchmark": "ASD Essential Eight",
+  "slug": "asd-essential-eight",
+  "version": "v2025",
+  "release_date": "2025-11-01",
+  "platform": "m365",
+  "source_url": "https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security/essential-eight/essential-eight-maturity-model",
+  "controls": [
+    {
+      "control_id": "E8-MAC-0",
+      "title": "No macro controls implemented (ML0 baseline)",
+      "description": "ML0 represents an organisation that has not deployed any macro security controls via Intune.",
+      "severity": "critical",
+      "service": "Intune",
+      "maturity_level": "ML0",
+      "is_manual": false,
+      "benchmark_audit_type": "Inferred",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "ML0 is inferred from the absence of ML1 policies."
+    },
+    {
+      "control_id": "E8-MAC-1.1",
+      "title": "Macros disabled for standard users",
+      "description": "Microsoft Office macro execution is disabled for standard users.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation."
+    },
+    {
+      "control_id": "E8-MAC-1.2",
+      "title": "Internet-originated macros blocked (Mark of the Web)",
+      "description": "Macros in files downloaded from the internet are blocked.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation."
+    },
+    {
+      "control_id": "E8-MAC-1.3",
+      "title": "AMSI scanning enabled for macros",
+      "description": "Antimalware Scan Interface (AMSI) scanning is enabled for Office macros.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation."
+    },
+    {
+      "control_id": "E8-MAC-1.4",
+      "title": "Users cannot change macro settings",
+      "description": "The macro security policy is enforced such that standard users cannot override or modify the configured macro settings.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation."
+    },
+    {
+      "control_id": "E8-MAC-2.1",
+      "title": "Win32 API calls blocked from Office macros (ASR rule)",
+      "description": "The Attack Surface Reduction rule blocking Win32 API calls from Office macros is enabled in Block mode.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML2",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.asr_rules",
+      "policy_file": "e8_mac_2_1_win32_api_block.rego",
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Fully automatable."
+    },
+    {
+      "control_id": "E8-MAC-3.1",
+      "title": "Only signed macros from trusted publishers can execute",
+      "description": "Office is configured to allow only digitally signed macros from trusted publishers to execute.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML3",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation."
+    },
+    {
+      "control_id": "E8-MAC-3.2",
+      "title": "Write access to Trusted Locations restricted to privileged users",
+      "description": "Only privileged users have write access to directories designated as Trusted Locations in Office.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML3",
+      "is_manual": true,
+      "benchmark_audit_type": "Manual",
+      "automation_status": "manual",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "Not automatable."
+    },
+    {
+      "control_id": "E8-MAC-3.3",
+      "title": "Untrusted publishers blocked via Message Bar or Backstage view",
+      "description": "Office is configured to block macros from untrusted publishers.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML3",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation."
+    },
+    {
+      "control_id": "E8-MAC-3.4",
+      "title": "V3 macro signatures required",
+      "description": "Office is configured to require Version 3 digital signatures for trusted macros.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML3",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation."
+    },
+    {
+      "control_id": "E8-MAC-3.5",
+      "title": "Pre-signing malicious code check performed",
+      "description": "A process is in place to check macros for malicious code before signing.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML3",
+      "is_manual": true,
+      "benchmark_audit_type": "Manual",
+      "automation_status": "manual",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "Not automatable."
+    },
+    {
+      "control_id": "E8-MAC-3.6",
+      "title": "Annual trusted publisher list review",
+      "description": "The organisation performs an annual review of all trusted macro publishers.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML3",
+      "is_manual": true,
+      "benchmark_audit_type": "Manual",
+      "automation_status": "manual",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "Not automatable."
+    },
+    {
+      "control_id": "E8-MFA-2.1",
+      "title": "MFA required for privileged users and Microsoft 365 services",
+      "description": "Checks whether Conditional Access policies exist that require MFA for privileged users and for access to Microsoft 365 services, as required by the Essential Eight MFA mitigation strategy.",
+      "severity": "critical",
+      "service": "EntraID",
+      "maturity_level": "ML2",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "entra.conditional_access.e8_mfa_enforcement",
+      "policy_file": "e8_mfa_2_1_ca_enforcement.rego",
+      "requires_permissions": [
+        "Policy.Read.All",
+        "RoleManagement.Read.Directory"
+      ],
+      "notes": "Research basis: 26T1-SEC-EG-001 and 26T1-SEC-EG-003."
+    },
+    {
+      "control_id": "E8-PRIV-1.1",
+      "title": "Privileged access restricted and appropriately assigned",
+      "description": "Checks whether administrative privileges are limited to an appropriate set of users by evaluating Entra ID directory role assignments.",
+      "severity": "critical",
+      "service": "EntraID",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "entra.roles.cloud_only_admins",
+      "policy_file": "e8_priv_1_1_restrict_admin_privileges.rego",
+      "requires_permissions": [
+        "RoleManagement.Read.Directory",
+        "User.Read.All"
+      ],
+      "notes": "Research basis: 26T1-SEC-EG-002 and 26T1-SEC-EG-004."
+    }
+  ]
+}

@@ -49,10 +49,11 @@ _PACKAGE_RE = re.compile(r"^package\s+(\S+)", re.MULTILINE)
 
 def _expected_package(framework: str, slug: str, version: str, control_id: str) -> str:
     """Replicate the package-path logic from worker/tasks.py:380-395."""
+    framework_normalized = framework.replace("-", "_")
     benchmark_normalized = slug.replace("-", "_")
     version_normalized = version.replace(".", "_")
-    control_suffix = control_id.replace(".", "_")
-    return f"{framework}.{benchmark_normalized}.{version_normalized}.control_{control_suffix}"
+    control_suffix = control_id.replace(".", "_").replace("-", "_").lower()
+    return f"{framework_normalized}.{benchmark_normalized}.{version_normalized}.control_{control_suffix}"
 
 
 def _extract_rego_package(rego_path: Path) -> str | None:
