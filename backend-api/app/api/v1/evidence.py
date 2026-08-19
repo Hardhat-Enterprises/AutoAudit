@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 
 from fastapi import APIRouter, Depends, UploadFile, File, Form
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
@@ -34,6 +35,7 @@ from app.services.encryption import encrypt
 from app.services.evidence_validator import validate_text
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/strategies")
@@ -175,10 +177,11 @@ async def scan(
             db.add(record)
             await db.commit()
     except Exception:
+        logger.exception("Failed to persist evidence validation output")
         try:
             await db.rollback()
         except Exception:
-            pass
+            logger.exception("Failed to roll back evidence validation transaction")
 
     return scan_result
 
