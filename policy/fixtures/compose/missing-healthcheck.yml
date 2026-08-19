@@ -1,0 +1,8 @@
+services:
+  worker:
+    image: example/worker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2.0"
