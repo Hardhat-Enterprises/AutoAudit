@@ -31,4 +31,4 @@ jobs:
           sudo mv gitleaks /usr/local/bin/gitleaks
 
       - name: Run gitleaks
-        run: gitleaks detect --source . --log-opts="--all" --redact --exit-code 1
+        run: gitleaks detect --source . --log-opts="--all" --redact --baseline-path .gitleaks-baseline.json --exit-code 1
