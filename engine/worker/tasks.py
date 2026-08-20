@@ -369,6 +369,8 @@ async def _evaluate_control_async(
             client_id=credentials["client_id"],
             client_secret=credentials["client_secret"],
             service_url=settings.POWERSHELL_SERVICE_URL,
+            sharepoint_admin_url=settings.SHAREPOINT_ADMIN_URL,
+            certificate_alias=settings.SHAREPOINT_CERT_ALIAS,
         )
     else:
         # Entra and other collectors use Graph API
