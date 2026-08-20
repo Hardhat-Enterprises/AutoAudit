@@ -8,6 +8,9 @@ from collectors.entra.applications.apps_and_services_settings import (
 )
 from collectors.entra.applications.forms_settings import FormsSettingsDataCollector
 
+from collectors.entra.applications.third_party_storage_services import (
+    ThirdPartyStorageServicesDataCollector,
+)
 # Authentication
 from collectors.entra.authentication.authentication_methods import (
     AuthenticationMethodsDataCollector,
@@ -144,6 +147,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Applications
     "entra.applications.apps_and_services_settings": AppsAndServicesSettingsDataCollector,
     "entra.applications.forms_settings": FormsSettingsDataCollector,
+    "entra.applications.third_party_storage_services": ThirdPartyStorageServicesDataCollector,
     # Authentication
     "entra.authentication.authentication_methods": AuthenticationMethodsDataCollector,
     "entra.authentication.mfa_fatigue_protection": MfaFatigueProtectionDataCollector,
