@@ -41,16 +41,30 @@ Automated GCP compliance assessment tool built with FastAPI. This API provides a
    - API Documentation: http://localhost:8000/docs | http://localhost:8000/redoc
    - Root Endpoint: http://localhost:8000/
 
-## Running tests
+## Running tests with coverage
 
-Install the `dev` extra, then run the pytest suite from `backend-api/`:
+Install test and coverage tooling (does not require the heavy `evidence` extra):
 
 ```bash
 uv sync --extra dev
+```
+
+Run the test suite:
+
+```bash
 uv run pytest tests/ -q
 ```
 
-Use `-v` instead of `-q` for more detail. CI runs the same command on changes under `backend-api/**`.
+Measure line coverage for `app/` with a terminal summary (including missing lines) and an HTML report:
+
+```bash
+uv run pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
+```
+
+- Terminal: coverage table and missing line numbers are printed after the run.
+- HTML: open `htmlcov/index.html` in a browser (`open htmlcov/index.html` on macOS).
+
+Coverage artifacts (`htmlcov/`, `.coverage`, `coverage.xml`) are gitignored.
 
 ## 📁 Project Structure
 
