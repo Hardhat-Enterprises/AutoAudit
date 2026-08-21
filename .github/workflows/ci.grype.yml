@@ -55,7 +55,8 @@ jobs:
         id: scan
         with:
           path: "."
-          fail-build: false
+          fail-build: true
+          severity-cutoff: critical
           output-format: sarif
           output-file: grype-report.sarif
 

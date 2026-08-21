@@ -105,3 +105,6 @@ If we want to add `authorization` into the mix (verifying a user has not only lo
       # Any users that don't have this role will get a HTTP 403 Forbidden in response
       return {"message": "Yes, you have admin."}
 ```
+
+#This change was made to test grype scans.
+<!-- Grype CI baseline test -->
