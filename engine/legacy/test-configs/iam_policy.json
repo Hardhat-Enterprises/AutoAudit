@@ -5,21 +5,21 @@
     {
       "role": "roles/compute.serviceAgent",
       "members": [
-        "serviceAccount:service-162922847862@compute-system.iam.gserviceaccount.com"
+        "serviceAccount:service-100000000000@compute-system.iam.gserviceaccount.com"
       ]
     },
     {
       "role": "roles/editor",
       "members": [
-        "serviceAccount:162922847862@cloudservices.gserviceaccount.com",
-        "serviceAccount:sa-noperms@coastal-stone-470308-a0.iam.gserviceaccount.com",
-        "serviceAccount:162922847862-compute@developer.gserviceaccount.com"
+        "serviceAccount:100000000000@cloudservices.gserviceaccount.com",
+        "serviceAccount:sa-noperms@example-project-123456.iam.gserviceaccount.com",
+        "serviceAccount:100000000000-compute@developer.gserviceaccount.com"
       ]
     },
     {
       "role": "roles/owner",
       "members": [
-        "user:AdityaHindocha3@gmail.com"
+        "user:owner@example.com"
       ]
     }
   ]
