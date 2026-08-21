@@ -196,11 +196,11 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "exchange.organization.owa_mailbox_policy",
-      "policy_file": null,
+      "policy_file": "1.3.7_third_party_storage_restricted.rego",
       "requires_permissions": ["Exchange.Manage"],
-      "notes": "Collector exists but control logic not defined"
+      "notes": "Rego policy and unit tests implemented. Live tenant verification blocked pending M365 credentials."
     },
     {
       "control_id": "1.3.8",
