@@ -1,0 +1,13 @@
+MITRE ATT&CK Mapping
+
+Control 1.3.3 : 
+		Title : Ensure 'External sharing' of calendars is not available
+		MITRE Technique : T1530
+		Tactic : Collection
+		Rationale : Prevents adversaries from extracting calendar metadata (availability, meeting titles, internal email addresses) via externally shared calendars. Cloud-hosted 				calendar data is a high-value reconnaissance target.
+
+Control 1.3.6 :
+		Title : Ensure the customer lockbox feature is enabled
+		MITRE Technique : T1078.004
+		Tactic : Persistence / Defense Evasion
+		Rationale : Prevents unauthorized privileged access by cloud provider personnel. Without Lockbox, adversaries who compromise vendor support channels gain unaudited access to 				tenant data via trusted cloud accounts.

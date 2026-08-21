@@ -1,0 +1,18 @@
+{
+  "sharing_policies": [
+    {
+      "Name": "Default Sharing Policy",
+      "Domains": [],
+      "Enabled": true,
+      "Default": true
+    }
+  ],
+  "total_policies": 1,
+  "default_policy": {
+    "Name": "Default Sharing Policy",
+    "Domains": [],
+    "Enabled": true,
+    "Default": true
+  },
+  "policies_allowing_external": []
+}

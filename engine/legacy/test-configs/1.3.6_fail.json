@@ -1,0 +1,12 @@
+{
+  "organization_config": {
+    "CustomerLockBoxEnabled": false,
+    "OAuth2ClientProfileEnabled": true,
+    "AuditDisabled": false,
+    "RejectDirectSend": true
+  },
+  "customer_lockbox_enabled": false,
+  "oauth_enabled": true,
+  "audit_disabled": false,
+  "reject_direct_send": true
+}
