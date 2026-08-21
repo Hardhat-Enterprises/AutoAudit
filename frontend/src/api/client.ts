@@ -50,6 +50,7 @@ async function fetchWithAuth<T = any>(
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
+      credentials: "include", // <-- Add this to attach secure cookies automatically
     });
 
     if (!response.ok) {
@@ -88,6 +89,7 @@ export async function login(email: string, password: string): Promise<any> {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
+    credentials: "include",
     body: new URLSearchParams({
       username: email,
       password,
@@ -139,6 +141,7 @@ export async function logout(token: AuthToken): Promise<any> {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -249,6 +252,7 @@ export async function deleteContactSubmission(
     headers: {
       Authorization: `Bearer ${token || ""}`,
     },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -360,6 +364,7 @@ export async function deleteConnection(
     headers: {
       Authorization: `Bearer ${token || ""}`,
     },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -466,6 +471,7 @@ export async function deleteScan(
     headers: {
       Authorization: `Bearer ${token || ""}`,
     },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -529,6 +535,7 @@ export async function scanEvidence(
   const response = await fetch(`${API_BASE_URL}/v1/evidence/scan`, {
     method: "POST",
     headers,
+    credentials: "include",
     body: formData,
   });
 
@@ -573,7 +580,8 @@ export async function downloadEvidenceReport(token: AuthToken, filename: string)
 
   const response = await fetch(
     `${API_BASE_URL}/v1/evidence/reports/${encodeURIComponent(filename)}`,
-    { method: 'GET', headers }
+    { method: 'GET', headers,
+      credentials: "include" }
   );
 
   if (!response.ok) {

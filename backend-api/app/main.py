@@ -5,6 +5,8 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.errors import not_found_handler, NotFound
+from prometheus_fastapi_instrumentator import Instrumentator # <-- 1. Added import
+
 settings = get_settings()
 
 
@@ -20,8 +22,8 @@ def create_app() -> FastAPI:
     # CORS must be added last so it runs first and wraps all responses including errors.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # permissive for dev; adjust in prod
-        allow_credentials=False,  # must be False when using wildcard origins
+        allow_origins=["http://localhost:3000"],  # Explicit origin required when credentials are True
+        allow_credentials=True,                   # Must be True to allow HttpOnly auth cookies
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -40,6 +42,9 @@ def create_app() -> FastAPI:
             "status": "healthy",
         }
         
+    # Initialize Prometheus Instrumentator and expose the /metrics endpoint
+    Instrumentator().instrument(app).expose(app) # <-- 2. Added instrumentation
+
     return app
 
 app = create_app()
