@@ -43,5 +43,13 @@ class SpoTenantDataCollector(BaseDataCollector):
             - default_sharing_link_type: Default sharing link type
             - default_link_permission: Default link permission level
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        tenant_settings = await client.get_tenant_settings()
+
+        return {
+            "tenant_settings": tenant_settings,
+            "legacy_auth_protocols_enabled": tenant_settings.get("LegacyAuthProtocolsEnabled"),
+            "azure_ad_b2b_integration_enabled": tenant_settings.get("EnableAzureADB2BIntegration"),
+            "sharing_capability": tenant_settings.get("SharingCapability"),
+            "default_sharing_link_type": tenant_settings.get("DefaultSharingLinkType"),
+            "default_link_permission": tenant_settings.get("DefaultLinkPermission"),
+        }
