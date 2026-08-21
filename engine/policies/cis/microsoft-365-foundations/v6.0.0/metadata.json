@@ -541,9 +541,9 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "exchange.organization.organization_config",
-      "policy_file": null,
+      "policy_file":"3.1.1_microsoft_365_audit_log_search_enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": "Check AuditDisabled = False"
     },
