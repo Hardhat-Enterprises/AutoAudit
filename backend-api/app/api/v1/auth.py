@@ -27,6 +27,12 @@ router.include_router(
     prefix="",
 )
 
+# Password reset endpoints (POST /auth/forgot-password, POST /auth/reset-password)
+router.include_router(
+    fastapi_users.get_reset_password_router(),
+    prefix="",
+)
+
 # User management endpoints
 users_router = APIRouter(prefix="/users", tags=["Users"])
 
