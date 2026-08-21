@@ -1,9 +1,9 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.logging import setup_logging
 from app.api.v1.router import api_router
 from app.core.config import get_settings
-from app.core.middleware import RequestLoggingMiddleware
+from app.core.middleware import RequestLoggingMiddleware, SecurityHeadersMiddleware
 from app.core.errors import not_found_handler, NotFound
 settings = get_settings()
 
@@ -15,6 +15,7 @@ def create_app() -> FastAPI:
     # RequestLoggingMiddleware must be added before CORSMiddleware
     # (middleware executes in reverse order - last added runs first)
     app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     # Allow frontend (localhost:3000 and others) to call the API during development.
     # CORS must be added last so it runs first and wraps all responses including errors.
@@ -43,3 +44,4 @@ def create_app() -> FastAPI:
     return app
 
 app = create_app()
+
