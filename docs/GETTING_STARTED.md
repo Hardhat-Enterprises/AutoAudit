@@ -37,6 +37,8 @@ You can start from the template:
 cp env.example .env
 ```
 
+Before continuing, open `.env` and fill in `POSTGRES_PASSWORD`, `SECRET_KEY`, and `ENCRYPTION_KEY` — these are required and have no default value. Generation commands for each are documented as comments in `env.example`.
+
 ```bash
 docker compose --profile all up --build -d
 ```
