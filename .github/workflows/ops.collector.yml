@@ -3,6 +3,9 @@ name: Run Collector
 on:
   push:
     branches: [engine-development]
+
+permissions:
+  contents: read
     
 jobs:
   run-collector:
