@@ -15,29 +15,32 @@ from collectors.graph_client import GraphClient
 
 
 class DeviceRegistrationPolicyDataCollector(BaseDataCollector):
-    """Collects device registration policy for CIS compliance evaluation.
-
-    This collector retrieves device join settings, LAPS configuration,
-    and local admin assignment settings for compliance evaluation.
-    """
+    """Collects device registration policy for CIS compliance evaluation."""
 
     async def collect(self, client: GraphClient) -> dict[str, Any]:
         """Collect device registration policy data.
 
         Returns:
-            Dict containing:
-            - device_registration_policy: The device registration policy
-            - azure_ad_join_settings: Azure AD join configuration
-            - local_admin_settings: Local admin assignment settings
-            - laps_settings: LAPS configuration
+            Dict containing device join settings, quota, local admin config, and LAPS state.
         """
-        # Get device registration policy
         policy = await client.get("/policies/deviceRegistrationPolicy", beta=True)
 
-        # Extract key settings
-        azure_ad_join = policy.get("azureADJoin", {})
-        azure_ad_registration = policy.get("azureADRegistration", {})
-        local_admin_password = policy.get("localAdminPassword", {})
+        azure_ad_join = policy.get("azureADJoin", {}) or {}
+        azure_ad_registration = policy.get("azureADRegistration", {}) or {}
+        local_admin_password = policy.get("localAdminPassword", {}) or {}
+        local_admins_config = azure_ad_join.get("localAdmins", {}) or {}
+
+        reg_users_raw = local_admins_config.get("registeringUsers")
+        if isinstance(reg_users_raw, dict):
+            odata_type = reg_users_raw.get("@odata.type", "")
+            if "noDeviceRegistrationMembership" in odata_type:
+                registering_users_local_admin: str | None = "notAllowed"
+            elif "allDeviceRegistrationMembership" in odata_type:
+                registering_users_local_admin = "allowed"
+            else:
+                registering_users_local_admin = odata_type or None
+        else:
+            registering_users_local_admin = reg_users_raw
 
         return {
             "device_registration_policy": policy,
@@ -51,4 +54,7 @@ class DeviceRegistrationPolicyDataCollector(BaseDataCollector):
             "laps_enabled": local_admin_password.get("isEnabled"),
             "user_device_quota": policy.get("userDeviceQuota"),
             "multi_factor_auth_configuration": policy.get("multiFactorAuthConfiguration"),
+            "local_admins_config": local_admins_config,
+            "global_admins_enabled_on_join": local_admins_config.get("enableGlobalAdmins"),
+            "registering_users_local_admin": registering_users_local_admin,
         }

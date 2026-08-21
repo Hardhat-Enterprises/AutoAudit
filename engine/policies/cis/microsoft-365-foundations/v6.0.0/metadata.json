@@ -766,11 +766,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "entra.devices.device_management_settings",
-      "policy_file": null,
-      "requires_permissions": ["Policy.Read.All"],
-      "notes": null
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.2_limit_device_registration_quota.rego",
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
+      "notes": "CIS v6.0.0 requires userDeviceQuota to be set to 20 or less. A value of 0 is treated as unlimited and is non-compliant."
     },
     {
       "control_id": "5.1.4.3",
@@ -781,11 +781,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "entra.devices.device_management_settings",
-      "policy_file": null,
-      "requires_permissions": ["Policy.Read.All"],
-      "notes": null
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.3_ga_not_local_admin_on_join.rego",
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
+      "notes": "Uses azureADJoin.localAdministratorsConfiguration.enableGlobalAdmins from /policies/deviceRegistrationPolicy (beta). Field may be absent on older tenants; policy returns non-compliant with an explanatory message in that case."
     },
     {
       "control_id": "5.1.4.4",
@@ -796,11 +796,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "entra.devices.device_management_settings",
-      "policy_file": null,
-      "requires_permissions": ["Policy.Read.All"],
-      "notes": null
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.4_limit_local_admin_on_join.rego",
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
+      "notes": "Uses azureADJoin.localAdministratorsConfiguration.registeringUsers from /policies/deviceRegistrationPolicy (beta). Compliant when value is notAllowed."
     },
     {
       "control_id": "5.1.4.5",

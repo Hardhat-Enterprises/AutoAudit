@@ -126,9 +126,9 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 5.1.3.1 | L1 | Ensure a dynamic group for guest users is created | Automated | Not Started | `entra.groups.groups` | Not Started | Collector exists but control logic not defined |
 | 5.1.3.2 | L1 | Ensure users cannot create security groups | Automated | Automated | `entra.policies.authorization_policy` | Implemented | Check allowedToCreateSecurityGroups |
 | 5.1.4.1 | L2 | Ensure the ability to join devices to Entra is restricted | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | |
-| 5.1.4.2 | L1 | Ensure the maximum number of devices per user is limited | Automated | Automated | `entra.devices.device_management_settings` | Implemented | |
-| 5.1.4.3 | L1 | Ensure the GA role is not added as a local administrator during Entra join | Automated | Automated | `entra.devices.device_management_settings` | Implemented | |
-| 5.1.4.4 | L1 | Ensure local administrator assignment is limited during Entra join | Automated | Automated | `entra.devices.device_management_settings` | Implemented | |
+| 5.1.4.2 | L1 | Ensure the maximum number of devices per user is limited | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | `userDeviceQuota > 0`; 0 treated as unlimited |
+| 5.1.4.3 | L1 | Ensure the GA role is not added as a local administrator during Entra join | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | `azureADJoin.localAdministratorsConfiguration.enableGlobalAdmins == false`; field may be absent on older tenants |
+| 5.1.4.4 | L1 | Ensure local administrator assignment is limited during Entra join | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | `azureADJoin.localAdministratorsConfiguration.registeringUsers == notAllowed` |
 | 5.1.4.5 | L1 | Ensure Local Administrator Password Solution is enabled | Automated | Not Started | | Not Started | Need LAPS configuration collector |
 | 5.1.4.6 | L2 | Ensure users are restricted from recovering BitLocker keys | Automated | Automated | `entra.policies.authorization_policy` | Implemented | Check allowedToReadBitlockerKeysForOwnedDevice |
 | 5.1.5.1 | L2 | Ensure user consent to apps accessing company data on their behalf is not allowed | Automated | Automated | `entra.policies.authorization_policy` | Implemented | |
