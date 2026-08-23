@@ -40,6 +40,12 @@ afterEach(cleanup);
 // --- primaryLabel fallback chain ---
 
 describe('primaryLabel', () => {
+  it('uses a generic label for the fallback account identifier', () => {
+    setupAuth({ email: null, username: 'jdoe', name: 'John', id: 2 });
+    renderPage();
+    expect(screen.getByText('Account identifier')).toBeInTheDocument();
+  });
+
   it('displays email when present', () => {
     setupAuth({ email: 'user@example.com', username: 'u', name: 'Name', id: 1 });
     renderPage();

@@ -321,7 +321,7 @@ export default function AccountPage({
 
               <div>
                 <span className="block text-xs font-semibold uppercase tracking-widest text-slate-400">
-                  Email
+                  Account identifier
                 </span>
                 <span className="mt-2 block text-base font-semibold">
                   {primaryLabel}
