@@ -34,6 +34,19 @@ function renderPage() {
   return render(<AccountPage />);
 }
 
+function setupLogoutAuth(clearAuth: () => void) {
+  vi.mocked(mockUseAuth).mockReturnValue({
+    user: { email: 'u@test.com' },
+    token: 'tok',
+    logout: clearAuth,
+  } as unknown as ReturnType<typeof mockUseAuth>);
+}
+
+async function logOutFromPage() {
+  renderPage();
+  await userEvent.click(screen.getByRole('button', { name: /log out/i }));
+}
+
 beforeEach(() => vi.clearAllMocks());
 afterEach(cleanup);
 
@@ -98,15 +111,10 @@ describe('handleLogout', () => {
 
   it('calls clearAuth and navigates to / after successful logout', async () => {
     const clearAuth = vi.fn();
-    vi.mocked(mockUseAuth).mockReturnValue({
-      user: { email: 'u@test.com' },
-      token: 'tok',
-      logout: clearAuth,
-    } as unknown as ReturnType<typeof mockUseAuth>);
+    setupLogoutAuth(clearAuth);
     vi.mocked(mockApiLogout).mockResolvedValue(undefined);
 
-    renderPage();
-    await userEvent.click(screen.getByRole('button', { name: /log out/i }));
+    await logOutFromPage();
 
     await waitFor(() => {
       expect(clearAuth).toHaveBeenCalled();
@@ -116,15 +124,10 @@ describe('handleLogout', () => {
 
   it('still clears auth and navigates when apiLogout fails (best-effort)', async () => {
     const clearAuth = vi.fn();
-    vi.mocked(mockUseAuth).mockReturnValue({
-      user: { email: 'u@test.com' },
-      token: 'tok',
-      logout: clearAuth,
-    } as unknown as ReturnType<typeof mockUseAuth>);
+    setupLogoutAuth(clearAuth);
     vi.mocked(mockApiLogout).mockRejectedValue(new Error('Network error'));
 
-    renderPage();
-    await userEvent.click(screen.getByRole('button', { name: /log out/i }));
+    await logOutFromPage();
 
     await waitFor(() => {
       expect(clearAuth).toHaveBeenCalled();
