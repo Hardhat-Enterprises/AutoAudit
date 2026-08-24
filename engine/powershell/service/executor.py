@@ -206,19 +206,23 @@ def execute_cmdlet(
 
     # Build the script
     if module == "SharePoint":
-        script = build_script(module, cmdlet, params, tenant_id,tenant_name, client_id)
+        script = build_script(module, cmdlet, params or {}, tenant_id, tenant_name, client_id)
     else:
-        script = build_script(module, cmdlet, params, tenant_id)
+        script = build_script(module, cmdlet, params or {}, tenant_id, None, None)
 
     # Set up environment with tokens
     env = os.environ.copy()
     if module == "Teams":
+        if not graph_token:
+            raise ValueError("graph_token is required for Teams module")
         env["GRAPH_TOKEN"] = graph_token
-        env["TEAMS_TOKEN"] = token
+        env["TEAMS_TOKEN"] = token or ""
     elif module == "SharePoint":
+        if not sharepoint_cert_password:
+            raise ValueError("sharepoint_cert_password is required")
         env["SHAREPOINT_CERT_PASSWORD"] = sharepoint_cert_password
     else:
-        env["EXO_TOKEN"] = token
+        env["EXO_TOKEN"] = token or ""
 
     # Execute PowerShell
     try:
