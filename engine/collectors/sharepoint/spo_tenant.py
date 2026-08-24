@@ -30,7 +30,6 @@ class SpoTenantDataCollector(BaseDataCollector):
     This collector retrieves tenant-wide SharePoint settings including
     sharing, authentication, guest access, and other configurations.
     """
-
     async def collect(self, client: SharePointClient) -> dict[str, Any]:
         """Collect SPO tenant data.
 
@@ -43,5 +42,9 @@ class SpoTenantDataCollector(BaseDataCollector):
             - default_sharing_link_type: Default sharing link type
             - default_link_permission: Default link permission level
         """
-        # TODO: Implement collector
-        raise NotImplementedError("Collector not yet implemented")
+        tenant_settings = await client.get_tenant_settings()
+
+        return {
+            "tenant_settings": tenant_settings,
+            "is-resharing-by-external-user-enabled": tenant_settings.get("isResharingByExternalUsersEnabled")
+        }

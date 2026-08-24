@@ -13,6 +13,7 @@ Environment Variables:
     M365_TENANT_ID: Azure AD tenant ID
     M365_CLIENT_ID: App registration client ID
     M365_CLIENT_SECRET: App registration client secret
+    M365_TENANT_NAME: Azure AD tenant name
 """
 
 import argparse
@@ -30,6 +31,7 @@ from collectors.registry import DATA_COLLECTORS, get_collector
 from collectors.graph_client import GraphClient
 from collectors.powershell_base import BasePowerShellCollector
 from collectors.powershell_client import PowerShellClient, PowerShellExecutionError
+from collectors.sharepoint_client import SharePointClient
 
 
 def list_collectors() -> None:
@@ -46,11 +48,13 @@ def list_collectors() -> None:
         print()
 
 
-def get_credentials() -> tuple[str, str, str]:
+def get_credentials(service:str) -> tuple[str, str, str, str, str, str]:
     """Get M365 credentials from environment variables."""
     tenant_id = os.environ.get("M365_TENANT_ID")
     client_id = os.environ.get("M365_CLIENT_ID")
     client_secret = os.environ.get("M365_CLIENT_SECRET")
+    tenant_name = os.environ.get("M365_TENANT_NAME")
+
 
     missing = []
     if not tenant_id:
@@ -59,8 +63,12 @@ def get_credentials() -> tuple[str, str, str]:
         missing.append("M365_CLIENT_ID")
     if not client_secret:
         missing.append("M365_CLIENT_SECRET")
+    if service == "sharepoint":
+        if not tenant_name:
+            missing.append("M365_TENANT_NAME")
 
-    if missing:
+
+    if missing and service != "sharepoint":
         print("Error: Missing required environment variables:")
         for var in missing:
             print(f"  - {var}")
@@ -69,9 +77,18 @@ def get_credentials() -> tuple[str, str, str]:
         print("  export M365_CLIENT_ID=<your-client-id>")
         print("  export M365_CLIENT_SECRET=<your-client-secret>")
         sys.exit(1)
+    elif missing and service == "SharePoint":
+        print("Error: Missing required environment variables:")
+        for var in missing:
+            print(f"  - {var}")
+        print("\nSet these variables before running the script:")
+        print("  export M365_TENANT_ID=<your-tenant-id>")
+        print("  export M365_CLIENT_ID=<your-client-id>")
+        print("  export M365_CLIENT_SECRET=<your-client-secret>")
+        print("  export M365_TENANT_NAME=<your-tenant-name>")
+        sys.exit(1)
 
-    return tenant_id, client_id, client_secret
-
+    return tenant_id, client_id, client_secret, tenant_name
 
 async def test_collector(
     collector_id: str,
@@ -90,6 +107,8 @@ async def test_collector(
     Returns:
         Dict containing collector_id, timestamp, elapsed_seconds, and data
     """
+    service = collector_id.split(".")[0]
+ 
     # Validate collector exists
     if collector_id not in DATA_COLLECTORS:
         print(f"Error: Unknown collector '{collector_id}'")
@@ -99,7 +118,7 @@ async def test_collector(
         sys.exit(1)
 
     # Get credentials
-    tenant_id, client_id, client_secret = get_credentials()
+    tenant_id, client_id, client_secret, tenant_name= get_credentials(service)
 
     if verbose:
         print(f"Tenant ID: {tenant_id}")
@@ -113,7 +132,8 @@ async def test_collector(
     if isinstance(collector, BasePowerShellCollector):
         client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
     else:
-        client = GraphClient(tenant_id, client_id, client_secret)
+        if service == "sharepoint": client = SharePointClient(tenant_id, client_id, client_secret,tenant_name)
+        else: client = GraphClient(tenant_id, client_id, client_secret)
 
     # Run collection
     print(f"Running collector: {collector_id}")
