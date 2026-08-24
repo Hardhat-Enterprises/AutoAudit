@@ -204,8 +204,8 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
     "exchange.transport.transport_rules": TransportRulesDataCollector,
 
-    #Sharepoint
-    "sharepoint.spo_tenant": SpoTenantDataCollector
+    # Sharepoint
+    "sharepoint.spo_tenant": SpoTenantDataCollector,
 }
 
 
