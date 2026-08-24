@@ -69,6 +69,10 @@ def get_credentials() -> tuple[str, str, str]:
         print("  export M365_CLIENT_ID=<your-client-id>")
         print("  export M365_CLIENT_SECRET=<your-client-secret>")
         sys.exit(1)
+        
+    assert tenant_id is not None
+    assert client_id is not None
+    assert client_secret is not None
 
     return tenant_id, client_id, client_secret
 

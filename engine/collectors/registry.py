@@ -1,6 +1,7 @@
 """Registry of available data collectors."""
 
 from collectors.base import BaseDataCollector
+from collectors.powershell_base import BasePowerShellCollector
 
 # Applications
 from collectors.entra.applications.apps_and_services_settings import (
@@ -142,7 +143,8 @@ from collectors.exchange.transport.transport_rules import TransportRulesDataColl
 from collectors.sharepoint.spo_tenant import SpoTenantDataCollector
 
 # Registry mapping data_collector_id to collector class
-DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
+CollectorType = type[BaseDataCollector] | type[BasePowerShellCollector]
+DATA_COLLECTORS: dict[str, CollectorType] = {
     # Applications
     "entra.applications.apps_and_services_settings": AppsAndServicesSettingsDataCollector,
     "entra.applications.forms_settings": FormsSettingsDataCollector,
@@ -208,8 +210,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "sharepoint.spo_tenant": SpoTenantDataCollector,
 }
 
-
-def get_collector(collector_id: str) -> BaseDataCollector:
+def get_collector(collector_id: str,) -> BaseDataCollector | BasePowerShellCollector:
     """Get a collector instance by ID."""
     collector_class = DATA_COLLECTORS.get(collector_id)
     if not collector_class:
