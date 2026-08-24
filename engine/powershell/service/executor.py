@@ -73,8 +73,8 @@ def build_script(
     cmdlet: str,
     params: Dict[str, Any],
     tenant_id: str,
-    tenant_name: Optional[str],
-    client_id: Optional[str],
+    tenant_name: str | None,
+    client_id: str | None,
 ) -> str:
     """Build the PowerShell script to execute.
 
