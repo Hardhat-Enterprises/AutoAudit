@@ -5,7 +5,7 @@ CIS Microsoft 365 Foundations Benchmark Controls:
 
 Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
-Required Cmdlets: Get-OwaMailboxPolicy
+Required Cmdlets: Get-OwaMailboxPolicy, Get-OrganizationConfig
 Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 """
 
@@ -44,6 +44,12 @@ class OwaMailboxPolicyDataCollector(BasePowerShellCollector):
             (p for p in policies if p.get("IsDefault")),
             policies[0] if policies else None
         )
+        # Find default policy for Booking
+        default_policy_bookings_mailbox_creation_enabled = (
+            default_policy.get("BookingsMailboxCreationEnabled")
+            if default_policy
+            else None
+        )
 
         # Check for policies with external storage enabled
         policies_with_external_storage = [
@@ -57,10 +63,22 @@ class OwaMailboxPolicyDataCollector(BasePowerShellCollector):
             if p.get("BookingsMailboxCreationEnabled")
         ]
 
+        # CIS 1.3.9 also allows an org-level compliant state: Bookings disabled
+        # tenant-wide (Get-OrganizationConfig -> BookingsEnabled)
+        org_config = await client.run_cmdlet("ExchangeOnline", "Get-OrganizationConfig")
+
+
         return {
             "owa_policies": policies,
             "total_policies": len(policies),
             "default_policy": default_policy,
+            "default_policy_bookings_mailbox_creation_enabled": default_policy_bookings_mailbox_creation_enabled,
             "policies_with_external_storage": policies_with_external_storage,
             "policies_with_bookings": policies_with_bookings,
+            "default_policy_bookings_mailbox_creation_enabled": (
+                default_policy.get("BookingsMailboxCreationEnabled")
+                if default_policy
+                else None
+            ),
+            "bookings_enabled": org_config.get("BookingsEnabled") if org_config else None,
         }

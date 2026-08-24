@@ -49,4 +49,5 @@ class OrganizationConfigDataCollector(BasePowerShellCollector):
             "oauth_enabled": config.get("OAuth2ClientProfileEnabled"),
             "audit_disabled": config.get("AuditDisabled"),
             "reject_direct_send": config.get("RejectDirectSend"),
+            "bookings_enabled": config.get("BookingsEnabled"),
         }
