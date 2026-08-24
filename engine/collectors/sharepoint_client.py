@@ -78,29 +78,7 @@ class SharePointClient:
         self._access_token = result["access_token"]
         return self._access_token
 
-    async def _get_graph_access_token(self) -> str:
-        """Get access token for Graph.
 
-        Returns:
-            Access token string.
-
-        Raises:
-            Exception: If token acquisition fails.
-        """
-        if  self._graph_access_token:
-            return self._graph_access_token
-
-        # Acquire token for Graph API
-        result = self._msal_app.acquire_token_for_client(
-            scopes=["https://graph.microsoft.com/.default"]
-        )
-
-        if "access_token" not in result:
-            error = result.get("error_description", result.get("error", "Unknown error"))
-            raise Exception(f"Failed to acquire token: {error}")
-
-        self._graph_access_token = result["access_token"]
-        return self._graph_access_token
 
     async def get_tenant_settings(self) -> dict[str, Any]:
         """Get SPO tenant settings via REST API.

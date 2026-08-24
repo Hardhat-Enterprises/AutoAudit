@@ -20,11 +20,11 @@ REST Endpoints: /_api/SPOTenant or SharePoint Admin API
 
 from typing import Any
 
-from collectors.powershell_base import BasePowerShellCollector
+from collectors.base import BaseDataCollector
 from collectors.sharepoint_client import SharePointClient
 
 
-class SpoTenantDataCollector(BasePowerShellCollector):
+class SpoTenantDataCollector(BaseDataCollector):
     """Collects SPO tenant settings for CIS compliance evaluation.
 
     This collector retrieves tenant-wide SharePoint settings including

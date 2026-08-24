@@ -179,76 +179,131 @@ def execute_cmdlet(
     tenant_name: Optional[str] = None,
     sharepoint_cert_password: Optional[str] = None,
     client_id: Optional[str] = None,
-
 ) -> Dict[str, Any]:
     """Execute a PowerShell cmdlet and return the result.
 
     Args:
-        module: PowerShell module (ExchangeOnline, Compliance, Teams)
+        module: PowerShell module (ExchangeOnline, Compliance, Teams, SharePoint)
         cmdlet: The cmdlet to run
         params: Parameters for the cmdlet
         tenant_id: Azure AD tenant ID
         token: Access token for Exchange/Compliance
         graph_token: Graph API token (required for Teams)
+        tenant_name: Microsoft 365 tenant name
+        sharepoint_cert_password: SharePoint certificate password
+        client_id: Application client ID
 
     Returns:
-        Parsed JSON output from the cmdlet
+        Parsed JSON output from the cmdlet.
 
     Raises:
-        PowerShellExecutionError: If execution fails
-        ValueError: If Teams module requested without graph_token
+        PowerShellExecutionError: If execution fails.
+        ValueError: If required authentication parameters are missing.
     """
     if module == "Teams" and not graph_token:
         raise ValueError("Teams module requires graph_token")
 
-    if module == "SharePoint" and not sharepoint_cert_password and not client_id:
-        raise ValueError("SharePoint module requires sharepoint_cert, sharepoint_cert_password and client_id")
+    if module == "SharePoint" and (
+        not sharepoint_cert_password
+        or not client_id
+        or not tenant_name
+    ):
+        raise ValueError(
+            "SharePoint module requires tenant_name, "
+            "sharepoint_cert_password and client_id"
+        )
 
-    # Build the script
+    # Build PowerShell script
     if module == "SharePoint":
-        script = build_script(module, cmdlet, params or {}, tenant_id, tenant_name, client_id)
+        script = build_script(
+            module,
+            cmdlet,
+            params or {},
+            tenant_id,
+            tenant_name,
+            client_id,
+        )
     else:
-        script = build_script(module, cmdlet, params or {}, tenant_id, None, None)
+        script = build_script(
+            module,
+            cmdlet,
+            params or {},
+            tenant_id,
+            None,
+            None,
+        )
 
-    # Set up environment with tokens
+    # Set up environment
     env = os.environ.copy()
+
     if module == "Teams":
         if not graph_token:
             raise ValueError("graph_token is required for Teams module")
+
         env["GRAPH_TOKEN"] = graph_token
         env["TEAMS_TOKEN"] = token or ""
+
     elif module == "SharePoint":
         if not sharepoint_cert_password:
-            raise ValueError("sharepoint_cert_password is required")
+            raise ValueError(
+                "sharepoint_cert_password is required for SharePoint module"
+            )
+
         env["SHAREPOINT_CERT_PASSWORD"] = sharepoint_cert_password
+
     else:
         env["EXO_TOKEN"] = token or ""
 
     # Execute PowerShell
     try:
         proc = subprocess.run(
-            ["pwsh", "-NoProfile", "-NonInteractive", "-Command", script],
+            [
+                "pwsh",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                script,
+            ],
             capture_output=True,
             text=True,
             timeout=120,
             env=env,
         )
+
     except subprocess.TimeoutExpired:
-        raise PowerShellExecutionError("PowerShell execution timed out after 120 seconds")
+        raise PowerShellExecutionError(
+            "PowerShell execution timed out after 120 seconds"
+        )
+
     except Exception as e:
-        raise PowerShellExecutionError(f"Failed to execute PowerShell: {e}")
+        raise PowerShellExecutionError(
+            f"Failed to execute PowerShell: {e}"
+        )
 
     if proc.returncode != 0:
-        raise PowerShellExecutionError(f"PowerShell execution failed:\n{proc.stderr}")
+        raise PowerShellExecutionError(
+            f"PowerShell execution failed:\n{proc.stderr}"
+        )
 
     # Parse JSON output
     stdout = proc.stdout.strip()
+
     if not stdout or stdout == "null":
-        return None
+        return {}
 
     try:
-        return json.loads(stdout)
+        result = json.loads(stdout)
     except json.JSONDecodeError as e:
         raise PowerShellExecutionError(
-            f"Failed to parse PowerShell output as JSON:\n{stdout}\nError: {e}"
+            f"Failed to parse PowerShell output as JSON:\n"
+            f"{stdout}\n"
+            f"Error: {e}"
         )
+
+    if not isinstance(result, dict):
+        raise PowerShellExecutionError(
+            "Unexpected PowerShell result type. "
+            f"Expected dict, received {type(result).__name__}."
+        )
+
+    return result

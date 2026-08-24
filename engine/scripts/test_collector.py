@@ -34,8 +34,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from collectors.registry import DATA_COLLECTORS, get_collector
 from collectors.graph_client import GraphClient
-from engine.collectors.powershell_base import BasePowerShellCollector
+from collectors.powershell_base import BasePowerShellCollector
 from collectors.powershell_client import PowerShellClient, PowerShellExecutionError
+
 
 
 def list_collectors() -> None:
