@@ -39,8 +39,9 @@ class GraphClient:
             error = result.get("error_description", result.get("error", "Unknown error"))
             raise Exception(f"Failed to acquire token: {error}")
 
-        self._access_token = result["access_token"]
-        return self._access_token
+        token = result["access_token"]
+        self._access_token = token
+        return token
 
     async def _request(
         self,

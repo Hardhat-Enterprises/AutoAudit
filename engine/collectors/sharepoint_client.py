@@ -71,8 +71,9 @@ class SharePointClient:
             error = result.get("error_description", result.get("error", "Unknown"))
             raise Exception(f"Failed to acquire SharePoint token: {error}")
 
-        self._access_token = result["access_token"]
-        return self._access_token
+        token = result["access_token"]
+        self._access_token = token
+        return token
 
     async def get_tenant_settings(self) -> dict[str, Any]:
         """Get SPO tenant settings via REST API.

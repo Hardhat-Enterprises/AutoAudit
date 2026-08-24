@@ -13,7 +13,6 @@ Environment Variables:
     M365_TENANT_ID: Azure AD tenant ID
     M365_CLIENT_ID: App registration client ID
     M365_CLIENT_SECRET: App registration client secret
-    M365_TENANT_NAME: Azure AD tenant name
 """
 
 import argparse
@@ -31,7 +30,6 @@ from collectors.registry import DATA_COLLECTORS, get_collector
 from collectors.graph_client import GraphClient
 from collectors.powershell_base import BasePowerShellCollector
 from collectors.powershell_client import PowerShellClient, PowerShellExecutionError
-from collectors.sharepoint_client import SharePointClient
 
 
 def list_collectors() -> None:
@@ -74,6 +72,7 @@ def get_credentials() -> tuple[str, str, str]:
 
     return tenant_id, client_id, client_secret
 
+
 async def test_collector(
     collector_id: str,
     output_dir: Path | None = None,
@@ -91,8 +90,6 @@ async def test_collector(
     Returns:
         Dict containing collector_id, timestamp, elapsed_seconds, and data
     """
- 
- 
     # Validate collector exists
     if collector_id not in DATA_COLLECTORS:
         print(f"Error: Unknown collector '{collector_id}'")
@@ -102,7 +99,7 @@ async def test_collector(
         sys.exit(1)
 
     # Get credentials
-    tenant_id, client_id, client_secret= get_credentials()
+    tenant_id, client_id, client_secret = get_credentials()
 
     if verbose:
         print(f"Tenant ID: {tenant_id}")
