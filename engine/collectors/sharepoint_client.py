@@ -80,22 +80,9 @@ class SharePointClient:
         Returns:
             Dict containing tenant configuration properties.
         """
-        # We can get 7.2.5 task settings via GraphAPI
-        graph_client = GraphClient(self.tenant_id,self.client_id,self.client_secret)
-        token = await graph_client._get_access_token()
+        # TODO: Implement REST API call
+        raise NotImplementedError("SharePoint client not yet implemented")
 
-        url = f"{graph_client.GRAPH_BASE_URL}/admin/sharepoint/settings"
-
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/json",
-        }
-
-        async with httpx.AsyncClient() as http_client:
-            response = await http_client.get(url, headers=headers, timeout=30.0)
-            response.raise_for_status()
-            payload = response.json()
-        return payload
 
     
     async def get_site_properties(self, site_url: str) -> dict[str, Any]:
