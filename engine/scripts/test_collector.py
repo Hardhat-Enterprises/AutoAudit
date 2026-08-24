@@ -26,10 +26,12 @@ from pathlib import Path
 # Add parent to path for imports when running as module
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 from collectors.registry import DATA_COLLECTORS, get_collector
 from collectors.graph_client import GraphClient
 from collectors.powershell_base import BasePowerShellCollector
 from collectors.powershell_client import PowerShellClient, PowerShellExecutionError
+from collectors.sharepoint_client import SharePointClient
 
 
 def list_collectors() -> None:
@@ -72,6 +74,17 @@ def get_credentials() -> tuple[str, str, str]:
 
     return tenant_id, client_id, client_secret
 
+#Extra function for getting tenant name
+def get_sharepoint_tenant_name() -> str:
+    """Get the SharePoint tenant name (e.g. 'contoso' for contoso.sharepoint.com)."""
+    tenant_name = os.environ.get("M365_SHAREPOINT_TENANT_NAME")
+    if not tenant_name:
+        print("Error: Missing required environment variable for SharePoint collectors:")
+        print("  - M365_SHAREPOINT_TENANT_NAME")
+        print("\nSet this before running a sharepoint.* collector:")
+        print("  export M365_SHAREPOINT_TENANT_NAME=<your-tenant-name>  # e.g. 'contoso'")
+        sys.exit(1)
+    return tenant_name
 
 async def test_collector(
     collector_id: str,
@@ -112,6 +125,9 @@ async def test_collector(
     collector = get_collector(collector_id)
     if isinstance(collector, BasePowerShellCollector):
         client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
+    elif collector.__class__.__module__.startswith("collectors.sharepoint"):
+        tenant_name = get_sharepoint_tenant_name()
+        client = SharePointClient(tenant_id, client_id, client_secret, tenant_name)
     else:
         client = GraphClient(tenant_id, client_id, client_secret)
 
@@ -177,6 +193,7 @@ async def test_all_collectors(
     tenant_id, client_id, client_secret = get_credentials()
     graph_client = GraphClient(tenant_id, client_id, client_secret)
     ps_client = None  # Lazy init PowerShell client
+    sp_client = None  # Lazy init SharePoint client
 
     results = []
     for collector_id in sorted(DATA_COLLECTORS.keys()):
@@ -188,6 +205,10 @@ async def test_all_collectors(
             if ps_client is None:
                 ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
             client = ps_client
+        elif collector.__class__.__module__.startswith("collectors.sharepoint"):
+            if sp_client is None:
+                sp_client = SharePointClient(tenant_id, client_id, client_secret, get_sharepoint_tenant_name())
+            client = sp_client
         else:
             client = graph_client
 
