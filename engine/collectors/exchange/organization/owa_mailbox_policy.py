@@ -31,13 +31,16 @@ class OwaMailboxPolicyDataCollector(BasePowerShellCollector):
             - policies_with_external_storage: Policies allowing external storage
             - policies_with_bookings: Policies with Bookings enabled
         """
-        policies = await client.run_cmdlet("ExchangeOnline", "Get-OwaMailboxPolicy")
+        raw_policies: Any = await client.run_cmdlet("ExchangeOnline", "Get-OwaMailboxPolicy")
 
         # Handle None, single policy, or list
-        if policies is None:
+        policies: list[dict[str, Any]]
+        if raw_policies is None:
             policies = []
-        elif isinstance(policies, dict):
-            policies = [policies]
+        elif isinstance(raw_policies, dict):
+            policies = [raw_policies]
+        else:
+            policies = raw_policies
 
         # Find default policy
         default_policy = next(
@@ -67,7 +70,6 @@ class OwaMailboxPolicyDataCollector(BasePowerShellCollector):
         # tenant-wide (Get-OrganizationConfig -> BookingsEnabled)
         org_config = await client.run_cmdlet("ExchangeOnline", "Get-OrganizationConfig")
 
-
         return {
             "owa_policies": policies,
             "total_policies": len(policies),
@@ -75,10 +77,5 @@ class OwaMailboxPolicyDataCollector(BasePowerShellCollector):
             "default_policy_bookings_mailbox_creation_enabled": default_policy_bookings_mailbox_creation_enabled,
             "policies_with_external_storage": policies_with_external_storage,
             "policies_with_bookings": policies_with_bookings,
-            "default_policy_bookings_mailbox_creation_enabled": (
-                default_policy.get("BookingsMailboxCreationEnabled")
-                if default_policy
-                else None
-            ),
             "bookings_enabled": org_config.get("BookingsEnabled") if org_config else None,
         }
