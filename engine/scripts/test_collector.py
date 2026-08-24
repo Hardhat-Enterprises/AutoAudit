@@ -114,10 +114,22 @@ async def test_collector(
 
     # Create collector and appropriate client
     collector = get_collector(collector_id)
+
     if isinstance(collector, BasePowerShellCollector):
-        client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
+        ps_client = PowerShellClient(
+            tenant_id,
+            client_id,
+            client_secret,
+            service_url=service_url,
+        )
+        client = await collector.collect(ps_client)
     else:
-        client = GraphClient(tenant_id, client_id, client_secret)
+        graph_client = GraphClient(
+            tenant_id,
+            client_id,
+            client_secret,
+        )
+        client = await collector.collect(graph_client)
 
     # Run collection
     print(f"Running collector: {collector_id}")
@@ -187,13 +199,19 @@ async def test_all_collectors(
         print(f"\n{collector_id}:")
         collector = get_collector(collector_id)
 
-        # Use appropriate client based on collector type
         if isinstance(collector, BasePowerShellCollector):
             if ps_client is None:
-                ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
-            client = ps_client
+                ps_client = PowerShellClient(
+                    tenant_id,
+                    client_id,
+                    client_secret,
+                    service_url=service_url,
+                )
+
+            client = await collector.collect(ps_client)
+
         else:
-            client = graph_client
+            client = await collector.collect(graph_client)
 
         start = datetime.now()
         try:
