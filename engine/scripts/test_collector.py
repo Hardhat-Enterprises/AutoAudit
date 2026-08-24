@@ -27,7 +27,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from engine.collectors.sharepoint_client import SharePointClient
+from collectors.sharepoint_client import SharePointClient
 
 # Add parent to path for imports when running as module
 sys.path.insert(0, str(Path(__file__).parent.parent))

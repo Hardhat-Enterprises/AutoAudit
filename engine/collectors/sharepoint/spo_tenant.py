@@ -20,8 +20,8 @@ REST Endpoints: /_api/SPOTenant or SharePoint Admin API
 
 from typing import Any
 
-from engine.collectors.powershell_base import BasePowerShellCollector
-from engine.collectors.sharepoint_client import SharePointClient
+from collectors.powershell_base import BasePowerShellCollector
+from collectors.sharepoint_client import SharePointClient
 
 
 class SpoTenantDataCollector(BasePowerShellCollector):

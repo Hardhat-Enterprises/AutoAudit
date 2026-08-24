@@ -27,7 +27,7 @@ from typing import Any, Optional
 import httpx
 from msal import ConfidentialClientApplication
 
-#from worker.validators import validate_tenant_id
+from worker.validators import validate_tenant_id
 
 
 class PowerShellExecutionError(Exception):

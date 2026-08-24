@@ -23,7 +23,7 @@ from typing import Any
 
 
 from msal import ConfidentialClientApplication
-from engine.collectors.powershell_client import PowerShellClient
+from collectors.powershell_client import PowerShellClient
 
 class SharePointClient:
     """Client for SharePoint Online REST API using client secret auth."""
