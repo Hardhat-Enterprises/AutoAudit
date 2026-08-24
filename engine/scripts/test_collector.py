@@ -123,6 +123,7 @@ async def test_collector(
 
     # Create collector and appropriate client
     collector = get_collector(collector_id)
+    client: PowerShellClient | SharePointClient | GraphClient
     if isinstance(collector, BasePowerShellCollector):
         client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
     elif collector.__class__.__module__.startswith("collectors.sharepoint"):
@@ -138,7 +139,7 @@ async def test_collector(
 
     start = datetime.now()
     try:
-        result = await collector.collect(client)
+        result = await collector.collect(client)      # type: ignore[arg-type]  # BaseDataCollector.collect() is declared for GraphClient only; PowerShell/SharePoint collectors accept their own client type by convention (see BasePowerShellCollector) — base signature not yet generalised.
         elapsed = (datetime.now() - start).total_seconds()
         print(f"Collection completed in {elapsed:.2f}s")
     except NotImplementedError:
@@ -194,6 +195,7 @@ async def test_all_collectors(
     graph_client = GraphClient(tenant_id, client_id, client_secret)
     ps_client = None  # Lazy init PowerShell client
     sp_client = None  # Lazy init SharePoint client
+    client: PowerShellClient | SharePointClient | GraphClient
 
     results = []
     for collector_id in sorted(DATA_COLLECTORS.keys()):
@@ -214,7 +216,7 @@ async def test_all_collectors(
 
         start = datetime.now()
         try:
-            result = await collector.collect(client)
+            result = await collector.collect(client)  # type: ignore[arg-type]  # BaseDataCollector.collect() is declared for GraphClient only; PowerShell/SharePoint collectors accept their own client type by convention (see BasePowerShellCollector) — base signature not yet generalised.
             elapsed = (datetime.now() - start).total_seconds()
             status = "OK"
             error = None
