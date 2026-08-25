@@ -13,6 +13,8 @@ Environment Variables:
     M365_TENANT_ID: Azure AD tenant ID
     M365_CLIENT_ID: App registration client ID
     M365_CLIENT_SECRET: App registration client secret
+    M365_SHAREPOINT_TENANT_NAME: SharePoint tenant name (only needed for
+        sharepoint.* collectors, e.g. 'contoso' for contoso.sharepoint.com)
 """
 
 import argparse
@@ -30,6 +32,7 @@ from collectors.registry import DATA_COLLECTORS, get_collector
 from collectors.graph_client import GraphClient
 from collectors.powershell_base import BasePowerShellCollector
 from collectors.powershell_client import PowerShellClient, PowerShellExecutionError
+from collectors.sharepoint_client import SharePointClient
 
 
 def list_collectors() -> None:
@@ -73,6 +76,18 @@ def get_credentials() -> tuple[str, str, str]:
     return tenant_id, client_id, client_secret
 
 
+def get_sharepoint_tenant_name() -> str:
+    """Get the SharePoint tenant name (e.g. 'contoso' for contoso.sharepoint.com)."""
+    tenant_name = os.environ.get("M365_SHAREPOINT_TENANT_NAME")
+    if not tenant_name:
+        print("Error: Missing required environment variable for SharePoint collectors:")
+        print("  - M365_SHAREPOINT_TENANT_NAME")
+        print("\nSet this before running a sharepoint.* collector:")
+        print("  export M365_SHAREPOINT_TENANT_NAME=<your-tenant-name>  # e.g. 'contoso'")
+        sys.exit(1)
+    return tenant_name
+
+
 async def test_collector(
     collector_id: str,
     output_dir: Path | None = None,
@@ -110,8 +125,12 @@ async def test_collector(
 
     # Create collector and appropriate client
     collector = get_collector(collector_id)
+    client: PowerShellClient | SharePointClient | GraphClient
     if isinstance(collector, BasePowerShellCollector):
         client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
+    elif collector.__class__.__module__.startswith("collectors.sharepoint"):
+        tenant_name = get_sharepoint_tenant_name()
+        client = SharePointClient(tenant_id, client_id, client_secret, tenant_name)
     else:
         client = GraphClient(tenant_id, client_id, client_secret)
 
@@ -122,7 +141,7 @@ async def test_collector(
 
     start = datetime.now()
     try:
-        result = await collector.collect(client)
+        result = await collector.collect(client)  # type: ignore[arg-type]  # BaseDataCollector.collect() is declared for GraphClient only; PowerShell/SharePoint collectors accept their own client type by convention (see BasePowerShellCollector) — base signature not yet generalised.
         elapsed = (datetime.now() - start).total_seconds()
         print(f"Collection completed in {elapsed:.2f}s")
     except NotImplementedError:
@@ -177,6 +196,7 @@ async def test_all_collectors(
     tenant_id, client_id, client_secret = get_credentials()
     graph_client = GraphClient(tenant_id, client_id, client_secret)
     ps_client = None  # Lazy init PowerShell client
+    sp_client = None  # Lazy init SharePoint client
 
     results = []
     for collector_id in sorted(DATA_COLLECTORS.keys()):
@@ -188,12 +208,16 @@ async def test_all_collectors(
             if ps_client is None:
                 ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
             client = ps_client
+        elif collector.__class__.__module__.startswith("collectors.sharepoint"):
+            if sp_client is None:
+                sp_client = SharePointClient(tenant_id, client_id, client_secret, get_sharepoint_tenant_name())
+            client = sp_client
         else:
             client = graph_client
 
         start = datetime.now()
         try:
-            result = await collector.collect(client)
+            result = await collector.collect(client)  # type: ignore[arg-type]  # see note in test_collector()
             elapsed = (datetime.now() - start).total_seconds()
             status = "OK"
             error = None
@@ -267,9 +291,10 @@ Examples:
   python -m scripts.test_collector -c exchange.organization.organization_config --use-service http://localhost:8001
 
 Environment Variables:
-  M365_TENANT_ID      Azure AD tenant ID
-  M365_CLIENT_ID      App registration client ID
-  M365_CLIENT_SECRET  App registration client secret
+  M365_TENANT_ID              Azure AD tenant ID
+  M365_CLIENT_ID              App registration client ID
+  M365_CLIENT_SECRET          App registration client secret
+  M365_SHAREPOINT_TENANT_NAME SharePoint tenant name (sharepoint.* collectors only)
         """,
     )
     parser.add_argument(

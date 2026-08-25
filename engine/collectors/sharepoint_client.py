@@ -76,10 +76,24 @@ class SharePointClient:
         """Get SPO tenant settings via REST API.
 
         Returns:
-            Dict containing tenant configuration properties.
+            Dict containing tenant configuration properties (e.g.
+            ExternalUserExpirationRequired, ExternalUserExpireInDays,
+            SharingCapability, LegacyAuthProtocolsEnabled) as returned by
+            the SPOTenant REST resource.
         """
-        # TODO: Implement REST API call
-        raise NotImplementedError("SharePoint client not yet implemented")
+        token = await self._get_access_token()
+        url = f"{self.admin_url}/_api/SPOTenant"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json;odata=nometadata",
+        }
+
+        async with httpx.AsyncClient() as http_client:
+            response = await http_client.get(url, headers=headers)
+            response.raise_for_status()
+            settings: dict[str, Any] = response.json()
+
+        return settings
 
     async def get_site_properties(self, site_url: str) -> dict[str, Any]:
         """Get site properties via REST API.
