@@ -77,6 +77,9 @@ from collectors.exchange.dns.dns_security_records import (
 )
 
 # Exchange - Organization
+from collectors.exchange.organization.admin_audit_log_config import (
+    AdminAuditLogConfigDataCollector,
+)
 from collectors.exchange.organization.organization_config import (
     OrganizationConfigDataCollector,
 )
@@ -177,6 +180,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
     # Exchange - Organization
+    "exchange.organization.admin_audit_log_config": AdminAuditLogConfigDataCollector,
     "exchange.organization.organization_config": OrganizationConfigDataCollector,
     "exchange.organization.owa_mailbox_policy": OwaMailboxPolicyDataCollector,
     "exchange.organization.sharing_policy": SharingPolicyDataCollector,

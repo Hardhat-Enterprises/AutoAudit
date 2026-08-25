@@ -21,41 +21,41 @@ package cis.microsoft_365_foundations.v6_0_0.control_3_1_1
 
 default result := {
     "compliant": false,
-    "message": "Evaluation failed: unable to determine Microsoft 365 audit status",
+    "message": "Evaluation failed: unable to determine Microsoft 365 audit log search status",
     "affected_resources": [],
     "details": {}
 }
 
 result := output if {
-    audit_disabled := object.get(input, "audit_disabled", null)
+    enabled := object.get(input, "unified_audit_log_ingestion_enabled", null)
 
-    audit_disabled != null
+    enabled != null
 
-    # Compliant when auditing is not disabled
-    compliant := audit_disabled == false
+    # Compliant when unified audit log ingestion is enabled
+    compliant := enabled == true
 
     output := {
         "compliant": compliant,
-        "message": generate_message(audit_disabled),
-        "affected_resources": generate_affected_resources(audit_disabled),
+        "message": generate_message(enabled),
+        "affected_resources": generate_affected_resources(compliant),
         "details": {
-            "audit_disabled": audit_disabled
+            "unified_audit_log_ingestion_enabled": enabled
         }
     }
 }
 
-generate_message(audit_disabled) := msg if {
-    audit_disabled == false
-    msg := "Microsoft 365 audit log search is enabled"
+generate_message(enabled) := msg if {
+    enabled == true
+    msg := "Microsoft 365 audit log search is enabled (UnifiedAuditLogIngestionEnabled is True)"
 }
 
-generate_message(audit_disabled) := msg if {
-    audit_disabled == true
-    msg := "Microsoft 365 audit log search is disabled (AuditDisabled is True)"
+generate_message(enabled) := msg if {
+    enabled == false
+    msg := "Microsoft 365 audit log search is disabled (UnifiedAuditLogIngestionEnabled is False)"
 }
 
-generate_affected_resources(false) := []
+generate_affected_resources(true) := []
 
-generate_affected_resources(true) := [
-    "Microsoft 365 unified audit logging is disabled"
+generate_affected_resources(false) := [
+    "Microsoft 365 unified audit log ingestion is disabled"
 ]
