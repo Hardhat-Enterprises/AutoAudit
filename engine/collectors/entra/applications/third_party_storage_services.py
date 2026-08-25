@@ -34,19 +34,20 @@ class ThirdPartyStorageServicesDataCollector(BaseDataCollector):
             - service_principal_exists: Whether the SP has been created in the tenant
             - account_enabled: The SP's accountEnabled value (None if not found)
             - service_principal: Raw service principal object, if found
+
+        Raises:
+            Any exception from the Graph API call is propagated so the worker
+            pipeline can retry or mark this control as an evaluation error,
+            rather than silently reporting a false non-compliance result.
         """
-        collector_error: str | None = None
         service_principal: dict[str, Any] | None = None
 
-        try:
-            resp = await client.get(
-                f"/servicePrincipals?$filter=appId eq '{THIRD_PARTY_STORAGE_APP_ID}'"
-            )
-            results = resp.get("value") if isinstance(resp, dict) else None
-            if isinstance(results, list) and results:
-                service_principal = results[0]
-        except Exception as exc:
-            collector_error = str(exc)
+        resp = await client.get(
+            f"/servicePrincipals?$filter=appId eq '{THIRD_PARTY_STORAGE_APP_ID}'"
+        )
+        results = resp.get("value") if isinstance(resp, dict) else None
+        if isinstance(results, list) and results:
+            service_principal = results[0]
 
         account_enabled = (
             service_principal.get("accountEnabled")
@@ -58,5 +59,5 @@ class ThirdPartyStorageServicesDataCollector(BaseDataCollector):
             "service_principal_exists": service_principal is not None,
             "account_enabled": account_enabled,
             "service_principal": service_principal,
-            "collector_error": collector_error,
         }
+    
