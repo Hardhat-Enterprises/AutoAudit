@@ -811,11 +811,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": null,
-      "policy_file": null,
-      "requires_permissions": null,
-      "notes": "Need LAPS configuration collector"
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.5_enable_laps.rego",
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
+      "notes": null
     },
     {
       "control_id": "5.1.4.6",
