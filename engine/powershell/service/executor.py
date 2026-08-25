@@ -212,7 +212,7 @@ def execute_cmdlet(
     client_id: Optional[str] = None,
     sharepoint_admin_url: Optional[str] = None,
     certificate_alias: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> Optional[Dict[str, Any]]:
     """Execute a PowerShell cmdlet and return the result.
 
     Args:
@@ -255,7 +255,9 @@ def execute_cmdlet(
         )
     else:
         script = build_script(module, cmdlet, params, tenant_id)
+        assert token is not None
         if module == "Teams":
+            assert graph_token is not None
             env["GRAPH_TOKEN"] = graph_token
             env["TEAMS_TOKEN"] = token
         else:
