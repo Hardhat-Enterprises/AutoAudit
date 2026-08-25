@@ -301,11 +301,10 @@ def evaluate_control(
         }
 
     except Exception as exc:
-        # Retry on failure
-        try:
-            raise self.retry(exc=exc)
-        except self.MaxRetriesExceededError:
-            # Max retries exceeded - mark as error
+        # self.request.retries is the number of retries already performed.
+        # Once the retry limit is reached, persist the terminal error
+        # instead of scheduling another retry.
+        if self.max_retries is not None and self.request.retries >= self.max_retries:
             with get_db_session() as session:
                 update_scan_result(
                     session,
@@ -318,11 +317,14 @@ def evaluate_control(
                 # Check if this was the last control and finalize scan if complete
                 finalize_scan_if_complete(session, scan_id)
                 session.commit()
+
             return {
                 "control_id": control_id,
                 "compliant": None,
                 "error": str(exc),
             }
+
+        raise self.retry(exc=exc)
 
 
 async def _evaluate_control_async(
