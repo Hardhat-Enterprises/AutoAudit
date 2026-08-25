@@ -32,7 +32,9 @@ def load_metadata(framework: str, benchmark: str, version: str) -> dict:
     Returns:
         The metadata dict containing controls list.
     """
-    metadata_path = Path(settings.POLICIES_DIR) / framework / benchmark / version / "metadata.json"
+    metadata_path = (
+        Path(settings.POLICIES_DIR) / framework / benchmark / version / "metadata.json"
+    )
     if not metadata_path.exists():
         raise FileNotFoundError(f"Metadata not found: {metadata_path}")
 
@@ -133,7 +135,9 @@ def run_scan(scan_id: int) -> dict:
             # explicitly disabled via ENABLE_POWERSHELL_CONTROLS=false.
             if (
                 settings.ENABLE_POWERSHELL_CONTROLS is False
-                and collector_id.startswith(("exchange.", "compliance.", "teams."))
+                and collector_id.startswith(
+                    ("exchange.", "compliance.", "teams.", "sharepoint.pnp.")
+                )
                 and not collector_id.startswith("exchange.dns.")
             ):
                 with get_db_session() as session:
@@ -357,9 +361,9 @@ async def _evaluate_control_async(
     #
     # Most Exchange and Compliance collectors require PowerShell, but a few Exchange
     # collectors use Graph (e.g. domain metadata).
-    if collector_id.startswith(("exchange.", "compliance.")) and not collector_id.startswith(
-        "exchange.dns."
-    ):
+    if collector_id.startswith(
+        ("exchange.", "compliance.", "sharepoint.pnp.")
+    ) and not collector_id.startswith("exchange.dns."):
         client = PowerShellClient(
             tenant_id=credentials["tenant_id"],
             client_id=credentials["client_id"],
