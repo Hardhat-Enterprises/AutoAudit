@@ -131,6 +131,9 @@ from collectors.exchange.protection.safe_links_policy import (
 from collectors.exchange.protection.teams_protection_policy import (
     TeamsProtectionPolicyDataCollector,
 )
+from collectors.exchange.protection.priority_account_protection import (
+    PriorityAccountStrictProtectionDataCollector,
+)
 
 # Exchange - Transport
 from collectors.exchange.transport.external_in_outlook import (
@@ -201,6 +204,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Exchange - Transport
     "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
     "exchange.transport.transport_rules": TransportRulesDataCollector,
+    "exchange.protection.priority_account_protection": PriorityAccountStrictProtectionDataCollector,
 }
 
 
