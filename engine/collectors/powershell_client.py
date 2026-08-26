@@ -19,10 +19,9 @@ Authentication Flow:
 """
 
 import json
-import os
 import subprocess
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from msal import ConfidentialClientApplication
@@ -43,6 +42,7 @@ class PowerShellClient:
     EXCHANGE_SCOPE = "https://outlook.office365.com/.default"
     TEAMS_SCOPE = "https://api.interfaces.records.teams.microsoft.com/.default"
     COMPLIANCE_SCOPE = "https://ps.compliance.protection.outlook.com/.default"
+
     DOCKER_IMAGE = "autoaudit-powershell"
 
     def __init__(
@@ -50,10 +50,9 @@ class PowerShellClient:
         tenant_id: str,
         client_id: str,
         client_secret: str,
-        tenant_name: Optional[str],
-        sharepoint_cert_password: Optional[str],
-        sharepoint_cert_path: Optional[str],
-        service_url: str | None = None
+        service_url: str | None = None,
+        sharepoint_admin_url: str | None = None,
+        certificate_alias: str | None = None,
     ):
         """Initialize PowerShell client.
 
@@ -63,23 +62,22 @@ class PowerShellClient:
             client_secret: Client secret for authentication
             service_url: Optional URL of PowerShell HTTP service (e.g., http://powershell-service:8001).
                          If provided, uses HTTP instead of spawning Docker containers.
+            sharepoint_admin_url: SharePoint admin URL (required for SharePointOnline)
+            certificate_alias: Certificate alias resolved by the PowerShell service
+                               (required for SharePointOnline)
         """
-        #self.tenant_id = validate_tenant_id(tenant_id)
-        self.tenant_id = tenant_id
+        self.tenant_id = validate_tenant_id(tenant_id)
         self.client_id = client_id
         self.client_secret = client_secret
-        self.tenant_name = tenant_name
         self.service_url = service_url
-        self.sharepoint_cert_password = sharepoint_cert_password
+        self.sharepoint_admin_url = sharepoint_admin_url
+        self.certificate_alias = certificate_alias
         self._msal_app = ConfidentialClientApplication(
             client_id=client_id,
             client_credential=client_secret,
             authority=f"https://login.microsoftonline.com/{self.tenant_id}",
         )
         self._image_checked = False
-        self.sharepoint_scope = (
-            f"https://{tenant_name}-admin.sharepoint.com/.default"
-        )
 
     def _ensure_docker_image(self) -> None:
         """Build Docker image if it doesn't exist."""
@@ -108,7 +106,9 @@ class PowerShellClient:
             text=True,
         )
         if not result.stdout.strip():
-            print(f"Building {self.DOCKER_IMAGE} Docker image (this may take a few minutes)...")
+            print(
+                f"Building {self.DOCKER_IMAGE} Docker image (this may take a few minutes)..."
+            )
             dockerfile_dir = Path(__file__).parent.parent / "docker" / "powershell"
             build_result = subprocess.run(
                 ["docker", "build", "-t", self.DOCKER_IMAGE, str(dockerfile_dir)],
@@ -123,7 +123,9 @@ class PowerShellClient:
 
         self._image_checked = True
 
-    async def run_cmdlet(self, module: str, cmdlet: str, **params: Any) -> dict[str, Any]:
+    async def run_cmdlet(
+        self, module: str, cmdlet: str, **params: Any
+    ) -> dict[str, Any]:
         """Execute a PowerShell cmdlet.
 
         Uses HTTP service if service_url is configured, otherwise spawns Docker container.
@@ -136,6 +138,11 @@ class PowerShellClient:
         Returns:
             Dict containing cmdlet output.
         """
+        if module == "SharePointOnline" and not self.service_url:
+            raise PowerShellExecutionError(
+                "SharePointOnline requires the PowerShell HTTP service; "
+                "Docker fallback is not supported"
+            )
         if self.service_url:
             return await self._run_via_service(module, cmdlet, params)
         else:
@@ -154,50 +161,54 @@ class PowerShellClient:
         Returns:
             Dict containing cmdlet output.
         """
-        # Acquire tokens
-        graph_token = None
-        if module == "SharePoint":
-            pass
-        elif module == "Teams":
-            # Teams needs both Graph and Teams tokens
-            graph_result = self._msal_app.acquire_token_for_client(
-                scopes=["https://graph.microsoft.com/.default"]
-            )
-            if "access_token" not in graph_result:
-                error_desc = graph_result.get("error_description", str(graph_result))
-                raise RuntimeError(f"Graph token acquisition failed: {error_desc}")
-            graph_token = graph_result["access_token"]
-
-            teams_result = self._msal_app.acquire_token_for_client(
-                scopes=[self.TEAMS_SCOPE]
-            )
-            if "access_token" not in teams_result:
-                error_desc = teams_result.get("error_description", str(teams_result))
-                raise RuntimeError(f"Teams token acquisition failed: {error_desc}")
-            token = teams_result["access_token"]
-        else:
-            # Exchange and Compliance use single token
-            scope = self._get_scope_for_module(module)
-            result = self._msal_app.acquire_token_for_client(scopes=[scope])
-            if "access_token" not in result:
-                error_desc = result.get("error_description", str(result))
-                raise RuntimeError(f"Token acquisition failed: {error_desc}")
-            token = result["access_token"]
-
-        # Build request payload
-        if module == "SharePoint":
+        if module == "SharePointOnline":
+            if not self.sharepoint_admin_url or not self.certificate_alias:
+                raise ValueError(
+                    "SharePointOnline requires sharepoint_admin_url and certificate_alias"
+                )
             payload = {
                 "module": module,
                 "cmdlet": cmdlet,
                 "params": params,
                 "tenant_id": self.tenant_id,
-                "tenant_name": self.tenant_name,
                 "client_id": self.client_id,
-                "sharepoint_cert_password": self.sharepoint_cert_password,
-                "token": "None",
-                "graph_token": "None",
+                "sharepoint_admin_url": self.sharepoint_admin_url,
+                "certificate_alias": self.certificate_alias,
             }
         else:
+            # Acquire tokens
+            graph_token = None
+            if module == "Teams":
+                # Teams needs both Graph and Teams tokens
+                graph_result = self._msal_app.acquire_token_for_client(
+                    scopes=["https://graph.microsoft.com/.default"]
+                )
+                if "access_token" not in graph_result:
+                    error_desc = graph_result.get(
+                        "error_description", str(graph_result)
+                    )
+                    raise RuntimeError(f"Graph token acquisition failed: {error_desc}")
+                graph_token = graph_result["access_token"]
+
+                teams_result = self._msal_app.acquire_token_for_client(
+                    scopes=[self.TEAMS_SCOPE]
+                )
+                if "access_token" not in teams_result:
+                    error_desc = teams_result.get(
+                        "error_description", str(teams_result)
+                    )
+                    raise RuntimeError(f"Teams token acquisition failed: {error_desc}")
+                token = teams_result["access_token"]
+            else:
+                # Exchange and Compliance use single token
+                scope = self._get_scope_for_module(module)
+                result = self._msal_app.acquire_token_for_client(scopes=[scope])
+                if "access_token" not in result:
+                    error_desc = result.get("error_description", str(result))
+                    raise RuntimeError(f"Token acquisition failed: {error_desc}")
+                token = result["access_token"]
+
+            # Build request payload
             payload = {
                 "module": module,
                 "cmdlet": cmdlet,
@@ -214,7 +225,6 @@ class PowerShellClient:
                 json=payload,
             )
             response.raise_for_status()
-            
 
         result = response.json()
         if not result.get("success"):
@@ -240,10 +250,8 @@ class PowerShellClient:
 
         # Build environment variables for tokens
         env_vars = []
-        if module == "SharePoint":
-            
-            pass
-        elif module == "Teams":
+
+        if module == "Teams":
             # Teams needs both Graph and Teams tokens
             graph_result = self._msal_app.acquire_token_for_client(
                 scopes=["https://graph.microsoft.com/.default"]
@@ -260,9 +268,10 @@ class PowerShellClient:
                 raise RuntimeError(f"Teams token acquisition failed: {error_desc}")
 
             env_vars = [
-                "-e", f"GRAPH_TOKEN={graph_result['access_token']}",
-                "-e", f"TEAMS_TOKEN={teams_result['access_token']}",
-                "-e", f"SHAREPOINT_CERT_PASSWORD={self.sharepoint_cert_password}",
+                "-e",
+                f"GRAPH_TOKEN={graph_result['access_token']}",
+                "-e",
+                f"TEAMS_TOKEN={teams_result['access_token']}",
             ]
         else:
             # Exchange and Compliance use single token
@@ -286,7 +295,9 @@ class PowerShellClient:
         )
 
         if proc.returncode != 0:
-            raise PowerShellExecutionError(f"PowerShell execution failed:\n{proc.stderr}")
+            raise PowerShellExecutionError(
+                f"PowerShell execution failed:\n{proc.stderr}"
+            )
 
         # Parse JSON output
         try:
@@ -318,7 +329,7 @@ class PowerShellClient:
                 param_str += f" -{key} {value}"
 
         if module == "ExchangeOnline":
-            return f'''
+            return f"""
 Import-Module ExchangeOnlineManagement
 Connect-ExchangeOnline -AccessToken $env:EXO_TOKEN -Organization "{self.tenant_id}" -ShowBanner:$false
 try {{
@@ -331,9 +342,9 @@ try {{
 }} finally {{
     Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 }}
-'''
+"""
         elif module == "Compliance":
-            return f'''
+            return f"""
 Import-Module ExchangeOnlineManagement
 Connect-IPPSSession -AccessToken $env:EXO_TOKEN -Organization "{self.tenant_id}" -ShowBanner:$false
 try {{
@@ -346,10 +357,10 @@ try {{
 }} finally {{
     Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 }}
-'''
+"""
         elif module == "Teams":
             # Teams module uses -AccessTokens (plural) with Graph and Teams tokens
-            return f'''
+            return f"""
 Import-Module MicrosoftTeams
 Connect-MicrosoftTeams -AccessTokens @($env:GRAPH_TOKEN, $env:TEAMS_TOKEN) -TenantId "{self.tenant_id}"
 try {{
@@ -362,37 +373,7 @@ try {{
 }} finally {{
     Disconnect-MicrosoftTeams -ErrorAction SilentlyContinue
 }}
-'''
-        elif module == "SharePoint":
-            cert_path = os.environ.get("SPO_CERT_PATH")
-            if not cert_path :
-                raise ValueError(
-                    "SharePoint module requires SPO_CERT_PATH"
-                    "to be configured on the PowerShell service"
-                )
-
-            return f'''
-$ErrorActionPreference = "Stop"
-Import-Module PnP.PowerShell
-$certPassword = ConvertTo-SecureString $env:SHAREPOINT_CERT_PASSWORD -AsPlainText -Force
-try {{
-    Connect-PnPOnline `
-        -Url "https://{self.tenant_name}-admin.sharepoint.com" `
-        -ClientId "{self.client_id}" `
-        -Tenant "{self.tenant_name}.onmicrosoft.com" `
-        -CertificatePath "{cert_path}" `
-        -CertificatePassword $certPassword
-
-    $result = {cmdlet}{param_str}
-    if ($null -eq $result) {{
-        Write-Output 'null'
-    }} else {{
-        $result | ConvertTo-Json -Depth 10
-    }}
-}} finally {{
-    Disconnect-PnPOnline -ErrorAction SilentlyContinue
-}}
-'''
+"""
         else:
             raise ValueError(f"Unsupported module: {module}")
 
@@ -400,7 +381,7 @@ try {{
         """Get the appropriate scope for a PowerShell module.
 
         Args:
-            module: The module name (ExchangeOnline, Teams, Compliance, SharePoint)
+            module: The module name (ExchangeOnline, Teams, Compliance)
 
         Returns:
             The OAuth scope for the module.
@@ -409,6 +390,5 @@ try {{
             "ExchangeOnline": self.EXCHANGE_SCOPE,
             "Teams": self.TEAMS_SCOPE,
             "Compliance": self.COMPLIANCE_SCOPE,
-            "SharePoint": self.sharepoint_scope
         }
         return scopes.get(module, self.EXCHANGE_SCOPE)

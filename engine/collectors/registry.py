@@ -8,6 +8,9 @@ from collectors.entra.applications.apps_and_services_settings import (
 )
 from collectors.entra.applications.forms_settings import FormsSettingsDataCollector
 
+from collectors.entra.applications.third_party_storage_services import (
+    ThirdPartyStorageServicesDataCollector,
+)
 # Authentication
 from collectors.entra.authentication.authentication_methods import (
     AuthenticationMethodsDataCollector,
@@ -77,6 +80,9 @@ from collectors.exchange.dns.dns_security_records import (
 )
 
 # Exchange - Organization
+from collectors.exchange.organization.admin_audit_log_config import (
+    AdminAuditLogConfigDataCollector,
+)
 from collectors.exchange.organization.organization_config import (
     OrganizationConfigDataCollector,
 )
@@ -138,15 +144,16 @@ from collectors.exchange.transport.external_in_outlook import (
 )
 from collectors.exchange.transport.transport_rules import TransportRulesDataCollector
 
+# SharePoint - PnP
+from collectors.sharepoint.pnp.tenant import PnpTenantDataCollector
 
-# Sharepoint 
-from collectors.sharepoint.spo_tenant import SpoTenantDataCollector
 
 # Registry mapping data_collector_id to collector class
 DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Applications
     "entra.applications.apps_and_services_settings": AppsAndServicesSettingsDataCollector,
     "entra.applications.forms_settings": FormsSettingsDataCollector,
+    "entra.applications.third_party_storage_services": ThirdPartyStorageServicesDataCollector,
     # Authentication
     "entra.authentication.authentication_methods": AuthenticationMethodsDataCollector,
     "entra.authentication.mfa_fatigue_protection": MfaFatigueProtectionDataCollector,
@@ -180,6 +187,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
     # Exchange - Organization
+    "exchange.organization.admin_audit_log_config": AdminAuditLogConfigDataCollector,
     "exchange.organization.organization_config": OrganizationConfigDataCollector,
     "exchange.organization.owa_mailbox_policy": OwaMailboxPolicyDataCollector,
     "exchange.organization.sharing_policy": SharingPolicyDataCollector,
@@ -204,8 +212,8 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Exchange - Transport
     "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
     "exchange.transport.transport_rules": TransportRulesDataCollector,
-    # Sharepoint
-    "sharepoint.spo_tenant": SpoTenantDataCollector
+    # SharePoint - PnP
+    "sharepoint.pnp.tenant": PnpTenantDataCollector,
 }
 
 

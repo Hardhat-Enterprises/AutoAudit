@@ -21,16 +21,14 @@ SharePoint REST API Reference:
 
 from typing import Any
 
-
+import httpx
 from msal import ConfidentialClientApplication
-from collectors.powershell_client import PowerShellClient
+
 
 class SharePointClient:
     """Client for SharePoint Online REST API using client secret auth."""
 
-    def __init__(self, tenant_id: str, client_id: str, client_secret: str, 
-                tenant_name: str, sharepoint_cert_password: str, sharepoint_cert_path: str):
-        
+    def __init__(self, tenant_id: str, client_id: str, client_secret: str, tenant_name: str):
         """Initialize SharePoint client.
 
         Args:
@@ -44,11 +42,7 @@ class SharePointClient:
         self.client_secret = client_secret
         self.tenant_name = tenant_name
         self.admin_url = f"https://{tenant_name}-admin.sharepoint.com"
-        self.sharepoint_cert_password = sharepoint_cert_password
-        self.sharepoint_cert_path = sharepoint_cert_path
         self._access_token: str | None = None
-        self._graph_access_token: str | None = None
-        self.service_url = "http://localhost:8001"
 
         self._msal_app = ConfidentialClientApplication(
             client_id=client_id,
@@ -78,33 +72,14 @@ class SharePointClient:
         self._access_token = result["access_token"]
         return self._access_token
 
-
-
     async def get_tenant_settings(self) -> dict[str, Any]:
         """Get SPO tenant settings via REST API.
 
         Returns:
             Dict containing tenant configuration properties.
         """
-        power_shell_client = PowerShellClient(
-                                                client_id=self.client_id,
-                                                tenant_id=self.tenant_id,
-                                                tenant_name=self.tenant_name,
-                                                client_secret=self.client_secret,
-                                                service_url=self.service_url,
-                                                sharepoint_cert_password=self.sharepoint_cert_password,
-                                                sharepoint_cert_path=self.sharepoint_cert_path
-        )
-        result = await power_shell_client.run_cmdlet("SharePoint", "Get-PnPTenant")
-        if not isinstance(result, dict):
-            raise RuntimeError(
-                "Get-PnPTenant returned an invalid result. "
-                f"Expected dict, received {type(result).__name__}."
-            )
-
-        return result
-
-
+        # TODO: Implement REST API call
+        raise NotImplementedError("SharePoint client not yet implemented")
 
     async def get_site_properties(self, site_url: str) -> dict[str, Any]:
         """Get site properties via REST API.
