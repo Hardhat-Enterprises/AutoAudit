@@ -13,8 +13,7 @@ RUN pwsh -NoProfile -Command " \
     Set-PSRepository PSGallery -InstallationPolicy Trusted; \
     Install-Module -Name ExchangeOnlineManagement -Scope AllUsers -Force; \
     Install-Module -Name MicrosoftTeams -Scope AllUsers -Force; \
-    Install-Module -Name Microsoft.Online.SharePoint.PowerShell -Scope AllUsers -Force; \
-    Install-Module PnP.PowerShell -Scope AllUsers -Force; \
+    Install-Module -Name PnP.PowerShell -RequiredVersion 3.4.0 -Scope AllUsers -Force \
     "
 
 ENV PNPPOWERSHELL_UPDATECHECK=Off
