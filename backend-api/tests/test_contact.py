@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
-from app.models.contact import ContactSubmission
+from app.models.contact import ContactSubmission, SubmissionHistory, SubmissionNote
 from app.models.user import User
 
 
@@ -31,7 +31,7 @@ def _execute_returning(single=None, items: list | None = None) -> MagicMock:
     return result
 
 
-def _submission() -> ContactSubmission:
+def _submission(**overrides) -> ContactSubmission:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     submission = ContactSubmission(
         first_name="Ada",
@@ -47,6 +47,8 @@ def _submission() -> ContactSubmission:
     submission.created_at = now
     submission.updated_at = now
     submission.resolved_at = None
+    for key, value in overrides.items():
+        setattr(submission, key, value)
     return submission
 
 
@@ -114,3 +116,218 @@ async def test_list_submissions_forbidden_for_viewer(
         response = await client.get("/v1/contact/submissions")
 
     assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_get_submission_ok(
+    client_factory,
+    mock_db_session: AsyncMock,
+    admin_user: User,
+) -> None:
+    submission = _submission()
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=submission))
+
+    client: AsyncClient = client_factory(admin_user)
+    async with client:
+        response = await client.get(f"/v1/contact/submissions/{submission.id}")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(submission.id)
+
+
+@pytest.mark.asyncio
+async def test_get_submission_not_found(
+    client_factory,
+    mock_db_session: AsyncMock,
+    admin_user: User,
+) -> None:
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=None))
+
+    client: AsyncClient = client_factory(admin_user)
+    async with client:
+        response = await client.get(f"/v1/contact/submissions/{uuid4()}")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_update_submission_status_to_resolved(
+    client_factory,
+    mock_db_session: AsyncMock,
+    admin_user: User,
+) -> None:
+    submission = _submission()
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=submission))
+
+    client: AsyncClient = client_factory(admin_user)
+    async with client:
+        response = await client.patch(
+            f"/v1/contact/submissions/{submission.id}",
+            json={"status": "resolved", "priority": "high"},
+        )
+
+    assert response.status_code == 200
+    assert submission.status == "resolved"
+    assert submission.priority == "high"
+    assert submission.resolved_at is not None
+    mock_db_session.commit.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_update_submission_clears_resolved_at(
+    client_factory,
+    mock_db_session: AsyncMock,
+    admin_user: User,
+) -> None:
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    submission = _submission(status="resolved", resolved_at=now)
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=submission))
+
+    client: AsyncClient = client_factory(admin_user)
+    async with client:
+        response = await client.patch(
+            f"/v1/contact/submissions/{submission.id}",
+            json={"status": "open"},
+        )
+
+    assert response.status_code == 200
+    assert submission.status == "open"
+    assert submission.resolved_at is None
+
+
+@pytest.mark.asyncio
+async def test_update_submission_not_found(
+    client_factory,
+    mock_db_session: AsyncMock,
+    admin_user: User,
+) -> None:
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=None))
+
+    client: AsyncClient = client_factory(admin_user)
+    async with client:
+        response = await client.patch(
+            f"/v1/contact/submissions/{uuid4()}",
+            json={"status": "open"},
+        )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_submission_ok(
+    client_factory,
+    mock_db_session: AsyncMock,
+    admin_user: User,
+) -> None:
+    submission = _submission()
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=submission))
+
+    client: AsyncClient = client_factory(admin_user)
+    async with client:
+        response = await client.delete(f"/v1/contact/submissions/{submission.id}")
+
+    assert response.status_code == 204
+    mock_db_session.delete.assert_awaited()
+    mock_db_session.commit.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_delete_submission_not_found(
+    client_factory,
+    mock_db_session: AsyncMock,
+    admin_user: User,
+) -> None:
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=None))
+
+    client: AsyncClient = client_factory(admin_user)
+    async with client:
+        response = await client.delete(f"/v1/contact/submissions/{uuid4()}")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_list_and_add_notes(
+    client_factory,
+    mock_db_session: AsyncMock,
+    admin_user: User,
+) -> None:
+    submission = _submission()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    note = SubmissionNote(
+        submission_id=submission.id,
+        admin_user_id=admin_user.id,
+        note="Follow up",
+        is_internal=True,
+    )
+    note.id = uuid4()
+    note.created_at = now
+    note.updated_at = now
+
+    mock_db_session.execute = AsyncMock(
+        side_effect=[
+            _execute_returning(items=[note]),  # list_notes
+            _execute_returning(single=submission),  # add_note lookup
+        ]
+    )
+
+    client: AsyncClient = client_factory(admin_user)
+    async with client:
+        listed = await client.get(f"/v1/contact/submissions/{submission.id}/notes")
+        assert listed.status_code == 200
+        assert listed.json()[0]["note"] == "Follow up"
+
+        created = await client.post(
+            f"/v1/contact/submissions/{submission.id}/notes",
+            json={"note": "New note", "is_internal": False},
+        )
+
+    assert created.status_code == 201
+    assert created.json()["note"] == "New note"
+    mock_db_session.commit.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_add_note_submission_not_found(
+    client_factory,
+    mock_db_session: AsyncMock,
+    admin_user: User,
+) -> None:
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=None))
+
+    client: AsyncClient = client_factory(admin_user)
+    async with client:
+        response = await client.post(
+            f"/v1/contact/submissions/{uuid4()}/notes",
+            json={"note": "Missing", "is_internal": True},
+        )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_list_history(
+    client_factory,
+    mock_db_session: AsyncMock,
+    admin_user: User,
+) -> None:
+    submission = _submission()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    history = SubmissionHistory(
+        submission_id=submission.id,
+        admin_user_id=admin_user.id,
+        action="update",
+        field_name="status",
+        old_value="new",
+        new_value="open",
+    )
+    history.id = uuid4()
+    history.created_at = now
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(items=[history]))
+
+    client: AsyncClient = client_factory(admin_user)
+    async with client:
+        response = await client.get(f"/v1/contact/submissions/{submission.id}/history")
+
+    assert response.status_code == 200
+    assert response.json()[0]["action"] == "update"

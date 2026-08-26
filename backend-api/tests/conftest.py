@@ -11,10 +11,10 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from app.api.v1 import auth, contact, platforms, settings, test as test_routes
+from app.api.v1 import auth, benchmarks, contact, platforms, settings, test as test_routes
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
-from app.models.contact import ContactSubmission
+from app.models.contact import ContactSubmission, SubmissionHistory, SubmissionNote
 from app.models.user import Role, User
 from app.models.user_settings import UserSettings
 
@@ -25,6 +25,7 @@ test_app.include_router(auth.router, prefix="/v1")
 test_app.include_router(settings.router, prefix="/v1")
 test_app.include_router(contact.router, prefix="/v1")
 test_app.include_router(platforms.router, prefix="/v1")
+test_app.include_router(benchmarks.router, prefix="/v1")
 
 
 def make_user(*, role: str, user_id: int = 1) -> User:
@@ -96,6 +97,18 @@ async def _populate_on_refresh(obj) -> None:
             obj.created_at = now
         if getattr(obj, "updated_at", None) is None:
             obj.updated_at = now
+    elif isinstance(obj, SubmissionNote):
+        if getattr(obj, "id", None) is None:
+            obj.id = uuid4()
+        if getattr(obj, "created_at", None) is None:
+            obj.created_at = now
+        if getattr(obj, "updated_at", None) is None:
+            obj.updated_at = now
+    elif isinstance(obj, SubmissionHistory):
+        if getattr(obj, "id", None) is None:
+            obj.id = uuid4()
+        if getattr(obj, "created_at", None) is None:
+            obj.created_at = now
 
 
 @pytest.fixture

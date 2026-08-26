@@ -51,8 +51,8 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 
-# Coverage baseline for 26T2-BE-PG-003 (measured ~57% with branch coverage after priority-module tests).
-# Gate slightly below the measured total to avoid flaky CI fails across environments.
+# Coverage baseline for 26T2-BE-PG-003 (measured ~79% with branch coverage after expanded tests).
+# Gate below the measured total to avoid flaky CI fails across environments.
 [tool.coverage.run]
 source = ["app"]
 branch = true
@@ -64,4 +64,4 @@ omit = [
 [tool.coverage.report]
 show_missing = true
 skip_empty = true
-fail_under = 55
+fail_under = 70

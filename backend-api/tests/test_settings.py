@@ -96,6 +96,25 @@ async def test_update_settings(
 
 
 @pytest.mark.asyncio
+async def test_update_settings_no_fields(
+    client_factory,
+    mock_db_session: AsyncMock,
+    viewer_user: User,
+) -> None:
+    """Empty patch should leave confirm_delete_enabled unchanged (branch 50->53)."""
+    existing = _settings(user_id=viewer_user.id, confirm_delete_enabled=True)
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=existing))
+
+    client: AsyncClient = client_factory(viewer_user)
+    async with client:
+        response = await client.patch("/v1/settings/", json={})
+
+    assert response.status_code == 200
+    assert response.json()["confirm_delete_enabled"] is True
+    assert existing.confirm_delete_enabled is True
+
+
+@pytest.mark.asyncio
 async def test_get_settings_unauthorized(client_factory) -> None:
     client: AsyncClient = client_factory(None)
     async with client:

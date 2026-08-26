@@ -1,9 +1,18 @@
 """Smoke tests for authenticated / authz endpoints."""
 
+from collections.abc import AsyncGenerator
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from httpx import AsyncClient
 
+from app.core.auth import get_current_user
 from app.models.user import User
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_returns_user(viewer_user: User) -> None:
+    assert await get_current_user(viewer_user) is viewer_user
 
 
 @pytest.mark.asyncio
@@ -43,6 +52,58 @@ async def test_users_me_returns_401_with_invalid_token(client_factory) -> None:
         )
 
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_update_users_me(
+    client_factory,
+    mock_db_session: AsyncMock,
+    viewer_user: User,
+) -> None:
+    mock_db_session.get = AsyncMock(return_value=viewer_user)
+
+    async def fake_session() -> AsyncGenerator[AsyncMock, None]:
+        yield mock_db_session
+
+    with patch("app.db.session.get_async_session", fake_session):
+        client: AsyncClient = client_factory(viewer_user)
+        async with client:
+            response = await client.patch(
+                "/v1/auth/users/me",
+                json={
+                    "first_name": "Ada",
+                    "last_name": "Lovelace",
+                    "organization_name": "Analytical Engines",
+                },
+            )
+
+    assert response.status_code == 200
+    assert viewer_user.first_name == "Ada"
+    assert viewer_user.last_name == "Lovelace"
+    assert viewer_user.organization_name == "Analytical Engines"
+    mock_db_session.commit.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_update_users_me_not_found(
+    client_factory,
+    mock_db_session: AsyncMock,
+    viewer_user: User,
+) -> None:
+    mock_db_session.get = AsyncMock(return_value=None)
+
+    async def fake_session() -> AsyncGenerator[AsyncMock, None]:
+        yield mock_db_session
+
+    with patch("app.db.session.get_async_session", fake_session):
+        client: AsyncClient = client_factory(viewer_user)
+        async with client:
+            response = await client.patch(
+                "/v1/auth/users/me",
+                json={"first_name": "Ada"},
+            )
+
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio

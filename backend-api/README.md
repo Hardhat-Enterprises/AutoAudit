@@ -63,7 +63,7 @@ uv run pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
 
 - Terminal: coverage table and missing line numbers are printed after the run.
 - HTML: open `htmlcov/index.html` in a browser (`open htmlcov/index.html` on macOS).
-- Threshold: `[tool.coverage.report] fail_under = 55` in `pyproject.toml` fails the run if `app/` coverage drops below 55% (baseline after 26T2-BE-PG-003 priority-module tests; measured ~57% with branch coverage).
+- Threshold: `[tool.coverage.report] fail_under = 70` in `pyproject.toml` fails the run if `app/` coverage drops below 70% (baseline after expanded 26T2-BE-PG-003 tests; measured ~79% with branch coverage).
 
 Coverage artifacts (`htmlcov/`, `.coverage`, `coverage.xml`) are gitignored.
 
