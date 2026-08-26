@@ -35,14 +35,12 @@ class GraphClient:
             scopes=["https://graph.microsoft.com/.default"]
         )
 
-        token = result.get("access_token")
-
-        if not isinstance(token, str):
+        if "access_token" not in result:
             error = result.get("error_description", result.get("error", "Unknown error"))
             raise Exception(f"Failed to acquire token: {error}")
 
-        self._access_token = token
-        return token
+        self._access_token = result["access_token"]
+        return self._access_token
 
     async def _request(
         self,
