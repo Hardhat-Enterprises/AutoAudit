@@ -219,6 +219,10 @@ DATA_COLLECTORS: dict[str, CollectorType] = {
 
     # Sharepoint
     "sharepoint.spo_tenant": SpoTenantDataCollector,
+
+    # Sharepoint PnP
+    "collectors.sharepoint.pnp.tenant":PnpTenantDataCollector
+
 }
 
 def get_collector(collector_id: str,) -> BaseDataCollector | BasePowerShellCollector:
