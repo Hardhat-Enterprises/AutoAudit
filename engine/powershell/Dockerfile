@@ -17,6 +17,8 @@ RUN pwsh -NoProfile -Command " \
     Install-Module PnP.PowerShell -Scope AllUsers -Force; \
     "
 
+ENV PNPPOWERSHELL_UPDATECHECK=Off
+
 # Create non-root user early, before any COPYs
 RUN tdnf install -y shadow-utils && tdnf clean all \
     && useradd --uid 1000 --create-home appuser
