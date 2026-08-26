@@ -43,7 +43,8 @@ class SpoTenantDataCollector(BaseDataCollector):
             - default_link_permission: Default link permission level
         """
         tenant_settings = await client.get(
-            "/admin/sharepoint/settings"
+            endpoint="/admin/sharepoint/settings",
+            beta=False
         )
 
         return {
