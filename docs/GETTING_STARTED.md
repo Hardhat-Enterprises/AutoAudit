@@ -155,6 +155,8 @@ docker compose --profile all up --build -d
 
 The worker logs are output directly to the Docker logs. You can view them with `docker compose logs -f worker`.
 
+SharePoint scans: [SharePoint local runtime](./engine/sharepoint-local-runtime.md).
+
 ## Verifying Your Setup
 
 Here's how to confirm everything is working:
