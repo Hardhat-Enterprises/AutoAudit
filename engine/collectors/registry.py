@@ -1,7 +1,6 @@
 """Registry of available data collectors."""
 
 from collectors.base import BaseDataCollector
-from collectors.powershell_base import BasePowerShellCollector
 
 # Applications
 from collectors.entra.applications.apps_and_services_settings import (
@@ -145,15 +144,15 @@ from collectors.exchange.transport.external_in_outlook import (
 )
 from collectors.exchange.transport.transport_rules import TransportRulesDataCollector
 
-# Sharepoint
-from collectors.sharepoint.spo_tenant import SpoTenantDataCollector
 # SharePoint - PnP
 from collectors.sharepoint.pnp.tenant import PnpTenantDataCollector
 
+# Sharepoint - GraphAPI
+from collectors.sharepoint.spo_tenant import SpoTenantDataCollector
+
 
 # Registry mapping data_collector_id to collector class
-CollectorType = type[BaseDataCollector] | type[BasePowerShellCollector]
-DATA_COLLECTORS: dict[str, CollectorType] = {
+DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Applications
     "entra.applications.apps_and_services_settings": AppsAndServicesSettingsDataCollector,
     "entra.applications.forms_settings": FormsSettingsDataCollector,
@@ -216,16 +215,13 @@ DATA_COLLECTORS: dict[str, CollectorType] = {
     # Exchange - Transport
     "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
     "exchange.transport.transport_rules": TransportRulesDataCollector,
-
-    # Sharepoint
-    "sharepoint.spo_tenant": SpoTenantDataCollector,
-
-    # Sharepoint PnP
-    "collectors.sharepoint.pnp.tenant":PnpTenantDataCollector
-
+    # SharePoint - PnP
+    "sharepoint.pnp.tenant": PnpTenantDataCollector,
+    # Sharepoint - GraphAPI
+    "sharepoint.spo_tenant":SpoTenantDataCollector
 }
 
-def get_collector(collector_id: str,) -> BaseDataCollector | BasePowerShellCollector:
+def get_collector(collector_id: str) -> BaseDataCollector:
     """Get a collector instance by ID."""
     collector_class = DATA_COLLECTORS.get(collector_id)
     if not collector_class:
