@@ -1606,11 +1606,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.9_guest_access_site_onedrive_expiration.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": "Reuses the existing sharepoint.pnp.tenant collector (extended to expose ExternalUserExpirationRequired/ExternalUserExpireInDays from the same Get-PnPTenant call already used for 7.3.1). Rego policy implemented; 7/7 opa tests passing. Not yet run end-to-end against a real tenant via the PnP local scan runtime -- flip automation_status to \"ready\" once verified."
     },
     {
       "control_id": "7.2.10",

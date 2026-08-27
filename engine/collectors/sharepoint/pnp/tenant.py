@@ -40,4 +40,6 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             "disallow_infected_file_download": tenant.get(
                 "DisallowInfectedFileDownload"
             ),
+            "external_user_expiration_required": tenant.get("ExternalUserExpirationRequired"),
+            "external_user_expire_in_days": tenant.get("ExternalUserExpireInDays"),
         }
