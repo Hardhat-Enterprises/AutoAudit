@@ -107,6 +107,35 @@ async def test_update_users_me_not_found(
 
 
 @pytest.mark.asyncio
+async def test_update_users_me_partial_fields(
+    client_factory,
+    mock_db_session: AsyncMock,
+    viewer_user: User,
+) -> None:
+    """Only first_name set — last_name/organization branches should be skipped."""
+    viewer_user.first_name = "Old"
+    viewer_user.last_name = "Keep"
+    viewer_user.organization_name = "KeepOrg"
+    mock_db_session.get = AsyncMock(return_value=viewer_user)
+
+    async def fake_session() -> AsyncGenerator[AsyncMock, None]:
+        yield mock_db_session
+
+    with patch("app.db.session.get_async_session", fake_session):
+        client: AsyncClient = client_factory(viewer_user)
+        async with client:
+            response = await client.patch(
+                "/v1/auth/users/me",
+                json={"first_name": "New"},
+            )
+
+    assert response.status_code == 200
+    assert viewer_user.first_name == "New"
+    assert viewer_user.last_name == "Keep"
+    assert viewer_user.organization_name == "KeepOrg"
+
+
+@pytest.mark.asyncio
 async def test_protected_endpoint_returns_200_for_viewer(
     client_factory,
     viewer_user: User,
