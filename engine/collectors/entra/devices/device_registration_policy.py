@@ -38,6 +38,7 @@ class DeviceRegistrationPolicyDataCollector(BaseDataCollector):
         azure_ad_join = policy.get("azureADJoin", {})
         azure_ad_registration = policy.get("azureADRegistration", {})
         local_admin_password = policy.get("localAdminPassword", {})
+        local_admins = azure_ad_join.get("localAdmins",{})
 
         # Extract local administrator assignment settings
         local_admins = azure_ad_join.get("localAdmins", {})
@@ -46,6 +47,8 @@ class DeviceRegistrationPolicyDataCollector(BaseDataCollector):
         return {
             "device_registration_policy": policy,
             "azure_ad_join_settings": azure_ad_join,
+            "local_admin_settings":local_admins,
+            "global_admins_as_local_admin": local_admins.get("enableGlobalAdmins"),
             "azure_ad_join_allowed": azure_ad_join.get("isAdminConfigurable"),
             "azure_ad_join_allowed_users": azure_ad_join.get("allowedUsers"),
             "azure_ad_join_allowed_groups": azure_ad_join.get("allowedGroups"),
