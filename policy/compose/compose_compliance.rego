@@ -14,12 +14,31 @@ has_resource_limits(service) if {
 	cpus != ""
 }
 
-# A healthcheck must include a command so Compose can distinguish a running
-# container from a service that is ready to receive work.
+# A healthcheck must include an executable command so Compose can distinguish
+# a running container from a service that is ready to receive work. Compose
+# uses ["NONE"] to explicitly disable a healthcheck, which is not compliant.
 has_healthcheck(service) if {
 	healthcheck := object.get(service, "healthcheck", {})
 	test := object.get(healthcheck, "test", [])
-	count(test) > 0
+	is_array(test)
+	count(test) > 1
+	test[0] == "CMD"
+}
+
+has_healthcheck(service) if {
+	healthcheck := object.get(service, "healthcheck", {})
+	test := object.get(healthcheck, "test", [])
+	is_array(test)
+	count(test) > 1
+	test[0] == "CMD-SHELL"
+}
+
+# Compose also permits the shell-command shorthand as a non-empty string.
+has_healthcheck(service) if {
+	healthcheck := object.get(service, "healthcheck", {})
+	test := object.get(healthcheck, "test", "")
+	is_string(test)
+	trim_space(test) != ""
 }
 
 deny contains msg if {
