@@ -63,3 +63,25 @@ test_empty_healthcheck_test_is_reported if {
 	`service "worker" must define a healthcheck with a test command` in messages
 	count(messages) == 1
 }
+
+test_disabled_healthcheck_is_reported if {
+	service := object.union(complete_service, {
+		"healthcheck": {
+			"test": ["NONE"],
+		},
+	})
+	messages := deny with input as {"services": {"worker": service}}
+	`service "worker" must define a healthcheck with a test command` in messages
+	count(messages) == 1
+}
+
+test_incomplete_healthcheck_command_is_reported if {
+	service := object.union(complete_service, {
+		"healthcheck": {
+			"test": ["CMD"],
+		},
+	})
+	messages := deny with input as {"services": {"worker": service}}
+	`service "worker" must define a healthcheck with a test command` in messages
+	count(messages) == 1
+}

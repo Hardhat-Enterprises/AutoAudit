@@ -24,7 +24,8 @@ conftest test --no-fail --policy policy/compose docker-compose.yml
 ## Scope
 
 The policy requires every Compose service to define both CPU and memory limits,
-and a healthcheck with a test command. The initial GitHub Actions workflow
+and a healthcheck with an executable test command. A disabled (`["NONE"]`) or
+incomplete healthcheck does not satisfy the requirement. The initial GitHub Actions workflow
 verifies the policy and its compliant fixture. It reports, rather than blocks
 on, the repository's current Compose findings until the team agrees the
 enforcement approach.
