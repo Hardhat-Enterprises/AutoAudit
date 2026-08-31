@@ -31,9 +31,9 @@
       "maturity_level": "ML1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "entra.devices.configuration_policies",
-      "policy_file": null,
+      "policy_file": "e8_mac_1_1_macros_disabled.rego",
       "requires_permissions": [
         "DeviceManagementConfiguration.Read.All"
       ],
