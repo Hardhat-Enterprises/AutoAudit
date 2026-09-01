@@ -238,6 +238,41 @@
         "User.Read.All"
       ],
       "notes": "Research basis: 26T1-SEC-EG-002 and 26T1-SEC-EG-004."
+    },
+    {
+      "control_id": "E8-BAK-1.1",
+      "title": "Regular backups performed, current, restored, and access restricted",
+      "description": "Checks whether Exchange, SharePoint, and OneDrive for Business are covered by an active protection policy, whether a recent restore point and restore session exist, and whether backup admin access is appropriately restricted.",
+      "severity": "high",
+      "service": "M365BackupStorage",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "m365.backup_restore",
+      "policy_file": "e8_bak_1_1_regular_backups.rego",
+      "requires_permissions": [
+        "BackupRestore-Configuration.Read.All",
+        "BackupRestore-Restore.Read.All",
+        "RoleManagement.Read.Directory",
+        "Application.Read.All"
+      ],
+      "notes": "Research basis: 26T2-SEC-EG-001 and 26T2-SEC-EG-002."
+    },
+    {
+      "control_id": "E8-BAK-1.2",
+      "title": "Regular Backups - restoration testing and third-party backup verification",
+      "description": "Confirms whether restoration has been tested as a deliberate disaster recovery exercise, and whether a third-party offline backup solution is in use, per ACSC guidance. Assessed via manually uploaded evidence rather than automated collection.",
+      "severity": "medium",
+      "service": "M365BackupStorage",
+      "maturity_level": "ML1",
+      "is_manual": true,
+      "benchmark_audit_type": "Manual",
+      "automation_status": "manual",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "Covered by the existing evidence-based checker security/strategies/regular_backups.py, currently unmaintained but functional. Complements the automated checks in E8-BAK-1.1."
     }
   ]
 }

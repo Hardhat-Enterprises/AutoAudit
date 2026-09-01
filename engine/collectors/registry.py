@@ -71,6 +71,9 @@ from collectors.entra.roles.admin_license_footprint import (
 from collectors.entra.roles.cloud_only_admins import CloudOnlyAdminsDataCollector
 from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
 
+# M365 Backup
+from collectors.m365.backup_restore import BackupRestoreDataCollector
+
 # Exchange - DNS
 from collectors.exchange.dns.dns_security_records import (
     DnsSecurityRecordsDataCollector,
@@ -173,6 +176,8 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.roles.admin_license_footprint": AdminLicenseFootprintDataCollector,
     "entra.roles.cloud_only_admins": CloudOnlyAdminsDataCollector,
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,
+    # M365 Backup
+    "m365.backup_restore": BackupRestoreDataCollector,
     # Users
     # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
