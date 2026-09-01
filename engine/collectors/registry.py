@@ -149,6 +149,8 @@ from collectors.sharepoint.pnp.tenant import PnpTenantDataCollector
 
 
 
+
+
 # Registry mapping data_collector_id to collector class
 DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Applications
