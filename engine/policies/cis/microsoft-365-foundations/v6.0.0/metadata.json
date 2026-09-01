@@ -1550,7 +1550,7 @@
       "data_collector_id": "sharepoint.pnp.tenant",
       "policy_file": "7.2.5_guest_resharing.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": "null"
     },
     {
       "control_id": "7.2.6",

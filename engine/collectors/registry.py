@@ -147,8 +147,6 @@ from collectors.exchange.transport.transport_rules import TransportRulesDataColl
 # SharePoint - PnP
 from collectors.sharepoint.pnp.tenant import PnpTenantDataCollector
 
-# Sharepoint - GraphAPI
-from collectors.sharepoint.spo_tenant import SpoTenantDataCollector
 
 
 # Registry mapping data_collector_id to collector class
@@ -217,8 +215,6 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "exchange.transport.transport_rules": TransportRulesDataCollector,
     # SharePoint - PnP
     "sharepoint.pnp.tenant": PnpTenantDataCollector,
-    # Sharepoint - GraphAPI
-    "sharepoint.spo_tenant":SpoTenantDataCollector
 }
 
 def get_collector(collector_id: str) -> BaseDataCollector:
