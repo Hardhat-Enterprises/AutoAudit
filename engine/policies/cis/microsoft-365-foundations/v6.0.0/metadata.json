@@ -781,10 +781,10 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "entra.devices.device_management_settings",
-      "policy_file": null,
-      "requires_permissions": ["Policy.Read.All"],
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.3_disable_global_admin_local_admin.rego",
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
       "notes": null
     },
     {
@@ -796,11 +796,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "entra.devices.device_management_settings",
-      "policy_file": null,
-      "requires_permissions": ["Policy.Read.All"],
-      "notes": null
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.4_restrict_local_admin_assignment.rego",
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
+      "notes": "Collector is corrected and policy is implemented"
     },
     {
       "control_id": "5.1.4.5",
