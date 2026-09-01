@@ -1,4 +1,23 @@
-"""Microsoft Graph API client."""
+"""SharePoint REST API client.
+
+This module provides connectivity to SharePoint Online using REST API instead
+of PowerShell because SharePoint Online PowerShell does not support client
+secret authentication for app-only scenarios.
+
+Authentication: Client secret via MSAL -> access token for SharePoint resource
+
+CAVEAT: Access token authentication has not been fully tested.
+    It should work, but needs verification during implementation. Certificate-based
+    authentication may be required instead of client secret authentication.
+
+NOTE: If certificate authentication is adopted in the future, consider replacing
+these REST API calls with PowerShell cmdlets (Get-SPOTenant, Get-SPOSite, etc.)
+for consistency with other collectors.
+
+SharePoint REST API Reference:
+- Tenant Admin API: https://{tenant}-admin.sharepoint.com/_api/
+- Site API: https://{site-url}/_api/
+"""
 
 from typing import Any
 
@@ -6,19 +25,25 @@ import httpx
 from msal import ConfidentialClientApplication
 
 
-class GraphClient:
-    """Client for Microsoft Graph API."""
+class SharePointClient:
+    """Client for SharePoint Online REST API using client secret auth."""
 
-    GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0"
-    GRAPH_BETA_URL = "https://graph.microsoft.com/beta"
+    def __init__(self, tenant_id: str, client_id: str, client_secret: str, tenant_name: str):
+        """Initialize SharePoint client.
 
-    def __init__(self, tenant_id: str, client_id: str, client_secret: str):
+        Args:
+            tenant_id: Azure AD tenant ID
+            client_id: Application (client) ID
+            client_secret: Client secret for authentication
+            tenant_name: SharePoint tenant name (e.g., 'contoso' for contoso.sharepoint.com)
+        """
         self.tenant_id = tenant_id
         self.client_id = client_id
         self.client_secret = client_secret
+        self.tenant_name = tenant_name
+        self.admin_url = f"https://{tenant_name}-admin.sharepoint.com"
         self._access_token: str | None = None
 
-        # Initialize MSAL client
         self._msal_app = ConfidentialClientApplication(
             client_id=client_id,
             client_credential=client_secret,
@@ -26,115 +51,53 @@ class GraphClient:
         )
 
     async def _get_access_token(self) -> str:
-        """Get or refresh the access token."""
+        """Get access token for SharePoint.
+
+        Returns:
+            Access token string.
+
+        Raises:
+            Exception: If token acquisition fails.
+        """
         if self._access_token:
             return self._access_token
 
-        # Acquire token for Graph API
         result = self._msal_app.acquire_token_for_client(
-            scopes=["https://graph.microsoft.com/.default"]
+            scopes=[f"{self.admin_url}/.default"]
         )
-
         if "access_token" not in result:
-            error = result.get("error_description", result.get("error", "Unknown error"))
-            raise Exception(f"Failed to acquire token: {error}")
+            error = result.get("error_description", result.get("error", "Unknown"))
+            raise Exception(f"Failed to acquire SharePoint token: {error}")
 
-        token = result["access_token"]
-        self._access_token = token
-        return token
+        self._access_token = result["access_token"]
+        return self._access_token
 
-    async def _request(
-        self,
-        method: str,
-        endpoint: str,
-        beta: bool = False,
-        params: dict | None = None,
-        json_data: dict | None = None,
-    ) -> dict[str, Any]:
-        """Make a request to the Graph API."""
-        token = await self._get_access_token()
-        base_url = self.GRAPH_BETA_URL if beta else self.GRAPH_BASE_URL
+    async def get_tenant_settings(self) -> dict[str, Any]:
+        """Get SPO tenant settings via REST API.
 
-        async with httpx.AsyncClient() as client:
-            response = await client.request(
-                method=method,
-                url=f"{base_url}{endpoint}",
-                headers={"Authorization": f"Bearer {token}"},
-                params=params,
-                json=json_data,
-                timeout=60.0,
-            )
-            response.raise_for_status()
-            return response.json() if response.content else {}
+        Returns:
+            Dict containing tenant configuration properties.
+        """
+        # TODO: Implement REST API call
+        raise NotImplementedError("SharePoint client not yet implemented")
 
-    async def get(
-        self, endpoint: str, beta: bool = False, params: dict | None = None
-    ) -> dict[str, Any]:
-        """GET request to Graph API."""
-        return await self._request("GET", endpoint, beta=beta, params=params)
+    async def get_site_properties(self, site_url: str) -> dict[str, Any]:
+        """Get site properties via REST API.
 
-    async def get_all_pages(
-        self,
-        endpoint: str,
-        beta: bool = False,
-        params: dict | None = None,
-        max_pages: int = 100,
-    ) -> list[dict[str, Any]]:
-        """Get all pages of a paginated endpoint."""
-        all_items: list[dict[str, Any]] = []
-        current_endpoint = endpoint
-        current_params = params
+        Args:
+            site_url: The SharePoint site URL
 
-        for _ in range(max_pages):
-            response = await self.get(current_endpoint, beta=beta, params=current_params)
-            items = response.get("value", [])
-            all_items.extend(items)
+        Returns:
+            Dict containing site properties.
+        """
+        # TODO: Implement REST API call
+        raise NotImplementedError("SharePoint client not yet implemented")
 
-            # Check for next page
-            next_link = response.get("@odata.nextLink")
-            if not next_link:
-                break
+    async def get_sync_client_restriction(self) -> dict[str, Any]:
+        """Get OneDrive sync client restriction settings.
 
-            # Parse next link - it's a full URL
-            base_url = self.GRAPH_BETA_URL if beta else self.GRAPH_BASE_URL
-            current_endpoint = next_link.replace(base_url, "")
-            current_params = None  # Params are in the URL
-
-        return all_items
-
-    async def get_users(self) -> list[dict[str, Any]]:
-        """Get all users."""
-        return await self.get_all_pages(
-            "/users",
-            params={"$select": "id,userPrincipalName,displayName,accountEnabled,userType"},
-        )
-
-    async def get_directory_roles(self) -> list[dict[str, Any]]:
-        """Get all directory roles."""
-        return await self.get_all_pages("/directoryRoles")
-
-    async def get_role_members(self, role_id: str) -> list[dict[str, Any]]:
-        """Get members of a directory role."""
-        return await self.get_all_pages(f"/directoryRoles/{role_id}/members")
-
-    async def get_conditional_access_policies(self) -> list[dict[str, Any]]:
-        """Get all Conditional Access policies."""
-        return await self.get_all_pages("/identity/conditionalAccess/policies")
-
-    async def get_authentication_methods(self, user_id: str) -> list[dict[str, Any]]:
-        """Get authentication methods for a user."""
-        response = await self.get(
-            f"/users/{user_id}/authentication/methods", beta=True
-        )
-        return response.get("value", [])
-
-    async def get_domains(self) -> list[dict[str, Any]]:
-        """Get all domains."""
-        return await self.get_all_pages("/domains")
-
-    async def get_user_license_details(self, user_id: str) -> list[dict[str, Any]]:
-        """Get license assignments and service plans for a user."""
-        return await self.get_all_pages(
-            f"/users/{user_id}/licenseDetails",
-            params={"$select": "id,skuId,skuPartNumber,servicePlans"},
-        )
+        Returns:
+            Dict containing sync client restriction settings.
+        """
+        # TODO: Implement REST API call
+        raise NotImplementedError("SharePoint client not yet implemented")

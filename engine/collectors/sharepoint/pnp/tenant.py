@@ -40,4 +40,7 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             "disallow_infected_file_download": tenant.get(
                 "DisallowInfectedFileDownload"
             ),
+            "prevent_external_users_from_resharing": tenant.get(
+                "PreventExternalUsersFromResharing"
+            ),
         }

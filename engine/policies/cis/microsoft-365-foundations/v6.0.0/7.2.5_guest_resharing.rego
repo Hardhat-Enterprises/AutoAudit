@@ -13,8 +13,9 @@
 #   version: v6.0.0
 #   severity: medium
 #   service: SharePoint
+#   data_collector_id: sharepoint.pnp.tenant
 #   requires_permissions:
-#   - SharePointTenantSettings.Read.All
+#   - SharePoint.Admin
 
 package cis.microsoft_365_foundations.v6_0_0.control_7_2_5
 
@@ -24,32 +25,32 @@ default result := {
 }
 
 result := output if {
-    resharing_enabled := input.is_resharing_by_external_users_enabled
+    prevent_resharing := input.prevent_external_users_from_resharing
 
-    compliant := resharing_enabled == false
+    compliant := prevent_resharing == true
 
     output := {
         "compliant": compliant,
-        "message": generate_message(resharing_enabled),
+        "message": generate_message(prevent_resharing),
         "affected_resources": generate_affected_resources(compliant),
         "details": {
-            "is_resharing_by_external_users_enabled": resharing_enabled
+            "prevent_external_users_from_resharing": prevent_resharing
         }
     }
 }
 
-generate_message(resharing_enabled) := msg if {
-    resharing_enabled == false
+generate_message(prevent_resharing) := msg if {
+    prevent_resharing == true
     msg := "SharePoint guest users cannot reshare items they do not own"
 }
 
-generate_message(resharing_enabled) := msg if {
-    resharing_enabled == true
+generate_message(prevent_resharing) := msg if {
+    prevent_resharing == false
     msg := "SharePoint guest users can reshare items they do not own"
 }
 
-generate_message(resharing_enabled) := msg if {
-    resharing_enabled == null
+generate_message(prevent_resharing) := msg if {
+    prevent_resharing == null
     msg := "Unable to determine whether SharePoint guest users can reshare items they do not own"
 }
 

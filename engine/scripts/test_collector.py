@@ -116,20 +116,18 @@ async def test_collector(
     collector = get_collector(collector_id)
 
     if isinstance(collector, BasePowerShellCollector):
-        ps_client = PowerShellClient(
+        client = PowerShellClient(
             tenant_id,
             client_id,
             client_secret,
             service_url=service_url,
         )
-        client = await collector.collect(ps_client)
     else:
-        graph_client = GraphClient(
+        client = GraphClient(
             tenant_id,
             client_id,
             client_secret,
         )
-        client = await collector.collect(graph_client)
 
     # Run collection
     print(f"Running collector: {collector_id}")
