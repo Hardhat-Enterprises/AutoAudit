@@ -1504,7 +1504,7 @@
       "automation_status": "ready",
       "data_collector_id": "sharepoint.pnp.tenant",
       "policy_file": "7.2.2_enable_azure_ad_b2b_integration.rego",
-      "requires_permissions": ["SharePoint.Admin","SharePointTenantSettings.Read.All"],
+      "requires_permissions": ["SharePoint.Admin"],
       "notes": null
     },
     {
