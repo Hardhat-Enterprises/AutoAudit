@@ -176,11 +176,11 @@ async def scan(
             await db.commit()
     except Exception:
         try:
-    await db.rollback()
-except Exception:
-    pass  # nosec B110
+            await db.rollback()
+        except Exception:
+            pass
 
-return scan_result
+    return scan_result
 
 
 @router.get("/reports/{filename}")
