@@ -69,10 +69,6 @@ def get_credentials() -> tuple[str, str, str]:
         print("  export M365_CLIENT_ID=<your-client-id>")
         print("  export M365_CLIENT_SECRET=<your-client-secret>")
         sys.exit(1)
-        
-    assert tenant_id is not None
-    assert client_id is not None
-    assert client_secret is not None
 
     return tenant_id, client_id, client_secret
 
@@ -114,20 +110,10 @@ async def test_collector(
 
     # Create collector and appropriate client
     collector = get_collector(collector_id)
-
     if isinstance(collector, BasePowerShellCollector):
-        client = PowerShellClient(
-            tenant_id,
-            client_id,
-            client_secret,
-            service_url=service_url,
-        )
+        client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
     else:
-        client = GraphClient(
-            tenant_id,
-            client_id,
-            client_secret,
-        )
+        client = GraphClient(tenant_id, client_id, client_secret)
 
     # Run collection
     print(f"Running collector: {collector_id}")
@@ -197,19 +183,13 @@ async def test_all_collectors(
         print(f"\n{collector_id}:")
         collector = get_collector(collector_id)
 
+        # Use appropriate client based on collector type
         if isinstance(collector, BasePowerShellCollector):
             if ps_client is None:
-                ps_client = PowerShellClient(
-                    tenant_id,
-                    client_id,
-                    client_secret,
-                    service_url=service_url,
-                )
-
-            client = await collector.collect(ps_client)
-
+                ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
+            client = ps_client
         else:
-            client = await collector.collect(graph_client)
+            client = graph_client
 
         start = datetime.now()
         try:

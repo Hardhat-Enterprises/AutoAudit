@@ -21,7 +21,7 @@ REST Endpoints: /_api/SPOTenant or SharePoint Admin API
 from typing import Any
 
 from collectors.base import BaseDataCollector
-from collectors.graph_client import GraphClient
+from collectors.sharepoint_client import SharePointClient
 
 
 class SpoTenantDataCollector(BaseDataCollector):
@@ -30,7 +30,8 @@ class SpoTenantDataCollector(BaseDataCollector):
     This collector retrieves tenant-wide SharePoint settings including
     sharing, authentication, guest access, and other configurations.
     """
-    async def collect(self, client: GraphClient) -> dict[str, Any]:
+
+    async def collect(self, client: SharePointClient) -> dict[str, Any]:
         """Collect SPO tenant data.
 
         Returns:
@@ -42,12 +43,5 @@ class SpoTenantDataCollector(BaseDataCollector):
             - default_sharing_link_type: Default sharing link type
             - default_link_permission: Default link permission level
         """
-        tenant_settings = await client.get(
-            endpoint="/admin/sharepoint/settings",
-            beta=False
-        )
-
-        return {
-            "tenant_settings": tenant_settings,
-            "is_resharing_by_external_users_enabled": tenant_settings.get("isResharingByExternalUsersEnabled")
-        }
+        # TODO: Implement collector
+        raise NotImplementedError("Collector not yet implemented")

@@ -19,12 +19,10 @@ SharePoint REST API Reference:
 - Site API: https://{site-url}/_api/
 """
 
-from builtins import Exception
 from typing import Any
 
 import httpx
 from msal import ConfidentialClientApplication
-from collectors.graph_client import GraphClient
 
 
 class SharePointClient:
@@ -71,9 +69,8 @@ class SharePointClient:
             error = result.get("error_description", result.get("error", "Unknown"))
             raise Exception(f"Failed to acquire SharePoint token: {error}")
 
-        token = result["access_token"]
-        self._access_token = token
-        return token
+        self._access_token = result["access_token"]
+        return self._access_token
 
     async def get_tenant_settings(self) -> dict[str, Any]:
         """Get SPO tenant settings via REST API.
@@ -84,8 +81,6 @@ class SharePointClient:
         # TODO: Implement REST API call
         raise NotImplementedError("SharePoint client not yet implemented")
 
-
-    
     async def get_site_properties(self, site_url: str) -> dict[str, Any]:
         """Get site properties via REST API.
 
