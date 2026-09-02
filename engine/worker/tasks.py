@@ -354,36 +354,82 @@ async def _evaluate_control_async(
     from collectors.registry import get_collector
     from collectors.graph_client import GraphClient
     from collectors.powershell_client import PowerShellClient
+    from collectors.multi_client_base import BaseMultiClientCollector
     from opa_client import opa_client
 
     # Get collector
     collector = get_collector(collector_id)
 
-    # Determine client type based on collector_id prefix.
-    #
-    # Most Exchange and Compliance collectors require PowerShell, but a few Exchange
-    # collectors use Graph (e.g. domain metadata).
-    if collector_id.startswith(
-        ("exchange.", "compliance.", "sharepoint.pnp.")
-    ) and not collector_id.startswith("exchange.dns."):
-        client = PowerShellClient(
-            tenant_id=credentials["tenant_id"],
-            client_id=credentials["client_id"],
-            client_secret=credentials["client_secret"],
-            service_url=settings.POWERSHELL_SERVICE_URL,
-            sharepoint_admin_url=settings.SHAREPOINT_ADMIN_URL,
-            certificate_alias=settings.SHAREPOINT_CERT_ALIAS,
-        )
-    else:
-        # Entra and other collectors use Graph API
-        client = GraphClient(
-            tenant_id=credentials["tenant_id"],
-            client_id=credentials["client_id"],
-            client_secret=credentials["client_secret"],
-        )
+    # Multi-client collectors (need more than one API at once, e.g. a
+    # control needing both Graph and DVM) are checked first. This is
+    # additive: existing single-client collectors are unaffected, this
+    # branch only fires for collectors that explicitly inherit
+    # BaseMultiClientCollector.
+    if isinstance(collector, BaseMultiClientCollector):
+        clients: dict = {}
+        for client_name in collector.required_clients:
+            if client_name == "graph":
+                clients["graph"] = GraphClient(
+                    tenant_id=credentials["tenant_id"],
+                    client_id=credentials["client_id"],
+                    client_secret=credentials["client_secret"],
+                )
+            elif client_name == "powershell":
+                clients["powershell"] = PowerShellClient(
+                    tenant_id=credentials["tenant_id"],
+                    client_id=credentials["client_id"],
+                    client_secret=credentials["client_secret"],
+                    service_url=settings.POWERSHELL_SERVICE_URL,
+                    sharepoint_admin_url=settings.SHAREPOINT_ADMIN_URL,
+                    certificate_alias=settings.SHAREPOINT_CERT_ALIAS,
+                )
+            elif client_name == "dvm":
+                # UNVERIFIED: DVM credentials. Report 26T2-SEC-EG-003
+                # states DVM needs a SEPARATE app registration from the
+                # one in `credentials`. Using placeholder separate
+                # settings here, NOT `credentials`. These settings
+                # (DVM_TENANT_ID etc.) do not exist yet in
+                # worker/config.py, need adding once confirmed against
+                # the live tenant.
+                from collectors.dvm_client import DVMClient
+                clients["dvm"] = DVMClient(
+                    tenant_id=settings.DVM_TENANT_ID,
+                    client_id=settings.DVM_CLIENT_ID,
+                    client_secret=settings.DVM_CLIENT_SECRET,
+                )
+            else:
+                raise ValueError(
+                    f"Unknown required client '{client_name}' for "
+                    f"collector {collector_id}"
+                )
+        collected_data = await collector.collect(clients)
 
-    # Collect data using the appropriate client
-    collected_data = await collector.collect(client)
+    else:
+        # Determine client type based on collector_id prefix.
+        #
+        # Most Exchange and Compliance collectors require PowerShell, but a few Exchange
+        # collectors use Graph (e.g. domain metadata).
+        if collector_id.startswith(
+            ("exchange.", "compliance.", "sharepoint.pnp.")
+        ) and not collector_id.startswith("exchange.dns."):
+            client = PowerShellClient(
+                tenant_id=credentials["tenant_id"],
+                client_id=credentials["client_id"],
+                client_secret=credentials["client_secret"],
+                service_url=settings.POWERSHELL_SERVICE_URL,
+                sharepoint_admin_url=settings.SHAREPOINT_ADMIN_URL,
+                certificate_alias=settings.SHAREPOINT_CERT_ALIAS,
+            )
+        else:
+            # Entra and other collectors use Graph API
+            client = GraphClient(
+                tenant_id=credentials["tenant_id"],
+                client_id=credentials["client_id"],
+                client_secret=credentials["client_secret"],
+            )
+
+        # Collect data using the appropriate client
+        collected_data = await collector.collect(client)
 
     # Build OPA package path to match the Rego package declaration
     # Rego package: "cis.microsoft_365_foundations.v3_1_0.control_1_1_1"
