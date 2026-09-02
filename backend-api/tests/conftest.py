@@ -9,7 +9,7 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from app.api.v1 import auth, test as test_routes
+from app.api.v1 import auth, manual_verification, test as test_routes
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
 from app.models.user import Role, User
@@ -18,6 +18,7 @@ from app.models.user import Role, User
 test_app = FastAPI()
 test_app.include_router(test_routes.router, prefix="/v1")
 test_app.include_router(auth.router, prefix="/v1")
+test_app.include_router(manual_verification.router, prefix="/v1")
 
 
 def make_user(*, role: str, user_id: int = 1) -> User:
