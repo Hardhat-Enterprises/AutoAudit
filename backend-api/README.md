@@ -41,7 +41,7 @@ Automated GCP compliance assessment tool built with FastAPI. This API provides a
    - API Documentation: http://localhost:8000/docs | http://localhost:8000/redoc
    - Root Endpoint: http://localhost:8000/
 
-   ## 🐳 Docker Startup and Database Migrations
+## 🐳 Docker Startup and Database Migrations
 
 When running the backend using the project's Docker configuration, the container starts through `backend-api/entrypoint.sh`.
 
