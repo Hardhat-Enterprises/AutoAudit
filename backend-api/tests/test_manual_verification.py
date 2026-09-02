@@ -20,63 +20,28 @@ def _execute_returning(single=None) -> MagicMock:
 
 
 @pytest.mark.asyncio
-async def test_get_nonexistent_returns_404(
+@pytest.mark.parametrize(
+    ("method", "path", "json_body"),
+    [
+        ("get", "/v1/manual-verification/99999", None),
+        ("patch", "/v1/manual-verification/99999", {"comment": "x"}),
+        ("delete", "/v1/manual-verification/99999", None),
+        ("get", "/v1/manual-verification/by-scan-result/99999", None),
+    ],
+)
+async def test_nonexistent_returns_404(
     client_factory,
     mock_db_session: AsyncMock,
     viewer_user: User,
+    method: str,
+    path: str,
+    json_body: dict | None,
 ) -> None:
     mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=None))
 
     client: AsyncClient = client_factory(viewer_user)
     async with client:
-        response = await client.get("/v1/manual-verification/99999")
-
-    assert response.status_code == 404
-
-
-@pytest.mark.asyncio
-async def test_patch_nonexistent_returns_404(
-    client_factory,
-    mock_db_session: AsyncMock,
-    viewer_user: User,
-) -> None:
-    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=None))
-
-    client: AsyncClient = client_factory(viewer_user)
-    async with client:
-        response = await client.patch(
-            "/v1/manual-verification/99999",
-            json={"comment": "x"},
-        )
-
-    assert response.status_code == 404
-
-
-@pytest.mark.asyncio
-async def test_delete_nonexistent_returns_404(
-    client_factory,
-    mock_db_session: AsyncMock,
-    viewer_user: User,
-) -> None:
-    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=None))
-
-    client: AsyncClient = client_factory(viewer_user)
-    async with client:
-        response = await client.delete("/v1/manual-verification/99999")
-
-    assert response.status_code == 404
-
-
-@pytest.mark.asyncio
-async def test_get_by_scan_result_nonexistent_returns_404(
-    client_factory,
-    mock_db_session: AsyncMock,
-    viewer_user: User,
-) -> None:
-    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=None))
-
-    client: AsyncClient = client_factory(viewer_user)
-    async with client:
-        response = await client.get("/v1/manual-verification/by-scan-result/99999")
+        kwargs = {"json": json_body} if json_body is not None else {}
+        response = await getattr(client, method)(path, **kwargs)
 
     assert response.status_code == 404
