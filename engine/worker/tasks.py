@@ -429,8 +429,12 @@ async def _evaluate_control_async(
                 client_secret=credentials["client_secret"],
             )
 
-        # Collect data using the appropriate client
-        collected_data = await collector.collect(client)
+        # Collect data using the appropriate client. collect() is typed
+        # for GraphClient specifically, but PowerShell-based collectors
+        # override this at runtime; cast to satisfy the type checker
+        # without changing existing behaviour.
+        from typing import cast
+        collected_data = await collector.collect(cast(GraphClient, client))
 
     # Build OPA package path to match the Rego package declaration
     # Rego package: "cis.microsoft_365_foundations.v3_1_0.control_1_1_1"
