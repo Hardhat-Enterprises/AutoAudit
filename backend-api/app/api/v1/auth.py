@@ -316,8 +316,8 @@ async def google_callback(
         value=autoaudit_token,
         httponly=True,
         secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
-        samesite="lax", 
-        max_age=3600, 
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     
     # Clean up the OAuth state cookie

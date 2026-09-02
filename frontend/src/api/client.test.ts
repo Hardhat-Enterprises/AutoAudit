@@ -119,14 +119,11 @@ describe('login', () => {
     expect(body.get('password')).toBe('mypassword');
   });
 
-  it('returns parsed response data on success', async () => {
-    vi.mocked(fetch).mockResolvedValue(
-      mockResponse(200, { access_token: 'abc', token_type: 'bearer' })
-    );
-
-    const result = await login('a@b.com', 'pass');
-    expect(result.access_token).toBe('abc');
-  });
+  it('resolves without a parsed body on success (session is set via Set-Cookie)', async () => {
+  vi.mocked(fetch).mockResolvedValue(mockResponse(200, {}));
+  const result = await login('a@b.com', 'pass');
+  expect(result).toBeUndefined();
+});
 
   it('throws APIError on a non-ok response', async () => {
     vi.mocked(fetch).mockResolvedValue(mockResponse(401, { detail: 'Invalid credentials' }));

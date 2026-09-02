@@ -17,7 +17,7 @@ function setupAuthMock() {
     isAuthenticated: false,
     isLoading: false,
     login: vi.fn(),
-    loginWithAccessToken: vi.fn(),
+    completeOAuthLogin: vi.fn(),
     logout: vi.fn(),
   });
 }

@@ -55,7 +55,7 @@ describe('SignupFormPanel', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /create account/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/please accept/i);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/please agree to the terms/i);
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
