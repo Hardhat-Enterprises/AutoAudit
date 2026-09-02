@@ -4,6 +4,11 @@ from app.schemas.evidence_validation import EvidenceValidationRead
 from app.schemas.validator_match import ValidatorMatch
 from app.schemas.validator_result import ValidatorResult
 from app.schemas.validator_summary import ValidatorSummary
+from app.schemas.manual_scan_result_detail import (
+    ManualScanResultDetailCreate,
+    ManualScanResultDetailRead,
+    ManualScanResultDetailUpdate,
+)
 
 __all__ = [
     "UserRead",
@@ -13,4 +18,7 @@ __all__ = [
     "ValidatorMatch",
     "ValidatorResult",
     "ValidatorSummary",
+    "ManualScanResultDetailCreate",
+    "ManualScanResultDetailRead",
+    "ManualScanResultDetailUpdate",
 ]
