@@ -239,7 +239,7 @@
       ],
       "notes": "Research basis: 26T1-SEC-EG-002 and 26T1-SEC-EG-004."
     },
-      {
+    {
       "control_id": "E8-POS-0",
       "title": "No operating system patching controls implemented (ML0 baseline)",
       "description": "ML0 represents an organisation that has not deployed operating system patching controls via Intune.",
