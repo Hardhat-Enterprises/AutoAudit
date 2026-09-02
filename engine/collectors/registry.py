@@ -46,6 +46,9 @@ from collectors.entra.devices.device_registration_policy import (
 )
 from collectors.entra.devices.enrollment_restrictions import (
     EnrollmentRestrictionsDataCollector,
+) 
+from collectors.entra.devices.windows_update_config import (
+    WindowsUpdateConfigDataCollector,
 )
 
 # Domains
@@ -171,6 +174,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
+    "entra.devices.windows_update_config": WindowsUpdateConfigDataCollector,
     # Domains
     "entra.domains.password_policy": PasswordPolicyDataCollector,
     # Governance
