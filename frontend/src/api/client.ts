@@ -150,7 +150,7 @@ export async function logout(token?: AuthToken): Promise<any> {
   if (!response.ok) {
     const error = (await response
       .json()
-      .catch(() => ({ detail: response.statusText }))) as Record <
+      .catch(() => ({ detail: response.statusText }))) as Record<
       string,
       unknown
     >;
@@ -568,7 +568,10 @@ export function getEvidenceReportUrl(filename: string): string {
   return `${API_BASE_URL}/v1/evidence/reports/${encodeURIComponent(filename)}`;
 }
 
-export async function downloadEvidenceReport(token: AuthToken, filename: string): Promise<void> {
+export async function downloadEvidenceReport(
+  token: AuthToken,
+  filename: string,
+): Promise<void> {
   // Downloads a report file by fetching it with the Bearer token attached.
   // Uses fetch() instead of a plain <a href> so the Authorization header is sent.
   // A plain anchor tag does not send Authorization headers on click, which causes 401.
@@ -581,8 +584,7 @@ export async function downloadEvidenceReport(token: AuthToken, filename: string)
 
   const response = await fetch(
     `${API_BASE_URL}/v1/evidence/reports/${encodeURIComponent(filename)}`,
-    { method: 'GET', headers,
-      credentials: "include" }
+    { method: "GET", headers, credentials: "include" },
   );
 
   if (!response.ok) {
@@ -591,7 +593,7 @@ export async function downloadEvidenceReport(token: AuthToken, filename: string)
 
   const blob = await response.blob();
   const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
