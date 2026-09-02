@@ -1,6 +1,6 @@
 import hashlib
 import json
-
+import logging
 from fastapi import APIRouter, Depends, UploadFile, File, Form
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,6 +34,8 @@ from app.services.encryption import encrypt
 from app.services.evidence_validator import validate_text
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.get("/strategies")
@@ -178,8 +180,14 @@ async def scan(
         try:
             await db.rollback()
         except Exception:
-            pass
-
+            # Best-effort cleanup: the validation record failed to persist and
+            # the rollback itself also failed. Log it instead of silently
+            # swallowing it (resolves Bandit B110) — this still never blocks
+            # the scan response, it just stops hiding the failure.
+            logger.exception(
+                "Failed to roll back the database session after a failed "
+                "evidence-validation write"
+            )
     return scan_result
 
 
