@@ -42,7 +42,7 @@ NO_PROFILE_RESULT: dict[str, Any] = {
 }
 
 
-def _normalize_mode(raw: str) -> str:
+def _normalize_mode(raw: str | None) -> str:
     """Map an Intune automaticUpdateMode enum value to a canonical mode string."""
     return INTUNE_UPDATE_MODE_MAP.get((raw or "").lower(), "unknown")
 
