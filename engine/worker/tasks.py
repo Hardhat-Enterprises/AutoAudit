@@ -409,6 +409,7 @@ async def _evaluate_control_async(
         #
         # Most Exchange and Compliance collectors require PowerShell, but a few Exchange
         # collectors use Graph (e.g. domain metadata).
+        client: PowerShellClient | GraphClient
         if collector_id.startswith(
             ("exchange.", "compliance.", "sharepoint.pnp.")
         ) and not collector_id.startswith("exchange.dns."):
