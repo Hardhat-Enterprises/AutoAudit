@@ -238,6 +238,24 @@
         "User.Read.All"
       ],
       "notes": "Research basis: 26T1-SEC-EG-002 and 26T1-SEC-EG-004."
+    },
+    {
+      "control_id": "E8-PA-1.1",
+      "title": "Patch Applications - Defender current and covered software within weakness threshold",
+      "description": "Checks whether Microsoft Defender's signature is current and real time protection is active on each device, and whether covered category software (office productivity, browser, email client, PDF) has no known weaknesses and is not past its vendor end of support date.",
+      "severity": "high",
+      "service": "MicrosoftDefender",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "m365.patch_applications",
+      "policy_file": "e8_pa_1_1_patch_applications.rego",
+      "requires_permissions": [
+        "DeviceManagementManagedDevices.Read.All",
+        "Vulnerability.Read.All (WindowsDefenderATP, Application permission)"
+      ],
+      "notes": "DVM permission name confirmed as Vulnerability.Read.All (Microsoft docs), not yet tested against a live tenant. Whether it needs a separate Entra app registration is unconfirmed. Research basis: 26T2-SEC-EG-003 and 26T2-SEC-EG-004."
     }
   ]
 }
