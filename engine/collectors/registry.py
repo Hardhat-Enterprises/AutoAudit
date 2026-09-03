@@ -46,7 +46,16 @@ from collectors.entra.devices.device_registration_policy import (
 )
 from collectors.entra.devices.enrollment_restrictions import (
     EnrollmentRestrictionsDataCollector,
+) 
+from collectors.entra.devices.windows_update_config import (
+    WindowsUpdateConfigDataCollector,
 )
+
+# M365 Backup
+from collectors.m365.backup_restore import BackupRestoreDataCollector
+
+# M365 Patch Applications
+from collectors.m365.patch_applications import PatchApplicationsDataCollector
 
 # Domains
 from collectors.entra.domains.password_policy import PasswordPolicyDataCollector
@@ -171,6 +180,11 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
+    "entra.devices.windows_update_config": WindowsUpdateConfigDataCollector,
+    # M365 Backup
+    "m365.backup_restore": BackupRestoreDataCollector,
+    # M365 Patch Applications
+    "m365.patch_applications": PatchApplicationsDataCollector,
     # Domains
     "entra.domains.password_policy": PasswordPolicyDataCollector,
     # Governance
