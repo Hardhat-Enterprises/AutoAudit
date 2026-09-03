@@ -1,0 +1,40 @@
+name: PR Activity Labeler
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # daily at 03:00 UTC — adjust to your timezone/preference
+  workflow_dispatch: # manual "Run workflow" button — also serves as backfill for all open PRs
+    inputs:
+      stale_after_days:
+        description: "Override: days until 'stale' (default 7). For testing — leave blank normally."
+        required: false
+      needs_decision_after_days:
+        description: "Override: days until 'needs-decision' (default 10). For testing — leave blank normally."
+        required: false
+      final_notice_after_days:
+        description: "Override: days until 'final-notice' (default 14). For testing — leave blank normally."
+        required: false
+      pr_number:
+        description: "Restrict this run to a single PR number. STRONGLY recommended whenever overriding thresholds above — without it, a threshold test run relabels every open PR in the repo, not just the one you're testing."
+        required: false
+
+permissions:
+  pull-requests: write
+  issues: write # labels/labels-list live under the Issues API even for PRs
+  contents: read
+
+jobs:
+  activity-scan:
+    runs-on: ubuntu-latest
+    env:
+      STALE_AFTER_DAYS: ${{ inputs.stale_after_days }}
+      NEEDS_DECISION_AFTER_DAYS: ${{ inputs.needs_decision_after_days }}
+      FINAL_NOTICE_AFTER_DAYS: ${{ inputs.final_notice_after_days }}
+      ONLY_PR_NUMBER: ${{ inputs.pr_number }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const run = require('${{ github.workspace }}/.github/scripts/activity-labeler.js');
+            await run({ github, context, core });
