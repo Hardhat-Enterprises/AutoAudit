@@ -20,6 +20,7 @@ from app.models.azure_connection import AzureConnection  # noqa
 from app.models.gcp_connection import GCPConnection  # noqa
 from app.models.aws_connection import AWSConnection  # noqa
 from app.models.user_settings import UserSettings  # noqa
+from app.models.control_verification_template import ControlVerificationTemplate  # noqa
 from app.core.config import get_settings
 
 # this is the Alembic Config object, which provides
