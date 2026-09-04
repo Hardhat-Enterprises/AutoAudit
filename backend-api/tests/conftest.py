@@ -11,7 +11,15 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from app.api.v1 import auth, benchmarks, contact, platforms, settings, test as test_routes
+from app.api.v1 import (
+    auth,
+    benchmarks,
+    contact,
+    manual_verification,
+    platforms,
+    settings,
+    test as test_routes,
+)
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
 from app.models.contact import ContactSubmission, SubmissionHistory, SubmissionNote
@@ -26,6 +34,7 @@ test_app.include_router(settings.router, prefix="/v1")
 test_app.include_router(contact.router, prefix="/v1")
 test_app.include_router(platforms.router, prefix="/v1")
 test_app.include_router(benchmarks.router, prefix="/v1")
+test_app.include_router(manual_verification.router, prefix="/v1")
 
 
 def make_user(*, role: str, user_id: int = 1) -> User:
