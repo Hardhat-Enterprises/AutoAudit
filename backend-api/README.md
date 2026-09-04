@@ -66,6 +66,37 @@ uv run pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
 - Threshold: `[tool.coverage.report] fail_under = 70` in `pyproject.toml` fails the run if `app/` coverage drops below 70% (baseline after expanded 26T2-BE-PG-003 tests; measured ~79% with branch coverage).
 
 Coverage artifacts (`htmlcov/`, `.coverage`, `coverage.xml`) are gitignored.
+## 🐳 Docker Startup and Database Migrations
+
+When running the backend using the project's Docker configuration, the container starts through `backend-api/entrypoint.sh`.
+
+The startup sequence is:
+
+1. Apply any pending database migrations:
+
+   ```bash
+   uv run alembic upgrade head
+   ```
+
+2. Seed the default administrator account:
+
+   ```bash
+   uv run python -m app.db.init_db
+   ```
+
+3. Start the FastAPI application:
+
+   ```bash
+   uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+   ```
+
+This ensures that the database schema is updated before the backend application starts when using the Docker container.
+
+### Future DevSecOps Improvement
+
+The current implementation executes database migrations during container startup, which is suitable for local development and single-container deployments.
+
+For future production environments using multiple replicas or rolling deployments, database migrations should be enforced as a dedicated deployment or pipeline step before updated application containers receive traffic. This reduces the risk of multiple containers attempting migrations simultaneously and provides a safer deployment process.
 
 ## 📁 Project Structure
 

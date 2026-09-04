@@ -91,11 +91,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "exchange.mailbox.mailboxes",
-      "policy_file": null,
+      "policy_file": "1.2.2_shared_mailbox_signin_blocked.rego",
       "requires_permissions": ["Exchange.Manage"],
-      "notes": "Collector exists but control logic not defined"
+      "notes": "Collector and policy implemented"
     },
     {
       "control_id": "1.3.1",
@@ -192,15 +192,15 @@
       "title": "Ensure 'third-party storage services' are restricted in 'Microsoft 365 on the web'",
       "description": "Restrict third-party storage providers in Office web apps.",
       "severity": "medium",
-      "service": "Exchange",
+      "service": "EntraID",
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "exchange.organization.owa_mailbox_policy",
-      "policy_file": null,
-      "requires_permissions": ["Exchange.Manage"],
-      "notes": "Collector exists but control logic not defined"
+      "automation_status": "ready",
+      "data_collector_id": "entra.applications.third_party_storage_services",
+      "policy_file": "1.3.7_third_party_storage_services.rego",
+      "requires_permissions": ["Application.Read.All"],
+      "notes": null
     },
     {
       "control_id": "1.3.8",
@@ -541,11 +541,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "exchange.organization.organization_config",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "exchange.organization.admin_audit_log_config",
+      "policy_file": "3.1.1_microsoft_365_audit_log_search_enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
-      "notes": "Check AuditDisabled = False"
+      "notes": "Check UnifiedAuditLogIngestionEnabled = True"
     },
     {
       "control_id": "3.2.1",
@@ -781,10 +781,10 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "entra.devices.device_management_settings",
-      "policy_file": null,
-      "requires_permissions": ["Policy.Read.All"],
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.3_disable_global_admin_local_admin.rego",
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
       "notes": null
     },
     {
@@ -796,11 +796,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "entra.devices.device_management_settings",
-      "policy_file": null,
-      "requires_permissions": ["Policy.Read.All"],
-      "notes": null
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.4_restrict_local_admin_assignment.rego",
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
+      "notes": "Collector is corrected and policy is implemented"
     },
     {
       "control_id": "5.1.4.5",
@@ -811,11 +811,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": null,
-      "policy_file": null,
-      "requires_permissions": null,
-      "notes": "Need LAPS configuration collector"
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.5_enable_laps.rego",
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
+      "notes": null
     },
     {
       "control_id": "5.1.4.6",
@@ -1546,11 +1546,11 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.5_guest_resharing.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": null 
     },
     {
       "control_id": "7.2.6",
@@ -1651,11 +1651,11 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.3.1_disallow_infected_file_download.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": null
     },
     {
       "control_id": "7.3.2",
