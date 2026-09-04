@@ -1546,11 +1546,11 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.5_guest_resharing.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": null 
     },
     {
       "control_id": "7.2.6",
