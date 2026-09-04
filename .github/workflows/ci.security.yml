@@ -58,6 +58,8 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Align with Backend CI: pytest suites are covered by pytest, not style/copy-paste gates.
+          FILTER_REGEX_EXCLUDE: .*backend-api/tests/.*
           VALIDATE_YAML: false
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_PYTHON_BLACK: false
