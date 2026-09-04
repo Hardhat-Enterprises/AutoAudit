@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import json
 
 from fastapi import APIRouter, Depends, UploadFile, File, Form
@@ -8,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 # Ensure the monorepo /security package is importable both locally and inside Docker
 import sys
 from pathlib import Path
+
+logger = logging.getLogger("api")
 
 
 def _find_security_dir() -> Path | None:
@@ -116,6 +119,7 @@ async def scan(
             text_hash = hashlib.sha256(extracted_text.encode("utf-8", errors="ignore")).hexdigest()
     except Exception:
         # Do not block scan if validator pre-pass fails.
+        logger.warning("Evidence validator pre-pass failed; continuing without validator", exc_info=True)
         extracted_text = ""
         validator_payload = None
         text_hash = None
@@ -178,10 +182,11 @@ async def scan(
             db.add(record)
             await db.commit()
     except Exception:
+        logger.warning("Failed to persist evidence validation; rolling back", exc_info=True)
         try:
             await db.rollback()
         except Exception:
-            pass  # nosec B110
+            logger.warning("Rollback after evidence validation failure also failed", exc_info=True)
 
     return scan_result
 
