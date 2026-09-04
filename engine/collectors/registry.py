@@ -219,7 +219,6 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "sharepoint.pnp.tenant": PnpTenantDataCollector,
 }
 
-
 def get_collector(collector_id: str) -> BaseDataCollector:
     """Get a collector instance by ID."""
     collector_class = DATA_COLLECTORS.get(collector_id)
