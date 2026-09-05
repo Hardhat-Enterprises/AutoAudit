@@ -19,48 +19,49 @@ class OwaMailboxPolicyDataCollector(BasePowerShellCollector):
     """Collects OWA mailbox policy settings for CIS compliance evaluation.
 
     This collector retrieves OWA settings including bookings, add-ins,
-    and storage provider configurations.
+    and storage provider configurations. It also retrieves the tenant-wide
+    Bookings setting via Get-OrganizationConfig: control 1.3.9 is evaluated
+    against a single collector (per the current worker architecture, which
+    runs exactly one collector per control), so both evidence sources this
+    control needs must be gathered here rather than in organization_config.py.
     """
 
     async def collect(self, client: PowerShellClient) -> dict[str, Any]:
-        """Collect OWA mailbox policy data.
+        raw_policies: Any = await client.run_cmdlet("ExchangeOnline", "Get-OwaMailboxPolicy")
+        raw_org_config: Any = await client.run_cmdlet("ExchangeOnline", "Get-OrganizationConfig")
 
-        Returns:
-            Dict containing:
-            - owa_policies: List of OWA mailbox policies
-            - policies_with_external_storage: Policies allowing external storage
-            - policies_with_bookings: Policies with Bookings enabled
-        """
-        policies = await client.run_cmdlet("ExchangeOnline", "Get-OwaMailboxPolicy")
-
-        # Handle None, single policy, or list
-        if policies is None:
+        policies: list[dict[str, Any]]
+        if raw_policies is None:
             policies = []
-        elif isinstance(policies, dict):
-            policies = [policies]
+        elif isinstance(raw_policies, dict):
+            policies = [raw_policies]
+        else:
+            policies = raw_policies
 
-        # Find default policy
         default_policy = next(
             (p for p in policies if p.get("IsDefault")),
             policies[0] if policies else None
         )
-
-        # Check for policies with external storage enabled
+        default_policy_bookings_mailbox_creation_enabled = (
+            default_policy.get("BookingsMailboxCreationEnabled")
+            if default_policy else None
+        )
         policies_with_external_storage = [
             p.get("Name") for p in policies
             if p.get("AdditionalStorageProvidersAvailable")
         ]
-
-        # Check for policies with Bookings enabled
         policies_with_bookings = [
             p.get("Name") for p in policies
             if p.get("BookingsMailboxCreationEnabled")
         ]
+        bookings_enabled = raw_org_config.get("BookingsEnabled") if raw_org_config else None
 
         return {
             "owa_policies": policies,
             "total_policies": len(policies),
             "default_policy": default_policy,
+            "default_policy_bookings_mailbox_creation_enabled": default_policy_bookings_mailbox_creation_enabled,
             "policies_with_external_storage": policies_with_external_storage,
             "policies_with_bookings": policies_with_bookings,
+            "bookings_enabled": bookings_enabled,
         }

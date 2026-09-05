@@ -226,10 +226,10 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": null,
-      "policy_file": null,
-      "requires_permissions": null,
+      "automation_status": "ready",
+      "data_collector_id": "exchange.organization.owa_mailbox_policy",
+      "policy_file": "1.3.9_bookings_restrictions.rego",
+      "requires_permissions": ["Exchange.Manage"],
       "notes": "Need Bookings API collector"
     },
     {
