@@ -64,6 +64,13 @@ jobs:
           VALIDATE_MARKDOWN: false
           VALIDATE_NATURAL_LANGUAGE: false
           VALIDATE_MARKDOWN_PRETTIER: false
+          # Matches ci.backend-api.yml: JSCPD and TS_STANDARD are not enforced
+          # in this repo. Without these, super-linter's PR-diff mode (VALIDATE_ALL_CODEBASE:
+          # false) also re-lints frontend/ files changed earlier in the same PR whenever
+          # this engine/**-triggered workflow runs, even though this job only exists to
+          # gate engine/ changes.
+          VALIDATE_JSCPD: false
+          VALIDATE_TYPESCRIPT_STANDARD: false
 
   test:
     name: Run Engine Tests
