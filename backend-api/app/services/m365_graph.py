@@ -124,7 +124,9 @@ async def probe_tenant_details(*, access_token: str) -> TenantDetails:
     display_name = org.get("displayName")
 
     verified = org.get("verifiedDomains") or []
-    verified_domains = [d.get("name") for d in verified if isinstance(d, dict) and d.get("name")]
+    verified_domains = [
+        name for d in verified if isinstance(d, dict) and (name := d.get("name"))
+    ]
     default_domain = next(
         (
             d.get("name")

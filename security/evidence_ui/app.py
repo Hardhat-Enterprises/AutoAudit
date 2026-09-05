@@ -4,7 +4,7 @@ import io
 import re
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import pytesseract
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -19,10 +19,11 @@ try:
 except Exception:
     fitz = None
 
+DocxDocument: Any = None  # populated below if python-docx is installed
 try:
     from docx import Document as DocxDocument  # python-docx
 except Exception:
-    DocxDocument = None
+    pass
 
 # -------------------- Import modules --------------------
 

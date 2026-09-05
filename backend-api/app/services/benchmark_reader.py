@@ -80,7 +80,7 @@ class BenchmarkFileReader:
         Returns:
             List of benchmark metadata dicts.
         """
-        benchmarks = []
+        benchmarks: list[dict[str, Any]] = []
         if not self.policies_dir.exists():
             return benchmarks
 
