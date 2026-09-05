@@ -20,12 +20,9 @@ from collectors.powershell_client import PowerShellClient
 class PnpTenantDataCollector(BasePowerShellCollector):
     """Collects SharePoint tenant settings via Get-PnPTenant.
 
-    This collector retrieves tenant-wide SharePoint settings. 
+    This collector retrieves tenant-wide SharePoint settings. CIS 7.3.1
     evaluates DisallowInfectedFileDownload; later controls can reuse the
     same tenant evidence.
-
-    CIS Microsoft 365 Foundations Benchmark Controls:
-    v6.0.0: 7.2.2, 7.3.1
     """
 
     async def collect(self, client: PowerShellClient) -> dict[str, Any]:
@@ -43,6 +40,5 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             "disallow_infected_file_download": tenant.get(
                 "DisallowInfectedFileDownload"
             ),
-
-            "azure_ad_b2b_integration_enabled":tenant.get("EnableAzureADB2BIntegration")
+            "azure_ad_b2b_integration_enabled":tenant.get("EnableAzureADB2BIntegration"),
         }
