@@ -41,6 +41,15 @@ os.environ.setdefault("GOOGLE_OAUTH_CLIENT_ID", "test-client-id")
 os.environ.setdefault("GOOGLE_OAUTH_CLIENT_SECRET", "test-client-secret")  # pragma: allowlist secret
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379")
 os.environ.setdefault("OPA_URL", "http://localhost:8181")
+# Benchmark metadata (policies/{framework}/{benchmark}/{version}/metadata.json)
+# lives in the repo at engine/policies, and is read straight off disk by
+# BenchmarkFileReader. The app's own default, POLICIES_DIR=/app/policies, is
+# a container path that only exists inside the Docker image -- it isn't
+# present on a CI runner or a developer's machine running `uv run pytest`
+# directly, so point at the real, checked-in policies directory instead.
+os.environ.setdefault(
+    "POLICIES_DIR", str(Path(__file__).resolve().parents[2] / "engine" / "policies")
+)
 # A deterministic, validly-formatted Fernet key (32 raw bytes, urlsafe
 # base64-encoded). Computed rather than hand-typed so it can't be a subtly
 # invalid string -- an invalid key raises immediately the first time any
