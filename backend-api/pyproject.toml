@@ -40,3 +40,28 @@ evidence = [
     "fpdf2>=2.8.1",
     "tabulate>=0.10.0",
 ]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+# Coverage baseline for 26T2-BE-PG-003 (measured ~79% with branch coverage after expanded tests).
+# Gate below the measured total to avoid flaky CI fails across environments.
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/alembic/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+fail_under = 70

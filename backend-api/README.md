@@ -41,6 +41,31 @@ Automated GCP compliance assessment tool built with FastAPI. This API provides a
    - API Documentation: http://localhost:8000/docs | http://localhost:8000/redoc
    - Root Endpoint: http://localhost:8000/
 
+## Running tests with coverage
+
+Install test and coverage tooling (does not require the heavy `evidence` extra):
+
+```bash
+uv sync --extra dev
+```
+
+Run the test suite:
+
+```bash
+uv run pytest tests/ -q
+```
+
+Measure line coverage for `app/` with a terminal summary (including missing lines) and an HTML report:
+
+```bash
+uv run pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
+```
+
+- Terminal: coverage table and missing line numbers are printed after the run.
+- HTML: open `htmlcov/index.html` in a browser (`open htmlcov/index.html` on macOS).
+- Threshold: `[tool.coverage.report] fail_under = 70` in `pyproject.toml` fails the run if `app/` coverage drops below 70% (baseline after expanded 26T2-BE-PG-003 tests; measured ~79% with branch coverage).
+
+Coverage artifacts (`htmlcov/`, `.coverage`, `coverage.xml`) are gitignored.
 ## 🐳 Docker Startup and Database Migrations
 
 When running the backend using the project's Docker configuration, the container starts through `backend-api/entrypoint.sh`.
@@ -89,7 +114,7 @@ backend-api/
 │   │
 │   └── main.py               # FastAPI app
 │
-├── tests/                    # Test scripts
+├── tests/                    # Pytest suite (fixtures + endpoint smoke tests)
 │
 ├── .env.example              # Environment variables template
 ├── pyproject.toml            # Project dependencies & metadata

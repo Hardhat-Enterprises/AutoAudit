@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class ContactSubmissionBase(BaseModel):
@@ -37,8 +37,7 @@ class ContactSubmissionRead(ContactSubmissionBase):
     updated_at: datetime
     resolved_at: datetime | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SubmissionNoteCreate(BaseModel):
@@ -55,8 +54,7 @@ class SubmissionNoteRead(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SubmissionHistoryRead(BaseModel):
@@ -69,5 +67,4 @@ class SubmissionHistoryRead(BaseModel):
     new_value: str | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
