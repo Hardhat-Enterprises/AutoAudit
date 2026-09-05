@@ -56,7 +56,7 @@ async def init_db():
             else "[SUCCESS] Updated default admin user with the following details."
         )
         print(f"  Email: {admin_email}")
-        print(f"  Password: {admin_password}")
+        print("  Password: [hidden] (see SEED_ADMIN_PASSWORD in your environment/.env, default 'admin' if unset)")
         print(f"  Role: {Role.ADMIN.value}")
         print("\nIMPORTANT: Change this password after first login.")
 
