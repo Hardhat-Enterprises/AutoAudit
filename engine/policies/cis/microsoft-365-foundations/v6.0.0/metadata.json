@@ -19,7 +19,10 @@
       "automation_status": "ready",
       "data_collector_id": "entra.roles.cloud_only_admins",
       "policy_file": "1.1.1_admin_cloud_only.rego",
-      "requires_permissions": ["User.Read.All", "RoleManagement.Read.Directory"],
+      "requires_permissions": [
+        "User.Read.All",
+        "RoleManagement.Read.Directory"
+      ],
       "notes": null
     },
     {
@@ -49,7 +52,10 @@
       "automation_status": "ready",
       "data_collector_id": "entra.roles.privileged_roles",
       "policy_file": "1.1.3_global_admin_count.rego",
-      "requires_permissions": ["RoleManagement.Read.Directory", "User.Read.All"],
+      "requires_permissions": [
+        "RoleManagement.Read.Directory",
+        "User.Read.All"
+      ],
       "notes": null
     },
     {
@@ -64,7 +70,10 @@
       "automation_status": "ready",
       "data_collector_id": "entra.roles.admin_license_footprint",
       "policy_file": "1.1.4_admin_license_footprint.rego",
-      "requires_permissions": ["User.Read.All", "RoleManagement.Read.Directory"],
+      "requires_permissions": [
+        "User.Read.All",
+        "RoleManagement.Read.Directory"
+      ],
       "notes": null
     },
     {
@@ -946,11 +955,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "deferred",
+      "automation_status": "ready",
       "data_collector_id": "entra.conditional_access.policies",
-      "policy_file": null,
+      "policy_file": "5.2.2.2_mfa_all_users.rego",
       "requires_permissions": ["Policy.Read.All"],
-      "notes": "Requires verification of exclusions"
+      "notes": "Automated: at least one enabled CA policy requires MFA for all users across all cloud apps. Exclusions are surfaced in details for assessor review, not treated as an automatic fail."
     },
     {
       "control_id": "5.2.2.3",
@@ -1051,11 +1060,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "deferred",
+      "automation_status": "ready",
       "data_collector_id": "entra.conditional_access.policies",
-      "policy_file": null,
+      "policy_file": "5.2.2.9_managed_device_required.rego",
       "requires_permissions": ["Policy.Read.All"],
-      "notes": "Requires policy coverage verification"
+      "notes": "Automated: at least one enabled CA policy requires a compliant device for all users across all cloud apps."
     },
     {
       "control_id": "5.2.2.10",
@@ -1096,11 +1105,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "deferred",
+      "automation_status": "ready",
       "data_collector_id": "entra.conditional_access.policies",
-      "policy_file": null,
+      "policy_file": "5.2.2.12_block_device_code_flow.rego",
       "requires_permissions": ["Policy.Read.All"],
-      "notes": "Requires policy coverage verification"
+      "notes": "Automated: at least one enabled CA policy blocks the device code sign-in flow (conditions.authenticationFlows.transferMethods == 'deviceCodeFlow') with a block grant control."
     },
     {
       "control_id": "5.2.3.1",
@@ -1550,7 +1559,7 @@
       "data_collector_id": "sharepoint.pnp.tenant",
       "policy_file": "7.2.5_guest_resharing.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": null 
+      "notes": null
     },
     {
       "control_id": "7.2.6",
