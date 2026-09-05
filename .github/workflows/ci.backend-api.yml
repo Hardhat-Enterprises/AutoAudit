@@ -73,9 +73,58 @@ jobs:
           VALIDATE_CHECKOV: false
           VALIDATE_YAML_PRETTIER: false
 
+  backend-tests:
+    name: Integration Tests (pytest)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: autoaudit
+          POSTGRES_PASSWORD: autoaudit_dev_password
+          POSTGRES_DB: autoaudit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies (Tesseract for evidence OCR)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr libtesseract-dev
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        working-directory: backend-api
+        run: uv sync --frozen --extra evidence
+
+      - name: Run integration test suite
+        working-directory: backend-api
+        # DATABASE_URL etc. are intentionally left unset here: tests/conftest.py
+        # sets matching defaults (os.environ.setdefault) that point at this same
+        # postgres service (db autoaudit_test, user/password autoaudit), and
+        # runs `alembic upgrade head` itself before any test executes -- so a
+        # separate migration step isn't needed, this just has to be the same
+        # entrypoint a developer runs locally.
+        run: uv run pytest -v
+
   report:
     name: Report PR status
-    needs: [analyze, run-lint]
+    needs: [analyze, run-lint, backend-tests]
     if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
@@ -86,9 +135,10 @@ jobs:
           script: |
             const analyze = '${{ needs.analyze.result }}';
             const lint    = '${{ needs.run-lint.result }}';
+            const tests   = '${{ needs.backend-tests.result }}';
 
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
-            const allPassed = [analyze, lint].every(r => ['success', 'skipped'].includes(r));
+            const allPassed = [analyze, lint, tests].every(r => ['success', 'skipped'].includes(r));
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const marker = '<!-- ci-report-backend-api -->';
 
@@ -100,6 +150,7 @@ jobs:
               `|---|---|`,
               `| Security analysis (Bandit) | ${icon(analyze)} \`${analyze}\` |`,
               `| Lint | ${icon(lint)} \`${lint}\` |`,
+              `| Integration tests (pytest) | ${icon(tests)} \`${tests}\` |`,
               ``,
               allPassed
                 ? `All checks passed.`
