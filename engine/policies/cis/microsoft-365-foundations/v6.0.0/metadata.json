@@ -482,9 +482,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "exchange.protection.priority_account_protection",
       "policy_file": null,
-      "requires_permissions": null,
+      "requires_permissions": ["Exchange.Manage"],
       "notes": "Need Priority Account Protection collector"
     },
     {
@@ -497,9 +497,9 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "exchange.protection.priority_account_protection",
       "policy_file": null,
-      "requires_permissions": null,
+      "requires_permissions": ["Exchange.Manage"],
       "notes": "Need Priority Account Protection collector"
     },
     {
