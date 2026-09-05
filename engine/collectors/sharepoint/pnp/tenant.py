@@ -40,6 +40,14 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             "disallow_infected_file_download": tenant.get(
                 "DisallowInfectedFileDownload"
             ),
-            "external_user_expiration_required": tenant.get("ExternalUserExpirationRequired"),
-            "external_user_expire_in_days": tenant.get("ExternalUserExpireInDays"),
+            "azure_ad_b2b_integration_enabled":tenant.get("EnableAzureADB2BIntegration"),
+            "prevent_external_users_from_resharing": tenant.get(
+                "PreventExternalUsersFromResharing"
+            ),
+               "external_user_expiration_required": tenant.get(
+               "ExternalUserExpirationRequired"
+            ),
+               "external_user_expire_in_days": tenant.get(
+               "ExternalUserExpireInDays"
+            ),
         }

@@ -4,11 +4,14 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import httpx
+import logging
 from app.services.m365_graph import (
     M365ConnectionError,
     acquire_graph_access_token,
     validate_m365_connection,
 )
+
+logger = logging.getLogger("api")
 
 # These permissions are critical for the current M365 benchmarks, so we always probe them and treat failures as critical.
 CRITICAL_BASELINE_PERMISSIONS = {
@@ -197,6 +200,7 @@ async def evaluate_scan_readiness(
                     headers={"Authorization": f"Bearer {access_token}"},
                 )
             except Exception:
+                logger.warning("Readiness probe request failed for permission %s; marking unverified", permission, exc_info=True)
                 unverified_permissions.add(permission)
                 checks.append(
                     ReadinessCheck(
