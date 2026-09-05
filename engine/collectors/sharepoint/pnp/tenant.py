@@ -41,4 +41,7 @@ class PnpTenantDataCollector(BasePowerShellCollector):
                 "DisallowInfectedFileDownload"
             ),
             "azure_ad_b2b_integration_enabled":tenant.get("EnableAzureADB2BIntegration"),
+            "prevent_external_users_from_resharing": tenant.get(
+                "PreventExternalUsersFromResharing"
+            ),
         }
