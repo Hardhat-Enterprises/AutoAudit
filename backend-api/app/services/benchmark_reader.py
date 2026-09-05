@@ -24,7 +24,7 @@ class BenchmarkFileReader:
     def __init__(self, policies_dir: Path | str | None = None):
         if policies_dir is None:
             settings = get_settings()
-            policies_dir = getattr(settings, "POLICIES_DIR", "/app/policies")
+            policies_dir = str(getattr(settings, "POLICIES_DIR", "/app/policies"))
         self.policies_dir = Path(policies_dir)
 
     def get_benchmark_path(self, framework: str, slug: str, version: str) -> Path:
@@ -80,7 +80,7 @@ class BenchmarkFileReader:
         Returns:
             List of benchmark metadata dicts.
         """
-        benchmarks = []
+        benchmarks: list[dict[str, Any]] = []
         if not self.policies_dir.exists():
             return benchmarks
 

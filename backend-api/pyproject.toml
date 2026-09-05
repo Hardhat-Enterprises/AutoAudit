@@ -25,6 +25,7 @@ dependencies = [
     "cryptography>=42.0.0",
     # Celery client for queueing tasks
     "celery[redis]>=5.3.0",
+    "prometheus-fastapi-instrumentator>=8.1.0",
 ]
 
 [project.optional-dependencies]
@@ -40,3 +41,28 @@ evidence = [
     "fpdf2>=2.8.1",
     "tabulate>=0.10.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+# Pin async tests and their fixtures to ONE event loop for the whole test
+# session. Without this, pytest-asyncio's default "function" loop scope
+# creates a brand-new event loop per test, but the SQLAlchemy async
+# `engine` (app.db.base.engine) is a session-lifetime singleton whose
+# connection pool hands out asyncpg connections across tests. A pooled
+# connection created on test N's event loop is not usable from test N+1's
+# *different* event loop -- asyncpg raises confusing errors such as
+# "cannot perform operation: another operation is in progress" or
+# "Event loop is closed" when that happens. Session-scoping the loop
+# keeps every test and fixture on the same loop the engine's connections
+# were created on.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+addopts = "-v"

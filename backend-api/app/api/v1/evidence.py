@@ -1,7 +1,7 @@
 import hashlib
 import logging
 import json
-
+import logging
 from fastapi import APIRouter, Depends, UploadFile, File, Form
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,6 +37,8 @@ from app.services.encryption import encrypt
 from app.services.evidence_validator import validate_text
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.get("/strategies")
@@ -184,7 +186,6 @@ async def scan(
             await db.rollback()
         except Exception:
             logger.warning("Rollback after evidence validation failure also failed", exc_info=True)
-
     return scan_result
 
 

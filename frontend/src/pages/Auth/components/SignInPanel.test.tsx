@@ -19,7 +19,7 @@ function setupAuth() {
     isAuthenticated: false,
     isLoading: false,
     login: mockLogin,
-    loginWithAccessToken: vi.fn(),
+    completeOAuthLogin: vi.fn(),
     logout: vi.fn(),
   });
 }

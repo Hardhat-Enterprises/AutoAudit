@@ -4,7 +4,7 @@ import io
 import re
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import pytesseract
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -19,10 +19,11 @@ try:
 except Exception:
     fitz = None
 
+DocxDocument: Any = None  # populated below if python-docx is installed
 try:
-    from docx import Document as DocxDocument  # python-docx
+    from docx import Document as DocxDocument  # type: ignore[no-redef]  # python-docx
 except Exception:
-    DocxDocument = None
+    pass
 
 # -------------------- Import modules --------------------
 
@@ -157,7 +158,7 @@ PREVIEWS = RESULTS / "previews"              # preview images for evidence
 INDEX_HTML = ROOT / "evidence_ui" / "ui.html"      # serve the UI from evidence_ui/ui.html
 
 # ✨ Recent scan: in-memory log
-SCAN_MEM = deque(maxlen=50)
+SCAN_MEM: deque[dict[str, str]] = deque(maxlen=50)
 
 def _push_mem_log(user: str, strategy: str, status: str) -> None:
     """status: 'success' | 'error'"""

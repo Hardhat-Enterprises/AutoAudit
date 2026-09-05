@@ -39,56 +39,50 @@ afterEach(cleanup);
 
 // --- primaryLabel fallback chain ---
 
-describe('primaryLabel', () => {
-  it('displays email when present', () => {
-    setupAuth({ email: 'user@example.com', username: 'u', name: 'Name', id: 1 });
+describe('account details fallbacks', () => {
+  it('displays name, email, and organization when present', () => {
+    setupAuth({
+      email: 'user@example.com',
+      first_name: 'Jane',
+      last_name: 'Doe',
+      organization_name: 'Acme Inc',
+    });
     renderPage();
+    expect(screen.getByText('Jane Doe')).toBeInTheDocument();
     expect(screen.getByText('user@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Acme Inc')).toBeInTheDocument();
   });
 
-  it('falls back to username when email is absent', () => {
-    setupAuth({ email: null, username: 'jdoe', name: 'John', id: 2 });
+  it('shows "Not available" for name when only one of first_name/last_name is present', () => {
+    setupAuth({ email: 'user@example.com', first_name: 'Jane', last_name: null });
     renderPage();
-    expect(screen.getByText('jdoe')).toBeInTheDocument();
+    expect(screen.getAllByText('Not available')).toHaveLength(2); // name + organization
   });
 
-  it('falls back to name when email and username are absent', () => {
-    setupAuth({ email: null, username: null, name: 'John Doe', id: 3 });
+  it('shows "Not available" for email when absent', () => {
+    setupAuth({ email: null, first_name: 'Jane', last_name: 'Doe' });
     renderPage();
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getAllByText('Not available')).toHaveLength(2); // email + organization
   });
 
-  it('falls back to id as string when email, username, and name are absent', () => {
-    setupAuth({ email: null, username: null, name: null, id: 99 });
-    renderPage();
-    expect(screen.getByText('99')).toBeInTheDocument();
-  });
-
-  it('shows "Signed in" when user is null', () => {
+  it('shows "Not available" for all fields when user is null', () => {
     setupAuth(null);
     renderPage();
-    expect(screen.getByText('Signed in')).toBeInTheDocument();
-  });
-
-  it('shows "Signed in" when all user fields are null or undefined', () => {
-    setupAuth({ email: null, username: null, name: null, id: null });
-    renderPage();
-    expect(screen.getByText('Signed in')).toBeInTheDocument();
+    expect(screen.getAllByText('Not available')).toHaveLength(3);
   });
 });
 
 // --- handleLogout ---
 
 describe('handleLogout', () => {
-  it('calls apiLogout with the current token', async () => {
-    setupAuth({ email: 'u@test.com' }, 'my-token');
-    vi.mocked(mockApiLogout).mockResolvedValue(undefined);
+  it('does not call the raw api client directly (avoids duplicate logout requests)', async () => {
+  setupAuth({ email: 'u@test.com' }, 'my-token');
 
-    renderPage();
-    await userEvent.click(screen.getByRole('button', { name: /log out/i }));
+  renderPage();
+  await userEvent.click(screen.getByRole('button', { name: /log out/i }));
 
-    expect(mockApiLogout).toHaveBeenCalledWith('my-token');
-  });
+  expect(mockApiLogout).not.toHaveBeenCalled();
+});
 
   it('calls clearAuth and navigates to / after successful logout', async () => {
     const clearAuth = vi.fn();

@@ -5,9 +5,8 @@ Run this script to create the default admin user:
     python -m app.db.init_db
 """
 import asyncio
-
+import os
 from sqlalchemy import select
-
 from app.db.session import async_session_maker
 from app.models.user import User, Role
 from fastapi_users.password import PasswordHelper
@@ -21,8 +20,8 @@ async def init_db():
     - Passwords are stored hashed in the DB (see User.hashed_password).
     - This script will create OR update a default admin user for local development.
     """
-    admin_email = "admin@example.com"
-    admin_password = "admin"  # pragma: allowlist secret
+    admin_email = os.getenv("SEED_ADMIN_EMAIL", "admin@example.com")
+    admin_password = os.getenv("SEED_ADMIN_PASSWORD", "admin")  # pragma: allowlist secret
 
     password_helper = PasswordHelper()
 
@@ -57,7 +56,7 @@ async def init_db():
             else "[SUCCESS] Updated default admin user with the following details."
         )
         print(f"  Email: {admin_email}")
-        print(f"  Password: {admin_password}")
+        print("  Password: [hidden] (see SEED_ADMIN_PASSWORD in your environment/.env, default 'admin' if unset)")
         print(f"  Role: {Role.ADMIN.value}")
         print("\nIMPORTANT: Change this password after first login.")
 
