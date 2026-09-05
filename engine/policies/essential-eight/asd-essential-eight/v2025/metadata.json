@@ -238,6 +238,23 @@
         "User.Read.All"
       ],
       "notes": "Research basis: 26T1-SEC-EG-002 and 26T1-SEC-EG-004."
+    },
+    {
+      "control_id": "E8-UAH-2.1",
+      "title": "Microsoft Office applications blocked from creating child processes",
+      "description": "Checks whether the Attack Surface Reduction rule blocking Office applications from creating child processes is enabled in Block mode, as required by the Essential Eight User Application Hardening mitigation strategy.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML2",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.asr_rules",
+      "policy_file": "e8_uah_2_1_office_child_process_block.rego",
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Reuses the entra.devices.asr_rules collector (same Graph profile fetch as E8-MAC-2.1) -- no extra API calls. First control for the User Application Hardening strategy."
     }
   ]
 }
