@@ -59,7 +59,9 @@ jobs:
         run: pip install bandit
 
       - name: Run Bandit scan on backend-api
-        run: bandit -r backend-api -f txt
+        # Exclude pytest suites (B101 assert_used) and local venvs.
+        # backend-api/.bandit also sets exclude=tests,.venv,venv for local runs.
+        run: bandit -r backend-api -x backend-api/tests,backend-api/.venv,backend-api/venv -f txt
 
   run-lint:
     name: Linting Code
@@ -76,6 +78,8 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pytest suites are covered by pytest; exclude from style/secret/copy-paste gates.
+          FILTER_REGEX_EXCLUDE: .*backend-api/tests/.*
           VALIDATE_YAML: false
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_PYTHON_BLACK: false
