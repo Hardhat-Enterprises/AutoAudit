@@ -1,0 +1,140 @@
+# Source of truth for repo labels. Run via the "Sync Labels" workflow
+# (.github/workflows/label-sync.yml), triggered manually or on push to this file.
+#
+# skip-delete is enabled in the workflow, so labels NOT listed here are left
+# alone (nothing gets silently deleted) — but every label listed here will
+# have its color/description kept in sync with this file.
+
+# ── your existing manual labels (documented as-is, colors approximate) ──
+- name: abandoned
+  color: "000000"
+  description: Confirmed abandoned PR
+- name: bug
+  color: "d73a4a"
+  description: Something isn't working
+- name: dependencies
+  color: "0366d6"
+  description: Dependency updates
+- name: deploy-preview
+  color: "0e8a16"
+  description: Preview deployment
+- name: deploy-preview-m365
+  color: "0e8a16"
+  description: M365 preview deployment
+- name: docker
+  color: "2496ed"
+  description: PR modifies Docker files
+- name: documentation
+  color: "0075ca"
+  description: Documentation only
+- name: duplicate
+  color: "cfd3d7"
+  description: Duplicate issue/PR
+- name: enhancement
+  color: "a2eeef"
+  description: New feature or request
+- name: github_actions
+  color: "2088ff"
+  description: GitHub Actions related
+- name: good first issue
+  color: "7057ff"
+  description: Good for newcomers
+- name: has-conflicts
+  color: "e11d21"
+  description: PR has merge conflicts
+- name: help wanted
+  color: "008672"
+  description: Extra attention needed
+- name: invalid
+  color: "e4e669"
+  description: This doesn't seem right
+- name: javascript
+  color: "f1e05a"
+  description: JavaScript related
+- name: needs-adoption
+  color: "fbca04"
+  description: Good code, unresponsive author — needs a new owner
+- name: overlapping-work
+  color: "d4c5f9"
+  description: Overlapping contributions with another PR
+- name: python
+  color: "3572a5"
+  description: Python related
+- name: "python:uv"
+  color: "3572a5"
+  description: uv-related Python tooling
+- name: question
+  color: "d876e3"
+  description: Further information is requested
+- name: stale
+  color: "ededed"
+  description: 7+ days no activity since last reviewer comment
+- name: teardown-preview
+  color: "b60205"
+  description: Preview environment teardown
+- name: wontfix
+  color: "ffffff"
+  description: This will not be worked on
+
+# ── new: work-area labels ──
+- name: "area: backend-api"
+  color: "1d76db"
+  description: Changes under /backend-api
+- name: "area: security"
+  color: "b60205"
+  description: Changes under /security
+- name: "area: frontend"
+  color: "5319e7"
+  description: Changes under /frontend
+- name: "area: engine"
+  color: "0e8a16"
+  description: Changes under /engine
+- name: "area: infrastructure"
+  color: "fbca04"
+  description: Changes under /infrastructure
+- name: "area: tools"
+  color: "c2e0c6"
+  description: Changes under /tools
+- name: "area: docs"
+  color: "0075ca"
+  description: Changes under /docs
+- name: "area: ci-cd"
+  color: "2088ff"
+  description: Changes under /.github
+- name: "area: root"
+  color: "cccccc"
+  description: Loose root-level files or IDE config
+- name: "area: multi"
+  color: "e99695"
+  description: Touches more than one work area
+
+# ── new: activity/status labels (auto-managed, PRs never auto-closed) ──
+- name: needs-triage
+  color: "fef2c0"
+  description: No reviewer has looked at this PR yet
+- name: needs-decision
+  color: "d93f0b"
+  description: 10-14 days no activity since last reviewer comment — decide outcome
+- name: final-notice
+  color: "b60205"
+  description: 14+ days no activity since last reviewer comment — resolve manually
+
+# ── new: extras ──
+- name: size/XS
+  color: "c5def5"
+  description: "< 10 lines changed"
+- name: size/S
+  color: "bfd4f2"
+  description: "< 100 lines changed"
+- name: size/M
+  color: "9fc4ee"
+  description: "< 500 lines changed"
+- name: size/L
+  color: "7aa9e0"
+  description: "< 1000 lines changed"
+- name: size/XL
+  color: "5590d6"
+  description: ">= 1000 lines changed"
+- name: first-contribution
+  color: "7057ff"
+  description: Author's first PR to this repo
