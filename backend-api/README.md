@@ -41,6 +41,17 @@ Automated GCP compliance assessment tool built with FastAPI. This API provides a
    - API Documentation: http://localhost:8000/docs | http://localhost:8000/redoc
    - Root Endpoint: http://localhost:8000/
 
+## Running tests
+
+Install the `dev` extra, then run the pytest suite from `backend-api/`:
+
+```bash
+uv sync --extra dev
+uv run pytest tests/ -q
+```
+
+Use `-v` instead of `-q` for more detail. CI runs the same command on changes under `backend-api/**`.
+
 ## 🐳 Docker Startup and Database Migrations
 
 When running the backend using the project's Docker configuration, the container starts through `backend-api/entrypoint.sh`.
@@ -72,7 +83,6 @@ This ensures that the database schema is updated before the backend application 
 The current implementation executes database migrations during container startup, which is suitable for local development and single-container deployments.
 
 For future production environments using multiple replicas or rolling deployments, database migrations should be enforced as a dedicated deployment or pipeline step before updated application containers receive traffic. This reduces the risk of multiple containers attempting migrations simultaneously and provides a safer deployment process.
-
 ## 📁 Project Structure
 
 ```
@@ -89,7 +99,7 @@ backend-api/
 │   │
 │   └── main.py               # FastAPI app
 │
-├── tests/                    # Test scripts
+├── tests/                    # Pytest suite (fixtures + endpoint smoke tests)
 │
 ├── .env.example              # Environment variables template
 ├── pyproject.toml            # Project dependencies & metadata
