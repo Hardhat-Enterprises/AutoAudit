@@ -21,7 +21,7 @@ except Exception:
 
 DocxDocument: Any = None  # populated below if python-docx is installed
 try:
-    from docx import Document as DocxDocument  # python-docx
+    from docx import Document as DocxDocument  # type: ignore[no-redef]  # python-docx
 except Exception:
     pass
 
