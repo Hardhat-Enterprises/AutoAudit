@@ -43,4 +43,7 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             "prevent_external_users_from_resharing": tenant.get(
                 "PreventExternalUsersFromResharing"
             ),
+            "restrict_external_domain_sharing":tenant.get(
+                "SharingDomainRestrictionMode"
+            )
         }
