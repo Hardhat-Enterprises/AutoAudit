@@ -19,7 +19,7 @@ also required for this suite to run unattended in CI.
 
 async def test_get_nonexistent_returns_404(auth_client):
     resp = await auth_client.get("/v1/manual-verification/99999")
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 404, resp.text  # nosec B101
 
 
 async def test_patch_nonexistent_returns_404(auth_client):
@@ -27,17 +27,17 @@ async def test_patch_nonexistent_returns_404(auth_client):
         "/v1/manual-verification/99999",
         json={"comment": "x"},
     )
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 404, resp.text  # nosec B101
 
 
 async def test_delete_nonexistent_returns_404(auth_client):
     resp = await auth_client.delete("/v1/manual-verification/99999")
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 404, resp.text  # nosec B101
 
 
 async def test_get_by_scan_result_nonexistent_returns_404(auth_client):
     resp = await auth_client.get("/v1/manual-verification/by-scan-result/99999")
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 404, resp.text  # nosec B101
 
 
 async def test_endpoints_require_auth(client):
@@ -46,13 +46,13 @@ async def test_endpoints_require_auth(client):
     auth were silently skipped and the lookup just failed to find the
     record)."""
     get_resp = await client.get("/v1/manual-verification/99999")
-    assert get_resp.status_code == 401, get_resp.text
+    assert get_resp.status_code == 401, get_resp.text  # nosec B101
 
     patch_resp = await client.patch(
         "/v1/manual-verification/99999",
         json={"comment": "x"},
     )
-    assert patch_resp.status_code == 401, patch_resp.text
+    assert patch_resp.status_code == 401, patch_resp.text  # nosec B101
 
     delete_resp = await client.delete("/v1/manual-verification/99999")
-    assert delete_resp.status_code == 401, delete_resp.text
+    assert delete_resp.status_code == 401, delete_resp.text  # nosec B101

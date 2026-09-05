@@ -13,44 +13,44 @@ enough to support them cheaply.
 
 async def test_list_scans_requires_auth(client):
     resp = await client.get("/v1/scans/")
-    assert resp.status_code == 401, resp.text
+    assert resp.status_code == 401, resp.text  # nosec B101
 
 
 async def test_list_scans_empty_for_new_user(auth_client):
     """A freshly registered user has created no scans yet."""
     resp = await auth_client.get("/v1/scans/")
-    assert resp.status_code == 200, resp.text
-    assert resp.json() == []
+    assert resp.status_code == 200, resp.text  # nosec B101
+    assert resp.json() == []  # nosec B101
 
 
 async def test_get_scan_requires_auth(client):
     resp = await client.get("/v1/scans/1")
-    assert resp.status_code == 401, resp.text
+    assert resp.status_code == 401, resp.text  # nosec B101
 
 
 async def test_get_nonexistent_scan_returns_404(auth_client):
     resp = await auth_client.get("/v1/scans/999999")
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 404, resp.text  # nosec B101
 
 
 async def test_get_scan_summary_nonexistent_returns_404(auth_client):
     resp = await auth_client.get("/v1/scans/999999/summary")
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 404, resp.text  # nosec B101
 
 
 async def test_get_scan_results_nonexistent_returns_404(auth_client):
     resp = await auth_client.get("/v1/scans/999999/results")
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 404, resp.text  # nosec B101
 
 
 async def test_delete_nonexistent_scan_returns_404(auth_client):
     resp = await auth_client.delete("/v1/scans/999999")
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 404, resp.text  # nosec B101
 
 
 async def test_delete_scan_requires_auth(client):
     resp = await client.delete("/v1/scans/1")
-    assert resp.status_code == 401, resp.text
+    assert resp.status_code == 401, resp.text  # nosec B101
 
 
 async def test_create_scan_nonexistent_connection_returns_404(auth_client):
@@ -65,7 +65,7 @@ async def test_create_scan_nonexistent_connection_returns_404(auth_client):
             "version": "v6.0.0",
         },
     )
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 404, resp.text  # nosec B101
 
 
 async def test_create_scan_requires_auth(client):
@@ -78,7 +78,7 @@ async def test_create_scan_requires_auth(client):
             "version": "v6.0.0",
         },
     )
-    assert resp.status_code == 401, resp.text
+    assert resp.status_code == 401, resp.text  # nosec B101
 
 
 async def test_readiness_nonexistent_connection_returns_404(auth_client):
@@ -91,7 +91,7 @@ async def test_readiness_nonexistent_connection_returns_404(auth_client):
             "version": "v6.0.0",
         },
     )
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 404, resp.text  # nosec B101
 
 
 async def test_readiness_requires_auth(client):
@@ -104,4 +104,4 @@ async def test_readiness_requires_auth(client):
             "version": "v6.0.0",
         },
     )
-    assert resp.status_code == 401, resp.text
+    assert resp.status_code == 401, resp.text  # nosec B101

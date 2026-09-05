@@ -22,7 +22,7 @@ Design notes (why this file is structured the way it is):
 """
 import base64
 import os
-import subprocess
+import subprocess  # nosec B404 -- fixed, hardcoded alembic invocation below; no untrusted input
 import sys
 import uuid
 from pathlib import Path
@@ -69,7 +69,7 @@ def _migrate_test_database():
     this works whether the test DB is a fresh CI container or a
     developer's persistent local one.
     """
-    subprocess.run(
+    subprocess.run(  # nosec B603 -- fixed argv list below, shell=False, no untrusted input
         [sys.executable, "-m", "alembic", "upgrade", "head"],
         cwd=BACKEND_API_ROOT,
         check=True,
@@ -123,12 +123,12 @@ async def registered_user(client):
     endpoint (not a shortcut DB insert), returning (email, password).
     """
     email = f"test-{uuid.uuid4().hex}@example.com"
-    password = "Sup3r-Secret-Test-Pw!"  # pragma: allowlist secret
+    password = "Sup3r-Secret-Test-Pw!"  # nosec B105 # pragma: allowlist secret
     resp = await client.post(
         "/v1/auth/register",
         json={"email": email, "password": password},
     )
-    assert resp.status_code == 201, resp.text
+    assert resp.status_code == 201, resp.text  # nosec B101
     return email, password
 
 
@@ -144,5 +144,5 @@ async def auth_client(client, registered_user):
         "/v1/auth/login",
         data={"username": email, "password": password},
     )
-    assert resp.status_code == 204, resp.text
+    assert resp.status_code == 204, resp.text  # nosec B101
     return client

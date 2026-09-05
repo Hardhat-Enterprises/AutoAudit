@@ -13,12 +13,12 @@ async def test_strategies_is_public(client):
     """The strategy list backs a dropdown the frontend shows before
     login, so it must not require authentication."""
     resp = await client.get("/v1/evidence/strategies")
-    assert resp.status_code == 200, resp.text
+    assert resp.status_code == 200, resp.text  # nosec B101
 
 
 async def test_health_is_public(client):
     resp = await client.get("/v1/evidence/health")
-    assert resp.status_code == 200, resp.text
+    assert resp.status_code == 200, resp.text  # nosec B101
 
 
 async def test_scan_requires_auth(client):
@@ -31,9 +31,9 @@ async def test_scan_requires_auth(client):
         files={"evidence": ("test.txt", b"dummy evidence content", "text/plain")},
         data={"strategy_name": "regular_backups"},
     )
-    assert resp.status_code == 401, resp.text
+    assert resp.status_code == 401, resp.text  # nosec B101
 
 
 async def test_download_report_requires_auth(client):
     resp = await client.get("/v1/evidence/reports/nonexistent.pdf")
-    assert resp.status_code == 401, resp.text
+    assert resp.status_code == 401, resp.text  # nosec B101
