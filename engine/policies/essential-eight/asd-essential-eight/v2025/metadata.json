@@ -238,6 +238,102 @@
         "User.Read.All"
       ],
       "notes": "Research basis: 26T1-SEC-EG-002 and 26T1-SEC-EG-004."
+    },
+    {
+      "control_id": "E8-POS-0",
+      "title": "No operating system patching controls implemented (ML0 baseline)",
+      "description": "ML0 represents an organisation that has not deployed operating system patching controls via Intune.",
+      "severity": "critical",
+      "service": "Intune",
+      "maturity_level": "ML0",
+      "is_manual": false,
+      "benchmark_audit_type": "Inferred",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "ML0 is inferred from the absence of ML1 policies."
+    },
+    {
+      "control_id": "E8-POS-1.1",
+      "title": "Operating system patches applied within the required timeframe",
+      "description": "Patches for operating systems are applied within two weeks of release on internet-facing and other high-risk systems. Assessed from Intune Windows Update for Business ring configuration, using the weakest ring.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.windows_update_config",
+      "policy_file": "e8_pos_1_1_os_patch_timeframe.rego",
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Threshold of 14 days derived from the ASD ML1 two-week ceiling and Microsoft's slowest reference ring (10 + 2 + 2). Policy logic verified against OPA 1.13.1; collector not yet run against a live tenant. Research basis: 26T2-SEC-KS-001."
+    },
+    {
+      "control_id": "E8-POS-1.2",
+      "title": "Unsupported operating systems replaced",
+      "description": "Operating systems that are no longer supported by vendors are replaced.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementManagedDevices.Read.All"
+      ],
+      "notes": "Requires managed device OS version inventory, not update ring configuration. Separate collector."
+    },
+    {
+      "control_id": "E8-POS-1.3",
+      "title": "Vulnerability scanning performed at required frequency",
+      "description": "A vulnerability scanner with an up-to-date vulnerability database is used to identify missing patches for operating systems.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": true,
+      "benchmark_audit_type": "Manual",
+      "automation_status": "manual",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "Scanner presence and scan cadence are not exposed by Intune configuration. Manual evidence required."
+    },
+    {
+      "control_id": "E8-POS-2.1",
+      "title": "Operating system patches applied within shortened ML2 timeframe",
+      "description": "Patches for operating systems are applied within two weeks of release, or within 48 hours if an exploit exists.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML2",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Reuses the E8-POS-1.1 collector with a shorter threshold. The 48-hour exploit condition is not derivable from configuration alone."
+    },
+    {
+      "control_id": "E8-POS-3.1",
+      "title": "Driver and firmware patches applied within required timeframe",
+      "description": "Patches for drivers and firmware are applied within the required timeframe.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML3",
+      "is_manual": true,
+      "benchmark_audit_type": "Manual",
+      "automation_status": "manual",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "Driver and firmware update state is not exposed via Windows Update for Business configuration profiles."
     }
   ]
 }
