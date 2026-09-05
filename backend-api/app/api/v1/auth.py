@@ -8,8 +8,11 @@ from fastapi_users import exceptions
 from fastapi.responses import RedirectResponse
 from httpx_oauth.clients.google import GoogleOAuth2
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import get_settings
 from app.core.users import auth_backend, fastapi_users, get_jwt_strategy, get_user_manager
+from app.db.session import get_async_session
 from app.schemas.user import UserRead, UserCreate, UserRegister, UserUpdate
 from app.core.auth import get_current_user
 from app.models.user import User
@@ -44,29 +47,21 @@ async def read_users_me(user: User = Depends(get_current_user)):
 async def update_users_me(
     user_update: UserUpdate,
     user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Update current authenticated user's profile information."""
-    from app.db.session import get_async_session
-
-    async for session in get_async_session():
-        db_user = await session.get(User, user.id)
-
-        if db_user is None:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        if user_update.first_name is not None:
-            db_user.first_name = user_update.first_name
-
-        if user_update.last_name is not None:
-            db_user.last_name = user_update.last_name
-
-        if user_update.organization_name is not None:
-            db_user.organization_name = user_update.organization_name
-
-        await session.commit()
-        await session.refresh(db_user)
-
-        return db_user
+    db_user = await db.get(User, user.id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user_update.first_name is not None:
+        db_user.first_name = user_update.first_name
+    if user_update.last_name is not None:
+        db_user.last_name = user_update.last_name
+    if user_update.organization_name is not None:
+        db_user.organization_name = user_update.organization_name
+    await db.commit()
+    await db.refresh(db_user)
+    return db_user
 
 
 # Change password endpoint
@@ -81,36 +76,22 @@ class PasswordChange(BaseModel):
 async def change_password(
     password_data: PasswordChange,
     user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+    user_manager=Depends(get_user_manager),
 ):
     """Change current user's password."""
-    from app.db.session import get_async_session
-    from app.core.users import get_user_manager
-
-    async for session in get_async_session():
-        db_user = await session.get(User, user.id)
-
-        if db_user is None:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        async for user_manager in get_user_manager(session):
-            verified, _ = user_manager.password_helper.verify_and_update(
-                password_data.current_password,
-                db_user.hashed_password,
-            )
-
-            if not verified:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Current password is incorrect",
-                )
-
-            db_user.hashed_password = user_manager.password_helper.hash(
-                password_data.new_password
-            )
-
-            await session.commit()
-
-            return {"message": "Password changed successfully"}
+    db_user = await db.get(User, user.id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    verified, _ = user_manager.password_helper.verify_and_update(
+        password_data.current_password,
+        db_user.hashed_password,
+    )
+    if not verified:
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    db_user.hashed_password = user_manager.password_helper.hash(password_data.new_password)
+    await db.commit()
+    return {"message": "Password changed successfully"}
 
 
 # Include users router
