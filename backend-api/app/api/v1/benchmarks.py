@@ -8,7 +8,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.auth import get_current_user
 from app.models.user import User
-from app.schemas.benchmark import BenchmarkRead, ControlRead
+from app.schemas.benchmark import (
+    AuditReadinessSummary,
+    BenchmarkRead,
+    ControlRead,
+)
+from app.services.audit_readiness import (
+    list_audit_readiness_gaps,
+    summarise_audit_readiness,
+)
 from app.services.benchmark_reader import get_file_reader
 
 router = APIRouter(prefix="/benchmarks", tags=["Benchmarks"])
@@ -72,6 +80,47 @@ async def get_benchmark(
         release_date=data.get("release_date"),
         source_url=data.get("source_url"),
         control_count=len(controls),
+    )
+
+
+@router.get(
+    "/{framework}/{slug}/{version}/audit-readiness",
+    response_model=AuditReadinessSummary,
+)
+async def get_audit_readiness(
+    framework: str,
+    slug: str,
+    version: str,
+    current_user: User = Depends(get_current_user),
+) -> AuditReadinessSummary:
+    """Return benchmark-level audit readiness and outstanding control gaps.
+
+    This endpoint evaluates readiness from benchmark metadata only. Controls
+    marked ``ready`` or ``manual`` are considered audit-ready. Controls that
+    are deferred, blocked, not started, or use an unknown automation status
+    are returned as gaps so callers can see what still needs attention.
+    """
+    file_reader = get_file_reader()
+
+    try:
+        data = file_reader.get_benchmark_metadata(framework, slug, version)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Benchmark {framework}/{slug}/{version} not found",
+        )
+
+    controls = data.get("controls", [])
+    summary = summarise_audit_readiness(controls)
+    gaps = list_audit_readiness_gaps(controls)
+
+    return AuditReadinessSummary(
+        framework=data.get("framework", framework),
+        slug=data.get("slug", slug),
+        version=data.get("version", version),
+        benchmark=data.get("benchmark", ""),
+        **summary,
+        gaps=gaps,
     )
 
 
