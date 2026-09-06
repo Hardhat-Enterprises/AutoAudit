@@ -32,3 +32,36 @@ class ControlRead(BaseModel):
     policy_file: str | None = None  # Null for manual controls
     requires_permissions: list[str] | None = None
     notes: str | None = None  # Blockers, special considerations
+
+
+class AuditReadinessGap(BaseModel):
+    """A benchmark control that still needs work before audit execution."""
+
+    control_id: str
+    title: str
+    automation_status: str
+    severity: str | None = None
+    service: str | None = None
+    requires_permissions: list[str] | None = None
+    notes: str | None = None
+
+
+class AuditReadinessSummary(BaseModel):
+    """Benchmark-level audit readiness summary."""
+
+    framework: str
+    slug: str
+    version: str
+    benchmark: str
+    total_controls: int
+    audit_ready_controls: int
+    gap_controls: int
+    ready_controls: int
+    manual_controls: int
+    deferred_controls: int
+    blocked_controls: int
+    not_started_controls: int
+    unknown_controls: int
+    readiness_percentage: float
+    status: str
+    gaps: list[AuditReadinessGap]
