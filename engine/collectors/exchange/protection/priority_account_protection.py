@@ -1,7 +1,7 @@
 """Priority account protection collector.
 
 CIS Microsoft 365 Foundations Benchmark Controls:
-    v6.0.0: 2.4.1, 2.4.2
+    v6.0.0: 2.4.1
 
 Connection Method: Exchange Online PowerShell (via Docker container)
 Authentication: Client secret via MSAL -> access token passed to -AccessToken parameter
@@ -19,7 +19,9 @@ class PriorityAccountProtectionDataCollector(BasePowerShellCollector):
     """Collects priority account protection configuration for CIS compliance evaluation.
 
     This collector retrieves the tenant-wide Priority account protection toggle,
-    and the list of individual accounts tagged as priority (VIP) accounts.
+    and the number of individual accounts tagged as priority (VIP) accounts.
+
+    This collector is deferred, pending implementation of Connect-IPPSSession functionality."
     """
 
     async def collect(self, client: PowerShellClient) -> dict[str, Any]:
@@ -52,3 +54,10 @@ class PriorityAccountProtectionDataCollector(BasePowerShellCollector):
             "priority_accounts": accounts,
             "total_priority_accounts": len(accounts),
         }
+
+    "Note: To satisfy the third step of the 2.4.1 audit, "
+    "we need to evaluate alert policies enabled for VIP accounts."
+    "This cannot be done without Connect-IPPSSession functionality."
+    "Once Connect-IPPSSession has been implemented, this collector can be completed."
+    "It will need to access the configured alert policies for each of the accounts listed"
+    "in the 'accounts' dict that is collected with GetUser."

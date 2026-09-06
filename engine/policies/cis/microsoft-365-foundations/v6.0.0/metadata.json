@@ -475,17 +475,17 @@
     {
       "control_id": "2.4.1",
       "title": "Ensure Priority account protection is enabled and configured",
-      "description": "Enable and configure priority account protection.",
+      "description": "Enable and configure priority account protection for at least one user account.",
       "severity": "medium",
       "service": "Defender",
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "blocked",
       "data_collector_id": "exchange.protection.priority_account_protection",
       "policy_file": null,
       "requires_permissions": ["Exchange.Manage"],
-      "notes": "Need Priority Account Protection collector"
+      "notes": "IPPSSession requires certificate auth"
     },
     {
       "control_id": "2.4.2",
