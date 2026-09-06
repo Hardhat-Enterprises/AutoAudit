@@ -1,7 +1,7 @@
 """add control verification template
  
 Revision ID: 8a7b91ea95d9
-Revises: j1k2l3m4n567
+Revises: 2899a0e678b6
 Create Date: 2026-05-08 09:22:25.327975
  
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
  
 # revision identifiers, used by Alembic.
 revision: str = '8a7b91ea95d9'
-down_revision: Union[str, Sequence[str], None] = 'j1k2l3m4n567'
+down_revision: Union[str, Sequence[str], None] = '2899a0e678b6'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
  
