@@ -1,79 +1,47 @@
-"""Integration tests for manual verification endpoints."""
+"""Unit/API tests for manual verification endpoints (no live server required)."""
 
-import os
+from unittest.mock import AsyncMock, MagicMock
 
-import httpx
+import pytest
+from httpx import AsyncClient
 
-BASE = "http://localhost:8000/v1"
-
-
-def token():
-    r = httpx.post(
-        f"{BASE}/auth/login",
-        data={
-            "username": os.getenv(
-                "AUTOAUDIT_TEST_USERNAME",
-                "admin@example.com",
-            ),
-            "password": os.getenv(
-                "AUTOAUDIT_TEST_PASSWORD",
-                "admin",  # nosec B105
-            ),
-        },
-        timeout=10,
-    )
-
-    assert r.status_code == 200, r.text  # nosec B101
-
-    return r.json()["access_token"]
+from app.models.user import User
 
 
-def auth(token_value):
-    return {
-        "Authorization": f"Bearer {token_value}"
-    }
+def _execute_returning(single=None) -> MagicMock:
+    result = MagicMock()
+    scalars = MagicMock()
+    scalars.all.return_value = []
+    scalars.one_or_none.return_value = single
+    result.scalars.return_value = scalars
+    result.unique.return_value = result
+    result.scalar_one_or_none.return_value = single
+    return result
 
 
-def test_get_nonexistent_returns_404():
-    t = token()
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("method", "path", "json_body"),
+    [
+        ("get", "/v1/manual-verification/99999", None),
+        ("patch", "/v1/manual-verification/99999", {"comment": "x"}),
+        ("delete", "/v1/manual-verification/99999", None),
+        ("get", "/v1/manual-verification/by-scan-result/99999", None),
+    ],
+)
+async def test_nonexistent_returns_404(
+    client_factory,
+    mock_db_session: AsyncMock,
+    viewer_user: User,
+    method: str,
+    path: str,
+    json_body: dict | None,
+) -> None:
+    mock_db_session.execute = AsyncMock(return_value=_execute_returning(single=None))
 
-    r = httpx.get(
-        f"{BASE}/manual-verification/99999",
-        headers=auth(t),
-    )
+    client: AsyncClient = client_factory(viewer_user)
+    async with client:
+        kwargs = {"json": json_body} if json_body is not None else {}
+        response = await getattr(client, method)(path, **kwargs)
 
-    assert r.status_code == 404, r.text  # nosec B101
-
-
-def test_patch_nonexistent_returns_404():
-    t = token()
-
-    r = httpx.patch(
-        f"{BASE}/manual-verification/99999",
-        json={"comment": "x"},
-        headers=auth(t),
-    )
-
-    assert r.status_code == 404, r.text  # nosec B101
-
-
-def test_delete_nonexistent_returns_404():
-    t = token()
-
-    r = httpx.delete(
-        f"{BASE}/manual-verification/99999",
-        headers=auth(t),
-    )
-
-    assert r.status_code == 404, r.text  # nosec B101
-
-
-def test_get_by_scan_result_nonexistent_returns_404():
-    t = token()
-
-    r = httpx.get(
-        f"{BASE}/manual-verification/by-scan-result/99999",
-        headers=auth(t),
-    )
-
-    assert r.status_code == 404, r.text  # nosec B101
+    assert response.status_code == 404
