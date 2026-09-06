@@ -24,8 +24,8 @@ class BenchmarkFileReader:
     def __init__(self, policies_dir: Path | str | None = None):
         if policies_dir is None:
             settings = get_settings()
-            policies_dir = getattr(settings, "POLICIES_DIR", "/app/policies")
-        self.policies_dir = Path(policies_dir or "/app/policies")
+            policies_dir = settings.POLICIES_DIR or "/app/policies"
+        self.policies_dir = Path(policies_dir)
 
     def get_benchmark_path(self, framework: str, slug: str, version: str) -> Path:
         """Get the path to a benchmark's directory."""

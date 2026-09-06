@@ -41,7 +41,7 @@ Automated GCP compliance assessment tool built with FastAPI. This API provides a
    - API Documentation: http://localhost:8000/docs | http://localhost:8000/redoc
    - Root Endpoint: http://localhost:8000/
 
-## Running tests with coverage
+## Running tests
 
 Install test and coverage tooling (does not require the heavy `evidence` extra):
 
@@ -55,6 +55,10 @@ Run the test suite:
 uv run pytest tests/ -q
 ```
 
+Use `-v` instead of `-q` for more detail. CI runs the same command on changes under `backend-api/**`.
+
+### Running tests with coverage
+
 Measure line coverage for `app/` with a terminal summary (including missing lines) and an HTML report:
 
 ```bash
@@ -66,6 +70,7 @@ uv run pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
 - Threshold: `[tool.coverage.report] fail_under = 70` in `pyproject.toml` fails the run if `app/` coverage drops below 70% (baseline after expanded 26T2-BE-PG-003 tests; measured ~79% with branch coverage).
 
 Coverage artifacts (`htmlcov/`, `.coverage`, `coverage.xml`) are gitignored.
+
 ## 🐳 Docker Startup and Database Migrations
 
 When running the backend using the project's Docker configuration, the container starts through `backend-api/entrypoint.sh`.
@@ -162,3 +167,6 @@ If we want to add `authorization` into the mix (verifying a user has not only lo
       # Any users that don't have this role will get a HTTP 403 Forbidden in response
       return {"message": "Yes, you have admin."}
 ```
+
+#This change was made to test grype scans.
+<!-- Grype CI baseline test -->

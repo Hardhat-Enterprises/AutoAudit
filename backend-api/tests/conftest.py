@@ -15,8 +15,10 @@ from app.api.v1 import (
     auth,
     benchmarks,
     contact,
+    m365_connections,
     manual_verification,
     platforms,
+    scans,
     settings,
     test as test_routes,
 )
@@ -26,7 +28,9 @@ from app.models.contact import ContactSubmission, SubmissionHistory, SubmissionN
 from app.models.user import Role, User
 from app.models.user_settings import UserSettings
 
-# Minimal app: mount lightweight routers (avoid evidence/OCR import chain).
+AUDITOR_FORBIDDEN_DETAIL = "Auditor or Admin access required"
+
+# Minimal app: mount routers needed by the suite (avoid evidence/OCR import chain).
 test_app = FastAPI()
 test_app.include_router(test_routes.router, prefix="/v1")
 test_app.include_router(auth.router, prefix="/v1")
@@ -35,10 +39,11 @@ test_app.include_router(contact.router, prefix="/v1")
 test_app.include_router(platforms.router, prefix="/v1")
 test_app.include_router(benchmarks.router, prefix="/v1")
 test_app.include_router(manual_verification.router, prefix="/v1")
+test_app.include_router(scans.router, prefix="/v1")
+test_app.include_router(m365_connections.router, prefix="/v1")
 
 
 def make_user(*, role: str, user_id: int = 1) -> User:
-    """Build an in-memory User for dependency overrides (no DB)."""
     user = User()
     user.id = user_id
     user.email = f"{role}-test@example.com"
