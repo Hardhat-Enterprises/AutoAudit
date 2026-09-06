@@ -5,10 +5,12 @@ from app.api.v1 import (
     contact,
     evidence,
     m365_connections,
+    manual_verification,
     platforms,
     scans,
     settings,
     test,
+    verification_templates,
 )
 
 api_router = APIRouter()
@@ -39,3 +41,8 @@ api_router.include_router(contact.router)
 
 # User settings routes
 api_router.include_router(settings.router)
+
+# Manual control verification template routes
+api_router.include_router(verification_templates.router)
+# Manual verification routes
+api_router.include_router(manual_verification.router)
