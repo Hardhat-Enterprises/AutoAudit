@@ -6,7 +6,7 @@ It started as a small internal tool to replace manual PR triage tracking (a spre
 
 ## How it works, in one paragraph
 
-Every PR gets area labels (`area: backend-api`, `area: docs`, etc.) the moment it's opened or updated, based on which top-level folders it touches, plus a size label based on lines/files changed. Separately, a nightly scan tracks how long a PR has been waiting on its author since a maintainer last engaged with it, applying `needs-triage` → `stale` → `needs-decision` → `final-notice` as that wait grows — but only once a maintainer (someone with write/admin access) has actually looked at it, and never while the PR's own author is the only one who's touched it. Nothing here ever takes action beyond labels; every outcome (closing, adopting, marking abandoned) stays a human decision.
+Every PR gets area labels (`area: backend-api`, `area: docs`, etc.) the moment it's opened or updated, based on which top-level folders it touches, plus a size label based on lines/files changed. Separately, an activity scan — triggered instantly on new comments, and as a nightly backstop — tracks whose turn it is to act: `needs-triage` (nobody's looked yet) → `needs-review` (someone responded, ball's back with the reviewer) on one side, and `stale` → `needs-decision` → `final-notice` (waiting on the author, graduating by elapsed time) on the other. Nothing here ever takes action beyond labels; every outcome (closing, adopting, marking abandoned) stays a human decision.
 
 ## Repository layout
 
@@ -22,7 +22,7 @@ Every PR gets area labels (`area: backend-api`, `area: docs`, etc.) the moment i
     pr-labels-reset.js           # bulk-clears managed labels from chosen PRs (the reset tool)
   workflows/
     pr.area-labeler.yml          # runs on every PR open/push: area + size + first-contribution
-    ops.pr-activity-labeler.yml  # nightly cron + manual: stale/needs-decision/final-notice/needs-triage
+    ops.pr-activity-labeler.yml  # instant on new comments + nightly backstop + manual: needs-triage/needs-review/stale/needs-decision/final-notice
     pr.labels-backfill.yml       # manual, one-shot: applies every label type to all currently-open PRs
     ops.label-sync.yml           # on push to labels.yml, or manual: creates/updates labels from the catalog
     ops.pr-labels-reset.yml      # manual "clean slate" tool: bulk-clears managed labels from chosen PRs
@@ -42,7 +42,7 @@ tools/pr-labeler/
 2. Merge this to your default branch. Merging alone triggers `ops.label-sync.yml` (it watches `.github/labels.yml`) — check the Actions tab and confirm the full label catalog now exists under Issues → Labels. If it doesn't fire automatically, run it manually: **Actions → Sync Labels → Run workflow**.
 3. Run **Actions → Backfill All PR Labels → Run workflow** once. This applies every label type — area, size, multi, first-contribution, and activity status — to every PR that was already open before this system existed.
 
-From there it's automatic: new/updated PRs get area and size labels within seconds, and a nightly scan keeps activity status current on everything else.
+From there it's automatic: new/updated PRs get area and size labels within seconds, and activity status updates instantly on every new comment, with a nightly scan as a backstop for anything time-based (a tier aging from day 6 to day 7 with no new comment, for instance).
 
 ## Recovering from a bad state: PR Labels Reset
 
@@ -72,13 +72,14 @@ The two safety gates — dry-run-by-default, plus the typed confirmation for rea
 | `docker` | Touches a `Dockerfile*`, `docker-compose*.yml`, or `.dockerignore` |
 | `github_actions` | Touches `.github/workflows/**` |
 | `needs-triage` | No maintainer has commented or reviewed yet |
+| `needs-review` | A maintainer engaged before, but the most recent comment/commit came from someone else since — filter on this to see what's waiting on you right now |
 | `stale` | 7+ days since a maintainer's last comment, no author response since |
 | `needs-decision` | 10+ days, same condition |
 | `final-notice` | 14+ days, same condition |
 
 Labels like `abandoned`, `needs-adoption`, `has-conflicts`, and `wontfix` stay fully manual by design — those require a judgment call this system deliberately doesn't make. A PR carrying any of them, or currently in draft, is skipped entirely by the activity scan.
 
-**How the activity clock works**: it only starts once a maintainer (anyone with write/admin permission on the repo) comments, reviews, or pushes to the PR — and critically, the PR's *own author* opening or updating their own PR never counts as that, even if the author happens to hold maintainer permissions themselves. The moment a non-maintainer responds after that, the clock clears and the tier label is removed automatically. A PR nobody has looked at yet stays at `needs-triage` indefinitely rather than aging into `stale` — the policy is about response time after engagement, not time since the PR was opened.
+**How the activity clock works**: it only starts once a maintainer (anyone with write/admin permission on the repo) comments, reviews, or pushes to the PR — and critically, the PR's *own author* opening or updating their own PR never counts as that, even if the author happens to hold maintainer permissions themselves. The moment a non-maintainer responds after that, the clock clears — and if a maintainer had engaged at some point before, the PR gets `needs-review` immediately rather than just going quiet, so a search/filter for "what needs my attention" actually surfaces it. This applies the instant a new comment is posted (not just on the nightly run), since the whole point is to see it right away. A PR nobody has looked at yet stays at `needs-triage` indefinitely rather than aging into `stale` — the policy is about response time after engagement, not time since the PR was opened.
 
 **Size tiers**: if this repo also runs a separate "PR size warning" check based on total lines or file count, it's worth aligning `size/XL`'s trigger condition with that check's threshold, so the two systems agree on what counts as "large" — see the comment above `sizeTier()` in `pr-metadata-labeler.js` for how that's wired up here.
 

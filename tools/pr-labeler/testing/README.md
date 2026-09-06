@@ -15,6 +15,8 @@ Run from either location:
 ```
 Each test creates its own branch (`test-labeler/<test>-<timestamp>`) and an open PR, recording the PR number locally so `cleanup` can find it later. Nothing is deleted automatically until you run `cleanup`, so you can inspect labels in the GitHub UI after any test before tearing it down.
 
+**Note on triggers**: in real use, the activity workflow reacts instantly to new comments (see the main README). The harness instead triggers it manually via `workflow_dispatch` after each action — this makes tests deterministic (a known run to wait on and poll for completion) rather than racing an automatic trigger the script has no handle to watch.
+
 ## Running tests
 
 ```bash
@@ -34,7 +36,7 @@ Each test creates its own branch (`test-labeler/<test>-<timestamp>`) and an open
 | `docker` | Adds a Dockerfile variant | `docker` label applied automatically |
 | `size-shrink` | Adds a large file, then shrinks it drastically | Size label moves *down*, not just up |
 | `size-xlfiles` | Adds 35+ tiny files | Largest size tier applied despite a low total line count |
-| `triage` | Opens a PR, runs the activity scan, then comments as the author | `needs-triage` appears, then **persists** through the self-comment |
+| `triage` | Opens a PR, runs the activity scan, then comments as the author | `needs-triage` appears, then **persists** through the self-comment. First step of a longer chain — see below |
 | `draft` | Opens a **draft** PR | No activity labels applied at all |
 | `exempt` | Adds a manual "no automated action" label, forces the clock to near-zero thresholds | Tier labels stay off despite the time condition being met |
 | `reset` | Adds a manual label alongside automated ones, runs the reset tool in dry-run then for real | Dry run changes nothing; real run clears managed labels but preserves the manual one |
@@ -44,11 +46,15 @@ Each test creates its own branch (`test-labeler/<test>-<timestamp>`) and an open
 
 Two scenarios genuinely require two distinct GitHub identities and can't be faked by a script — a comment from the same account that opened the PR is always a self-comment, and self-comments never count as maintainer engagement (by design, see the main README).
 
-**`triage` → `verify-triage-cleared <PR#>`**: after running `triage`, comment on the printed PR number from your *second* account, then run:
+**`triage` → `verify-triage-cleared <PR#>` → `verify-needs-review <PR#>` → `verify-needs-review-cleared <PR#>`**: a chain of four commands walking one PR through the full state machine. After running `triage`, comment on the printed PR number from your *second* account, then run each step in order:
 ```bash
-./run-tests.sh verify-triage-cleared 42
+./run-tests.sh verify-triage-cleared 42       # confirms needs-triage clears once a maintainer engages
+./run-tests.sh verify-needs-review 42         # posts an author response automatically, confirms needs-review appears
 ```
-This confirms an outside maintainer's comment clears `needs-triage`.
+`verify-needs-review` needs no second account — it posts the author's response itself, since the harness's own account already *is* the PR's author at this point. The last step does, though: comment on the PR again from your second account, then:
+```bash
+./run-tests.sh verify-needs-review-cleared 42 # confirms needs-review clears once the maintainer re-engages
+```
 
 **`tier-fast`**: tests the full multi-day progression without waiting. It pauses partway through and asks you to comment from your second account before continuing — the harness then forces the clock's thresholds to near-zero (scoped to only this one PR) so the tier label jumps ahead in seconds instead of days:
 ```bash

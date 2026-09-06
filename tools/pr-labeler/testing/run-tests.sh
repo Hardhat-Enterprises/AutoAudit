@@ -3,11 +3,9 @@
 # target repo, on a clean working tree, with `gh` authenticated as a
 # maintainer (write/admin) account. See ../TESTING.md for the full guide.
 #
-# Usage:
-#   ./testing/run-tests.sh <test-name>   # run one test
-#   ./testing/run-tests.sh all           # run every automated test
-#   ./testing/run-tests.sh cleanup       # close/delete every branch+PR this script created
-#   ./testing/run-tests.sh list          # show test names
+# Usage (from either location — see testing/README.md):
+#   ./run-tests.sh <test-name>                          # from inside tools/pr-labeler/testing/
+#   ./tools/pr-labeler/testing/run-tests.sh <test-name>  # from the repo root
 #
 # Each test creates its own branch (prefixed test-labeler/) and PR, leaves
 # them open (labels are easiest to inspect that way), and records the PR
@@ -246,17 +244,53 @@ test_triage_and_response() {
   run_dispatch_and_wait "ops.pr-activity-labeler.yml"
   has_label "$pr" "needs-triage" && pass "needs-triage persists after author's own comment" || fail "needs-triage incorrectly cleared by self-comment"
 
-  echo "  NOTE: to test that an outside maintainer comment clears needs-triage,"
-  echo "  comment on PR #$pr from a different maintainer account, then re-run:"
-  echo "    ./testing/run-tests.sh verify-triage-cleared $pr"
+  echo "  NOTE: to test that an outside maintainer comment clears needs-triage"
+  echo "  (and continue into the needs-review checks), comment on PR #$pr from"
+  echo "  a different maintainer account, then run:"
+  echo "    ./run-tests.sh verify-triage-cleared $pr"
   git checkout "$BASE_BRANCH" --quiet
 }
 
 verify_triage_cleared() {
   local pr="$1"
   log "Re-checking PR #$pr after external maintainer comment"
-  run_dispatch_and_wait "ops.pr-activity-labeler.yml"
-  has_label "$pr" "needs-triage" && fail "needs-triage still present after outside maintainer comment" || pass "needs-triage correctly cleared"
+  run_dispatch_and_wait "ops.pr-activity-labeler.yml" -f pr_number="$pr"
+  if has_label "$pr" "needs-triage"; then
+    fail "needs-triage still present after outside maintainer comment"
+  else
+    pass "needs-triage correctly cleared"
+  fi
+  echo "  Next: this continues automatically — run:"
+  echo "    ./run-tests.sh verify-needs-review $pr"
+}
+
+verify_needs_review() {
+  # Unlike the maintainer-comment steps, this one needs no second account —
+  # the script's own account IS the PR's author, so its own comment here
+  # is a genuine "author responds" event.
+  local pr="$1"
+  log "Posting an author response on PR #$pr and checking for needs-review"
+  gh pr comment "$pr" --body "author response to maintainer comment (automated test)"
+  run_dispatch_and_wait "ops.pr-activity-labeler.yml" -f pr_number="$pr"
+  if has_label "$pr" "needs-review"; then
+    pass "needs-review applied after author responded to a maintainer comment"
+  else
+    fail "needs-review missing after author response — check activity-labeler.js"
+  fi
+  echo "  To confirm needs-review clears when a maintainer re-engages:"
+  echo "  comment on PR #$pr from your OTHER maintainer account again, then run:"
+  echo "    ./run-tests.sh verify-needs-review-cleared $pr"
+}
+
+verify_needs_review_cleared() {
+  local pr="$1"
+  log "Re-checking PR #$pr after a second outside maintainer comment"
+  run_dispatch_and_wait "ops.pr-activity-labeler.yml" -f pr_number="$pr"
+  if has_label "$pr" "needs-review"; then
+    fail "needs-review still present after the maintainer re-engaged"
+  else
+    pass "needs-review correctly cleared — full state-machine cycle verified"
+  fi
 }
 
 test_draft_immunity() {
@@ -428,6 +462,8 @@ list_tests() {
   echo "  sync                    - label sync regression check"
   echo "  all                     - run everything above"
   echo "  verify-triage-cleared N - re-check PR #N after an outside comment"
+  echo "  verify-needs-review N  - post an author response and check for needs-review"
+  echo "  verify-needs-review-cleared N - re-check PR #N after a second outside comment"
   echo "  cleanup                 - close every PR + delete every branch this script made"
 }
 
@@ -447,6 +483,8 @@ main() {
     reset) require_clean_tree; test_reset_tool ;;
     sync) require_clean_tree; test_sync_regression ;;
     verify-triage-cleared) verify_triage_cleared "${2:?PR number required}" ;;
+    verify-needs-review) verify_needs_review "${2:?PR number required}" ;;
+    verify-needs-review-cleared) verify_needs_review_cleared "${2:?PR number required}" ;;
     all)
       require_clean_tree
       test_area; test_multi_and_shrink; test_root_catchall; test_docker_label

@@ -1,25 +1,29 @@
-// Implements the 7/10/14-day rule as a "waiting on author" clock:
+// Implements the 7/10/14-day rule as a "waiting on author" clock, plus a
+// symmetric "waiting on maintainer" signal:
 //
 //   - The clock STARTS at the timestamp of the most recent maintainer
 //     (write/admin permission) comment, review, or commit on the PR.
 //   - The clock RESETS (clears) the moment the PR author or any other
 //     non-maintainer contributor comments or pushes a commit *after*
-//     that maintainer activity — they've responded.
+//     that maintainer activity — they've responded. When this happens
+//     after at least one prior maintainer engagement, the PR gets
+//     `needs-review` immediately (no day threshold — a reviewer filtering
+//     for "needs my attention" should see it the moment it happens).
 //   - If a maintainer has never engaged with the PR at all, it gets
-//     `needs-triage` instead of a stale-tier label — nobody has looked
-//     at it yet, so "waiting on author" doesn't apply.
+//     `needs-triage` instead — nobody has looked at it yet, so neither
+//     "waiting on author" nor "waiting on maintainer" applies.
 //   - Bots are ignored entirely (dependabot, github-actions[bot], etc.)
 //   - Draft PRs and PRs already carrying a manual outcome label
 //     (abandoned / needs-adoption / has-conflicts / wontfix) are skipped
 //     — a human has already made the call, the bot shouldn't relitigate it.
 //
-// Thresholds (days since clock start):
-//   >= 14  -> final-notice   (remove stale, needs-decision)
-//   >= 10  -> needs-decision (remove stale, final-notice)
-//   >= 7   -> stale          (remove needs-decision, final-notice)
-//   <  7   -> no tier label  (remove all three if present)
+// The four states below are mutually exclusive — a PR carries at most one:
+//   needs-triage    -> no maintainer has ever engaged
+//   needs-review    -> maintainer engaged, then someone else had the last word
+//   (none)          -> maintainer engaged, waiting on author, under 7 days
+//   stale / needs-decision / final-notice -> waiting on author, 7/10/14+ days
 
-const { TIER_LABELS } = require("./label-taxonomy.js");
+const { STATUS_LABELS } = require("./label-taxonomy.js");
 const EXEMPT_LABELS = ["abandoned", "needs-adoption", "has-conflicts", "wontfix"];
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -139,39 +143,39 @@ module.exports = async ({ github, context, core }) => {
       }
     }
 
-    const currentTierLabels = labelNames.filter((n) => TIER_LABELS.includes(n));
+    const currentStatusLabel = labelNames.find((n) => STATUS_LABELS.includes(n)) ?? null;
 
+    let targetLabel;
     if (!anyMaintainerEver) {
-      // Nobody has reviewed this yet.
-      if (!labelNames.includes("needs-triage")) {
-        await github.rest.issues.addLabels({ owner, repo, issue_number: pr_number, labels: ["needs-triage"] });
-      }
-      for (const l of currentTierLabels) {
-        await github.rest.issues.removeLabel({ owner, repo, issue_number: pr_number, name: l }).catch(() => {});
-      }
-      continue;
-    }
-
-    if (labelNames.includes("needs-triage")) {
-      await github.rest.issues.removeLabel({ owner, repo, issue_number: pr_number, name: "needs-triage" }).catch(() => {});
-    }
-
-    let targetLabel = null;
-    if (clockStart) {
+      // Nobody has reviewed this yet — waiting-on-author tiers don't apply.
+      targetLabel = "needs-triage";
+    } else if (clockStart) {
+      // Most recent engagement was a maintainer's — waiting on the author.
+      // Only the passage of time itself makes this actionable, so nothing
+      // is applied until a threshold is actually crossed.
       const days = (Date.now() - new Date(clockStart).getTime()) / MS_PER_DAY;
       if (days >= DAYS_FINAL_NOTICE) targetLabel = "final-notice";
       else if (days >= DAYS_NEEDS_DECISION) targetLabel = "needs-decision";
       else if (days >= DAYS_STALE) targetLabel = "stale";
+      else targetLabel = null;
+    } else {
+      // A maintainer engaged at some point, but the most recent event was
+      // someone else (the author, or another non-maintainer) responding
+      // after that — the ball is back in the maintainer's court. Unlike
+      // the waiting-on-author tiers, this is actionable immediately: a
+      // reviewer filtering by label should see it the moment it happens,
+      // not after some elapsed-time threshold.
+      targetLabel = "needs-review";
     }
 
-    core.info(`#${pr_number}: clockStart=${clockStart} -> ${targetLabel ?? "none"}`);
+    core.info(`#${pr_number}: clockStart=${clockStart}, anyMaintainerEver=${anyMaintainerEver} -> ${targetLabel ?? "none"}`);
 
-    for (const l of TIER_LABELS) {
-      const has = labelNames.includes(l);
-      if (l === targetLabel && !has) {
-        await github.rest.issues.addLabels({ owner, repo, issue_number: pr_number, labels: [l] });
-      } else if (l !== targetLabel && has) {
-        await github.rest.issues.removeLabel({ owner, repo, issue_number: pr_number, name: l }).catch(() => {});
+    if (currentStatusLabel !== targetLabel) {
+      if (currentStatusLabel) {
+        await github.rest.issues.removeLabel({ owner, repo, issue_number: pr_number, name: currentStatusLabel }).catch(() => {});
+      }
+      if (targetLabel) {
+        await github.rest.issues.addLabels({ owner, repo, issue_number: pr_number, labels: [targetLabel] });
       }
     }
   }

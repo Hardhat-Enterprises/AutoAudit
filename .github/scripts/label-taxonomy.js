@@ -12,10 +12,15 @@ const SIZE_PREFIX = "size/";
 const TIER_LABELS = ["stale", "needs-decision", "final-notice"];
 
 // Every exact (non-prefixed) label name this system can apply on its own
-const MANAGED_EXACT_LABELS = ["needs-triage", "first-contribution", "docker", "github_actions", ...TIER_LABELS];
+const MANAGED_EXACT_LABELS = ["needs-triage", "needs-review", "first-contribution", "docker", "github_actions", ...TIER_LABELS];
+
+// The activity-clock states are mutually exclusive — a PR carries at most
+// one of these at a time. Used by activity-labeler.js to sync labels as a
+// single state machine instead of separate add/remove blocks per label.
+const STATUS_LABELS = ["needs-triage", "needs-review", ...TIER_LABELS];
 
 function isManagedLabel(name) {
   return name.startsWith(AREA_PREFIX) || name.startsWith(SIZE_PREFIX) || MANAGED_EXACT_LABELS.includes(name);
 }
 
-module.exports = { AREA_PREFIX, SIZE_PREFIX, TIER_LABELS, MANAGED_EXACT_LABELS, isManagedLabel };
+module.exports = { AREA_PREFIX, SIZE_PREFIX, TIER_LABELS, MANAGED_EXACT_LABELS, STATUS_LABELS, isManagedLabel };

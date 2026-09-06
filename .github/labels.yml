@@ -112,6 +112,9 @@
 - name: needs-triage
   color: "fef2c0"
   description: No reviewer has looked at this PR yet
+- name: needs-review
+  color: "0e8a16"
+  description: Author (or someone else) responded since the reviewer's last comment — needs another look
 - name: needs-decision
   color: "d93f0b"
   description: 10-14 days no activity since last reviewer comment — decide outcome

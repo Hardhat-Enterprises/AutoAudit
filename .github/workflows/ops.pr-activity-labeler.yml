@@ -2,7 +2,9 @@ name: PR Activity Labeler
 
 on:
   schedule:
-    - cron: "0 3 * * *" # daily at 03:00 UTC — adjust to your timezone/preference
+    - cron: "0 3 * * *" # daily at 03:00 UTC — adjust to your timezone/preference; still needed as a backstop even with the comment trigger below (e.g. tier labels ageing from day 6 to day 7 with no new comment)
+  issue_comment:
+    types: [created] # near-real-time: relabel the instant someone comments, so needs-review (and clearing of stale/etc.) doesn't wait for the nightly run
   workflow_dispatch: # manual "Run workflow" button — also serves as backfill for all open PRs
     inputs:
       stale_after_days:
@@ -25,12 +27,22 @@ permissions:
 
 jobs:
   activity-scan:
+    # issue_comment fires for comments on plain issues too, not just PRs —
+    # skip the run entirely if this comment wasn't on a PR. `github.event.issue`
+    # doesn't exist at all on schedule/workflow_dispatch triggers, so this
+    # condition evaluates safely to true (short-circuits before the null
+    # property access) for both of those.
+    if: github.event_name != 'issue_comment' || github.event.issue.pull_request
     runs-on: ubuntu-latest
     env:
       STALE_AFTER_DAYS: ${{ inputs.stale_after_days }}
       NEEDS_DECISION_AFTER_DAYS: ${{ inputs.needs_decision_after_days }}
       FINAL_NOTICE_AFTER_DAYS: ${{ inputs.final_notice_after_days }}
-      ONLY_PR_NUMBER: ${{ inputs.pr_number }}
+      # Comment-triggered runs are scoped to just that one PR — cheap and
+      # instant, versus rescanning every open PR on every single comment.
+      # Scheduled/manual runs fall back to inputs.pr_number (blank by
+      # default, meaning "scan everything").
+      ONLY_PR_NUMBER: ${{ github.event_name == 'issue_comment' && github.event.issue.number || inputs.pr_number }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/github-script@v9
