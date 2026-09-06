@@ -1,11 +1,17 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.logging import setup_logging
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.errors import not_found_handler, NotFound
+from app.db.session import get_async_session
 from app.schemas.health import ReadinessResponse
+
 settings = get_settings()
 
 
@@ -26,14 +32,18 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
     app.include_router(api_router, prefix=settings.API_PREFIX)
 
-    # error handler
+    # Error handler
     app.add_exception_handler(NotFound, not_found_handler)
 
     @app.get("/")
     def root():
-        return {"status": "ok", "message": "AutoAudit API running"}
+        return {
+            "status": "ok",
+            "message": "AutoAudit API running",
+        }
 
     @app.get("/liveness")
     def health_check():
@@ -46,11 +56,27 @@ def create_app() -> FastAPI:
         response_model=ReadinessResponse,
         tags=["Health"],
         summary="Check whether the API is ready to serve requests",
+        responses={
+            503: {
+                "model": ReadinessResponse,
+                "description": "Required dependency is unavailable",
+            }
+        },
     )
-    def readiness_check() -> ReadinessResponse:
-        return ReadinessResponse()
+    async def readiness_check(
+        db: AsyncSession = Depends(get_async_session),
+    ):
+        try:
+            await db.execute(text("SELECT 1"))
+        except Exception:
+            return JSONResponse(
+                status_code=503,
+                content={"status": "not_ready"},
+            )
 
+        return ReadinessResponse(status="ready")
 
     return app
+
 
 app = create_app()
