@@ -59,8 +59,9 @@ jobs:
         run: pip install bandit
 
       - name: Run Bandit scan on backend-api
-        # Exclude pytest suites: Bandit B101 flags assert, which is expected in tests.
-        run: bandit -r backend-api -x backend-api/tests -f txt
+        # Exclude pytest suites (B101 assert_used) and local venvs.
+        # backend-api/.bandit also sets exclude=tests,.venv,venv for local runs.
+        run: bandit -r backend-api -x backend-api/tests,backend-api/.venv,backend-api/venv -f txt
 
   run-lint:
     name: Linting Code
