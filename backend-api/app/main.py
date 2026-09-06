@@ -1,11 +1,10 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import NotFound, not_found_handler
 from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 settings = get_settings()
 
