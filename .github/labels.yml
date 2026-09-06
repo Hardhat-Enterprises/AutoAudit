@@ -128,16 +128,16 @@
   description: "< 10 lines changed"
 - name: size/S
   color: "bfd4f2"
-  description: "< 100 lines changed"
+  description: "10-99 lines changed"
 - name: size/M
   color: "9fc4ee"
-  description: "< 500 lines changed"
+  description: "100-249 lines changed"
 - name: size/L
   color: "7aa9e0"
-  description: "< 1000 lines changed"
+  description: "250-500 lines changed"
 - name: size/XL
   color: "5590d6"
-  description: ">= 1000 lines changed"
+  description: "> 500 lines changed, or > 30 files changed"
 - name: first-contribution
   color: "7057ff"
   description: Author's first PR to this repo

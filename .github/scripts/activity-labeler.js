@@ -12,6 +12,11 @@
 //   - If a maintainer has never engaged with the PR at all, it gets
 //     `needs-triage` instead — nobody has looked at it yet, so neither
 //     "waiting on author" nor "waiting on maintainer" applies.
+//   - Commits are only ever trusted as an event when their (git-level)
+//     author matches the PR's own declared author — never as evidence
+//     that anyone else engaged with this specific PR, since commit
+//     authorship can be inherited from elsewhere (rebases, cherry-picks,
+//     applied patches) and isn't reliable proof of who pushed it here.
 //   - Bots are ignored entirely (dependabot, github-actions[bot], etc.)
 //   - Draft PRs and PRs already carrying a manual outcome label
 //     (abandoned / needs-adoption / has-conflicts / wontfix) are skipped
@@ -91,7 +96,20 @@ module.exports = async ({ github, context, core }) => {
       continue;
     }
     if (labelNames.some((n) => EXEMPT_LABELS.includes(n))) {
-      core.info(`#${pr_number}: has manual outcome label, skipping`);
+      // A manual outcome label means a human has already made the call —
+      // don't recompute the clock, but DO clear any status label that was
+      // already sitting on the PR. Otherwise a PR marked has-conflicts
+      // (etc.) keeps showing up in a `stale`/`needs-review`/etc. filter
+      // indefinitely, even though it's no longer in scope for automation.
+      // Scoped strictly to the 5 status labels this script owns — nothing
+      // else on the PR (area/size/manual labels) is touched here.
+      const existingStatus = labelNames.find((n) => STATUS_LABELS.includes(n));
+      if (existingStatus) {
+        core.info(`#${pr_number}: has manual outcome label, clearing stale status label "${existingStatus}"`);
+        await github.rest.issues.removeLabel({ owner, repo, issue_number: pr_number, name: existingStatus }).catch(() => {});
+      } else {
+        core.info(`#${pr_number}: has manual outcome label, skipping`);
+      }
       continue;
     }
 
@@ -115,9 +133,16 @@ module.exports = async ({ github, context, core }) => {
       if (r.submitted_at) events.push({ login: r.user?.login, time: r.submitted_at });
     }
     for (const c of commits) {
+      // c.author (GitHub user) and c.commit.author (git commit metadata,
+      // name/email/date baked into the commit itself) are NOT the same
+      // thing as "who pushed this to this PR". A rebase, cherry-pick, or
+      // applied patch can carry someone else's authorship on a commit
+      // that person never touched in the context of this PR — so this
+      // event is only ever trusted below when it matches the PR's own
+      // declared author (a value GitHub assigns, not git metadata).
       const login = c.author?.login; // null if commit email isn't linked to a GH account
       const time = c.commit?.author?.date;
-      if (login && time) events.push({ login, time });
+      if (login && time) events.push({ login, time, isCommit: true });
     }
 
     events.sort((a, b) => new Date(a.time) - new Date(b.time));
@@ -134,6 +159,13 @@ module.exports = async ({ github, context, core }) => {
       // test PR, or a collaborator pushing their own commits). Only a
       // *different* person with write/admin permission starts the clock.
       const isSelf = ev.login === authorLogin;
+      // A commit "by" someone other than the PR's own author is never
+      // trusted as that person's engagement (see the comment above the
+      // commits loop) — it's simply ignored rather than misread as
+      // maintainer review. It's still fully trusted as a genuine event
+      // when it matches the PR's own author, which is the common case
+      // this is meant to capture (author pushes a fix = a response).
+      if (ev.isCommit && !isSelf) continue;
       const maintainer = !isSelf && (await isMaintainer(ev.login));
       if (maintainer) {
         anyMaintainerEver = true;
