@@ -447,6 +447,11 @@ def main() -> None:
         with open(results_path) as f:
             results = json.load(f)
 
+        if not isinstance(results, list):
+            print(f"ERROR: expected {results_path} to contain a list of control results, "
+                  f"got {type(results).__name__}")
+            sys.exit(1)
+
         if args.meta:
             meta_path = Path(args.meta)
             if not meta_path.exists():
