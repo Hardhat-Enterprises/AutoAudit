@@ -203,6 +203,89 @@
       "requires_permissions": null,
       "notes": "Not automatable."
     },
+        {
+      "control_id": "E8-UAH-0",
+      "title": "No user application hardening controls implemented (ML0 baseline)",
+      "description": "ML0 represents an organisation that has not deployed the required User Application Hardening controls via Intune.",
+      "severity": "critical",
+      "service": "Intune",
+      "maturity_level": "ML0",
+      "is_manual": false,
+      "benchmark_audit_type": "Inferred",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "ML0 is inferred from the absence of the required ML1 User Application Hardening policies."
+    },
+    {
+      "control_id": "E8-UAH-1.1",
+      "title": "Internet Explorer 11 is disabled or removed",
+      "description": "Internet Explorer 11 is disabled or removed as a standalone browser through Intune policy.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": "entra.devices.configuration_policies",
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation. Policy-level assessment only, as AutoAudit cannot confirm successful application on every managed device."
+    },
+    {
+      "control_id": "E8-UAH-1.2",
+      "title": "Web browsers do not process Java from the internet",
+      "description": "Web browsers are configured through Intune to prevent Java from running from internet sources.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": "entra.devices.configuration_policies",
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation. Policy-level assessment only, as AutoAudit cannot confirm successful application on every managed device."
+    },
+    {
+      "control_id": "E8-UAH-1.3",
+      "title": "Web browsers do not process web advertisements from the internet",
+      "description": "Web browsers are configured to block internet advertisements through centrally managed browser extension policy.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": "entra.devices.configuration_policies",
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation. Evaluation requires an approved organisational ad-blocking extension identifier or configurable allowlist."
+    },
+    {
+      "control_id": "E8-UAH-1.4",
+      "title": "Web browser security settings cannot be changed by users",
+      "description": "Browser security settings are centrally enforced through Intune so standard users cannot override the configured hardening policies.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": "entra.devices.configuration_policies",
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Partial automation. Assessment is based on policy assignment scope because no discrete Settings Catalog lock setting exists."
+    },
     {
       "control_id": "E8-MFA-2.1",
       "title": "MFA required for privileged users and Microsoft 365 services",
