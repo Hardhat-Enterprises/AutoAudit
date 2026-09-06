@@ -5,6 +5,7 @@ from app.api.v1 import (
     contact,
     evidence,
     m365_connections,
+    manual_verification,
     platforms,
     scans,
     settings,
@@ -39,3 +40,6 @@ api_router.include_router(contact.router)
 
 # User settings routes
 api_router.include_router(settings.router)
+
+# Manual verification routes
+api_router.include_router(manual_verification.router)

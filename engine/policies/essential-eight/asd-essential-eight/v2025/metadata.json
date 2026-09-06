@@ -32,7 +32,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
@@ -47,7 +47,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
@@ -61,10 +61,12 @@
       "maturity_level": "ML1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
+
       "automation_status": "ready",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": "e8_mac_1_3_amsi_scanning.rego",
       "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
+
       "notes": "Partial automation."
     },
     {
@@ -77,7 +79,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
@@ -107,7 +109,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
@@ -137,7 +139,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
@@ -152,7 +154,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."

@@ -1,4 +1,5 @@
 import secrets
+import logging
 from urllib.parse import urlencode
 
 import httpx
@@ -12,6 +13,8 @@ from app.core.users import auth_backend, fastapi_users, get_jwt_strategy, get_us
 from app.schemas.user import UserRead, UserCreate, UserRegister, UserUpdate
 from app.core.auth import get_current_user
 from app.models.user import User
+
+logger = logging.getLogger("api")
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -223,6 +226,7 @@ async def google_callback(
         token = await client.get_access_token(code, redirect_uri=_google_redirect_uri())
         google_access_token = token["access_token"]
     except Exception:
+        logger.exception("Google OAuth token exchange failed")
         return RedirectResponse(
             _frontend_google_callback_url(
                 {
@@ -243,6 +247,7 @@ async def google_callback(
         resp.raise_for_status()
         profile = resp.json()
     except Exception:
+        logger.exception("Google OAuth userinfo fetch failed")
         return RedirectResponse(
             _frontend_google_callback_url(
                 {
@@ -293,6 +298,7 @@ async def google_callback(
             is_verified_by_default=True,
         )
     except Exception:
+        logger.exception("Google OAuth account linking failed")
         return RedirectResponse(
             _frontend_google_callback_url(
                 {
