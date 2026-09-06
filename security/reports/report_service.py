@@ -60,10 +60,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
+from typing import TYPE_CHECKING
+
 from docx import Document
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches
+
+if TYPE_CHECKING:
+    import lxml.etree
 
 log = logging.getLogger(__name__)
 

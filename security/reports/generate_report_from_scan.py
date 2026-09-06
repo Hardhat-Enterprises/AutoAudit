@@ -77,8 +77,16 @@ def _api_get(base_url: str, path: str, token: str) -> dict | list:
 def fetch_scan_data(api_url: str, token: str, scan_id: int) -> tuple[dict, list]:
     """Fetch scan metadata and results from the API."""
     print(f"Fetching scan #{scan_id} from {api_url} ...")
-    meta    = _api_get(api_url, f"/v1/scans/{scan_id}", token)
+    meta = _api_get(api_url, f"/v1/scans/{scan_id}", token)
     results = _api_get(api_url, f"/v1/scans/{scan_id}/results", token)
+
+    if not isinstance(meta, dict):
+        print(f"ERROR: expected scan metadata to be an object, got {type(meta).__name__}")
+        sys.exit(1)
+    if not isinstance(results, list):
+        print(f"ERROR: expected scan results to be a list, got {type(results).__name__}")
+        sys.exit(1)
+
     print(f"  Status: {meta.get('status')}  |  "
           f"Pass: {meta.get('passed_count')}  |  "
           f"Fail: {meta.get('failed_count')}  |  "
