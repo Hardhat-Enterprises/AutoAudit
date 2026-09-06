@@ -1,12 +1,14 @@
 """Scan API endpoints."""
 
+from collections import defaultdict
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from collections import defaultdict
 
 from app.core.auth import get_current_user
+from app.core.permissions import require_auditor_or_above
 from app.db.session import get_async_session
 from app.models.compliance import Scan
 from app.models.m365_connection import M365Connection
@@ -37,7 +39,7 @@ router = APIRouter(prefix="/scans", tags=["Scans"])
 @router.post("/", response_model=ScanCreatedResponse, status_code=status.HTTP_201_CREATED)
 async def create_scan(
     scan_data: ScanCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_auditor_or_above),
     db: AsyncSession = Depends(get_async_session),
 ) -> ScanCreatedResponse:
     """Create a new compliance scan.
@@ -330,7 +332,7 @@ async def get_scan_results(
 @router.delete("/{scan_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_scan(
     scan_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_auditor_or_above),
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete a scan (hard delete) and its results."""
