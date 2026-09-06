@@ -55,11 +55,13 @@ jobs:
         id: scan
         with:
           path: "."
-          fail-build: false
+          fail-build: true
+          severity-cutoff: critical
           output-format: sarif
           output-file: grype-report.sarif
 
       - name: Upload vulnerability report
+        if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: grype-report.sarif

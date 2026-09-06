@@ -41,6 +41,53 @@ Automated GCP compliance assessment tool built with FastAPI. This API provides a
    - API Documentation: http://localhost:8000/docs | http://localhost:8000/redoc
    - Root Endpoint: http://localhost:8000/
 
+## Running tests
+
+Install test tooling via the `dev` extra (not included in a plain `uv sync`):
+
+```bash
+uv sync --extra dev
+```
+
+Run the pytest suite from `backend-api/`:
+
+```bash
+uv run pytest tests/ -q
+```
+
+Use `-v` instead of `-q` for more detail. CI runs the same install and test commands on changes under `backend-api/**`.
+
+## 🐳 Docker Startup and Database Migrations
+
+When running the backend using the project's Docker configuration, the container starts through `backend-api/entrypoint.sh`.
+
+The startup sequence is:
+
+1. Apply any pending database migrations:
+
+   ```bash
+   uv run alembic upgrade head
+   ```
+
+2. Seed the default administrator account:
+
+   ```bash
+   uv run python -m app.db.init_db
+   ```
+
+3. Start the FastAPI application:
+
+   ```bash
+   uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+   ```
+
+This ensures that the database schema is updated before the backend application starts when using the Docker container.
+
+### Future DevSecOps Improvement
+
+The current implementation executes database migrations during container startup, which is suitable for local development and single-container deployments.
+
+For future production environments using multiple replicas or rolling deployments, database migrations should be enforced as a dedicated deployment or pipeline step before updated application containers receive traffic. This reduces the risk of multiple containers attempting migrations simultaneously and provides a safer deployment process.
 ## 📁 Project Structure
 
 ```
@@ -57,7 +104,7 @@ backend-api/
 │   │
 │   └── main.py               # FastAPI app
 │
-├── tests/                    # Test scripts
+├── tests/                    # Pytest suite (fixtures + endpoint tests)
 │
 ├── .env.example              # Environment variables template
 ├── pyproject.toml            # Project dependencies & metadata
@@ -105,3 +152,6 @@ If we want to add `authorization` into the mix (verifying a user has not only lo
       # Any users that don't have this role will get a HTTP 403 Forbidden in response
       return {"message": "Yes, you have admin."}
 ```
+
+#This change was made to test grype scans.
+<!-- Grype CI baseline test -->

@@ -38,6 +38,9 @@ from collectors.entra.conditional_access.e8_mfa_enforcement import (
 
 # Devices
 from collectors.entra.devices.asr_rules import ASRRulesDataCollector
+from collectors.entra.devices.configuration_policies import (
+    ConfigurationPoliciesDataCollector,
+)
 from collectors.entra.devices.device_management_settings import (
     DeviceManagementSettingsDataCollector,
 )
@@ -151,6 +154,9 @@ from collectors.exchange.transport.transport_rules import TransportRulesDataColl
 from collectors.sharepoint.pnp.tenant import PnpTenantDataCollector
 
 
+
+
+
 # Registry mapping data_collector_id to collector class
 DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Applications
@@ -168,6 +174,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.conditional_access.e8_mfa_enforcement": E8MfaEnforcementDataCollector,
     # Devices
     "entra.devices.asr_rules": ASRRulesDataCollector,
+    "entra.devices.configuration_policies": ConfigurationPoliciesDataCollector,
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
@@ -218,7 +225,6 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "exchange.protection.priority_account_protection": PriorityAccountStrictProtectionDataCollector,
     "sharepoint.pnp.tenant": PnpTenantDataCollector,
 }
-
 
 def get_collector(collector_id: str) -> BaseDataCollector:
     """Get a collector instance by ID."""
