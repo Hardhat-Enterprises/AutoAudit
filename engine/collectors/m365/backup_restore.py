@@ -221,28 +221,30 @@ class BackupRestoreDataCollector(BaseDataCollector):
         seen_ids: set[str] = set()
         expanded: list[dict[str, Any]] = []
 
+        def _add_if_new(user: dict[str, Any]) -> None:
+            user_id = user.get("id")
+            if user_id is not None and user_id not in seen_ids:
+                seen_ids.add(user_id)
+                expanded.append(user)
+
         for m in raw_members:
             odata_type = m.get("@odata.type")
 
             if odata_type == "#microsoft.graph.user":
-                if m.get("id") not in seen_ids:
-                    seen_ids.add(m.get("id"))
-                    expanded.append(
-                        {
-                            "id": m.get("id"),
-                            "userPrincipalName": m.get("userPrincipalName"),
-                            "displayName": m.get("displayName"),
-                        }
-                    )
+                _add_if_new(
+                    {
+                        "id": m.get("id"),
+                        "userPrincipalName": m.get("userPrincipalName"),
+                        "displayName": m.get("displayName"),
+                    }
+                )
             elif odata_type == "#microsoft.graph.group":
                 group_members = await client.get_all_pages(
                     f"/groups/{m.get('id')}/members"
                 )
                 nested = await self._expand_members(client, group_members)
                 for user in nested:
-                    if user["id"] not in seen_ids:
-                        seen_ids.add(user["id"])
-                        expanded.append(user)
+                    _add_if_new(user)
             # Other principal types (e.g. service principals) are not
             # expanded, since they are not counted as human backup admins.
 
