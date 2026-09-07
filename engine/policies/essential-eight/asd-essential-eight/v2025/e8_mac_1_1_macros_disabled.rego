@@ -87,13 +87,26 @@ vba_settings contains entry if {
     "app": app_of(definition_id),
     "policy_name": object.get(policy, "name", ""),
     "policy_enabled": enum_suffix(object.get(instance, ["choiceSettingValue", "value"], "")) == "1",
+    "assigned": count(object.get(policy, "assignments", [])) > 0,
     "level": selected_level(instance),
   }
 }
 
+# An unassigned policy reaches no device, so a correct value on its own is not
+# evidence of compliance. This does not prove the policy applied on every device -
+# that needs per-device state from the Intune reports API - but it does rule out
+# a policy that was created and never rolled out.
 setting_compliant(entry) if {
   entry.policy_enabled
   entry.level in compliant_levels
+  entry.assigned
+}
+
+# A policy that exists but is assigned to no group reaches no device. Called out
+# separately because the fix is an Intune assignment, not a settings change.
+apps_unassigned contains entry.app if {
+  some entry in vba_settings
+  not entry.assigned
 }
 
 configured_apps contains entry.app if {
@@ -123,7 +136,7 @@ msg := sprintf(
 ) if {
   compliant
 } else := sprintf(
-  "Office macros are not disabled by default for %d of %d required apps (%s). Not configured: %s. Configured at a non-compliant level: %s.",
+  "Office macros are not disabled by default for %d of %d required apps (%s). Not configured: %s. Present but not in force: %s.",
   [
     count(missing_apps),
     count(required_apps),
@@ -145,6 +158,7 @@ result := output if {
       "compliant_apps": labels(compliant_apps & required_apps),
       "apps_not_configured": labels(apps_not_configured),
       "apps_misconfigured": labels(apps_misconfigured),
+      "apps_unassigned": labels(apps_unassigned & required_apps),
       "settings_evidence": sort([e | some e in vba_settings]),
     },
   }

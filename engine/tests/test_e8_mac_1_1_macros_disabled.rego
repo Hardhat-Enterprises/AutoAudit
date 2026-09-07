@@ -53,10 +53,36 @@ internet_block_setting := {"settingInstance": {
 	},
 }}
 
+# A Graph assignment object, trimmed to the parts the policy reads. The policy
+# only counts them, so the target shape does not matter here - but it does matter
+# that "assigned to nobody" is an empty list, which is what the collector
+# normalises a missing key to.
+group_assignment := {
+	"id": "b1f0c0de-0000-4000-8000-000000000001",
+	"source": "direct",
+	"target": {
+		"@odata.type": "#microsoft.graph.groupAssignmentTarget",
+		"groupId": "8f9a0b1c-0000-4000-8000-000000000002",
+	},
+}
+
 collector_output(settings) := {
 	"configuration_policies": [{
 		"id": "3e6c6222-4466-401a-8b8d-5c7058c8d432",
 		"name": "E8_MACRO",
+		"assignments": [group_assignment],
+		"settings": settings,
+	}],
+	"total_configuration_policies": 1,
+}
+
+# Same policy, assigned to nobody: the setting is configured correctly but no
+# device ever receives it.
+collector_output_unassigned(settings) := {
+	"configuration_policies": [{
+		"id": "3e6c6222-4466-401a-8b8d-5c7058c8d432",
+		"name": "E8_MACRO",
+		"assignments": [],
 		"settings": settings,
 	}],
 	"total_configuration_policies": 1,
@@ -100,8 +126,8 @@ test_compliant_level_3_signed_only_satisfies_ml1 if {
 test_compliant_across_multiple_policies if {
 	result := control.result with input as {
 		"configuration_policies": [
-			{"id": "p1", "name": "Macro baseline - Office", "settings": [vba_setting("word", "2"), vba_setting("excel", "2")]},
-			{"id": "p2", "name": "Macro baseline - PowerPoint", "settings": [vba_setting("ppt", "4")]},
+			{"id": "p1", "name": "Macro baseline - Office", "assignments": [group_assignment], "settings": [vba_setting("word", "2"), vba_setting("excel", "2")]},
+			{"id": "p2", "name": "Macro baseline - PowerPoint", "assignments": [group_assignment], "settings": [vba_setting("ppt", "4")]},
 		],
 		"total_configuration_policies": 2,
 	}
@@ -190,7 +216,7 @@ test_missing_collector_output_returns_default if {
 	count(result.details) == 0
 }
 
-# Guards against the PR #311 mistake: the harness wrapper is not the runtime shape.
+# The debug harness wrapper is not the shape the policy receives at scan time.
 test_harness_wrapped_input_is_not_accepted if {
 	result := control.result with input as {"data": collector_output([
 		vba_setting("word", "2"),
@@ -219,4 +245,69 @@ test_result_details_structure if {
 	evidence.policy_name == "E8_MACRO"
 	evidence.policy_enabled == true
 	evidence.app in {"word", "excel", "ppt"}
+}
+
+# --- Assignment coverage -----------------------------------------------------
+
+# All three apps configured at a compliant
+# level, but the policy is assigned to nobody, so no device receives it.
+test_non_compliant_correct_level_but_policy_unassigned if {
+	result := control.result with input as collector_output_unassigned([
+		vba_setting("word", "2"),
+		vba_setting("excel", "2"),
+		vba_setting("ppt", "2"),
+	])
+
+	result.compliant == false
+	result.details.apps_unassigned == ["Excel", "PowerPoint", "Word"]
+	result.details.compliant_apps == []
+}
+
+# An assignment on a policy carrying the wrong level must not rescue it.
+test_non_compliant_assigned_but_wrong_level if {
+	result := control.result with input as collector_output([
+		vba_setting("word", "1"),
+		vba_setting("excel", "1"),
+		vba_setting("ppt", "1"),
+	])
+
+	result.compliant == false
+	count(result.details.apps_unassigned) == 0
+}
+
+# Assignments live on the policy, not the setting, so one app can be covered by
+# an assigned policy while another sits in an unassigned one.
+test_non_compliant_one_app_in_an_unassigned_policy if {
+	result := control.result with input as {
+		"configuration_policies": [
+			{
+				"id": "p1", "name": "Assigned baseline",
+				"assignments": [group_assignment],
+				"settings": [vba_setting("word", "2"), vba_setting("excel", "2")],
+			},
+			{
+				"id": "p2", "name": "Draft, never assigned",
+				"assignments": [],
+				"settings": [vba_setting("ppt", "2")],
+			},
+		],
+		"total_configuration_policies": 2,
+	}
+
+	result.compliant == false
+	result.details.compliant_apps == ["Excel", "Word"]
+	result.details.apps_unassigned == ["PowerPoint"]
+}
+
+# A missing assignments key is treated as unassigned, never as unknown-so-pass.
+test_non_compliant_when_assignments_key_is_absent if {
+	result := control.result with input as {
+		"configuration_policies": [{
+			"id": "p1", "name": "E8_MACRO",
+			"settings": [vba_setting("word", "2"), vba_setting("excel", "2"), vba_setting("ppt", "2")],
+		}],
+		"total_configuration_policies": 1,
+	}
+
+	result.compliant == false
 }

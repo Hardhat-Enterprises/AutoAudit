@@ -1,14 +1,14 @@
 {
   "collector_id": "entra.devices.configuration_policies",
-  "timestamp": "2026-07-27T10:31:36.210031",
-  "elapsed_seconds": 2.689,
+  "timestamp": "2026-09-07T13:21:58.021403",
+  "elapsed_seconds": 2.765,
   "data": {
     "configuration_policies": [
       {
         "createdDateTime": "2026-07-26T03:46:27.1475394Z",
         "creationSource": null,
         "description": "For E8-MAC-1.1, 1.2 and 1.3",
-        "lastModifiedDateTime": "2026-07-26T03:46:27.1475394Z",
+        "lastModifiedDateTime": "2026-08-31T02:32:28.9258048Z",
         "name": "E8_MACRO",
         "platforms": "windows10",
         "priorityMetaData": null,
@@ -24,6 +24,19 @@
           "templateDisplayName": null,
           "templateDisplayVersion": null
         },
+        "assignments@odata.context": "https://graph.microsoft.com/beta/$metadata#deviceManagement/configurationPolicies('3e6c6222-4466-401a-8b8d-5c7058c8d432')/assignments",
+        "assignments": [
+          {
+            "id": "3e6c6222-4466-401a-8b8d-5c7058c8d432_adadadad-808e-44e2-905a-0b7873a8a531",
+            "source": "direct",
+            "sourceId": "3e6c6222-4466-401a-8b8d-5c7058c8d432",
+            "target": {
+              "@odata.type": "#microsoft.graph.allDevicesAssignmentTarget",
+              "deviceAndAppManagementAssignmentFilterId": null,
+              "deviceAndAppManagementAssignmentFilterType": "none"
+            }
+          }
+        ],
         "settings": [
           {
             "id": "0",
@@ -83,7 +96,7 @@
                     "auditRuleInformation": null,
                     "choiceSettingValue": {
                       "settingValueTemplateReference": null,
-                      "value": "user_vendor_msft_policy_config_office16v2~policy~l_microsoftofficesystem~l_securitysettings_l_macroruntimescanscope_l_macroruntimescanscopeenum_2",
+                      "value": "user_vendor_msft_policy_config_office16v2~policy~l_microsoftofficesystem~l_securitysettings_l_macroruntimescanscope_l_macroruntimescanscopeenum_0",
                       "children": []
                     }
                   }
@@ -123,7 +136,7 @@
                     "auditRuleInformation": null,
                     "choiceSettingValue": {
                       "settingValueTemplateReference": null,
-                      "value": "user_vendor_msft_policy_config_ppt16v2~policy~l_microsoftofficepowerpoint~l_powerpointoptions~l_security~l_trustcenter_l_vbawarningspolicy_l_empty3_2",
+                      "value": "user_vendor_msft_policy_config_ppt16v2~policy~l_microsoftofficepowerpoint~l_powerpointoptions~l_security~l_trustcenter_l_vbawarningspolicy_l_empty3_3",
                       "children": []
                     }
                   }
@@ -163,7 +176,7 @@
                     "auditRuleInformation": null,
                     "choiceSettingValue": {
                       "settingValueTemplateReference": null,
-                      "value": "user_vendor_msft_policy_config_word16v2~policy~l_microsoftofficeword~l_wordoptions~l_security~l_trustcenter_l_vbawarningspolicy_l_empty19_2",
+                      "value": "user_vendor_msft_policy_config_word16v2~policy~l_microsoftofficeword~l_wordoptions~l_security~l_trustcenter_l_vbawarningspolicy_l_empty19_3",
                       "children": []
                     }
                   }
