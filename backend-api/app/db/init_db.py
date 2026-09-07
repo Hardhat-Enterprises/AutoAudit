@@ -57,6 +57,7 @@ async def init_db():
             else "[SUCCESS] Updated default admin user with the following details."
         )
         print(f"  Email: {admin_email}")
+        print("  Password: (dev default — see backend-api README / Getting Started)")
         print(f"  Role: {Role.ADMIN.value}")
         print("\nIMPORTANT: Change the default password after first login.")
 

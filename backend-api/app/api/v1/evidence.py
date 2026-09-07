@@ -1,6 +1,6 @@
 import hashlib
-import json
 import logging
+import json
 
 from fastapi import APIRouter, Depends, UploadFile, File, Form
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 # Ensure the monorepo /security package is importable both locally and inside Docker
 import sys
 from pathlib import Path
+
+logger = logging.getLogger("api")
 
 
 def _find_security_dir() -> Path | None:
@@ -25,7 +27,7 @@ if SECURITY_DIR and str(SECURITY_DIR.parent) not in sys.path:
     sys.path.insert(0, str(SECURITY_DIR.parent))
 
 # Reuse existing evidence logic from security package
-from security.evidence_ui import app as evidence_ui
+from security.evidence_ui import app as evidence_ui  # type: ignore[import-not-found]
 
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
@@ -118,6 +120,7 @@ async def scan(
             text_hash = hashlib.sha256(extracted_text.encode("utf-8", errors="ignore")).hexdigest()
     except Exception:
         # Do not block scan if validator pre-pass fails.
+        logger.warning("Evidence validator pre-pass failed; continuing without validator", exc_info=True)
         extracted_text = ""
         validator_payload = None
         text_hash = None
@@ -150,7 +153,10 @@ async def scan(
             response_payload["validator"] = validator_payload
     elif isinstance(scan_result, JSONResponse):
         try:
-            payload = json.loads((scan_result.body or b"{}").decode("utf-8"))
+            body = scan_result.body or b"{}"
+            if isinstance(body, memoryview):
+                body = body.tobytes()
+            payload = json.loads(body.decode("utf-8"))
         except Exception:
             payload = None
         if isinstance(payload, dict):
@@ -177,11 +183,11 @@ async def scan(
             db.add(record)
             await db.commit()
     except Exception:
-        logger.exception("Failed to persist evidence validation output")
+        logger.warning("Failed to persist evidence validation; rolling back", exc_info=True)
         try:
             await db.rollback()
         except Exception:
-            logger.exception("Failed to roll back evidence validation transaction")
+            logger.warning("Rollback after evidence validation failure also failed", exc_info=True)
 
     return scan_result
 
