@@ -51,7 +51,7 @@ def create_app() -> FastAPI:
         return {
             "status": "healthy",
         }
-        
+
     # Initialize Prometheus Instrumentator and expose the /metrics endpoint
     Instrumentator().instrument(app).expose(app) # <-- 2. Added instrumentation
 

@@ -292,11 +292,11 @@ async def google_callback(
 
     # fastapi-users JWTStrategy.write_token is async in the version used by the backend container.
     autoaudit_token = await get_jwt_strategy().write_token(user)
-    
+
     # Redirect to frontend without the token in the URL fragment
-    redirect_url = _frontend_google_callback_url({}) 
+    redirect_url = _frontend_google_callback_url({})
     response = RedirectResponse(redirect_url, status_code=status.HTTP_302_FOUND)
-    
+
     # Set the token in a secure, HttpOnly cookie
     response.set_cookie(
         key="autoaudit_jwt",
@@ -306,7 +306,7 @@ async def google_callback(
         samesite="lax",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
-    
+
     # Clean up the OAuth state cookie
     response.delete_cookie(
         GOOGLE_OAUTH_STATE_COOKIE,

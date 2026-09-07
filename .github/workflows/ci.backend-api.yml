@@ -139,7 +139,7 @@ jobs:
       - name: Install and run pytest
         working-directory: backend-api
         run: |
-          uv sync --group dev
+          uv sync --group dev --extra evidence
           uv run pytest tests/ -q
 
   report:

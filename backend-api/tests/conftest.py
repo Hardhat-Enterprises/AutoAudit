@@ -155,7 +155,7 @@ async def auth_client(client, registered_user):
     )
     assert resp.status_code == 204, resp.text  # nosec B101
     return client
-"""Shared fixtures for backend-api tests."""
+# Shared fixtures for backend-api tests.
 
 from collections.abc import AsyncGenerator, Callable
 from unittest.mock import AsyncMock, MagicMock
