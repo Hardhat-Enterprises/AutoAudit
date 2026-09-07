@@ -113,3 +113,17 @@ Dependabot is currently paused on this repo (`open-pull-requests-limit` set to 0
 ### Why this matters
 
 An outdated or vulnerable dependency can introduce a security hole with no code change of your own — the risk is inherited the moment you add the package. Treating dependency scanning results as informational rather than actionable is one of the most common ways security tooling ends up ignored in practice.
+
+
+## Before Opening a Pull Request
+
+A quick checklist covering the practices in this guide:
+
+- [ ] Protected routes use `Depends(get_current_user)` or an appropriate `require_*` / `RoleChecker` dependency — no manual role checks inline
+- [ ] No credentials, tokens, or connection strings with real passwords are committed — pre-commit hooks are installed and passing (`pre-commit install`)
+- [ ] Any new dependency is genuinely needed, reasonably well-maintained, and checked against the GitHub Security tab after the PR is opened
+- [ ] Dependency files (`requirements.txt`, `package-lock.json`, `pyproject.toml`) are updated deliberately, not hand-edited
+- [ ] CodeQL, Bandit, and lint checks are passing on your PR before requesting review
+- [ ] If a scanner flags something you believe is a false positive, it's suppressed with a justification comment, not silently ignored
+
+This guide is a living document — if you find a gap or a pattern that should be documented, open a PR to extend it.
