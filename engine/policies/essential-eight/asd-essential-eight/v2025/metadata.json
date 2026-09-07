@@ -32,7 +32,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": [
         "DeviceManagementConfiguration.Read.All"
@@ -49,7 +49,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": [
         "DeviceManagementConfiguration.Read.All"
@@ -66,7 +66,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": [
         "DeviceManagementConfiguration.Read.All"
@@ -83,7 +83,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": [
         "DeviceManagementConfiguration.Read.All"
@@ -117,7 +117,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": [
         "DeviceManagementConfiguration.Read.All"
@@ -149,7 +149,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": [
         "DeviceManagementConfiguration.Read.All"
@@ -166,7 +166,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": null,
+      "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
       "requires_permissions": [
         "DeviceManagementConfiguration.Read.All"
