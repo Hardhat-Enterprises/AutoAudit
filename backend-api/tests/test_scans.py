@@ -57,6 +57,28 @@ async def m365_connection_id(db_session, registered_user) -> int:
     return connection.id
 
 
+@pytest_asyncio.fixture
+async def auditor_role(db_session, registered_user) -> None:
+    """Elevate `registered_user` (and therefore `auth_client`, which logs
+    in as that same user) from the default Viewer role to Auditor.
+
+    The scan create/delete endpoints are gated by
+    `require_auditor_or_above` (see app/core/permissions.py), so a
+    freshly registered user -- Viewer by default -- gets a 403 before
+    ever reaching the create/delete logic these tests exercise. There is
+    no self-service role-change endpoint, so this updates the row
+    directly via `db_session`, mirroring how `m365_connection_id` above
+    seeds a connection row directly rather than through the API.
+    `get_current_user` re-fetches the user from the DB on every request,
+    so the change takes effect immediately -- no re-login required.
+    """
+    email, _ = registered_user
+    result = await db_session.execute(select(User).where(User.email == email))
+    user = result.scalar_one()
+    user.role = "auditor"
+    await db_session.commit()
+
+
 async def test_list_scans_requires_auth(client):
     resp = await client.get("/v1/scans/")
     assert resp.status_code == 401, resp.text  # nosec B101
@@ -89,7 +111,7 @@ async def test_get_scan_results_nonexistent_returns_404(auth_client):
     assert resp.status_code == 404, resp.text  # nosec B101
 
 
-async def test_delete_nonexistent_scan_returns_404(auth_client):
+async def test_delete_nonexistent_scan_returns_404(auth_client, auditor_role):
     resp = await auth_client.delete("/v1/scans/999999")
     assert resp.status_code == 404, resp.text  # nosec B101
 
@@ -99,7 +121,7 @@ async def test_delete_scan_requires_auth(client):
     assert resp.status_code == 401, resp.text  # nosec B101
 
 
-async def test_create_scan_nonexistent_connection_returns_404(auth_client):
+async def test_create_scan_nonexistent_connection_returns_404(auth_client, auditor_role):
     """The connection ownership/existence check must run (and fail
     loudly) before any benchmark lookup or Celery task is queued."""
     resp = await auth_client.post(
@@ -153,7 +175,9 @@ async def test_readiness_requires_auth(client):
     assert resp.status_code == 401, resp.text  # nosec B101
 
 
-async def test_create_scan_happy_path(auth_client, m365_connection_id, monkeypatch):
+async def test_create_scan_happy_path(
+    auth_client, m365_connection_id, auditor_role, monkeypatch
+):
     """A valid, active connection plus a real benchmark on disk should
     create the scan, seed every control as a pending ScanResult, and
     queue it -- the full path the frontend relies on after the user picks
@@ -197,7 +221,7 @@ async def test_create_scan_happy_path(auth_client, m365_connection_id, monkeypat
 
 
 async def test_create_scan_with_control_ids_skips_the_rest(
-    auth_client, m365_connection_id, monkeypatch
+    auth_client, m365_connection_id, auditor_role, monkeypatch
 ):
     """Requesting specific control_ids should still seed a ScanResult for
     every control in the benchmark (so category totals in the summary
