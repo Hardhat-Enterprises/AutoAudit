@@ -207,13 +207,16 @@ def test_collect_restore_sessions_returns_all_without_filtering():
 
 # --- _collect_backup_admin_roles ---
 
+_THREE_BACKUP_ROLES = [
+    {"id": "r1", "displayName": "Microsoft 365 Backup Administrator"},
+    {"id": "r2", "displayName": "SharePoint Backup Administrator"},
+    {"id": "r3", "displayName": "Exchange Backup Administrator"},
+]
+
+
 def test_collect_backup_admin_roles_finds_all_three_with_members():
     client = AsyncMock()
-    client.get_directory_roles.return_value = [
-        {"id": "r1", "displayName": "Microsoft 365 Backup Administrator"},
-        {"id": "r2", "displayName": "SharePoint Backup Administrator"},
-        {"id": "r3", "displayName": "Exchange Backup Administrator"},
-    ]
+    client.get_directory_roles.return_value = _THREE_BACKUP_ROLES
     client.get_role_members.return_value = [
         {"id": "u1", "userPrincipalName": "a@x.com", "displayName": "A", "@odata.type": "#microsoft.graph.user"},
         {"id": "g1", "@odata.type": "#microsoft.graph.group"},
@@ -235,11 +238,7 @@ def test_role_assignable_group_members_are_expanded_not_dropped():
     # role-assignable group must count that group's real members, not
     # silently drop the group and report zero.
     client = AsyncMock()
-    client.get_directory_roles.return_value = [
-        {"id": "r1", "displayName": "Microsoft 365 Backup Administrator"},
-        {"id": "r2", "displayName": "SharePoint Backup Administrator"},
-        {"id": "r3", "displayName": "Exchange Backup Administrator"},
-    ]
+    client.get_directory_roles.return_value = _THREE_BACKUP_ROLES
     client.get_role_members.return_value = [
         {"id": "g1", "@odata.type": "#microsoft.graph.group"},
     ]
@@ -259,11 +258,7 @@ def test_role_assignable_group_members_are_expanded_not_dropped():
 
 def test_group_expansion_deduplicates_users_reached_two_ways():
     client = AsyncMock()
-    client.get_directory_roles.return_value = [
-        {"id": "r1", "displayName": "Microsoft 365 Backup Administrator"},
-        {"id": "r2", "displayName": "SharePoint Backup Administrator"},
-        {"id": "r3", "displayName": "Exchange Backup Administrator"},
-    ]
+    client.get_directory_roles.return_value = _THREE_BACKUP_ROLES
     # Same user u1 is both a direct member and a member of the group.
     client.get_role_members.return_value = [
         {"id": "u1", "userPrincipalName": "a@x.com", "displayName": "A", "@odata.type": "#microsoft.graph.user"},
