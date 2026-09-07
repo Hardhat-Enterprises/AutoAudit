@@ -139,7 +139,7 @@ jobs:
       - name: Install and run pytest
         working-directory: backend-api
         run: |
-          uv sync --extra dev
+          uv sync --group dev
           uv run pytest tests/ -q
 
   report:
@@ -192,4 +192,24 @@ jobs:
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
               });
+
+              const existing = comments.find(c => c.body.includes(marker));
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            } catch (error) {
+              core.warning(`Failed to post PR comment: ${error.message}`);
             }
