@@ -1,8 +1,13 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.logging import setup_logging
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.core.errors import NotFound, not_found_handler
+from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.errors import not_found_handler, NotFound
 from prometheus_fastapi_instrumentator import Instrumentator # <-- 1. Added import
@@ -18,23 +23,28 @@ def create_app() -> FastAPI:
     # (middleware executes in reverse order - last added runs first)
     app.add_middleware(RequestLoggingMiddleware)
 
-    # Allow frontend (localhost:3000 and others) to call the API during development.
-    # CORS must be added last so it runs first and wraps all responses including errors.
+    # Allow the configured frontend to make credentialed API requests.
+    # Expose X-Request-ID so the frontend can use it when reporting errors.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:3000"],  # Explicit origin required when credentials are True
         allow_credentials=True,                   # Must be True to allow HttpOnly auth cookies
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["X-Request-ID"],
     )
+
     app.include_router(api_router, prefix=settings.API_PREFIX)
 
-    # error handler
+    # Error handler
     app.add_exception_handler(NotFound, not_found_handler)
 
     @app.get("/")
     def root():
-        return {"status": "ok", "message": "AutoAudit API running"}
+        return {
+            "status": "ok",
+            "message": "AutoAudit API running",
+        }
 
     @app.get("/liveness")
     def health_check():
