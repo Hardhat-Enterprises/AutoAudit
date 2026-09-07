@@ -1,7 +1,7 @@
 """Expand aws_connection table with full credential columns.
 
 Revision ID: k1l2m3n4o567
-Revises: j2k3l4m5n678
+Revises: 8a7b91ea95d9
 Create Date: 2026-07-26
 """
 
