@@ -9,7 +9,8 @@ from app.core.config import get_settings
 from app.core.errors import NotFound, not_found_handler
 from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
-from app.core.errors import not_found_handler, NotFound
+from app.db.session import get_async_session
+from app.schemas.health import ReadinessResponse
 from prometheus_fastapi_instrumentator import Instrumentator # <-- 1. Added import
 
 settings = get_settings()
@@ -51,6 +52,31 @@ def create_app() -> FastAPI:
         return {
             "status": "healthy",
         }
+
+    @app.get(
+        "/readiness",
+        response_model=ReadinessResponse,
+        tags=["Health"],
+        summary="Check whether the API is ready to serve requests",
+        responses={
+            503: {
+                "model": ReadinessResponse,
+                "description": "Required dependency is unavailable",
+            }
+        },
+    )
+    async def readiness_check(
+        db: AsyncSession = Depends(get_async_session),
+    ):
+        try:
+            await db.execute(text("SELECT 1"))
+        except Exception:
+            return JSONResponse(
+                status_code=503,
+                content={"status": "not_ready"},
+            )
+
+        return ReadinessResponse(status="ready")
 
     # Initialize Prometheus Instrumentator and expose the /metrics endpoint
     Instrumentator().instrument(app).expose(app) # <-- 2. Added instrumentation

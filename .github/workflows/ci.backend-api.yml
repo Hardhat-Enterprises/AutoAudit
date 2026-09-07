@@ -129,15 +129,38 @@ jobs:
   test:
     name: Pytest
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: autoaudit
+          POSTGRES_PASSWORD: autoaudit_dev_password
+          POSTGRES_DB: autoaudit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install system dependencies (Tesseract for evidence OCR)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr libtesseract-dev
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v4
 
       - name: Install and run pytest
         working-directory: backend-api
+        # DATABASE_URL etc. are intentionally left unset here: tests/conftest.py
+        # sets matching defaults (os.environ.setdefault) that point at this same
+        # postgres service, and runs `alembic upgrade head` itself before any
+        # test executes (see backend-tests job above for the same setup).
         run: |
           uv sync --group dev --extra evidence
           uv run pytest tests/ -q
