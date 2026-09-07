@@ -11,6 +11,7 @@ from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
 from app.db.session import get_async_session
 from app.schemas.health import ReadinessResponse
+from app.api.health import router as health_router
 
 settings = get_settings()
 
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router, prefix=settings.API_PREFIX)
+    app.include_router(health_router)
 
     # Error handler
     app.add_exception_handler(NotFound, not_found_handler)
@@ -45,37 +47,6 @@ def create_app() -> FastAPI:
             "status": "ok",
             "message": "AutoAudit API running",
         }
-
-    @app.get("/liveness")
-    def health_check():
-        return {
-            "status": "healthy",
-        }
-
-    @app.get(
-        "/readiness",
-        response_model=ReadinessResponse,
-        tags=["Health"],
-        summary="Check whether the API is ready to serve requests",
-        responses={
-            503: {
-                "model": ReadinessResponse,
-                "description": "Required dependency is unavailable",
-            }
-        },
-    )
-    async def readiness_check(
-        db: AsyncSession = Depends(get_async_session),
-    ):
-        try:
-            await db.execute(text("SELECT 1"))
-        except Exception:
-            return JSONResponse(
-                status_code=503,
-                content={"status": "not_ready"},
-            )
-
-        return ReadinessResponse(status="ready")
 
     return app
 
