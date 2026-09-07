@@ -21,23 +21,19 @@ The repo follows the established modular structure:
 
 Full commit history and traceability from team forks are preserved.
 
-## Branching Strategy  
-- Only trusted, verified releases from `staging` are merged into `main`.
-- Direct commits are prohibited via branch protection rules.
-- Changes in `main` trigger the production deployment workflows.
+## Branching Strategy
+- PRs are merged into staging only after review and approval from team leads on dev.
+- No direct commits to staging are allowed to ensure controlled releases.
+- Approved staging code is promoted to main for production deployment.
 
-## CI/CD Pipeline Overview  
-- Code scanning (CodeQL, Grype) and security validations run on every push or PR.
-- Docker images are built and tagged for the `prod` environment here.
-- **Production deployments to Google Cloud Platform (GCP) will be triggered from this branch once configured.**
-- Currently, GCP deployment automation is being set up;  
-  once complete, a GCP Cloud Build trigger will automatically build and deploy the `main` branch code and push images into the GCP Artifact Registry.
+## CI/CD Pipeline Overview
+- Runs CodeQL security analysis on changed code.
+- Runs super-linter code quality checks.
+- Performs Docker image builds tagged with the staging environment.
+- Conducts Grype vulnerability scans on built images.
+- Pushes Docker images to Docker Hub on successful builds.
 
-## Docker Builds  
-- Production Docker images from the `main` branch are tagged appropriately and pushed to:  
-  - [Docker Hub - AutoAudit Services](https://hub.docker.com/u/autoauditservices)  
-  - GCP Artifact Registry (once integration is complete)  
-- Individual service repos like Engine, Backend-API, Frontend, and Security have mirrored deployment artifacts.
+Note: Integration/end-to-end test suites and GCP staging cluster deployments are not yet configured. Production promotion should be verified manually until these are in place.
 
 ## Contribution Guidelines  
 - Only merges from `staging` occur into `main`, following stringent review and testing.  
