@@ -497,7 +497,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "not_started",
-      "data_collector_id": "exchange.protection.priority_account_protection",
+      "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": ["Exchange.Manage"],
       "notes": "Need Priority Account Protection collector"
