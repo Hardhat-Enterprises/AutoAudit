@@ -134,11 +134,14 @@ async def test_connection(
     """Test an AWS connection by verifying the credentials are valid."""
     connection = await _get_user_connection(connection_id, current_user.id, db)
 
-    # Decrypt credentials — boto3 integration to be added for live validation
+    # Decrypt credentials
     _secret_access_key = decrypt(connection.encrypted_secret_access_key)
 
+    # Live credential validation requires boto3 (not yet a dependency).
+    # Returning success=False so callers are not misled into thinking
+    # credentials are valid before an actual AWS API call confirms them.
     return AWSConnectionTestResult(
-        success=True,
-        message="AWS connection credentials are stored. Live validation requires boto3 integration.",
+        success=False,
+        message="Live credential validation is not yet implemented. Add boto3 to enable AWS STS verification.",
         account_alias=None,
     )

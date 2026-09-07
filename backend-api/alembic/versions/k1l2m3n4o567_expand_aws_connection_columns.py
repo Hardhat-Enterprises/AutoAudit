@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "k1l2m3n4o567"
-down_revision: Union[str, Sequence[str], None] = "j2k3l4m5n678"
+down_revision: Union[str, Sequence[str], None] = "8a7b91ea95d9"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -81,12 +81,22 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Downgrade schema — drop all added columns, revert to stub."""
+    """Downgrade schema — remove only the columns added by this revision."""
     bind = op.get_bind()
     inspector = sa.inspect(bind)
 
     if "aws_connection" not in set(inspector.get_table_names()):
         return
 
-    op.drop_index(op.f("ix_aws_connection_user_id"), table_name="aws_connection")
-    op.drop_table("aws_connection")
+    existing_columns = {col["name"] for col in inspector.get_columns("aws_connection")}
+
+    # Drop index first if it exists
+    existing_indexes = {idx["name"] for idx in inspector.get_indexes("aws_connection")}
+    if "ix_aws_connection_user_id" in existing_indexes:
+        op.drop_index(op.f("ix_aws_connection_user_id"), table_name="aws_connection")
+
+    # Drop only the columns added by this migration
+    for col in ["updated_at", "created_at", "is_active", "region",
+                "encrypted_secret_access_key", "access_key_id", "account_id", "name", "user_id"]:
+        if col in existing_columns:
+            op.drop_column("aws_connection", col)
