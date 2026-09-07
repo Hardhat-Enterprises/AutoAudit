@@ -651,10 +651,16 @@ def _substitute_finding_blocks(
 
     # --- Pass 2: fill the first block for each severity in-place.
     for sev in order:
-        ctrls = sev_lists.get(sev, [])
-        if not ctrls or sev not in anchors:
+        if sev not in anchors:
             continue
+        ctrls = sev_lists.get(sev, [])
         start, end = _block_slice(anchors, hard_stop, sev, order)
+        if not ctrls:
+            # No failing controls at this severity — remove the block
+            # entirely rather than leaving unfilled template placeholders.
+            for child in children[start:end]:
+                body.remove(child)
+            continue
         ctrl_map = _sanitise_mapping(_single_control_mapping(ctrls[0]))
         _expand_placeholder_variants(ctrl_map)
         for child in children[start:end]:

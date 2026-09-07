@@ -240,6 +240,7 @@ def transform(results: list, meta: dict | None = None) -> dict:
             "Control_ID":   r["control_id"],
             "Control_Name": r["control_id"],  # Name requires benchmark lookup — not in results API
             "Status":       r["status"].upper(),
+            "Pass/Fail":    "FAIL" if r["status"] == "failed" else "PASS",
             "Severity":     _severity(r["control_id"], r["status"]),
             "Description":  r.get("message") or "",
             "Evidence":     evidence_str,
