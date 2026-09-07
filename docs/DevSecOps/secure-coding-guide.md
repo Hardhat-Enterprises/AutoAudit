@@ -81,3 +81,35 @@ For local development, use environment variables loaded from a `.env` file (alre
 ### Why this matters
 
 A leaked secret in git history can be extracted long after the file is "fixed" in a later commit — removing a value from the current version of a file does not remove it from history. Prevention at commit time is far cheaper than rotating credentials after a leak.
+
+
+##### Dependency Management
+
+Every dependency you add is code you didn't write but are still responsible for. AutoAudit already scans for known vulnerabilities in dependencies — this section covers how to work with that scanning rather than around it.
+
+### Automated scanning
+
+The repo runs Grype (`ci.grype.yml`) on pull requests and pushes to `main` when files change inside `frontend/`, `backend-api/`, or `engine/`, and weekly on a schedule. Grype checks dependency files — `pyproject.toml`, `requirements.txt`, and `package-lock.json` — against public vulnerability databases. Findings are uploaded to the GitHub Security tab as a SARIF report rather than blocking the build, so a flagged dependency will not fail your PR automatically — it is on you to check the Security tab and treat findings seriously rather than ignoring them because the build went green.
+
+### Adding a new dependency
+
+Before adding a new package:
+
+- Check whether an existing dependency already covers what you need — every new package is another thing Grype has to watch and another potential source of vulnerabilities
+- Prefer well-maintained, widely-used packages over small or unmaintained ones
+- After adding it, check the GitHub Security tab for any new Grype findings tied to your PR
+
+### Updating dependencies
+
+Keep dependency files current rather than letting them drift:
+
+- Python: update `pyproject.toml` / `requirements.txt` deliberately, and re-run the app locally to confirm nothing breaks
+- Frontend: update `package-lock.json` via `npm install` rather than hand-editing it
+
+### A note on Dependabot
+
+Dependabot is currently paused on this repo (`open-pull-requests-limit` set to 0) because the volume of automatic update PRs became difficult to review individually. This means dependency updates are currently a manual responsibility rather than something automation handles for you — don't assume dependencies are being kept current in the background.
+
+### Why this matters
+
+An outdated or vulnerable dependency can introduce a security hole with no code change of your own — the risk is inherited the moment you add the package. Treating dependency scanning results as informational rather than actionable is one of the most common ways security tooling ends up ignored in practice.
