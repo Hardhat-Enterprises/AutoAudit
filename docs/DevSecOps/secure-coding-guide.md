@@ -83,7 +83,7 @@ For local development, use environment variables loaded from a `.env` file (alre
 A leaked secret in git history can be extracted long after the file is "fixed" in a later commit — removing a value from the current version of a file does not remove it from history. Prevention at commit time is far cheaper than rotating credentials after a leak.
 
 
-##### Dependency Management
+## Dependency Management
 
 Every dependency you add is code you didn't write but are still responsible for. AutoAudit already scans for known vulnerabilities in dependencies — this section covers how to work with that scanning rather than around it.
 
