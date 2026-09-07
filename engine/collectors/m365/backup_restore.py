@@ -189,17 +189,8 @@ class BackupRestoreDataCollector(BaseDataCollector):
                 roles_not_found.append(role_name)
                 continue
 
-            members = await client.get_role_members(role["id"])
-
-            member_details = [
-                {
-                    "id": m.get("id"),
-                    "userPrincipalName": m.get("userPrincipalName"),
-                    "displayName": m.get("displayName"),
-                }
-                for m in members
-                if m.get("@odata.type") == "#microsoft.graph.user"
-            ]
+            raw_members = await client.get_role_members(role["id"])
+            member_details = await self._expand_members(client, raw_members)
 
             backup_admin_roles.append(
                 {
@@ -210,6 +201,52 @@ class BackupRestoreDataCollector(BaseDataCollector):
             )
 
         return backup_admin_roles, roles_not_found
+
+    async def _expand_members(
+        self, client: GraphClient, raw_members: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Expand role members to a flat, deduplicated list of users.
+
+        A directory role can be assigned directly to users, or to a
+        role-assignable group, in which case Graph returns a
+        #microsoft.graph.group object rather than individual users.
+        Silently dropping those groups previously caused member_count to
+        undercount effective backup admin access, since a group with many
+        members would report as zero. Groups are expanded one level via
+        the group's members endpoint; nested groups within a
+        role-assignable group are expanded recursively, and results are
+        deduplicated by id since the same user could reach the role
+        through more than one group.
+        """
+        seen_ids: set[str] = set()
+        expanded: list[dict[str, Any]] = []
+
+        for m in raw_members:
+            odata_type = m.get("@odata.type")
+
+            if odata_type == "#microsoft.graph.user":
+                if m.get("id") not in seen_ids:
+                    seen_ids.add(m.get("id"))
+                    expanded.append(
+                        {
+                            "id": m.get("id"),
+                            "userPrincipalName": m.get("userPrincipalName"),
+                            "displayName": m.get("displayName"),
+                        }
+                    )
+            elif odata_type == "#microsoft.graph.group":
+                group_members = await client.get_all_pages(
+                    f"/groups/{m.get('id')}/members"
+                )
+                nested = await self._expand_members(client, group_members)
+                for user in nested:
+                    if user["id"] not in seen_ids:
+                        seen_ids.add(user["id"])
+                        expanded.append(user)
+            # Other principal types (e.g. service principals) are not
+            # expanded, since they are not counted as human backup admins.
+
+        return expanded
 
     async def _collect_detected_vendors(
         self, client: GraphClient

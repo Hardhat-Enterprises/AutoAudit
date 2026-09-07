@@ -66,16 +66,22 @@ services_with_recent_restore_point := {service |
 
 services_missing_recent_restore_point := REQUIRED_SERVICES - services_with_recent_restore_point
 
-# --- Restore sessions: at least one within the last 12 months ---
+# --- Restore sessions: at least one successful session within the last 12 months ---
+# Per Microsoft's restoreSessionStatus enum (draft, activating, active,
+# completedWithError, completed, failed), only "completed" reflects a
+# session where all restore artifacts fully succeeded. A recent session
+# that is failed, in progress, or completed with errors does not satisfy
+# the control's "restored" outcome, so status is checked alongside recency.
 
-recent_restore_sessions := [s |
+recent_successful_restore_sessions := [s |
 	some s in input.restore_sessions
 	s.createdDateTime != null
 	created_ns := time.parse_rfc3339_ns(s.createdDateTime)
 	created_ns >= time.now_ns() - RESTORE_SESSION_WINDOW_NS
+	s.status == "completed"
 ]
 
-has_recent_restore_session if count(recent_restore_sessions) > 0
+has_recent_restore_session if count(recent_successful_restore_sessions) > 0
 
 default has_recent_restore_session := false
 
@@ -112,6 +118,7 @@ result := {
 		"backup_admin_threshold": MAX_BACKUP_ADMIN_ACCOUNTS,
 		"backup_admin_access_excessive": backup_admin_access_excessive,
 		"backup_admin_roles_not_found": input.roles_not_found,
+		"detected_vendors": object.get(input, "detected_vendors", []),
 	},
 }
 

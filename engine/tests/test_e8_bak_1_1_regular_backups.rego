@@ -22,7 +22,7 @@ test_compliant_all_conditions_met if {
 			{"id": "rp3", "protectionDateTime": "2026-08-19T00:00:00Z", "expirationDateTime": "2027-08-19T00:00:00Z", "protectionUnitType": "driveProtectionUnit"},
 		],
 		"restore_sessions": [
-			{"id": "s1", "status": "succeeded", "createdDateTime": "2026-06-01T00:00:00Z"},
+			{"id": "s1", "status": "completed", "createdDateTime": "2026-06-01T00:00:00Z"},
 		],
 		"backup_admin_roles": [
 			{"role_name": "Microsoft 365 Backup Administrator", "member_count": 2, "members": [{"id": "1"}, {"id": "2"}]},
@@ -50,7 +50,7 @@ test_non_compliant_missing_active_policy if {
 			{"id": "rp3", "protectionDateTime": "2026-08-19T00:00:00Z", "expirationDateTime": "2027-08-19T00:00:00Z", "protectionUnitType": "driveProtectionUnit"},
 		],
 		"restore_sessions": [
-			{"id": "s1", "status": "succeeded", "createdDateTime": "2026-06-01T00:00:00Z"},
+			{"id": "s1", "status": "completed", "createdDateTime": "2026-06-01T00:00:00Z"},
 		],
 		"backup_admin_roles": [
 			{"role_name": "Microsoft 365 Backup Administrator", "member_count": 1, "members": [{"id": "1"}]},
@@ -76,7 +76,7 @@ test_non_compliant_missing_recent_restore_point if {
 			{"id": "rp2", "protectionDateTime": "2026-08-19T00:00:00Z", "expirationDateTime": "2027-08-19T00:00:00Z", "protectionUnitType": "siteProtectionUnit"},
 		],
 		"restore_sessions": [
-			{"id": "s1", "status": "succeeded", "createdDateTime": "2026-06-01T00:00:00Z"},
+			{"id": "s1", "status": "completed", "createdDateTime": "2026-06-01T00:00:00Z"},
 		],
 		"backup_admin_roles": [
 			{"role_name": "Microsoft 365 Backup Administrator", "member_count": 1, "members": [{"id": "1"}]},
@@ -128,7 +128,36 @@ test_non_compliant_stale_restore_session if {
 			{"id": "rp3", "protectionDateTime": "2026-08-19T00:00:00Z", "expirationDateTime": "2027-08-19T00:00:00Z", "protectionUnitType": "driveProtectionUnit"},
 		],
 		"restore_sessions": [
-			{"id": "s1", "status": "succeeded", "createdDateTime": "2023-01-01T00:00:00Z"},
+			{"id": "s1", "status": "completed", "createdDateTime": "2023-01-01T00:00:00Z"},
+		],
+		"backup_admin_roles": [
+			{"role_name": "Microsoft 365 Backup Administrator", "member_count": 1, "members": [{"id": "1"}]},
+			{"role_name": "SharePoint Backup Administrator", "member_count": 0, "members": []},
+			{"role_name": "Exchange Backup Administrator", "member_count": 0, "members": []},
+		],
+		"roles_not_found": [],
+	}
+	result.compliant == false
+	result.details.has_recent_restore_session == false
+}
+
+test_non_compliant_recent_but_failed_restore_session if {
+	# Directly covers the reviewer's finding: a recent session with a
+	# non-terminal-success status (failed, active, completedWithError)
+	# must not satisfy has_recent_restore_session just because it is recent.
+	result := data.essential_eight.asd_essential_eight.v2025.control_e8_bak_1_1.result with input as {
+		"protection_policies": [
+			{"id": "p1", "service": "exchangeProtectionPolicy", "status": "active"},
+			{"id": "p2", "service": "sharePointProtectionPolicy", "status": "active"},
+			{"id": "p3", "service": "oneDriveForBusinessProtectionPolicy", "status": "active"},
+		],
+		"recent_restore_points": [
+			{"id": "rp1", "protectionDateTime": "2026-08-19T00:00:00Z", "expirationDateTime": "2027-08-19T00:00:00Z", "protectionUnitType": "mailboxProtectionUnit"},
+			{"id": "rp2", "protectionDateTime": "2026-08-19T00:00:00Z", "expirationDateTime": "2027-08-19T00:00:00Z", "protectionUnitType": "siteProtectionUnit"},
+			{"id": "rp3", "protectionDateTime": "2026-08-19T00:00:00Z", "expirationDateTime": "2027-08-19T00:00:00Z", "protectionUnitType": "driveProtectionUnit"},
+		],
+		"restore_sessions": [
+			{"id": "s1", "status": "failed", "createdDateTime": "2026-08-19T00:00:00Z"},
 		],
 		"backup_admin_roles": [
 			{"role_name": "Microsoft 365 Backup Administrator", "member_count": 1, "members": [{"id": "1"}]},
@@ -154,7 +183,7 @@ test_non_compliant_excessive_backup_admin_access if {
 			{"id": "rp3", "protectionDateTime": "2026-08-19T00:00:00Z", "expirationDateTime": "2027-08-19T00:00:00Z", "protectionUnitType": "driveProtectionUnit"},
 		],
 		"restore_sessions": [
-			{"id": "s1", "status": "succeeded", "createdDateTime": "2026-06-01T00:00:00Z"},
+			{"id": "s1", "status": "completed", "createdDateTime": "2026-06-01T00:00:00Z"},
 		],
 		"backup_admin_roles": [
 			{"role_name": "Microsoft 365 Backup Administrator", "member_count": 6, "members": [{"id": "1"}, {"id": "2"}, {"id": "3"}, {"id": "4"}, {"id": "5"}, {"id": "6"}]},
@@ -182,7 +211,7 @@ test_compliant_at_admin_threshold if {
 			{"id": "rp3", "protectionDateTime": "2026-08-19T00:00:00Z", "expirationDateTime": "2027-08-19T00:00:00Z", "protectionUnitType": "driveProtectionUnit"},
 		],
 		"restore_sessions": [
-			{"id": "s1", "status": "succeeded", "createdDateTime": "2026-06-01T00:00:00Z"},
+			{"id": "s1", "status": "completed", "createdDateTime": "2026-06-01T00:00:00Z"},
 		],
 		"backup_admin_roles": [
 			{"role_name": "Microsoft 365 Backup Administrator", "member_count": 5, "members": [{"id": "1"}, {"id": "2"}, {"id": "3"}, {"id": "4"}, {"id": "5"}]},
@@ -217,6 +246,7 @@ test_result_details_structure if {
 		"restore_sessions": [],
 		"backup_admin_roles": [],
 		"roles_not_found": [],
+		"detected_vendors": [{"vendor": "Veeam", "matched_app_name": "Veeam Data Cloud for Microsoft 365"}],
 	}
 	_ = result.compliant
 	_ = result.message
@@ -228,4 +258,5 @@ test_result_details_structure if {
 	_ = result.details.backup_admin_threshold
 	_ = result.details.backup_admin_access_excessive
 	_ = result.details.backup_admin_roles_not_found
+	result.details.detected_vendors == [{"vendor": "Veeam", "matched_app_name": "Veeam Data Cloud for Microsoft 365"}]
 }

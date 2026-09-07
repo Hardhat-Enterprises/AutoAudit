@@ -194,8 +194,8 @@ def test_collect_recent_restore_points_missing_protection_unit_does_not_crash():
 def test_collect_restore_sessions_returns_all_without_filtering():
     client = AsyncMock()
     client.get_all_pages.return_value = [
-        {"id": "s1", "status": "succeeded", "createdDateTime": "2020-01-01T00:00:00Z"},
-        {"id": "s2", "status": "succeeded", "createdDateTime": "2026-06-01T00:00:00Z"},
+        {"id": "s1", "status": "completed", "createdDateTime": "2020-01-01T00:00:00Z"},
+        {"id": "s2", "status": "completed", "createdDateTime": "2026-06-01T00:00:00Z"},
     ]
     collector = BackupRestoreDataCollector()
 
@@ -228,6 +228,56 @@ def test_collect_backup_admin_roles_finds_all_three_with_members():
         assert r["member_count"] == 1
         assert len(r["members"]) == 1
         assert r["members"][0]["id"] == "u1"
+
+
+def test_role_assignable_group_members_are_expanded_not_dropped():
+    # Directly covers the reviewer's finding: a role assigned to a
+    # role-assignable group must count that group's real members, not
+    # silently drop the group and report zero.
+    client = AsyncMock()
+    client.get_directory_roles.return_value = [
+        {"id": "r1", "displayName": "Microsoft 365 Backup Administrator"},
+        {"id": "r2", "displayName": "SharePoint Backup Administrator"},
+        {"id": "r3", "displayName": "Exchange Backup Administrator"},
+    ]
+    client.get_role_members.return_value = [
+        {"id": "g1", "@odata.type": "#microsoft.graph.group"},
+    ]
+    client.get_all_pages.return_value = [
+        {"id": "u1", "userPrincipalName": "a@x.com", "displayName": "A", "@odata.type": "#microsoft.graph.user"},
+        {"id": "u2", "userPrincipalName": "b@x.com", "displayName": "B", "@odata.type": "#microsoft.graph.user"},
+    ]
+    collector = BackupRestoreDataCollector()
+
+    roles, not_found = asyncio.run(collector._collect_backup_admin_roles(client))
+
+    client.get_all_pages.assert_any_call("/groups/g1/members")
+    for r in roles:
+        assert r["member_count"] == 2
+        assert {m["id"] for m in r["members"]} == {"u1", "u2"}
+
+
+def test_group_expansion_deduplicates_users_reached_two_ways():
+    client = AsyncMock()
+    client.get_directory_roles.return_value = [
+        {"id": "r1", "displayName": "Microsoft 365 Backup Administrator"},
+        {"id": "r2", "displayName": "SharePoint Backup Administrator"},
+        {"id": "r3", "displayName": "Exchange Backup Administrator"},
+    ]
+    # Same user u1 is both a direct member and a member of the group.
+    client.get_role_members.return_value = [
+        {"id": "u1", "userPrincipalName": "a@x.com", "displayName": "A", "@odata.type": "#microsoft.graph.user"},
+        {"id": "g1", "@odata.type": "#microsoft.graph.group"},
+    ]
+    client.get_all_pages.return_value = [
+        {"id": "u1", "userPrincipalName": "a@x.com", "displayName": "A", "@odata.type": "#microsoft.graph.user"},
+    ]
+    collector = BackupRestoreDataCollector()
+
+    roles, _ = asyncio.run(collector._collect_backup_admin_roles(client))
+
+    for r in roles:
+        assert r["member_count"] == 1
 
 
 def test_collect_backup_admin_roles_reports_roles_not_found():
