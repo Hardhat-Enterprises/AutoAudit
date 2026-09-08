@@ -37,6 +37,8 @@ You can start from the template:
 cp env.example .env
 ```
 
+Before continuing, open `.env` and fill in `POSTGRES_PASSWORD`, `SECRET_KEY`, and `ENCRYPTION_KEY` — these are required and have no default value. Generation commands for each are documented as comments in `env.example`.
+
 ```bash
 docker compose --profile all up --build -d
 ```
@@ -154,6 +156,8 @@ docker compose --profile all up --build -d
 ```
 
 The worker logs are output directly to the Docker logs. You can view them with `docker compose logs -f worker`.
+
+SharePoint scans: [SharePoint local runtime](./engine/sharepoint-local-runtime.md). SharePoint controls: [SharePoint control development](./engine/sharepoint-control-development.md).
 
 ## Verifying Your Setup
 
