@@ -122,7 +122,12 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Build report body
+        id: build
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             // Fork PRs get a read-only GITHUB_TOKEN; commenting on the upstream PR is forbidden.
@@ -140,10 +145,9 @@ jobs:
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
             const allPassed = [analyze, lint, test].every(r => ['success', 'skipped'].includes(r));
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const marker = '<!-- ci-report-backend-api -->'; // used to find and update the existing comment
 
             const body = [
-              marker,
+              '<!-- ci-report-backend-api -->',
               `### CI: Backend API`,
               ``,
               `| Job | Result |`,
@@ -157,31 +161,10 @@ jobs:
                 : `One or more checks failed. [View logs](${runUrl})`,
             ].join('\n');
 
-            try {
-              const { data: comments } = await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-              });
+            core.setOutput('body', body);
 
-              const existing = comments.find(c => c.body.includes(marker));
-
-              if (existing) {
-                await github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: existing.id,
-                  body,
-                });
-              } else {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  body,
-                });
-              }
-            } catch (err) {
-              // Do not fail the workflow when the token cannot write comments.
-              core.warning(`Could not post CI status comment: ${err.message || err}`);
-            }
+      - if: steps.build.outputs.body
+        uses: ./.github/actions/pr-status-comment
+        with:
+          marker: '<!-- ci-report-backend-api -->'
+          body: ${{ steps.build.outputs.body }}
