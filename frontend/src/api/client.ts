@@ -1,7 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL as string | undefined;
 
 if (!API_BASE_URL) {
-  throw new Error('VITE_API_URL environment variable must be set');
+  throw new Error("VITE_API_URL environment variable must be set");
 }
 
 type APIErrorPayload = Record<string, unknown> | undefined;
@@ -13,7 +13,7 @@ export class APIError extends Error {
 
   constructor(message: string, status: number, payload?: APIErrorPayload) {
     super(message);
-    this.name = 'APIError';
+    this.name = "APIError";
     this.status = status;
     this.payload = payload;
   }
@@ -22,9 +22,9 @@ export class APIError extends Error {
 function getErrorDetail(payload: unknown, fallback: string): string {
   if (
     payload &&
-    typeof payload === 'object' &&
-    'detail' in payload &&
-    typeof (payload as { detail?: unknown }).detail === 'string'
+    typeof payload === "object" &&
+    "detail" in payload &&
+    typeof (payload as { detail?: unknown }).detail === "string"
   ) {
     return (payload as { detail: string }).detail;
   }
@@ -35,10 +35,10 @@ function getErrorDetail(payload: unknown, fallback: string): string {
 async function fetchWithAuth<T = any>(
   endpoint: string,
   token: AuthToken,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...((options.headers as Record<string, string> | undefined) || {}),
   };
 
@@ -53,11 +53,17 @@ async function fetchWithAuth<T = any>(
     });
 
     if (!response.ok) {
-      const error = (await response.json().catch(() => ({ detail: response.statusText }))) as Record<
+      const error = (await response
+        .json()
+        .catch(() => ({ detail: response.statusText }))) as Record<
         string,
         unknown
       >;
-      throw new APIError(getErrorDetail(error, 'Request failed'), response.status, error);
+      throw new APIError(
+        getErrorDetail(error, "Request failed"),
+        response.status,
+        error,
+      );
     }
 
     // Support endpoints that may return 204 No Content.
@@ -70,7 +76,7 @@ async function fetchWithAuth<T = any>(
     if (error instanceof APIError) {
       throw error;
     }
-    const message = error instanceof Error ? error.message : 'Network error';
+    const message = error instanceof Error ? error.message : "Network error";
     throw new APIError(message, 0);
   }
 }
@@ -78,9 +84,9 @@ async function fetchWithAuth<T = any>(
 // Auth endpoints
 export async function login(email: string, password: string): Promise<any> {
   const response = await fetch(`${API_BASE_URL}/v1/auth/login`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
       username: email,
@@ -89,20 +95,37 @@ export async function login(email: string, password: string): Promise<any> {
   });
 
   if (!response.ok) {
-    const error = (await response.json().catch(() => ({ detail: 'Login failed' }))) as Record<
-      string,
-      unknown
-    >;
-    throw new APIError(getErrorDetail(error, 'Invalid credentials'), response.status, error);
+    const error = (await response
+      .json()
+      .catch(() => ({ detail: "Login failed" }))) as Record<string, unknown>;
+    throw new APIError(
+      getErrorDetail(error, "Invalid credentials"),
+      response.status,
+      error,
+    );
   }
 
   return response.json();
 }
 
-export async function register(email: string, password: string): Promise<any> {
-  return fetchWithAuth('/v1/auth/register', null, {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
+export type RegisterPayload = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  organizationName: string;
+  password: string;
+};
+
+export async function register(payload: RegisterPayload): Promise<any> {
+  return fetchWithAuth("/v1/auth/register", null, {
+    method: "POST",
+    body: JSON.stringify({
+      first_name: payload.firstName,
+      last_name: payload.lastName,
+      email: payload.email,
+      organization_name: payload.organizationName,
+      password: payload.password,
+    }),
   });
 }
 
@@ -112,18 +135,24 @@ export async function logout(token: AuthToken): Promise<any> {
   if (!token) return;
 
   const response = await fetch(`${API_BASE_URL}/v1/auth/logout`, {
-    method: 'POST',
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
 
   if (!response.ok) {
-    const error = (await response.json().catch(() => ({ detail: response.statusText }))) as Record<
+    const error = (await response
+      .json()
+      .catch(() => ({ detail: response.statusText }))) as Record<
       string,
       unknown
     >;
-    throw new APIError(getErrorDetail(error, 'Logout failed'), response.status, error);
+    throw new APIError(
+      getErrorDetail(error, "Logout failed"),
+      response.status,
+      error,
+    );
   }
 
   // 204 No Content (common for logout); nothing to parse.
@@ -134,7 +163,38 @@ export async function logout(token: AuthToken): Promise<any> {
 }
 
 export async function getCurrentUser(token: AuthToken): Promise<any> {
-  return fetchWithAuth('/v1/auth/users/me', token);
+  return fetchWithAuth("/v1/auth/users/me", token);
+}
+
+export type UpdateCurrentUserPayload = {
+  first_name?: string;
+  last_name?: string;
+  organization_name?: string;
+};
+
+export async function updateCurrentUser(
+  token: AuthToken,
+  payload: UpdateCurrentUserPayload,
+): Promise<any> {
+  return fetchWithAuth("/v1/auth/users/me", token, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export type ChangePasswordPayload = {
+  current_password: string;
+  new_password: string;
+};
+
+export async function changePassword(
+  token: AuthToken,
+  payload: ChangePasswordPayload,
+): Promise<any> {
+  return fetchWithAuth("/v1/auth/users/me/change-password", token, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 // Contact submissions
@@ -147,85 +207,108 @@ export type ContactSubmissionCreatePayload = {
   subject: string;
   message: string;
   source?: string;
-}
+};
 
-export async function createContactSubmission(payload: ContactSubmissionCreatePayload): Promise<any> {
-  return fetchWithAuth('/v1/contact', null, {
-    method: 'POST',
+export async function createContactSubmission(
+  payload: ContactSubmissionCreatePayload,
+): Promise<any> {
+  return fetchWithAuth("/v1/contact", null, {
+    method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
 export async function getContactSubmissions(token: AuthToken): Promise<any> {
-  return fetchWithAuth('/v1/contact/submissions', token);
+  return fetchWithAuth("/v1/contact/submissions", token);
 }
 
-export async function getContactSubmission(token: AuthToken, id: string | number): Promise<any> {
+export async function getContactSubmission(
+  token: AuthToken,
+  id: string | number,
+): Promise<any> {
   return fetchWithAuth(`/v1/contact/submissions/${id}`, token);
 }
 
 export async function updateContactSubmission(
   token: AuthToken,
   id: string | number,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
 ): Promise<any> {
   return fetchWithAuth(`/v1/contact/submissions/${id}`, token, {
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify(payload),
   });
 }
 
-export async function deleteContactSubmission(token: AuthToken, id: string | number): Promise<void> {
+export async function deleteContactSubmission(
+  token: AuthToken,
+  id: string | number,
+): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/v1/contact/submissions/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      Authorization: `Bearer ${token || ''}`,
+      Authorization: `Bearer ${token || ""}`,
     },
   });
 
   if (!response.ok) {
-    const error = (await response.json().catch(() => ({ detail: response.statusText }))) as Record<
+    const error = (await response
+      .json()
+      .catch(() => ({ detail: response.statusText }))) as Record<
       string,
       unknown
     >;
-    throw new APIError(getErrorDetail(error, 'Failed to delete submission'), response.status, error);
+    throw new APIError(
+      getErrorDetail(error, "Failed to delete submission"),
+      response.status,
+      error,
+    );
   }
 }
 
-export async function getContactNotes(token: AuthToken, id: string | number): Promise<any> {
+export async function getContactNotes(
+  token: AuthToken,
+  id: string | number,
+): Promise<any> {
   return fetchWithAuth(`/v1/contact/submissions/${id}/notes`, token);
 }
 
 export async function addContactNote(
   token: AuthToken,
   id: string | number,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
 ): Promise<any> {
   return fetchWithAuth(`/v1/contact/submissions/${id}/notes`, token, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export async function getContactHistory(token: AuthToken, id: string | number): Promise<any> {
+export async function getContactHistory(
+  token: AuthToken,
+  id: string | number,
+): Promise<any> {
   return fetchWithAuth(`/v1/contact/submissions/${id}/history`, token);
 }
 
 // Settings endpoints
 export async function getSettings(token: AuthToken): Promise<any> {
-  return fetchWithAuth('/v1/settings', token);
+  return fetchWithAuth("/v1/settings", token);
 }
 
-export async function updateSettings(token: AuthToken, data: Record<string, unknown>): Promise<any> {
-  return fetchWithAuth('/v1/settings', token, {
-    method: 'PATCH',
+export async function updateSettings(
+  token: AuthToken,
+  data: Record<string, unknown>,
+): Promise<any> {
+  return fetchWithAuth("/v1/settings", token, {
+    method: "PATCH",
     body: JSON.stringify(data),
   });
 }
 
 // Platform endpoints
 export async function getPlatforms(token: AuthToken): Promise<any> {
-  return fetchWithAuth('/v1/platforms', token);
+  return fetchWithAuth("/v1/platforms", token);
 }
 
 // M365 Connection endpoints
@@ -234,22 +317,25 @@ export type CreateConnectionPayload = {
   tenant_id: string;
   client_id: string;
   client_secret: string;
-}
+};
 
 export type UpdateConnectionPayload = {
   name?: string;
   tenant_id?: string;
   client_id?: string;
   client_secret?: string;
-}
+};
 
 export async function getConnections(token: AuthToken): Promise<any> {
-  return fetchWithAuth('/v1/m365-connections/', token);
+  return fetchWithAuth("/v1/m365-connections/", token);
 }
 
-export async function createConnection(token: AuthToken, data: CreateConnectionPayload): Promise<any> {
-  return fetchWithAuth('/v1/m365-connections/', token, {
-    method: 'POST',
+export async function createConnection(
+  token: AuthToken,
+  data: CreateConnectionPayload,
+): Promise<any> {
+  return fetchWithAuth("/v1/m365-connections/", token, {
+    method: "POST",
     body: JSON.stringify(data),
   });
 }
@@ -257,43 +343,51 @@ export async function createConnection(token: AuthToken, data: CreateConnectionP
 export async function updateConnection(
   token: AuthToken,
   id: string | number,
-  data: UpdateConnectionPayload
+  data: UpdateConnectionPayload,
 ): Promise<any> {
   return fetchWithAuth(`/v1/m365-connections/${id}`, token, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(data),
   });
 }
 
-export async function deleteConnection(token: AuthToken, id: string | number): Promise<void> {
+export async function deleteConnection(
+  token: AuthToken,
+  id: string | number,
+): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/v1/m365-connections/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      Authorization: `Bearer ${token || ''}`,
+      Authorization: `Bearer ${token || ""}`,
     },
   });
 
   if (!response.ok) {
-    const error = (await response.json().catch(() => ({ detail: response.statusText }))) as Record<
+    const error = (await response
+      .json()
+      .catch(() => ({ detail: response.statusText }))) as Record<
       string,
       unknown
     >;
-    throw new Error(getErrorDetail(error, 'Failed to delete connection'));
+    throw new Error(getErrorDetail(error, "Failed to delete connection"));
   }
 
   // DELETE returns 204 No Content, so don't try to parse JSON
   return;
 }
 
-export async function testConnection(token: AuthToken, id: string | number): Promise<any> {
+export async function testConnection(
+  token: AuthToken,
+  id: string | number,
+): Promise<any> {
   return fetchWithAuth(`/v1/m365-connections/${id}/test`, token, {
-    method: 'POST',
+    method: "POST",
   });
 }
 
 // Benchmark endpoints
 export async function getBenchmarks(token: AuthToken): Promise<any> {
-  return fetchWithAuth('/v1/benchmarks', token);
+  return fetchWithAuth("/v1/benchmarks", token);
 }
 
 // Scan endpoints
@@ -302,16 +396,16 @@ export type CreateScanPayload = {
   framework: string;
   benchmark: string;
   version: string;
-}
+};
 
 // One item in the readiness breakdown shown on the scan form.
 export type ScanReadinessCheck = {
   key: string;
   label: string;
-  status: 'pass' | 'fail' | 'warn';
-  severity: 'critical' | 'warning';
+  status: "pass" | "fail" | "warn";
+  severity: "critical" | "warning";
   message: string;
-}
+};
 
 export type ScanReadinessResponse = {
   ready: boolean;
@@ -320,19 +414,25 @@ export type ScanReadinessResponse = {
   missing_permissions: string[];
   unverified_permissions: string[];
   checks: ScanReadinessCheck[];
-}
+};
 
 export async function getScans(token: AuthToken): Promise<any> {
-  return fetchWithAuth('/v1/scans/', token);
+  return fetchWithAuth("/v1/scans/", token);
 }
 
-export async function getScan(token: AuthToken, id: string | number): Promise<any> {
+export async function getScan(
+  token: AuthToken,
+  id: string | number,
+): Promise<any> {
   return fetchWithAuth(`/v1/scans/${id}`, token);
 }
 
-export async function createScan(token: AuthToken, data: CreateScanPayload): Promise<any> {
-  return fetchWithAuth('/v1/scans/', token, {
-    method: 'POST',
+export async function createScan(
+  token: AuthToken,
+  data: CreateScanPayload,
+): Promise<any> {
+  return fetchWithAuth("/v1/scans/", token, {
+    method: "POST",
     body: JSON.stringify(data),
   });
 }
@@ -344,7 +444,7 @@ export async function getScanReadiness(
     framework: string;
     benchmark: string;
     version: string;
-  }
+  },
 ): Promise<ScanReadinessResponse> {
   // Readiness is a lightweight GET request because it only validates the selected connection and benchmark. It does not create or start a scan.
   const search = new URLSearchParams({
@@ -357,20 +457,25 @@ export async function getScanReadiness(
   return fetchWithAuth(`/v1/scans/readiness?${search.toString()}`, token);
 }
 
-export async function deleteScan(token: AuthToken, id: string | number): Promise<void> {
+export async function deleteScan(
+  token: AuthToken,
+  id: string | number,
+): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/v1/scans/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      Authorization: `Bearer ${token || ''}`,
+      Authorization: `Bearer ${token || ""}`,
     },
   });
 
   if (!response.ok) {
-    const error = (await response.json().catch(() => ({ detail: response.statusText }))) as Record<
+    const error = (await response
+      .json()
+      .catch(() => ({ detail: response.statusText }))) as Record<
       string,
       unknown
     >;
-    throw new Error(getErrorDetail(error, 'Failed to delete scan'));
+    throw new Error(getErrorDetail(error, "Failed to delete scan"));
   }
 
   // DELETE returns 204 No Content, so don't try to parse JSON
@@ -385,15 +490,18 @@ export async function getEvidenceStrategies(): Promise<any> {
   // Returns an array of strategy objects, e.g.
   // [{ name, description, category, severity, evidence_types }, ...]
   // (see backend-api/app/api/v1/evidence.py -> strategies()).
-  return fetchWithAuth('/v1/evidence/strategies', null);
+  return fetchWithAuth("/v1/evidence/strategies", null);
 }
 
 export type ScanEvidenceParams = {
   strategyName: string;
   file: File | Blob;
-}
+};
 
-export async function scanEvidence(token: AuthToken, { strategyName, file }: ScanEvidenceParams): Promise<any> {
+export async function scanEvidence(
+  token: AuthToken,
+  { strategyName, file }: ScanEvidenceParams,
+): Promise<any> {
   // Frontend -> Backend
   // POST /v1/evidence/scan (multipart/form-data)
   //
@@ -401,17 +509,17 @@ export async function scanEvidence(token: AuthToken, { strategyName, file }: Sca
   // The user is derived from the Bearer token (server-side), not a client-provided user_id.
   // Backend returns a JSON payload that the UI renders in the Results section.
   if (!strategyName) {
-    throw new Error('Strategy is required');
+    throw new Error("Strategy is required");
   }
   if (!file) {
-    throw new Error('Evidence file is required');
+    throw new Error("Evidence file is required");
   }
 
   const formData = new FormData();
   // These field names must match the FastAPI endpoint signature in:
   // backend-api/app/api/v1/evidence.py -> scan(...)
-  formData.append('strategy_name', strategyName);
-  formData.append('evidence', file);
+  formData.append("strategy_name", strategyName);
+  formData.append("evidence", file);
 
   const headers: Record<string, string> = {};
   if (token) {
@@ -419,7 +527,7 @@ export async function scanEvidence(token: AuthToken, { strategyName, file }: Sca
   }
 
   const response = await fetch(`${API_BASE_URL}/v1/evidence/scan`, {
-    method: 'POST',
+    method: "POST",
     headers,
     body: formData,
   });
@@ -427,12 +535,18 @@ export async function scanEvidence(token: AuthToken, { strategyName, file }: Sca
   if (!response.ok) {
     // The backend may respond with JSON (FastAPI error) or plain text.
     // We parse best-effort and throw APIError so callers can display a message.
-    const raw = await response.text().catch(() => '');
+    const raw = await response.text().catch(() => "");
     try {
-      const error = (raw ? JSON.parse(raw) : { detail: response.statusText }) as Record<string, unknown>;
-      throw new APIError(getErrorDetail(error, 'Scan failed'), response.status, error);
+      const error = (
+        raw ? JSON.parse(raw) : { detail: response.statusText }
+      ) as Record<string, unknown>;
+      throw new APIError(
+        getErrorDetail(error, "Scan failed"),
+        response.status,
+        error,
+      );
     } catch {
-      throw new APIError(raw || 'Scan failed', response.status);
+      throw new APIError(raw || "Scan failed", response.status);
     }
   }
 
@@ -442,6 +556,37 @@ export async function scanEvidence(token: AuthToken, { strategyName, file }: Sca
 export function getEvidenceReportUrl(filename: string): string {
   // Frontend helper to build a direct download URL for a generated report.
   // Backend endpoint: GET /v1/evidence/reports/{filename}
-  if (!filename) return '';
+  if (!filename) return "";
   return `${API_BASE_URL}/v1/evidence/reports/${encodeURIComponent(filename)}`;
+}
+
+export async function downloadEvidenceReport(token: AuthToken, filename: string): Promise<void> {
+  // Downloads a report file by fetching it with the Bearer token attached.
+  // Uses fetch() instead of a plain <a href> so the Authorization header is sent.
+  // A plain anchor tag does not send Authorization headers on click, which causes 401.
+  if (!filename) return;
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/v1/evidence/reports/${encodeURIComponent(filename)}`,
+    { method: 'GET', headers }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Download failed: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
 }

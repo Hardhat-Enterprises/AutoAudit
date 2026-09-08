@@ -97,8 +97,11 @@ policies/
     gcp/
       v1.0.0/
         ...
-  essential8/
-    ...
+  essential-eight/
+    asd-essential-eight/
+      v2025/
+        e8_mac_2_1_win32_api_block.rego
+        metadata.json
 ```
 
 The package name in each policy mirrors this structure, with dots replacing slashes and hyphens becoming underscores:
@@ -106,7 +109,22 @@ The package name in each policy mirrors this structure, with dots replacing slas
 ```
 cis/microsoft-365-foundations/v3.1.0/1.1.1_...
 → package cis.microsoft_365_foundations.v3_1_0.control_1_1_1
+
+essential-eight/asd-essential-eight/v2025/e8_mac_2_1_...
+→ package essential_eight.asd_essential_eight.v2025.control_e8_mac_2_1
 ```
+
+## Naming convention: kebab on the metadata side, snake on the Rego side
+
+This split is deliberate, not accidental:
+
+- **Human-readable side** (directories, metadata.json `framework` / `slug`, file names other than .rego) uses **kebab-case**. It matches the existing CIS tree and is easier to read in URLs and shell commands.
+- **Rego side** (package paths, .rego file names) uses **snake_case**. The Rego language doesn't allow hyphens in package identifiers, so this isn't a choice.
+- **Control IDs** are kept **verbatim from the framework's published format** — no re-stylising. For CIS that means dotted lowercase (`1.1.1`); for ASD Essential Eight that means uppercase with hyphens and dots (`E8-MAC-2.1`, `E8-MFA-2.1`, `E8-PRIV-1.1`). The reason is auditor traceability: someone cross-referencing AutoAudit's output against the source benchmark should get a line-for-line match without mental translation.
+
+The engine bridges the two sides automatically. `engine/worker/tasks.py` normalises framework names and control IDs when building the OPA package path at scan time — lowercasing and replacing hyphens / dots with underscores. The transform is a no-op on CIS inputs (which are already lowercase + dot-separated) and the right thing on Essential Eight inputs.
+
+In practice this means contributors adding a new non-CIS control don't have to think about the conversion: keep the framework / slug / control_id in their published form on the metadata side, name the Rego file and package in snake_case, and the engine wires them together correctly.
 
 ## References
 

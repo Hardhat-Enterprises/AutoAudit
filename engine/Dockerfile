@@ -8,21 +8,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Create non-root user early, before any COPYs
+RUN adduser --disabled-password --gecos "" --uid 1000 appuser
+RUN chown appuser:appuser /app
+
 # Copy and install Python dependencies
-COPY pyproject.toml .
+COPY --chown=appuser:appuser pyproject.toml .
 RUN pip install --no-cache-dir .
 
 # Copy application code
-COPY worker/ ./worker/
-COPY collectors/ ./collectors/
-COPY policies/ ./policies/
-COPY opa_client.py ./
+COPY --chown=appuser:appuser worker/ ./worker/
+COPY --chown=appuser:appuser collectors/ ./collectors/
+COPY --chown=appuser:appuser policies/ ./policies/
+COPY --chown=appuser:appuser opa_client.py ./
 
 # Set Python path to include /app
 ENV PYTHONPATH=/app
 
 # Copy entrypoint script and fix line endings
-COPY worker_entrypoint.sh .
+COPY --chown=appuser:appuser worker_entrypoint.sh .
 RUN sed -i 's/\r$//' worker_entrypoint.sh && chmod +x worker_entrypoint.sh
+
+USER appuser
 
 CMD ["./worker_entrypoint.sh"]

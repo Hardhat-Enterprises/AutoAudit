@@ -32,7 +32,9 @@ def load_metadata(framework: str, benchmark: str, version: str) -> dict:
     Returns:
         The metadata dict containing controls list.
     """
-    metadata_path = Path(settings.POLICIES_DIR) / framework / benchmark / version / "metadata.json"
+    metadata_path = (
+        Path(settings.POLICIES_DIR) / framework / benchmark / version / "metadata.json"
+    )
     if not metadata_path.exists():
         raise FileNotFoundError(f"Metadata not found: {metadata_path}")
 
@@ -133,7 +135,9 @@ def run_scan(scan_id: int) -> dict:
             # explicitly disabled via ENABLE_POWERSHELL_CONTROLS=false.
             if (
                 settings.ENABLE_POWERSHELL_CONTROLS is False
-                and collector_id.startswith(("exchange.", "compliance.", "teams."))
+                and collector_id.startswith(
+                    ("exchange.", "compliance.", "teams.", "sharepoint.pnp.")
+                )
                 and not collector_id.startswith("exchange.dns.")
             ):
                 with get_db_session() as session:
@@ -297,11 +301,10 @@ def evaluate_control(
         }
 
     except Exception as exc:
-        # Retry on failure
-        try:
-            raise self.retry(exc=exc)
-        except self.MaxRetriesExceededError:
-            # Max retries exceeded - mark as error
+        # self.request.retries is the number of retries already performed.
+        # Once the retry limit is reached, persist the terminal error
+        # instead of scheduling another retry.
+        if self.max_retries is not None and self.request.retries >= self.max_retries:
             with get_db_session() as session:
                 update_scan_result(
                     session,
@@ -314,11 +317,14 @@ def evaluate_control(
                 # Check if this was the last control and finalize scan if complete
                 finalize_scan_if_complete(session, scan_id)
                 session.commit()
+
             return {
                 "control_id": control_id,
                 "compliant": None,
                 "error": str(exc),
             }
+
+        raise self.retry(exc=exc)
 
 
 async def _evaluate_control_async(
@@ -348,51 +354,106 @@ async def _evaluate_control_async(
     from collectors.registry import get_collector
     from collectors.graph_client import GraphClient
     from collectors.powershell_client import PowerShellClient
+    from collectors.multi_client_base import BaseMultiClientCollector
     from opa_client import opa_client
 
     # Get collector
     collector = get_collector(collector_id)
 
-    # Determine client type based on collector_id prefix.
-    #
-    # Most Exchange and Compliance collectors require PowerShell, but a few Exchange
-    # collectors use Graph (e.g. domain metadata).
-    if collector_id.startswith(("exchange.", "compliance.")) and not collector_id.startswith(
-        "exchange.dns."
-    ):
-        client = PowerShellClient(
-            tenant_id=credentials["tenant_id"],
-            client_id=credentials["client_id"],
-            client_secret=credentials["client_secret"],
-            service_url=settings.POWERSHELL_SERVICE_URL,
-        )
-    else:
-        # Entra and other collectors use Graph API
-        client = GraphClient(
-            tenant_id=credentials["tenant_id"],
-            client_id=credentials["client_id"],
-            client_secret=credentials["client_secret"],
-        )
+    # Multi-client collectors (need more than one API at once, e.g. a
+    # control needing both Graph and DVM) are checked first. This is
+    # additive: existing single-client collectors are unaffected, this
+    # branch only fires for collectors that explicitly inherit
+    # BaseMultiClientCollector.
+    if isinstance(collector, BaseMultiClientCollector):
+        clients: dict = {}
+        for client_name in collector.required_clients:
+            if client_name == "graph":
+                clients["graph"] = GraphClient(
+                    tenant_id=credentials["tenant_id"],
+                    client_id=credentials["client_id"],
+                    client_secret=credentials["client_secret"],
+                )
+            elif client_name == "powershell":
+                clients["powershell"] = PowerShellClient(
+                    tenant_id=credentials["tenant_id"],
+                    client_id=credentials["client_id"],
+                    client_secret=credentials["client_secret"],
+                    service_url=settings.POWERSHELL_SERVICE_URL,
+                    sharepoint_admin_url=settings.SHAREPOINT_ADMIN_URL,
+                    certificate_alias=settings.SHAREPOINT_CERT_ALIAS,
+                )
+            elif client_name == "dvm":
+                # UNVERIFIED: DVM credentials. Report 26T2-SEC-EG-003
+                # states DVM needs a SEPARATE app registration from the
+                # one in `credentials`. Using placeholder separate
+                # settings here, NOT `credentials`. These settings
+                # (DVM_TENANT_ID etc.) do not exist yet in
+                # worker/config.py, need adding once confirmed against
+                # the live tenant.
+                from collectors.dvm_client import DVMClient
+                clients["dvm"] = DVMClient(
+                    tenant_id=settings.DVM_TENANT_ID,
+                    client_id=settings.DVM_CLIENT_ID,
+                    client_secret=settings.DVM_CLIENT_SECRET,
+                )
+            else:
+                raise ValueError(
+                    f"Unknown required client '{client_name}' for "
+                    f"collector {collector_id}"
+                )
+        collected_data = await collector.collect(clients)
 
-    # Collect data using the appropriate client
-    collected_data = await collector.collect(client)
+    else:
+        # Determine client type based on collector_id prefix.
+        #
+        # Most Exchange and Compliance collectors require PowerShell, but a few Exchange
+        # collectors use Graph (e.g. domain metadata).
+        client: PowerShellClient | GraphClient
+        if collector_id.startswith(
+            ("exchange.", "compliance.", "sharepoint.pnp.")
+        ) and not collector_id.startswith("exchange.dns."):
+            client = PowerShellClient(
+                tenant_id=credentials["tenant_id"],
+                client_id=credentials["client_id"],
+                client_secret=credentials["client_secret"],
+                service_url=settings.POWERSHELL_SERVICE_URL,
+                sharepoint_admin_url=settings.SHAREPOINT_ADMIN_URL,
+                certificate_alias=settings.SHAREPOINT_CERT_ALIAS,
+            )
+        else:
+            # Entra and other collectors use Graph API
+            client = GraphClient(
+                tenant_id=credentials["tenant_id"],
+                client_id=credentials["client_id"],
+                client_secret=credentials["client_secret"],
+            )
+
+        # Collect data using the appropriate client. collect() is typed
+        # for GraphClient specifically, but PowerShell-based collectors
+        # override this at runtime; cast to satisfy the type checker
+        # without changing existing behaviour.
+        from typing import cast
+        collected_data = await collector.collect(cast(GraphClient, client))
 
     # Build OPA package path to match the Rego package declaration
     # Rego package: "cis.microsoft_365_foundations.v3_1_0.control_1_1_1"
     # OPA REST API path: "cis/microsoft_365_foundations/v3_1_0/control_1_1_1"
     #
     # Transform:
+    # - framework: "essential-eight" -> "essential_eight"
     # - benchmark: "microsoft-365-foundations" -> "microsoft_365_foundations"
     # - version: "v3.1.0" -> "v3_1_0"
-    # - control_id: "1.1.1" -> "control_1_1_1"
+    # - control_id: "1.1.1" -> "control_1_1_1", "E8-MAC-2.1" -> "control_e8_mac_2_1"
+    framework_normalized = framework.replace("-", "_")
     benchmark_normalized = benchmark.replace("-", "_")
     version_normalized = version.replace(".", "_")
 
-    # Convert control_id like "1.1.1" to "control_1_1_1"
-    control_suffix = control_id.replace(".", "_")
+    # Convert control_id to a valid Rego identifier (lowercase, hyphens/dots to underscores)
+    control_suffix = control_id.replace(".", "_").replace("-", "_").lower()
     control_package = f"control_{control_suffix}"
 
-    package_path = f"{framework}/{benchmark_normalized}/{version_normalized}/{control_package}"
+    package_path = f"{framework_normalized}/{benchmark_normalized}/{version_normalized}/{control_package}"
 
     # Evaluate policy with OPA
     result = await opa_client.evaluate_policy(package_path, collected_data)

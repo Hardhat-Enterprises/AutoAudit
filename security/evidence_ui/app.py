@@ -157,7 +157,7 @@ PREVIEWS = RESULTS / "previews"              # preview images for evidence
 INDEX_HTML = ROOT / "evidence_ui" / "ui.html"      # serve the UI from evidence_ui/ui.html
 
 # ✨ Recent scan: in-memory log
-SCAN_MEM = deque(maxlen=50)
+SCAN_MEM: deque[dict[str, str]] = deque(maxlen=50)
 
 def _push_mem_log(user: str, strategy: str, status: str) -> None:
     """status: 'success' | 'error'"""
@@ -387,15 +387,22 @@ async def scan(
 
 @app.get("/reports/{filename}")
 def download_report(filename: str):
-    path = OUT_DIR / filename
+    safe_name = Path(filename).name
+    if not safe_name or safe_name != filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    path = (OUT_DIR / safe_name).resolve()
+    if not str(path).startswith(str(OUT_DIR.resolve())):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
     if not path.exists():
         raise HTTPException(status_code=404, detail="Report not found")
 
     media = (
         "application/pdf"
-        if filename.lower().endswith(".pdf")
+        if safe_name.lower().endswith(".pdf")
         else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        if filename.lower().endswith(".docx")
+        if safe_name.lower().endswith(".docx")
         else "text/plain"
     )
-    return FileResponse(str(path), media_type=media, filename=filename)
+    return FileResponse(str(path), media_type=media, filename=safe_name)

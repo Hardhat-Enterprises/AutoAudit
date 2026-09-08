@@ -1,14 +1,16 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     # The below settings are defaults, and not duplicates of .env
     # The contents of .env overrides what is defined here.
+    model_config = SettingsConfigDict(env_file=".env")
+
     APP_ENV: str = "dev"
     API_PREFIX: str = "/v1"
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://autoaudit:autoaudit_dev_password@localhost:5432/autoaudit"
+    DATABASE_URL: str = "postgresql+asyncpg://autoaudit:autoaudit_dev_password@localhost:5432/autoaudit"  # pragma: allowlist secret
 
     # Authentication
     SECRET_KEY: str = "change-this-to-a-secure-random-string-in-production"
@@ -36,9 +38,6 @@ class Settings(BaseSettings):
 
     # Policies directory (for benchmark/control metadata)
     POLICIES_DIR: str = "/app/policies"
-
-    class Config:
-        env_file = ".env"
 
 
 def get_settings() -> Settings:

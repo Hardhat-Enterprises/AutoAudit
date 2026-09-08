@@ -1,0 +1,32 @@
+name: Preview Instructions
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  post-instructions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post preview environment instructions
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.number }}
+          body: |
+            <!-- autoaudit-preview-instructions -->
+            ## Preview Environment
+
+            A preview environment can be spun up on demand for this PR.
+
+            | Action | Label | Includes |
+            |---|---|---|
+            | **Spin up preview** | `deploy-preview` | Frontend, backend, database, Redis, OPA, worker |
+            | **Spin up preview with M365** | `deploy-preview-m365` | Everything above + PowerShell service for Exchange/Teams scan testing |
+            | **Tear down preview** | `teardown-preview` | Stops the environment early |
+
+            > The environment will also be torn down automatically when the PR is closed or merged.
+            > Preview URLs will appear in a follow-up comment once the deploy completes (~5–8 min).
+            > M365 scans require real tenant credentials added through the frontend UI.

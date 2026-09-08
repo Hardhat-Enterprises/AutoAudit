@@ -8,6 +8,9 @@ from collectors.entra.applications.apps_and_services_settings import (
 )
 from collectors.entra.applications.forms_settings import FormsSettingsDataCollector
 
+from collectors.entra.applications.third_party_storage_services import (
+    ThirdPartyStorageServicesDataCollector,
+)
 # Authentication
 from collectors.entra.authentication.authentication_methods import (
     AuthenticationMethodsDataCollector,
@@ -29,8 +32,15 @@ from collectors.entra.conditional_access.conditional_access_policies import (
 from collectors.entra.conditional_access.legacy_auth_block import (
     LegacyAuthBlockDataCollector,
 )
+from collectors.entra.conditional_access.e8_mfa_enforcement import (
+    E8MfaEnforcementDataCollector,
+)
 
 # Devices
+from collectors.entra.devices.asr_rules import ASRRulesDataCollector
+from collectors.entra.devices.configuration_policies import (
+    ConfigurationPoliciesDataCollector,
+)
 from collectors.entra.devices.device_management_settings import (
     DeviceManagementSettingsDataCollector,
 )
@@ -61,6 +71,9 @@ from collectors.entra.policies.authorization_policy import (
 from collectors.entra.policies.b2b_policy import B2BPolicyDataCollector
 
 # Roles
+from collectors.entra.roles.admin_license_footprint import (
+    AdminLicenseFootprintDataCollector,
+)
 from collectors.entra.roles.cloud_only_admins import CloudOnlyAdminsDataCollector
 from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
 
@@ -70,6 +83,9 @@ from collectors.exchange.dns.dns_security_records import (
 )
 
 # Exchange - Organization
+from collectors.exchange.organization.admin_audit_log_config import (
+    AdminAuditLogConfigDataCollector,
+)
 from collectors.exchange.organization.organization_config import (
     OrganizationConfigDataCollector,
 )
@@ -131,12 +147,19 @@ from collectors.exchange.transport.external_in_outlook import (
 )
 from collectors.exchange.transport.transport_rules import TransportRulesDataCollector
 
+# SharePoint - PnP
+from collectors.sharepoint.pnp.tenant import PnpTenantDataCollector
+
+
+
+
 
 # Registry mapping data_collector_id to collector class
 DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Applications
     "entra.applications.apps_and_services_settings": AppsAndServicesSettingsDataCollector,
     "entra.applications.forms_settings": FormsSettingsDataCollector,
+    "entra.applications.third_party_storage_services": ThirdPartyStorageServicesDataCollector,
     # Authentication
     "entra.authentication.authentication_methods": AuthenticationMethodsDataCollector,
     "entra.authentication.mfa_fatigue_protection": MfaFatigueProtectionDataCollector,
@@ -145,7 +168,10 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Conditional Access
     "entra.conditional_access.policies": ConditionalAccessPoliciesDataCollector,
     "entra.conditional_access.legacy_auth_block": LegacyAuthBlockDataCollector,
+    "entra.conditional_access.e8_mfa_enforcement": E8MfaEnforcementDataCollector,
     # Devices
+    "entra.devices.asr_rules": ASRRulesDataCollector,
+    "entra.devices.configuration_policies": ConfigurationPoliciesDataCollector,
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
@@ -161,12 +187,14 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.policies.authorization_policy": AuthorizationPolicyDataCollector,
     "entra.policies.b2b_policy": B2BPolicyDataCollector,
     # Roles
+    "entra.roles.admin_license_footprint": AdminLicenseFootprintDataCollector,
     "entra.roles.cloud_only_admins": CloudOnlyAdminsDataCollector,
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,
     # Users
     # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
     # Exchange - Organization
+    "exchange.organization.admin_audit_log_config": AdminAuditLogConfigDataCollector,
     "exchange.organization.organization_config": OrganizationConfigDataCollector,
     "exchange.organization.owa_mailbox_policy": OwaMailboxPolicyDataCollector,
     "exchange.organization.sharing_policy": SharingPolicyDataCollector,
@@ -191,8 +219,9 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Exchange - Transport
     "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
     "exchange.transport.transport_rules": TransportRulesDataCollector,
+    # SharePoint - PnP
+    "sharepoint.pnp.tenant": PnpTenantDataCollector,
 }
-
 
 def get_collector(collector_id: str) -> BaseDataCollector:
     """Get a collector instance by ID."""

@@ -1,0 +1,53 @@
+name: "Compliance Policy Checks"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'policy/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'policy/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+jobs:
+  conftest:
+    name: Verify Compose policies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Conftest
+        env:
+          CONFTEST_VERSION: 0.69.0
+        run: |
+          curl --fail --location --silent --show-error \
+            "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz" \
+            --output "$RUNNER_TEMP/conftest.tar.gz"
+          tar -xzf "$RUNNER_TEMP/conftest.tar.gz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: Verify Compose policy unit tests
+        run: conftest verify --policy policy/compose
+
+      - name: Verify workflow permissions policy unit tests
+        run: conftest verify --policy policy/github-actions
+
+      - name: Verify compliant Compose fixture
+        run: conftest test --policy policy/compose policy/fixtures/compose/compliant.yml
+
+      - name: Verify compliant workflow fixture
+        run: conftest test --policy policy/github-actions policy/fixtures/workflows/compliant.yml
+
+      - name: Report current Compose findings
+        run: conftest test --no-fail --policy policy/compose docker-compose.yml
+
+      - name: Report workflow permission findings
+        run: conftest test --no-fail --policy policy/github-actions .github/workflows

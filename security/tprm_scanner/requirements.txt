@@ -14,7 +14,7 @@ openai==0.27.0
 pandas>=1.4.0
 numpy>=1.21.0
 plotly==5.5.0
-weasyprint==60.1
+weasyprint==68.1
 python-docx==0.8.11
 python-nmap==0.7.1
 flask-sqlalchemy==2.5.1

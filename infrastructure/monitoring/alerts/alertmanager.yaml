@@ -27,7 +27,7 @@ receivers:
         smarthost: 'smtp.example.com:587'
         auth_username: 'alertmanager@example.com'
         auth_identity: 'alertmanager@example.com'
-        auth_password: 'REPLACE_WITH_REAL_PASSWORD'
+        auth_password: 'REPLACE_WITH_REAL_PASSWORD'  # pragma: allowlist secret
 
 #Note: Webhook URLs and APIs have been removed as no Slack or Azure Sentinel integrations are used.
 #VERY IMPORTANT: THE EMAIL ADDRESSES AND THEIR ADJACENT DETAILS ARE PLACEHOLDERS. TO BE MODIFIED BEFORE DEPLOYING.

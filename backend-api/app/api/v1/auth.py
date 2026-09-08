@@ -1,4 +1,5 @@
 import secrets
+import logging
 from urllib.parse import urlencode
 
 import httpx
@@ -12,6 +13,8 @@ from app.core.users import auth_backend, fastapi_users, get_jwt_strategy, get_us
 from app.schemas.user import UserRead, UserCreate, UserRegister, UserUpdate
 from app.core.auth import get_current_user
 from app.models.user import User
+
+logger = logging.getLogger("api")
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -36,6 +39,35 @@ async def read_users_me(user: User = Depends(get_current_user)):
     """Get current authenticated user information."""
     return user
 
+#Update User
+@users_router.patch("/me", summary="Update my user information", response_model=UserRead)
+async def update_users_me(
+    user_update: UserUpdate,
+    user: User = Depends(get_current_user),
+):
+    """Update current authenticated user's profile information."""
+    from app.db.session import get_async_session
+
+    async for session in get_async_session():
+        db_user = await session.get(User, user.id)
+
+        if db_user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        if user_update.first_name is not None:
+            db_user.first_name = user_update.first_name
+
+        if user_update.last_name is not None:
+            db_user.last_name = user_update.last_name
+
+        if user_update.organization_name is not None:
+            db_user.organization_name = user_update.organization_name
+
+        await session.commit()
+        await session.refresh(db_user)
+
+        return db_user
+
 
 # Change password endpoint
 from pydantic import BaseModel
@@ -51,35 +83,34 @@ async def change_password(
     user: User = Depends(get_current_user),
 ):
     """Change current user's password."""
-    from app.core.users import get_user_manager
     from app.db.session import get_async_session
-    from fastapi import Request
-
-    # Create a mock request object for fastapi-users
-    request = Request(scope={"type": "http"})
+    from app.core.users import get_user_manager
 
     async for session in get_async_session():
+        db_user = await session.get(User, user.id)
+
+        if db_user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
         async for user_manager in get_user_manager(session):
-            try:
-                # Verify current password
-                verified, updated_password_hash = user_manager.password_helper.verify_and_update(
-                    password_data.current_password, user.hashed_password
+            verified, _ = user_manager.password_helper.verify_and_update(
+                password_data.current_password,
+                db_user.hashed_password,
+            )
+
+            if not verified:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Current password is incorrect",
                 )
-                if not verified:
-                    raise exceptions.InvalidPasswordException()
 
-                # Hash new password
-                new_hashed_password = user_manager.password_helper.hash(password_data.new_password)
+            db_user.hashed_password = user_manager.password_helper.hash(
+                password_data.new_password
+            )
 
-                # Update user password
-                user.hashed_password = new_hashed_password
-                await session.commit()
+            await session.commit()
 
-                return {"message": "Password changed successfully"}
-
-            except exceptions.InvalidPasswordException:
-                from fastapi import HTTPException
-                raise HTTPException(status_code=400, detail="Invalid current password")
+            return {"message": "Password changed successfully"}
 
 
 # Include users router
@@ -149,7 +180,7 @@ async def google_authorize() -> RedirectResponse:
         value=state,
         max_age=600,
         httponly=True,
-        secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
+        secure=True,
         samesite="lax",
         path=f"{settings.API_PREFIX}/auth/google/callback",
     )
@@ -195,6 +226,7 @@ async def google_callback(
         token = await client.get_access_token(code, redirect_uri=_google_redirect_uri())
         google_access_token = token["access_token"]
     except Exception:
+        logger.exception("Google OAuth token exchange failed")
         return RedirectResponse(
             _frontend_google_callback_url(
                 {
@@ -215,6 +247,7 @@ async def google_callback(
         resp.raise_for_status()
         profile = resp.json()
     except Exception:
+        logger.exception("Google OAuth userinfo fetch failed")
         return RedirectResponse(
             _frontend_google_callback_url(
                 {
@@ -265,6 +298,7 @@ async def google_callback(
             is_verified_by_default=True,
         )
     except Exception:
+        logger.exception("Google OAuth account linking failed")
         return RedirectResponse(
             _frontend_google_callback_url(
                 {
@@ -278,12 +312,16 @@ async def google_callback(
     # fastapi-users JWTStrategy.write_token is async in the version used by the backend container.
     autoaudit_token = await get_jwt_strategy().write_token(user)
     redirect_url = _frontend_google_callback_url(
-        {"access_token": autoaudit_token, "token_type": "bearer"}
+        # "bearer" is the OAuth 2.0 token-type value, not a credential.
+        {"access_token": autoaudit_token, "token_type": "bearer"}  # nosec B105
     )
 
     response = RedirectResponse(redirect_url, status_code=status.HTTP_302_FOUND)
     response.delete_cookie(
         GOOGLE_OAUTH_STATE_COOKIE,
         path=f"{settings.API_PREFIX}/auth/google/callback",
+        secure=True,
+        httponly=True,
+        samesite="lax",
     )
     return response
