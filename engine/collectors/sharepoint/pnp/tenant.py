@@ -1,10 +1,11 @@
 """PnP SharePoint tenant collector.
 
 CIS Microsoft 365 Foundations Benchmark Controls:
-    v6.0.0: 7.3.1
+    v6.0.0: 7.3.1, 7.2.7
 
 Control Descriptions:
     7.3.1 - Ensure Office 365 SharePoint infected files are disallowed for download
+    7.2.7 - Ensure link sharing is restricted in SharePoint and OneDrive
 
 Connection Method: SharePoint Online PowerShell (via PowerShell HTTP service)
 Required Cmdlets: Get-PnPTenant
@@ -49,5 +50,9 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             ),
                "external_user_expire_in_days": tenant.get(
                "ExternalUserExpireInDays"
+            ),
+                "default_sharing_link_type": tenant.get
+            (
+                "DefaultSharingLinkType"
             ),
         }
