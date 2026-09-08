@@ -118,7 +118,10 @@ async def test_probe_tenant_details_paths() -> None:
         details = await probe_tenant_details(access_token="tok")
     assert details.tenant_display_name == "Contoso"
     assert details.default_domain == "contoso.com"
-    assert "contoso.com" in details.verified_domains
+    assert details.verified_domains == [
+        "contoso.com",
+        "contoso.onmicrosoft.com",
+    ]
 
 
 @pytest.mark.asyncio
