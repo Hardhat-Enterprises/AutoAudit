@@ -34,7 +34,7 @@ def main() -> None:
             print(f"ERROR: {p} not found — check you're running from the right directory.")
         sys.exit(1)
 
-    with open(DATASET_PATH) as f:
+    with open(DATASET_PATH, encoding="utf-8") as f:
         data = json.load(f)
 
     tenant = data.get("tenant", {}).get("Tenant_Name", "unknown")

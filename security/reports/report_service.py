@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines,protected-access,too-many-nested-blocks
 """
 report_service.py
 =================
@@ -953,8 +954,6 @@ def _inject_evidence_extracts(doc: Document, controls: list) -> None:
         if len(left_labels & _FINDING_ROW_LABELS) >= 4:
             finding_tables.append(table)
 
-    body = doc.element.body
-
     for table, ctrl in zip(finding_tables, failing):
         n        = _normalize_keys(ctrl)
         extract  = _pick(n, "extract", "evidence extract").strip()
@@ -967,9 +966,6 @@ def _inject_evidence_extracts(doc: Document, controls: list) -> None:
         # Style: 9pt Times New Roman, grey label + monospace-ish extract body.
         label_line = f"Evidence file: {filename}" if filename else ""
         body_line  = extract
-
-        ns_w  = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-        ns_w14 = "http://schemas.microsoft.com/office/word/2010/wordml"
 
         def _make_run(text: str, bold: bool = False, colour: str = "595959") -> "lxml.etree._Element":
             r = OxmlElement("w:r")
@@ -1499,7 +1495,7 @@ if __name__ == "__main__":
     to_pdf   = "--pdf" in args
     keep     = "--keep-docx" in args
 
-    with open(dataset) as f:
+    with open(dataset, encoding="utf-8") as f:
         data = json.load(f)
 
     if to_pdf:

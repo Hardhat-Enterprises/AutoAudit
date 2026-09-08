@@ -445,7 +445,7 @@ def main() -> None:
             print(f"ERROR: Results file not found: {results_path}")
             sys.exit(1)
         print(f"Loading results from: {results_path}")
-        with open(results_path) as f:
+        with open(results_path, encoding="utf-8") as f:
             results = json.load(f)
 
         if not isinstance(results, list):
@@ -459,7 +459,7 @@ def main() -> None:
                 print(f"WARNING: Meta file not found: {meta_path} — tenant name will be generic.")
             else:
                 print(f"Loading metadata from: {meta_path}")
-                with open(meta_path) as f:
+                with open(meta_path, encoding="utf-8") as f:
                     meta = json.load(f)
     else:
         parser.error("Provide either --results (offline) or --api-url + --scan-id (live).")
@@ -494,12 +494,12 @@ def main() -> None:
             dataset_out = Path(args.results).stem + "_dataset.json"
         else:
             dataset_out = f"scan_{args.scan_id}_dataset.json"
-        with open(dataset_out, "w") as f:
+        with open(dataset_out, "w", encoding="utf-8") as f:
             json.dump(dataset, f, indent=2, default=str)
         print(f"\nDataset saved to: {dataset_out}")
 
     # --- Generate report ---
-    print(f"\nGenerating report...")
+    print("\nGenerating report...")
     print(f"  Template : {template_path}")
     print(f"  Output   : {args.output}/")
 
