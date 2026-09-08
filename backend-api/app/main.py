@@ -53,7 +53,6 @@ def create_app() -> FastAPI:
         }
 
     @app.get(
-        "/readiness",
         response_model=ReadinessResponse,
         tags=["Health"],
         summary="Check whether the API is ready to serve requests",
