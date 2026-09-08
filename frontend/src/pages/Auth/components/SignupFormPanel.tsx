@@ -145,6 +145,10 @@ const SignupFormPanel = ({
       setError(TERMS_ERROR_MESSAGE);
       return false;
     }
+    if (!isValidEmail(formData.email)) {
+      setError("Please enter a valid email address");
+      return false;
+    }
     if (formData.password !== formData.confirmPassword) {
       setError(PASSWORD_MISMATCH_MESSAGE);
       return false;
