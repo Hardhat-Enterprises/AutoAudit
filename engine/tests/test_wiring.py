@@ -123,6 +123,19 @@ def _orphaned_collectors() -> list[str]:
     return sorted(cid for cid in DATA_COLLECTORS if cid not in referenced)
 
 
+def _multi_client_collectors() -> list[tuple[str, type]]:
+    """(collector_id, collector_class) for every registered collector that
+    inherits BaseMultiClientCollector."""
+    from collectors.multi_client_base import BaseMultiClientCollector
+    from collectors.registry import DATA_COLLECTORS
+
+    return [
+        (cid, cls)
+        for cid, cls in DATA_COLLECTORS.items()
+        if issubclass(cls, BaseMultiClientCollector)
+    ]
+
+
 # Pre-compute parametrize data and IDs
 _READY = _ready_controls()
 _READY_IDS = [f"{v}-{cid}" for v, cid, _, _, _ in _READY]
@@ -137,6 +150,9 @@ _ALL_CONTROLS = _all_controls()
 _ALL_CONTROLS_IDS = [f"{v}-{cid}" for v, cid, _ in _ALL_CONTROLS]
 
 _ORPHANED = _orphaned_collectors()
+
+_MULTI_CLIENT_COLLECTORS = _multi_client_collectors()
+_MULTI_CLIENT_COLLECTOR_IDS = [cid for cid, _ in _MULTI_CLIENT_COLLECTORS]
 
 
 # ---------------------------------------------------------------------------
@@ -302,4 +318,43 @@ def test_no_duplicate_control_ids(meta_path, meta):
     duplicates = {cid: count for cid, count in seen.items() if count > 1}
     assert not duplicates, (
         f"[{meta['slug']}/{meta['version']}] Duplicate control_ids: {duplicates}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 8: Multi-client collectors declare valid required_clients
+# ---------------------------------------------------------------------------
+
+_KNOWN_MULTI_CLIENT_TYPES = {"graph", "powershell", "dvm"}
+
+
+@pytest.mark.parametrize(
+    "collector_id,collector_cls",
+    _MULTI_CLIENT_COLLECTORS,
+    ids=_MULTI_CLIENT_COLLECTOR_IDS,
+)
+def test_multi_client_collector_has_required_clients(collector_id, collector_cls):
+    """Every BaseMultiClientCollector subclass must declare at least one
+    required client, otherwise tasks.py has nothing to build and collect()
+    would be called with an empty clients dict."""
+    assert len(collector_cls.required_clients) > 0, (
+        f"Collector '{collector_id}' inherits BaseMultiClientCollector "
+        f"but required_clients is empty"
+    )
+
+
+@pytest.mark.parametrize(
+    "collector_id,collector_cls",
+    _MULTI_CLIENT_COLLECTORS,
+    ids=_MULTI_CLIENT_COLLECTOR_IDS,
+)
+def test_multi_client_collector_required_clients_are_known(collector_id, collector_cls):
+    """Every required client name must be one tasks.py's client-building
+    branch actually knows how to construct, otherwise the collector fails
+    at runtime with an unclear ValueError deep in a Celery task instead of
+    failing here in CI."""
+    unknown = set(collector_cls.required_clients) - _KNOWN_MULTI_CLIENT_TYPES
+    assert not unknown, (
+        f"Collector '{collector_id}' requires unknown client type(s) "
+        f"{unknown}. Known types: {_KNOWN_MULTI_CLIENT_TYPES}"
     )
