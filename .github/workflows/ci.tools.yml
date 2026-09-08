@@ -35,3 +35,6 @@ jobs:
 
       - name: Product claims match what the product does
         run: python -m pytest tools/tests/test_product_claims.py -q
+
+      - name: PowerShell service stays importable on its image interpreter
+        run: python -m pytest tools/tests/test_powershell_service_python_floor.py -q
