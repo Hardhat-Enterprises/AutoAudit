@@ -1,4 +1,4 @@
-"""App Control for Business policy collector.
+"""Application Control policy collector.
 
 Essential Eight Benchmark Controls:
     E8-AC-1.1: Application Control deployed and enforced on workstations
@@ -6,15 +6,26 @@ Essential Eight Benchmark Controls:
 Connection Method: Microsoft Graph API
 Required Scopes: DeviceManagementConfiguration.Read.All
 Graph Endpoints:
-    /v1.0/deviceManagement/configurationPolicies              (policy list)
-    /v1.0/deviceManagement/configurationPolicies/{id}/settings    (setting values)
-    /v1.0/deviceManagement/configurationPolicies/{id}/assignments (deployment)
+    /v1.0/deviceManagement/deviceConfigurations                  (legacy AppLocker)
+    /v1.0/deviceManagement/deviceConfigurations/{id}/assignments (legacy scope)
+    /beta/deviceManagement/configurationPolicies                 (modern App Control)
+    /beta/deviceManagement/configurationPolicies/{id}/settings   (modern settings)
 
-Intune App Control for Business policies use the Windows ApplicationControl CSP
-and are surfaced through the settings-catalog `configurationPolicies` endpoint,
-not `deviceConfigurations`. The older Application control profiles under Attack
-Surface Reduction use the AppLocker CSP and are documented by Microsoft as
-pending deprecation, so they are deliberately out of scope here.
+Two Intune surfaces can carry application control configuration:
+
+1. The legacy Application control profile, exposed on
+   windows10EndpointProtectionConfiguration objects through the
+   appLockerApplicationControl property. This is a documented v1.0 enum that
+   states the audit or enforce intent directly, so it is the preferred source.
+2. Modern App Control for Business policies, which use the ApplicationControl
+   CSP and are surfaced through the beta settings-catalog endpoints. These
+   expose configured policy intent only.
+
+Microsoft does not document a first-class Graph property for the device-side
+effective state of an App Control policy (an IsDeployed or IsEffective flag).
+The collector therefore reports effective_device_state_verified as False and
+the policy returns insufficient evidence rather than a pass where enforcement
+cannot be established from configuration alone.
 
 Research reference: 26T2-SEC-KHS-001, 26T2-SEC-TD-001
 """
@@ -25,78 +36,58 @@ from collectors.base import BaseDataCollector
 from collectors.graph_client import GraphClient
 
 
-# Identifies an App Control for Business policy among all settings-catalog
-# policies. Matched case-insensitively against the template display name.
-APP_CONTROL_TEMPLATE_HINTS = ("app control", "application control")
-
-# Base PolicyIDs assigned by Intune to policies built with the "built-in
-# controls" format. Used as a fallback when the template reference is absent.
-# Source: https://learn.microsoft.com/en-us/intune/device-configuration/endpoint-security/manage-app-control
-BUILT_IN_BASE_POLICY_IDS = {
-    "{a8012cfc-d8ae-493c-b2ea-510f035f1250}",
-    "{d6d6c2d6-e8b6-4d8f-8223-14be1de562ff}",
-    "{63d1178a-816a-4ab6-8ecd-127f2df0ce47}",
-    "{2da0f72d-1688-4097-847d-c42c39e631bc}",
+# windows10EndpointProtectionConfiguration.appLockerApplicationControl enum,
+# lowercased. Anything outside this map normalises to "unknown", which is absent
+# from ENFORCING_STATES in the Rego policy, so an unrecognised or future value
+# fails closed instead of being read as enforcement.
+# Source: https://learn.microsoft.com/en-us/graph/api/intune-deviceconfig-windows10endpointprotectionconfiguration-list
+APPLOCKER_STATE_MAP = {
+    "notconfigured": "not_configured",
+    "enforcecomponentsandstoreapps": "enforced",
+    "auditcomponentsandstoreapps": "audit_only",
+    "enforcecomponentsstoreappsandsmartlocker": "enforced",
+    "auditcomponentsstoreappsandsmartlocker": "audit_only",
 }
 
-# Substrings identifying the built-in-control settings within a policy's
+# Identifies an App Control for Business policy among settings-catalog policies.
+APP_CONTROL_TEMPLATE_HINTS = ("app control", "application control")
+
+# Substrings identifying built-in-control settings within a policy's
 # settingDefinitionId. Settings-catalog identifiers are verbose and version
 # dependent, so they are matched by substring rather than exact value.
 SETTING_HINT_TRUST_WINDOWS = "trustwindows"
 SETTING_HINT_REPUTATION = "intelligentsecuritygraph"
 SETTING_HINT_MANAGED_INSTALLER = "managedinstaller"
 
-# Enforcement states derived from the "Enable trust of Windows components and
-# store apps" setting. Anything unrecognised normalises to "unknown", which is
-# absent from ENFORCING_MODES in the Rego policy, so a future Intune value
-# fails closed rather than silently passing.
-ENFORCEMENT_MODE_MAP = {
-    "enabled": "enforced",
-    "true": "enforced",
-    "1": "enforced",
-    "audit": "audit_only",
-    "auditonly": "audit_only",
-    "audit only": "audit_only",
-    "2": "audit_only",
-    "notconfigured": "not_configured",
-    "disabled": "not_configured",
-    "0": "not_configured",
-}
+LEGACY_ODATA_HINT = "windows10endpointprotectionconfiguration"
 
 NO_POLICY_RESULT: dict[str, Any] = {
     "policies_found": 0,
     "weakest_policy_name": None,
-    "policy_format": "none",
-    "enforcement_mode": "not_configured",
+    "graph_source_type": None,
+    "graph_policy_id": None,
+    "configured_enforcement_state": "not_configured",
     "trust_reputation": False,
     "trust_managed_installer": False,
     "assigned": False,
+    "effective_device_state_verified": False,
 }
 
 
-def _normalize_enforcement(raw: str | None) -> str:
-    """Map an App Control trust setting value to a canonical enforcement mode."""
-    key = (raw or "").strip().lower().replace("_", "")
-    return ENFORCEMENT_MODE_MAP.get(key, "unknown")
+def _normalize_applocker_state(raw: str | None) -> str:
+    """Map an appLockerApplicationControl enum value to a canonical state."""
+    return APPLOCKER_STATE_MAP.get((raw or "").strip().lower(), "unknown")
 
 
 def _is_app_control_policy(policy: dict[str, Any]) -> bool:
     """Return True if a settings-catalog policy is an App Control policy."""
     template = policy.get("templateReference") or {}
     display_name = (template.get("templateDisplayName") or "").lower()
-    if any(hint in display_name for hint in APP_CONTROL_TEMPLATE_HINTS):
-        return True
-    template_id = (template.get("templateId") or "").lower()
-    return template_id in BUILT_IN_BASE_POLICY_IDS
+    return any(hint in display_name for hint in APP_CONTROL_TEMPLATE_HINTS)
 
 
 def _setting_value(instance: dict[str, Any]) -> str | None:
-    """Extract a comparable scalar from a settings-catalog setting instance.
-
-    Settings-catalog instances nest their value differently depending on the
-    setting type. Only the shapes App Control uses are handled; anything else
-    returns None and is treated as unrecognised by the caller.
-    """
+    """Extract a comparable scalar from a settings-catalog setting instance."""
     choice = instance.get("choiceSettingValue")
     if isinstance(choice, dict):
         value = choice.get("value")
@@ -111,35 +102,109 @@ def _setting_value(instance: dict[str, Any]) -> str | None:
     return None
 
 
+def _is_enabled(value: str | None) -> bool:
+    """Interpret a settings-catalog boolean-ish value."""
+    return (value or "").strip().lower() in ("1", "true", "enabled")
+
+
 class AppControlPolicyDataCollector(BaseDataCollector):
-    """Collects Intune App Control for Business policy configuration.
+    """Collects Intune application control configuration from both Graph surfaces.
 
     ASD ML1 requires application control to be implemented on workstations and
-    restricted to an organisation-approved set. A policy that exists but runs in
-    audit mode permits every application to execute, so audit-only deployments
-    are reported distinctly from enforced ones.
+    restricted to an organisation-approved set. A policy in audit mode records
+    execution without preventing it, so audit-only deployments are reported
+    distinctly from enforced ones.
 
-    Where a tenant defines multiple App Control policies, a single audit-only or
+    Where a tenant defines multiple policies, a single unassigned, audit-only or
     reputation-only policy undermines the control, so the weakest policy
     determines the result and is surfaced by name for remediation. This mirrors
     the weakest-state selection used by ASRRulesDataCollector.
     """
 
     async def collect(self, client: GraphClient) -> dict[str, Any]:
-        """Collect App Control for Business policy data."""
-        policies = await client.get_all_pages("/deviceManagement/configurationPolicies")
+        """Collect application control policy data."""
         findings: list[dict[str, Any]] = []
+        findings.extend(await self._collect_legacy(client))
+        findings.extend(await self._collect_modern(client))
 
+        if not findings:
+            # No Intune policy does not prove unauthorised code can run: the
+            # tenant may enforce application control by another mechanism. The
+            # Rego policy reports this as insufficient evidence.
+            return dict(NO_POLICY_RESULT)
+
+        weakest = max(
+            findings,
+            key=lambda f: (
+                not f["assigned"],
+                f["configured_enforcement_state"] != "enforced",
+                f["trust_reputation"] and not f["trust_managed_installer"],
+            ),
+        )
+        return {
+            "policies_found": len(findings),
+            "weakest_policy_name": weakest["policy_name"],
+            "graph_source_type": weakest["graph_source_type"],
+            "graph_policy_id": weakest["graph_policy_id"],
+            "configured_enforcement_state": weakest["configured_enforcement_state"],
+            "trust_reputation": weakest["trust_reputation"],
+            "trust_managed_installer": weakest["trust_managed_installer"],
+            "assigned": weakest["assigned"],
+            # Microsoft exposes no documented Graph property for the device-side
+            # effective state of an application control policy, so configuration
+            # intent is all that can be established here.
+            "effective_device_state_verified": False,
+        }
+
+    async def _collect_legacy(self, client: GraphClient) -> list[dict[str, Any]]:
+        """Read legacy Application control profiles (AppLocker CSP)."""
+        configs = await client.get_all_pages("/deviceManagement/deviceConfigurations")
+        findings: list[dict[str, Any]] = []
+        for config in configs:
+            if LEGACY_ODATA_HINT not in config.get("@odata.type", "").lower():
+                continue
+            raw_state = config.get("appLockerApplicationControl")
+            if raw_state is None:
+                continue
+            config_id = config.get("id")
+            assignments = await client.get_all_pages(
+                f"/deviceManagement/deviceConfigurations/{config_id}/assignments"
+            )
+            findings.append(
+                {
+                    "policy_name": config.get("displayName"),
+                    "graph_source_type": "legacy_device_configuration",
+                    "graph_policy_id": config_id,
+                    "configured_enforcement_state": _normalize_applocker_state(
+                        raw_state
+                    ),
+                    # The legacy profile has no reputation or managed installer
+                    # options; those exist only on modern App Control policies.
+                    "trust_reputation": False,
+                    "trust_managed_installer": False,
+                    "assigned": len(assignments) > 0,
+                }
+            )
+        return findings
+
+    async def _collect_modern(self, client: GraphClient) -> list[dict[str, Any]]:
+        """Read modern App Control for Business policies (ApplicationControl CSP)."""
+        policies = await client.get_all_pages(
+            "/deviceManagement/configurationPolicies", beta=True
+        )
+        findings: list[dict[str, Any]] = []
         for policy in policies:
             if not _is_app_control_policy(policy):
                 continue
 
             policy_id = policy.get("id")
             settings = await client.get_all_pages(
-                f"/deviceManagement/configurationPolicies/{policy_id}/settings"
+                f"/deviceManagement/configurationPolicies/{policy_id}/settings",
+                beta=True,
             )
             assignments = await client.get_all_pages(
-                f"/deviceManagement/configurationPolicies/{policy_id}/assignments"
+                f"/deviceManagement/configurationPolicies/{policy_id}/assignments",
+                beta=True,
             )
 
             enforcement_raw: str | None = None
@@ -153,50 +218,31 @@ class AppControlPolicyDataCollector(BaseDataCollector):
                 if SETTING_HINT_TRUST_WINDOWS in definition_id:
                     enforcement_raw = value
                 elif SETTING_HINT_REPUTATION in definition_id:
-                    trust_reputation = str(value).lower() in ("1", "true", "enabled")
+                    trust_reputation = _is_enabled(value)
                 elif SETTING_HINT_MANAGED_INSTALLER in definition_id:
-                    trust_managed_installer = str(value).lower() in (
-                        "1",
-                        "true",
-                        "enabled",
-                    )
+                    trust_managed_installer = _is_enabled(value)
+
+            # A policy exposing no readable built-in setting was authored with
+            # custom XML, which this collector cannot interpret. It resolves to
+            # "unknown" so the control reports insufficient evidence.
+            if enforcement_raw is None:
+                state = "unknown"
+            elif _is_enabled(enforcement_raw):
+                state = "enforced"
+            elif "audit" in enforcement_raw.strip().lower():
+                state = "audit_only"
+            else:
+                state = "unknown"
 
             findings.append(
                 {
                     "policy_name": policy.get("name") or policy.get("displayName"),
-                    # A policy carrying no readable built-in settings was authored
-                    # with custom XML, which this collector cannot interpret.
-                    "policy_format": "built_in" if enforcement_raw else "xml",
-                    "enforcement_mode": _normalize_enforcement(enforcement_raw),
+                    "graph_source_type": "modern_configuration_policy",
+                    "graph_policy_id": policy_id,
+                    "configured_enforcement_state": state,
                     "trust_reputation": trust_reputation,
                     "trust_managed_installer": trust_managed_installer,
                     "assigned": len(assignments) > 0,
                 }
             )
-
-        if not findings:
-            # No App Control policy does not by itself prove unauthorised code can
-            # run: the tenant may enforce application control outside Intune. The
-            # policy surfaces this as requiring manual verification.
-            return dict(NO_POLICY_RESULT)
-
-        # Weakest policy wins: unassigned first, then non-enforcing mode, then
-        # reputation-only trust, which the Essential Eight does not accept as an
-        # organisation-approved set.
-        weakest = max(
-            findings,
-            key=lambda f: (
-                not f["assigned"],
-                f["enforcement_mode"] != "enforced",
-                f["trust_reputation"] and not f["trust_managed_installer"],
-            ),
-        )
-        return {
-            "policies_found": len(findings),
-            "weakest_policy_name": weakest["policy_name"],
-            "policy_format": weakest["policy_format"],
-            "enforcement_mode": weakest["enforcement_mode"],
-            "trust_reputation": weakest["trust_reputation"],
-            "trust_managed_installer": weakest["trust_managed_installer"],
-            "assigned": weakest["assigned"],
-        }
+        return findings
