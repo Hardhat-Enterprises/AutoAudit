@@ -116,6 +116,9 @@ jobs:
       pull-requests: write
       issues: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Build report body
         id: build
         uses: actions/github-script@v7

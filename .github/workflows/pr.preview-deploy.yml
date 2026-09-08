@@ -365,6 +365,7 @@ jobs:
         with:
           marker: '<!-- autoaudit-preview -->'
           body: ${{ steps.build.outputs.body }}
+          issue-number: ${{ needs.gate.outputs.pr-number }}
 
       - name: Keep-alive (preview stays up until cancelled or 6h timeout)
         run: |
