@@ -1,0 +1,10 @@
+{
+  "collector_id": "exchange.protection.priority_account_protection",
+  "timestamp": "2026-08-09T19:31:22.922961",
+  "elapsed_seconds": 13.85,
+  "data": {
+    "protection_enabled": true,
+    "priority_accounts": [],
+    "total_priority_accounts": 0
+  }
+}
