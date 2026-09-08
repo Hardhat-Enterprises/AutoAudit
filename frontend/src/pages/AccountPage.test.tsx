@@ -34,44 +34,68 @@ function renderPage() {
   return render(<AccountPage />);
 }
 
+function setupLogoutAuth(clearAuth: () => void) {
+  vi.mocked(mockUseAuth).mockReturnValue({
+    user: { email: 'u@test.com' },
+    token: 'tok',
+    logout: clearAuth,
+  } as unknown as ReturnType<typeof mockUseAuth>);
+}
+
+async function logOutFromPage() {
+  renderPage();
+  await userEvent.click(screen.getByRole('button', { name: /log out/i }));
+}
+
 beforeEach(() => vi.clearAllMocks());
 afterEach(cleanup);
 
 // --- primaryLabel fallback chain ---
 
-describe('account details fallbacks', () => {
-  it('displays name, email, and organization when present', () => {
-    setupAuth({
-      email: 'user@example.com',
-      first_name: 'Jane',
-      last_name: 'Doe',
-      organization_name: 'Acme Inc',
-    });
+describe('primaryLabel', () => {
+  it('uses a generic label for the fallback account identifier', () => {
+    setupAuth({ email: null, username: 'jdoe', name: 'John', id: 2 });
     renderPage();
-    expect(screen.getByText('Jane Doe')).toBeInTheDocument();
+    expect(screen.getByText('Account identifier')).toBeInTheDocument();
+  });
+
+  it('displays email when present', () => {
+    setupAuth({ email: 'user@example.com', username: 'u', name: 'Name', id: 1 });
+    renderPage();
     expect(screen.getByText('user@example.com')).toBeInTheDocument();
-    expect(screen.getByText('Acme Inc')).toBeInTheDocument();
   });
 
-  it('shows "Not available" for name when only one of first_name/last_name is present', () => {
-    setupAuth({ email: 'user@example.com', first_name: 'Jane', last_name: null });
+  it('falls back to username when email is absent', () => {
+    setupAuth({ email: null, username: 'jdoe', name: 'John', id: 2 });
     renderPage();
-    expect(screen.getAllByText('Not available')).toHaveLength(2); // name + organization
+    expect(screen.getByText('jdoe')).toBeInTheDocument();
   });
 
-  it('shows "Not available" for email when absent', () => {
-    setupAuth({ email: null, first_name: 'Jane', last_name: 'Doe' });
+  it('falls back to name when email and username are absent', () => {
+    setupAuth({ email: null, username: null, name: 'John Doe', id: 3 });
     renderPage();
-    expect(screen.getAllByText('Not available')).toHaveLength(2); // email + organization
+    expect(screen.getByText('John Doe')).toBeInTheDocument();
   });
 
-  it('shows "Not available" for all fields when user is null', () => {
+  it('falls back to id as string when email, username, and name are absent', () => {
+    setupAuth({ email: null, username: null, name: null, id: 99 });
+    renderPage();
+    expect(screen.getByText('99')).toBeInTheDocument();
+  });
+
+  it('shows "Signed in" when user is null', () => {
     setupAuth(null);
     renderPage();
-    expect(screen.getAllByText('Not available')).toHaveLength(3);
+    expect(screen.getByText('Signed in')).toBeInTheDocument();
+  });
+
+  it('shows "Signed in" when all user fields are null or undefined', () => {
+    setupAuth({ email: null, username: null, name: null, id: null });
+    renderPage();
+    expect(screen.getByText('Signed in')).toBeInTheDocument();
   });
 });
-
+  
 // --- handleLogout ---
 
 describe('handleLogout', () => {
@@ -86,15 +110,10 @@ describe('handleLogout', () => {
 
   it('calls clearAuth and navigates to / after successful logout', async () => {
     const clearAuth = vi.fn();
-    vi.mocked(mockUseAuth).mockReturnValue({
-      user: { email: 'u@test.com' },
-      token: 'tok',
-      logout: clearAuth,
-    } as unknown as ReturnType<typeof mockUseAuth>);
+    setupLogoutAuth(clearAuth);
     vi.mocked(mockApiLogout).mockResolvedValue(undefined);
 
-    renderPage();
-    await userEvent.click(screen.getByRole('button', { name: /log out/i }));
+    await logOutFromPage();
 
     await waitFor(() => {
       expect(clearAuth).toHaveBeenCalled();
@@ -104,15 +123,10 @@ describe('handleLogout', () => {
 
   it('still clears auth and navigates when apiLogout fails (best-effort)', async () => {
     const clearAuth = vi.fn();
-    vi.mocked(mockUseAuth).mockReturnValue({
-      user: { email: 'u@test.com' },
-      token: 'tok',
-      logout: clearAuth,
-    } as unknown as ReturnType<typeof mockUseAuth>);
+    setupLogoutAuth(clearAuth);
     vi.mocked(mockApiLogout).mockRejectedValue(new Error('Network error'));
 
-    renderPage();
-    await userEvent.click(screen.getByRole('button', { name: /log out/i }));
+    await logOutFromPage();
 
     await waitFor(() => {
       expect(clearAuth).toHaveBeenCalled();

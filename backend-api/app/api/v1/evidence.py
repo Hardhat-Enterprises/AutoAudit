@@ -37,6 +37,7 @@ from app.services.encryption import encrypt
 from app.services.evidence_validator import validate_text
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
+logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 

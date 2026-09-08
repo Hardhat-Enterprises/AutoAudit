@@ -100,6 +100,7 @@ describe('SignupFormPanel', () => {
       organizationName: 'Acme',
       password: 'SecurePass1',
       confirmPassword: 'SecurePass1',
+      agreeTerms: true,
     });
   });
 

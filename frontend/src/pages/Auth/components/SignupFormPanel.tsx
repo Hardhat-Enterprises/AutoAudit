@@ -8,13 +8,14 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import type { SignUpFormData } from "../signUpTypes";
+import type { SignUpFormData, SignUpSubmitPayload } from "../signUpTypes";
+
 const TERMS_ERROR_MESSAGE = "Please agree to the terms and privacy policy";
 const PASSWORD_MISMATCH_MESSAGE = "These passwords do not match"; // pragma: allowlist secret
 type SignupFormPanelProps = {
-  formData: any;
+  formData: SignUpFormData;
   onFormChange: (field: keyof SignUpFormData, value: string) => void;
-  onSubmit: (data: any) => void | Promise<void>;
+  onSubmit: (data: SignUpSubmitPayload) => void | Promise<void>;
   onBackToLogin: () => void;
   submitError: string;
 };
@@ -134,10 +135,7 @@ const SignupFormPanel = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  // Every input's `name` attribute below is one of SignUpFormData's own keys
-  // (firstName/lastName/email/organizationName/password/confirmPassword),
-  // so this cast is safe.
-  onFormChange(e.target.name as keyof SignUpFormData, e.target.value);
+    onFormChange(e.target.name as keyof SignUpFormData, e.target.value);
   };
 
   const handleAgreeTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,7 +169,7 @@ const SignupFormPanel = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    onSubmit(formData);
+    onSubmit({ ...formData, agreeTerms });
   };
 
   const strength = getPasswordStrength(formData.password);

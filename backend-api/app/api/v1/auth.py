@@ -311,5 +311,8 @@ async def google_callback(
     response.delete_cookie(
         GOOGLE_OAUTH_STATE_COOKIE,
         path=f"{settings.API_PREFIX}/auth/google/callback",
+        secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
+        httponly=True,
+        samesite="lax",
     )
     return response
