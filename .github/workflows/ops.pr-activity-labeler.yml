@@ -2,9 +2,15 @@ name: PR Activity Labeler
 
 on:
   schedule:
-    - cron: "0 3 * * *" # daily at 03:00 UTC — adjust to your timezone/preference; still needed as a backstop even with the comment trigger below (e.g. tier labels ageing from day 6 to day 7 with no new comment)
+    - cron: "0 3 * * *" # daily at 03:00 UTC — adjust to your timezone/preference; still the backstop for anything the triggers below can't reach for a forked PR (see note on pull_request_review below)
   issue_comment:
-    types: [created] # near-real-time: relabel the instant someone comments, so needs-review (and clearing of stale/etc.) doesn't wait for the nightly run
+    types: [created] # near-real-time: a comment on the Conversation tab
+  pull_request_target:
+    types: [synchronize] # near-real-time: author pushes new commits. Must be pull_request_target (not pull_request) for full write permissions on forked PRs — same reasoning as pr.area-labeler.yml. Checkout below has no `ref:`, so it uses the base branch, never the fork's code.
+  pull_request_review:
+    types: [submitted] # near-real-time: a maintainer's review (approve/request changes/comment)
+  pull_request_review_comment:
+    types: [created] # near-real-time: an inline comment on the diff
   workflow_dispatch: # manual "Run workflow" button — also serves as backfill for all open PRs
     inputs:
       stale_after_days:
@@ -19,6 +25,18 @@ on:
       pr_number:
         description: "Restrict this run to a single PR number. STRONGLY recommended whenever overriding thresholds above — without it, a threshold test run relabels every open PR in the repo, not just the one you're testing."
         required: false
+
+# NOTE on forked PRs: pull_request_review and pull_request_review_comment
+# have no "_target" variant, so unlike pull_request_target, GitHub gives
+# them a READ-ONLY token when the PR is from a fork — a known platform
+# limitation (no clean workaround exists; see GitHub community discussions
+# #55940 and #26651). For PRs from branches within this repo (the normal
+# case here), these triggers run with full permissions as expected. If
+# this repo ever accepts outside-fork contributions, a review left on a
+# fork's PR will fail this specific real-time trigger with a permissions
+# error — but the nightly cron above still relabels it correctly within
+# 24h regardless, so nothing is silently wrong, just delayed for that one
+# combination of circumstances.
 
 permissions:
   pull-requests: write
@@ -38,11 +56,13 @@ jobs:
       STALE_AFTER_DAYS: ${{ inputs.stale_after_days }}
       NEEDS_DECISION_AFTER_DAYS: ${{ inputs.needs_decision_after_days }}
       FINAL_NOTICE_AFTER_DAYS: ${{ inputs.final_notice_after_days }}
-      # Comment-triggered runs are scoped to just that one PR — cheap and
-      # instant, versus rescanning every open PR on every single comment.
-      # Scheduled/manual runs fall back to inputs.pr_number (blank by
-      # default, meaning "scan everything").
-      ONLY_PR_NUMBER: ${{ github.event_name == 'issue_comment' && github.event.issue.number || inputs.pr_number }}
+      # Every real-time trigger above scopes to just the one affected PR —
+      # cheap and instant, versus rescanning every open PR on every event.
+      # `github.event.issue.number` covers issue_comment; `github.event.pull_request.number`
+      # covers the other three real-time triggers (all include a pull_request
+      # object). Scheduled/manual runs fall through to inputs.pr_number
+      # (blank by default, meaning "scan everything").
+      ONLY_PR_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number || inputs.pr_number }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/github-script@v9

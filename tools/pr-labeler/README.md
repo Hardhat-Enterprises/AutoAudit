@@ -22,7 +22,7 @@ Every PR gets area labels (`area: backend-api`, `area: docs`, etc.) the moment i
     pr-labels-reset.js           # bulk-clears managed labels from chosen PRs (the reset tool)
   workflows/
     pr.area-labeler.yml          # runs on every PR open/push: area + size + first-contribution
-    ops.pr-activity-labeler.yml  # instant on new comments + nightly backstop + manual: needs-triage/needs-review/stale/needs-decision/final-notice
+    ops.pr-activity-labeler.yml  # instant on comments/pushes/reviews + nightly backstop + manual: needs-triage/needs-review/stale/needs-decision/final-notice
     pr.labels-backfill.yml       # manual, one-shot: applies every label type to all currently-open PRs
     ops.label-sync.yml           # on push to labels.yml, or manual: creates/updates labels from the catalog
     ops.pr-labels-reset.yml      # manual "clean slate" tool: bulk-clears managed labels from chosen PRs
@@ -42,7 +42,9 @@ tools/pr-labeler/
 2. Merge this to your default branch. Merging alone triggers `ops.label-sync.yml` (it watches `.github/labels.yml`) — check the Actions tab and confirm the full label catalog now exists under Issues → Labels. If it doesn't fire automatically, run it manually: **Actions → Sync Labels → Run workflow**.
 3. Run **Actions → Backfill All PR Labels → Run workflow** once. This applies every label type — area, size, multi, first-contribution, and activity status — to every PR that was already open before this system existed.
 
-From there it's automatic: new/updated PRs get area and size labels within seconds, and activity status updates instantly on every new comment, with a nightly scan as a backstop for anything time-based (a tier aging from day 6 to day 7 with no new comment, for instance).
+From there it's automatic: new/updated PRs get area and size labels within seconds, and activity status updates instantly on new comments, new commits, and reviews, with a nightly scan as a backstop for anything time-based (a tier aging from day 6 to day 7 with no new activity, for instance) or anything the real-time triggers can't reach — see the caveat on forked PRs below.
+
+**Caveat on forked PRs**: `pull_request_review` and `pull_request_review_comment` have no fork-safe "_target" variant, so GitHub gives them a read-only token when the PR is from a fork (a platform limitation, not something fixable here). For PRs from branches within this repo — the normal case — this doesn't apply. If this repo ever accepts outside-fork contributions, a review left on a fork's PR won't update labels instantly through this specific trigger, but the nightly scan still catches it correctly within 24h.
 
 ## Recovering from a bad state: PR Labels Reset
 
