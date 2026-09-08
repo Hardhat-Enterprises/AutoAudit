@@ -178,7 +178,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.devices.macro_notification_settings": MacroNotificationSettingsDataCollector,
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
-    "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector, 
+    "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
     # Domains
     "entra.domains.password_policy": PasswordPolicyDataCollector,
     # Governance

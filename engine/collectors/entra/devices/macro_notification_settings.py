@@ -121,3 +121,4 @@ class MacroNotificationSettingsDataCollector(BaseDataCollector):
             "source": "intune_settings_catalog",
             "total_policies_checked": len(policies),
         }
+    
