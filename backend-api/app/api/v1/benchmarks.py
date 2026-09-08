@@ -109,6 +109,7 @@ async def list_controls(
                 data_collector_id=control.get("data_collector_id"),
                 policy_file=control.get("policy_file"),
                 requires_permissions=control.get("requires_permissions"),
+                mitre_attack=control.get("mitre_attack"),
                 notes=control.get("notes"),
             )
         )
@@ -155,5 +156,6 @@ async def get_control(
         data_collector_id=control.get("data_collector_id"),
         policy_file=control.get("policy_file"),
         requires_permissions=control.get("requires_permissions"),
+        mitre_attack=control.get("mitre_attack"),
         notes=control.get("notes"),
     )

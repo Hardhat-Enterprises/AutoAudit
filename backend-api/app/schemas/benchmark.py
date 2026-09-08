@@ -15,6 +15,12 @@ class BenchmarkRead(BaseModel):
     source_url: str | None = None
     control_count: int
 
+class MitreAttackMapping(BaseModel):
+    """MITRE ATT&CK technique associated with a control."""
+
+
+    technique_id: str
+    technique_name: str
 
 class ControlRead(BaseModel):
     """Schema for control data read from metadata.json files."""
@@ -31,4 +37,5 @@ class ControlRead(BaseModel):
     data_collector_id: str | None = None  # Null for manual controls
     policy_file: str | None = None  # Null for manual controls
     requires_permissions: list[str] | None = None
+    mitre_attack: list[MitreAttackMapping] | None = None
     notes: str | None = None  # Blockers, special considerations
