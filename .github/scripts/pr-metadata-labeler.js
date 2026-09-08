@@ -21,6 +21,47 @@ function sizeTier(totalLines, filesChanged) {
   return `${SIZE_PREFIX}XS`;
 }
 
+// --- first-contribution ---
+// The Search API has a much stricter *secondary* rate limit (30
+// requests/minute) than every other endpoint this codebase calls — easy
+// to exceed calling it once per PR when backfilling many at once, which
+// is exactly what happened the first time a real backfill ran at scale.
+// Rather than just tolerating that limit (retries, pacing delays), this
+// avoids the endpoint entirely: fetch the full PR list once per process
+// (a handful of calls against the generous core rate limit, however many
+// PRs exist), cache it, and derive "is this author's first PR" from that
+// — O(PRs/100) calls total for an entire run, not one Search call per PR.
+let prCountsByAuthorPromise = null;
+
+async function getPrCountsByAuthor(github, owner, repo) {
+  if (!prCountsByAuthorPromise) {
+    prCountsByAuthorPromise = github
+      .paginate(github.rest.pulls.list, { owner, repo, state: "all", per_page: 100 })
+      .then((allPrs) => {
+        const counts = new Map();
+        for (const p of allPrs) {
+          const login = p.user?.login;
+          if (!login) continue;
+          counts.set(login, (counts.get(login) || 0) + 1);
+        }
+        return counts;
+      });
+  }
+  return prCountsByAuthorPromise;
+}
+
+async function isFirstContribution(github, owner, repo, author) {
+  try {
+    const counts = await getPrCountsByAuthor(github, owner, repo);
+    return (counts.get(author) || 0) <= 1;
+  } catch (e) {
+    // A missing "nice to have" label is a much smaller problem than
+    // letting this crash the caller's loop — log and move on.
+    console.warn(`first-contribution check failed for ${author}: ${e.message}`);
+    return false;
+  }
+}
+
 async function labelOne({ github, owner, repo, pr }) {
   const pr_number = pr.number;
   const { data: current } = await github.rest.issues.get({ owner, repo, issue_number: pr_number });
@@ -48,11 +89,7 @@ async function labelOne({ github, owner, repo, pr }) {
 
   // --- first-contribution (sticky once set, cheap to skip re-checking) ---
   if (!labelNames.includes("first-contribution")) {
-    const author = pr.user.login;
-    const { data: pastPRs } = await github.rest.search.issuesAndPullRequests({
-      q: `repo:${owner}/${repo} type:pr author:${author}`,
-    });
-    if (pastPRs.total_count <= 1) {
+    if (await isFirstContribution(github, owner, repo, pr.user.login)) {
       await github.rest.issues.addLabels({ owner, repo, issue_number: pr_number, labels: ["first-contribution"] });
     }
   }

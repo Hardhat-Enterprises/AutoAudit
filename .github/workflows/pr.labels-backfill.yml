@@ -42,6 +42,7 @@ jobs:
     if: needs.list-open-prs.outputs.json != '[]'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7 # without this, actions/labeler can't find .github/labeler.yml locally and re-fetches it via the API once per PR in the list — harmless but noisy, and this avoids it
       - uses: actions/labeler@v7
         with:
           configuration-path: .github/labeler.yml
@@ -61,12 +62,23 @@ jobs:
             const prNumbers = ${{ needs.list-open-prs.outputs.json }};
 
             for (const pr_number of prNumbers) {
-              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: pr_number });
-              await labelOne({ github, owner, repo, pr });
+              try {
+                const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: pr_number });
+                await labelOne({ github, owner, repo, pr });
+              } catch (e) {
+                // One PR's failure (rate limit, deleted PR, anything) must
+                // never abort processing for every PR still queued behind
+                // it — this is exactly what happened before this fix: a
+                // single Search API rate-limit hit crashed the whole loop
+                // partway through a real backfill, silently leaving the
+                // rest of the PRs untouched.
+                core.warning(`#${pr_number}: failed during metadata backfill, skipping (${e.message})`);
+              }
             }
 
   activity-labels-backfill:
     needs: metadata-labels-backfill
+    if: always() # runs even if metadata-labels-backfill reported a failure — the two are independent (this script does its own full open-PR scan and doesn't depend on metadata-labels-backfill's output), so one weak spot shouldn't also block the other job that would otherwise work fine on its own
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
