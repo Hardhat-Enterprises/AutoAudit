@@ -491,16 +491,16 @@
       "control_id": "2.4.2",
       "title": "Ensure Priority accounts have 'Strict protection' presets applied",
       "description": "Apply strict protection presets to priority accounts.",
-      "severity": "medium",
+      "severity": "high",
       "service": "Defender",
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": null,
-      "policy_file": null,
-      "requires_permissions": null,
-      "notes": "Need Priority Account Protection collector"
+      "automation_status": "ready",
+      "data_collector_id": "exchange.protection.priority_account_protection",
+      "policy_file": "2.4.2_priority_account_strict_protection.rego",
+      "requires_permissions": ["Exchange.ManageAsApp"],
+      "notes": "Collector and Rego policy implemented; 7/7 opa tests passing."
     },
     {
       "control_id": "2.4.3",
