@@ -3,7 +3,7 @@ import { Lock, Zap, BarChart3, type LucideIcon } from "lucide-react";
 
 const brandFeatures: { icon: LucideIcon; text: string }[] = [
   { icon: Lock, text: "Enterprise-grade security & encryption" },
-  { icon: Zap, text: "Real-time compliance monitoring" },
+  { icon: Zap, text: "On-demand compliance assessments" },
   { icon: BarChart3, text: "Actionable reporting & insights" },
 ];
 
@@ -80,7 +80,7 @@ const BrandPanel = () => {
           </h1>
           <p className="m-0 text-center leading-[1.6] text-[rgb(var(--landing-text-soft))]">
             Connect to your Microsoft 365 compliance dashboard, monitor security posture, and act on
-            real-time recommendations.
+            remediation guidance for each finding.
           </p>
         </div>
 
