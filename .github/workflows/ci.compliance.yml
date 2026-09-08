@@ -6,13 +6,12 @@ on:
     paths:
       - 'policy/**'
       - 'docker-compose.yml'
-      - '.github/workflows/ci.compliance.yml'
+      - '.github/workflows/**'
   pull_request:
-    branches: [main]
     paths:
       - 'policy/**'
       - 'docker-compose.yml'
-      - '.github/workflows/ci.compliance.yml'
+      - '.github/workflows/**'
 
 permissions:
   contents: read
@@ -35,11 +34,20 @@ jobs:
           tar -xzf "$RUNNER_TEMP/conftest.tar.gz" -C "$RUNNER_TEMP"
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
-      - name: Verify policy unit tests
+      - name: Verify Compose policy unit tests
         run: conftest verify --policy policy/compose
+
+      - name: Verify workflow permissions policy unit tests
+        run: conftest verify --policy policy/github-actions
 
       - name: Verify compliant Compose fixture
         run: conftest test --policy policy/compose policy/fixtures/compose/compliant.yml
 
+      - name: Verify compliant workflow fixture
+        run: conftest test --policy policy/github-actions policy/fixtures/workflows/compliant.yml
+
       - name: Report current Compose findings
         run: conftest test --no-fail --policy policy/compose docker-compose.yml
+
+      - name: Report workflow permission findings
+        run: conftest test --no-fail --policy policy/github-actions .github/workflows
