@@ -97,3 +97,28 @@ test_result_structure if {
 	_ = result.details.policies_allowing_external
 	_ = result.details.enabled_external_policies
 }
+
+# ---------------------------------------------------------------------------
+# NEW (codex fix): non-compliant — Default Sharing Policy enabled with NO domains
+# ---------------------------------------------------------------------------
+
+test_non_compliant_default_policy_enabled_no_domains if {
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {
+		"policies_allowing_external": [],
+		"default_policy": {"Name": "Default Sharing Policy", "Enabled": true},
+	}
+	result.compliant == false
+	contains(result.message, "Default Sharing Policy is enabled")
+}
+
+# ---------------------------------------------------------------------------
+# NEW (codex fix): compliant — Default Sharing Policy explicitly disabled
+# ---------------------------------------------------------------------------
+
+test_compliant_default_policy_disabled if {
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {
+		"policies_allowing_external": [],
+		"default_policy": {"Name": "Default Sharing Policy", "Enabled": false},
+	}
+	result.compliant == true
+}
