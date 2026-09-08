@@ -7,9 +7,6 @@ Create Date: 2026-09-08 00:00:00.000000
 """
 from typing import Sequence, Union
 
-from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision: str = 'e5f6a7b8c9d0'
@@ -19,10 +16,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
-    pass
+    """Upgrade schema. No-op merge revision; reconciles the two heads."""
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
-    pass
+    """Downgrade schema. No-op merge revision; reconciles the two heads."""
