@@ -55,7 +55,7 @@ describe('SignupFormPanel', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /create account/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/please accept/i);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/please agree/i);
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -100,6 +100,7 @@ describe('SignupFormPanel', () => {
       organizationName: 'Acme',
       password: 'SecurePass1',
       confirmPassword: 'SecurePass1',
+      agreeTerms: true,
     });
   });
 
