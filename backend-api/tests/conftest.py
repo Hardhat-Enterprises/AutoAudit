@@ -25,6 +25,10 @@ from app.api.v1 import (
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
 from app.models.contact import ContactSubmission, SubmissionHistory, SubmissionNote
+from app.models.compliance import Scan
+from app.models.m365_connection import M365Connection
+from app.models.manual_scan_result_detail import ManualScanResultDetail
+from app.models.scan_result import ScanResult
 from app.models.user import Role, User
 from app.models.user_settings import UserSettings
 
@@ -123,6 +127,42 @@ async def _populate_on_refresh(obj) -> None:
             obj.id = uuid4()
         if getattr(obj, "created_at", None) is None:
             obj.created_at = now
+    elif isinstance(obj, ManualScanResultDetail):
+        if getattr(obj, "id", None) is None:
+            obj.id = 1
+        if getattr(obj, "created_at", None) is None:
+            obj.created_at = now
+        if getattr(obj, "updated_at", None) is None:
+            obj.updated_at = now
+    elif isinstance(obj, M365Connection):
+        if getattr(obj, "id", None) is None:
+            obj.id = 1
+        if getattr(obj, "is_active", None) is None:
+            obj.is_active = True
+        if getattr(obj, "created_at", None) is None:
+            obj.created_at = now
+        if getattr(obj, "updated_at", None) is None:
+            obj.updated_at = now
+    elif isinstance(obj, Scan):
+        if getattr(obj, "id", None) is None:
+            obj.id = 1
+        if getattr(obj, "started_at", None) is None:
+            obj.started_at = now
+        if getattr(obj, "passed_count", None) is None:
+            obj.passed_count = 0
+        if getattr(obj, "failed_count", None) is None:
+            obj.failed_count = 0
+        if getattr(obj, "skipped_count", None) is None:
+            obj.skipped_count = 0
+        if getattr(obj, "error_count", None) is None:
+            obj.error_count = 0
+    elif isinstance(obj, ScanResult):
+        if getattr(obj, "id", None) is None:
+            obj.id = 1
+        if getattr(obj, "created_at", None) is None:
+            obj.created_at = now
+        if getattr(obj, "updated_at", None) is None:
+            obj.updated_at = now
 
 
 @pytest.fixture
