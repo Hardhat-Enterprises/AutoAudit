@@ -45,4 +45,4 @@ This document is descriptive rather than corrective; no code changes are include
 1. Confirm revocation of the credential described in section 4a and record the outcome here.
 2. Replace the three docker-compose.yml credentials with environment-variable references and a local `.env` file (PR #330).
 3. Add a CI job running gitleaks against full commit history on every push.
-4. Evaluate GCP Workload Identity Federation as a replacement for long-lived service account credentials.
+4. Evaluate GCP Workload Identity Federation as a replacement for long-lived service account credentials. Code-side change and setup script prepared (see `docs/DevSecOps/workload-identity-federation.md`); still pending someone with GCP IAM access running the setup script and confirming the old key is revoked.

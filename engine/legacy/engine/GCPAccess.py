@@ -1,15 +1,14 @@
-from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.auth import default
-import json 
-import os
+import json
 
-service_account_info = json.loads(os.environ["GCP_CREDENTIALS"])
-creds = service_account.Credentials.from_service_account_info(
-    service_account_info,
-    scopes=["https://www.googleapis.com/auth/cloud-platform"],
-)
+# Authenticates via Application Default Credentials. In CI this is populated
+# by google-github-actions/auth using Workload Identity Federation (see
+# .github/workflows/ops.collector.yml) - no service account JSON key is
+# read from the environment or stored anywhere. Locally, this falls back to
+# whatever `gcloud auth application-default login` has configured.
+creds, _ = default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
 
 crm_policy = build("cloudresourcemanager", "v3", credentials=creds)
 bucket_policy = build("storage", "v1", credentials=creds)
