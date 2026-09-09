@@ -12,12 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      # Used only for failure summaries on PRs with a writable token.
       pull-requests: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
       - name: Review dependency changes
         uses: actions/dependency-review-action@v5
         with:
@@ -26,5 +22,4 @@ jobs:
           vulnerability-check: true
           license-check: false
           show-patched-versions: true
-          # Fork and Dependabot PR tokens normally cannot write comments.
           comment-summary-in-pr: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' && 'on-failure' || 'never' }}
