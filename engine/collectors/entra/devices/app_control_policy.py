@@ -61,6 +61,23 @@ SETTING_HINT_MANAGED_INSTALLER = "managedinstaller"
 
 LEGACY_ODATA_HINT = "windows10endpointprotectionconfiguration"
 
+# Assignment target types, matched as substrings of the target's @odata.type.
+# Source: https://learn.microsoft.com/en-us/graph/api/resources/intune-shared-devicandappmanagementassignmenttarget
+TARGET_HINT_ALL_DEVICES = "alldevicesassignmenttarget"
+TARGET_HINT_ALL_USERS = "alllicensedusersassignmenttarget"
+TARGET_HINT_EXCLUSION = "exclusiongroupassignmenttarget"
+TARGET_HINT_GROUP = "groupassignmenttarget"
+
+# Ordering used to select the weakest policy. A policy that reaches nothing is
+# weaker than one whose coverage cannot be established, which is in turn weaker
+# than one assigned tenant-wide.
+ASSIGNMENT_SCOPE_RANK = {
+    "all_devices": 0,
+    "group_scoped": 1,
+    "unknown": 2,
+    "none": 3,
+}
+
 NO_POLICY_RESULT: dict[str, Any] = {
     "policies_found": 0,
     "weakest_policy_name": None,
@@ -69,7 +86,8 @@ NO_POLICY_RESULT: dict[str, Any] = {
     "configured_enforcement_state": "not_configured",
     "trust_reputation": False,
     "trust_managed_installer": False,
-    "assigned": False,
+    "assignment_scope": "none",
+    "has_exclusions": False,
     "effective_device_state_verified": False,
 }
 
@@ -77,6 +95,32 @@ NO_POLICY_RESULT: dict[str, Any] = {
 def _normalize_applocker_state(raw: str | None) -> str:
     """Map an appLockerApplicationControl enum value to a canonical state."""
     return APPLOCKER_STATE_MAP.get((raw or "").strip().lower(), "unknown")
+
+
+def _analyse_assignments(assignments: list[dict[str, Any]]) -> tuple[str, bool]:
+    """Classify how widely a policy is deployed.
+
+    The presence of an assignment record is not proof that the workstations in
+    scope receive the policy: a profile targeted at a pilot group, or one with
+    exclusions applied, reaches only part of the fleet. Returns the assignment
+    scope and whether any exclusion target is present, so the policy can report
+    insufficient evidence where tenant-wide coverage cannot be established.
+    """
+    if not assignments:
+        return "none", False
+
+    target_types = [
+        (a.get("target") or {}).get("@odata.type", "").lower() for a in assignments
+    ]
+    has_exclusions = any(TARGET_HINT_EXCLUSION in t for t in target_types)
+
+    if any(
+        TARGET_HINT_ALL_DEVICES in t or TARGET_HINT_ALL_USERS in t for t in target_types
+    ):
+        return "all_devices", has_exclusions
+    if any(TARGET_HINT_GROUP in t for t in target_types):
+        return "group_scoped", has_exclusions
+    return "unknown", has_exclusions
 
 
 def _is_app_control_policy(policy: dict[str, Any]) -> bool:
@@ -136,7 +180,8 @@ class AppControlPolicyDataCollector(BaseDataCollector):
         weakest = max(
             findings,
             key=lambda f: (
-                not f["assigned"],
+                ASSIGNMENT_SCOPE_RANK.get(f["assignment_scope"], 2),
+                f["has_exclusions"],
                 f["configured_enforcement_state"] != "enforced",
                 f["trust_reputation"] and not f["trust_managed_installer"],
             ),
@@ -149,7 +194,8 @@ class AppControlPolicyDataCollector(BaseDataCollector):
             "configured_enforcement_state": weakest["configured_enforcement_state"],
             "trust_reputation": weakest["trust_reputation"],
             "trust_managed_installer": weakest["trust_managed_installer"],
-            "assigned": weakest["assigned"],
+            "assignment_scope": weakest["assignment_scope"],
+            "has_exclusions": weakest["has_exclusions"],
             # Microsoft exposes no documented Graph property for the device-side
             # effective state of an application control policy, so configuration
             # intent is all that can be established here.
@@ -170,6 +216,7 @@ class AppControlPolicyDataCollector(BaseDataCollector):
             assignments = await client.get_all_pages(
                 f"/deviceManagement/deviceConfigurations/{config_id}/assignments"
             )
+            scope, has_exclusions = _analyse_assignments(assignments)
             findings.append(
                 {
                     "policy_name": config.get("displayName"),
@@ -182,7 +229,8 @@ class AppControlPolicyDataCollector(BaseDataCollector):
                     # options; those exist only on modern App Control policies.
                     "trust_reputation": False,
                     "trust_managed_installer": False,
-                    "assigned": len(assignments) > 0,
+                    "assignment_scope": scope,
+                    "has_exclusions": has_exclusions,
                 }
             )
         return findings
@@ -234,6 +282,7 @@ class AppControlPolicyDataCollector(BaseDataCollector):
             else:
                 state = "unknown"
 
+            scope, has_exclusions = _analyse_assignments(assignments)
             findings.append(
                 {
                     "policy_name": policy.get("name") or policy.get("displayName"),
@@ -242,7 +291,8 @@ class AppControlPolicyDataCollector(BaseDataCollector):
                     "configured_enforcement_state": state,
                     "trust_reputation": trust_reputation,
                     "trust_managed_installer": trust_managed_installer,
-                    "assigned": len(assignments) > 0,
+                    "assignment_scope": scope,
+                    "has_exclusions": has_exclusions,
                 }
             )
         return findings
