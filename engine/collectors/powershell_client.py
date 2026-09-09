@@ -125,7 +125,7 @@ class PowerShellClient:
 
     async def run_cmdlet(
         self, module: str, cmdlet: str, **params: Any
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | list[dict[str, Any]] | None:
         """Execute a PowerShell cmdlet.
 
         Uses HTTP service if service_url is configured, otherwise spawns Docker container.
