@@ -8,6 +8,9 @@ from collectors.entra.applications.apps_and_services_settings import (
 )
 from collectors.entra.applications.forms_settings import FormsSettingsDataCollector
 
+from collectors.entra.applications.third_party_storage_services import (
+    ThirdPartyStorageServicesDataCollector,
+)
 # Authentication
 from collectors.entra.authentication.authentication_methods import (
     AuthenticationMethodsDataCollector,
@@ -35,6 +38,9 @@ from collectors.entra.conditional_access.e8_mfa_enforcement import (
 
 # Devices
 from collectors.entra.devices.asr_rules import ASRRulesDataCollector
+from collectors.entra.devices.configuration_policies import (
+    ConfigurationPoliciesDataCollector,
+)
 from collectors.entra.devices.device_management_settings import (
     DeviceManagementSettingsDataCollector,
 )
@@ -43,6 +49,9 @@ from collectors.entra.devices.device_registration_policy import (
 )
 from collectors.entra.devices.enrollment_restrictions import (
     EnrollmentRestrictionsDataCollector,
+) 
+from collectors.entra.devices.windows_update_config import (
+    WindowsUpdateConfigDataCollector,
 )
 
 # Domains
@@ -71,12 +80,18 @@ from collectors.entra.roles.admin_license_footprint import (
 from collectors.entra.roles.cloud_only_admins import CloudOnlyAdminsDataCollector
 from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
 
+# M365 Backup
+from collectors.m365.backup_restore import BackupRestoreDataCollector
+
 # Exchange - DNS
 from collectors.exchange.dns.dns_security_records import (
     DnsSecurityRecordsDataCollector,
 )
 
 # Exchange - Organization
+from collectors.exchange.organization.admin_audit_log_config import (
+    AdminAuditLogConfigDataCollector,
+)
 from collectors.exchange.organization.organization_config import (
     OrganizationConfigDataCollector,
 )
@@ -131,6 +146,9 @@ from collectors.exchange.protection.safe_links_policy import (
 from collectors.exchange.protection.teams_protection_policy import (
     TeamsProtectionPolicyDataCollector,
 )
+from collectors.exchange.protection.priority_account_protection import (
+    PriorityAccountStrictProtectionDataCollector,
+)
 
 # Exchange - Transport
 from collectors.exchange.transport.external_in_outlook import (
@@ -138,12 +156,19 @@ from collectors.exchange.transport.external_in_outlook import (
 )
 from collectors.exchange.transport.transport_rules import TransportRulesDataCollector
 
+# SharePoint - PnP
+from collectors.sharepoint.pnp.tenant import PnpTenantDataCollector
+
+
+
+
 
 # Registry mapping data_collector_id to collector class
 DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Applications
     "entra.applications.apps_and_services_settings": AppsAndServicesSettingsDataCollector,
     "entra.applications.forms_settings": FormsSettingsDataCollector,
+    "entra.applications.third_party_storage_services": ThirdPartyStorageServicesDataCollector,
     # Authentication
     "entra.authentication.authentication_methods": AuthenticationMethodsDataCollector,
     "entra.authentication.mfa_fatigue_protection": MfaFatigueProtectionDataCollector,
@@ -155,9 +180,11 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.conditional_access.e8_mfa_enforcement": E8MfaEnforcementDataCollector,
     # Devices
     "entra.devices.asr_rules": ASRRulesDataCollector,
+    "entra.devices.configuration_policies": ConfigurationPoliciesDataCollector,
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
+    "entra.devices.windows_update_config": WindowsUpdateConfigDataCollector,
     # Domains
     "entra.domains.password_policy": PasswordPolicyDataCollector,
     # Governance
@@ -173,10 +200,13 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.roles.admin_license_footprint": AdminLicenseFootprintDataCollector,
     "entra.roles.cloud_only_admins": CloudOnlyAdminsDataCollector,
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,
+    # M365 Backup
+    "m365.backup_restore": BackupRestoreDataCollector,
     # Users
     # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
     # Exchange - Organization
+    "exchange.organization.admin_audit_log_config": AdminAuditLogConfigDataCollector,
     "exchange.organization.organization_config": OrganizationConfigDataCollector,
     "exchange.organization.owa_mailbox_policy": OwaMailboxPolicyDataCollector,
     "exchange.organization.sharing_policy": SharingPolicyDataCollector,
@@ -201,8 +231,9 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Exchange - Transport
     "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
     "exchange.transport.transport_rules": TransportRulesDataCollector,
+    "exchange.protection.priority_account_protection": PriorityAccountStrictProtectionDataCollector,
+    "sharepoint.pnp.tenant": PnpTenantDataCollector,
 }
-
 
 def get_collector(collector_id: str) -> BaseDataCollector:
     """Get a collector instance by ID."""
