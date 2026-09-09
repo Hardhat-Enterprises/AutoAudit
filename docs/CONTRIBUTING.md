@@ -252,6 +252,7 @@ Each control in metadata.json uses this schema:
 | `data_collector_id` | string | Nullable | Collector registry ID, null for manual |
 | `policy_file` | string | Nullable | Rego policy filename, null for manual |
 | `requires_permissions` | array | Nullable | Required API permissions |
+| `mitre_attack` | array | Nullable | MITRE ATT&CK techniques associated with the security exposure of a failed control |
 | `notes` | string | Nullable | Blockers, special considerations |
 
 ---
