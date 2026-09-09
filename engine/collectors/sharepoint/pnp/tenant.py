@@ -50,4 +50,7 @@ class PnpTenantDataCollector(BasePowerShellCollector):
                "external_user_expire_in_days": tenant.get(
                "ExternalUserExpireInDays"
             ),
+            "is_unmanaged_sync_client_for_tenant_restricted": tenant.get(
+                 "IsUnmanagedSyncClientForTenantRestricted"
+),
         }
