@@ -8,7 +8,7 @@ A line-by-line review of docker-compose.yml identified three credentials stored 
 
 - **Line 32** — `POSTGRES_PASSWORD: autoaudit_dev_password`. Carries a `# pragma: allowlist secret` comment, which suppresses detect-secrets from flagging it despite being a real password.
 - **Line 107** — `SECRET_KEY=dev-secret-key-change-in-production`, the JWT signing key for backend-api.
-- **Line 126** — `ENCRYPTION_KEY=Ps-HiS3ww5QzQPc_Mdu5-JyA_jCNbdFHMdiwWSlAfgM=`. Unlike the other two, this is not a placeholder — it is an active Fernet key encrypting stored M365/AWS/Azure/GCP credentials. It is repeated at **line 166** in the worker service, since both services require the same key to decrypt shared data.
+- **Line 126** — `ENCRYPTION_KEY=<redacted - real Fernet key, not a placeholder>`. Unlike the other two, this is not a placeholder — it is an active Fernet key encrypting stored M365/AWS/Azure/GCP credentials. It is repeated at **line 166** in the worker service, since both services require the same key to decrypt shared data. (Redacted here rather than quoted verbatim, since an audit document is permanent and should not itself become a place a real secret is recorded.)
 
 The Postgres password additionally appears embedded in the `DATABASE_URL` connection string at lines 104 and 157, so a fix limited to the standalone `POSTGRES_PASSWORD` line alone would be incomplete. This class of finding is addressed by the [OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html) and the [CIS Docker Benchmark](https://www.cisecurity.org/benchmark/docker), both of which recommend externalizing secrets from configuration files rather than hardcoding them.
 
