@@ -166,7 +166,7 @@ class PowerShellClient:
                 raise ValueError(
                     "SharePointOnline requires sharepoint_admin_url and certificate_alias"
                 )
-            payload = {
+            payload: dict[str, Any] = {
                 "module": module,
                 "cmdlet": cmdlet,
                 "params": params,
