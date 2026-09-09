@@ -115,7 +115,7 @@ class PowerShellClient:
                 ["docker", "build", "-t", self.DOCKER_IMAGE, str(dockerfile_dir)],
                 capture_output=True,
                 text=True,
-                check=False,                                
+                check=False,
             )
             if build_result.returncode != 0:
                 raise PowerShellExecutionError(
