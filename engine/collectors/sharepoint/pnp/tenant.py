@@ -68,4 +68,7 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             "external_user_expire_in_days": tenant.get(
                 "ExternalUserExpireInDays"
             ),
+            "restrict_external_domain_sharing":tenant.get(
+                "SharingDomainRestrictionMode"
+            ),
         }
