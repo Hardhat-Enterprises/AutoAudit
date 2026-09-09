@@ -534,6 +534,23 @@ class GcpDeviceAssetControlsCollector(BaseDataCollector):
         ]
 
 
+    def _get_successful_review_time(self, review):
+        """Return a successful review timestamp in UTC, or None."""
+        if review.get("status") != "SUCCESS":
+            return None
+
+        timestamp = review.get("timestamp")
+        if not timestamp:
+            return None
+
+        try:
+            return datetime.fromisoformat(
+                timestamp.replace("Z", "+00:00")
+            ).astimezone(timezone.utc)
+        except (TypeError, ValueError):
+            return None
+
+
     def _weekly_execution_verified(
         self,
         reviews
@@ -542,19 +559,13 @@ class GcpDeviceAssetControlsCollector(BaseDataCollector):
         now = datetime.now(timezone.utc)
 
         for review in reviews:
-            if review.get("status") != "SUCCESS":
+            review_time = self._get_successful_review_time(review)
+            if review_time is None:
                 continue
-            timestamp = review.get("timestamp")
-            if not timestamp:
-                continue
-            try:
-                review_time = datetime.fromisoformat(
-                    timestamp.replace("Z", "+00:00")
-                ).astimezone(timezone.utc)
-            except (TypeError, ValueError):
-                continue
+
             if cutoff <= review_time <= now:
                 return True
+
         return False
 
 
@@ -595,19 +606,8 @@ class GcpDeviceAssetControlsCollector(BaseDataCollector):
         cutoff = now - timedelta(days=frequency_days)
 
         for review in reviews:
-            if review.get("status") != "SUCCESS":
-                continue
-
-            timestamp = review.get("timestamp")
-            if not timestamp:
-                continue
-
-            try:
-                review_time = datetime.fromisoformat(
-                    timestamp.replace("Z", "+00:00")
-                ).astimezone(timezone.utc)
-                now = datetime.now(timezone.utc)
-            except (TypeError, ValueError):
+            review_time = self._get_successful_review_time(review)
+            if review_time is None:
                 continue
 
             if cutoff <= review_time <= now:
