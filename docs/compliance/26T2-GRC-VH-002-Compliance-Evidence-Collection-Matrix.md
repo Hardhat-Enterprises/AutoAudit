@@ -5,7 +5,8 @@
 **Project:** AutoAudit  
 **Team:** GRC  
 **Artefact Type:** Compliance evidence mapping  
-**Status:** Draft v0.1
+**Status:** Draft v0.1  
+**Benchmark Reference:** CIS Microsoft 365 Foundations Benchmark v6.0.0
 
 ---
 
@@ -48,7 +49,7 @@ This is an initial validation sample rather than a complete mapping of all CIS M
 | 5.2.3.4 | Ensure all member users are MFA capable | `entra.authentication.mfa_registration_report` | Microsoft Graph API | User registration details returned from `/reports/authenticationMethods/userRegistrationDetails` | `total_users`, `mfa_registered_count`, `mfa_capable_count`, `mfa_not_registered_count`, `mfa_registration_percentage` | Raw registration data = AUTO-DIRECT; calculated counts/percentage = AUTO-DERIVED | Automated | Collector provides MFA registration and capability evidence, but final CIS pass/fail policy logic is not defined in the collector itself. |
 | 5.2.2.3 | Block legacy authentication | `entra.conditional_access.legacy_auth_block` | Microsoft Graph API | Conditional Access policies | `targets_all_users`, `targets_all_apps`, `blocks_legacy_auth`, `grant_control` | Raw policies = AUTO-DIRECT; calculated flags = AUTO-DERIVED | Automated | Collector identifies relevant blocking conditions, but final CIS compliance evaluation should still be validated against the policy logic. |
 | 5.3.1 | Privileged Identity Management | `entra.governance.pim_role_policies` | Microsoft Graph API | Role management policies, role definitions and policy rules | `pim_enabled`, approval requirements, MFA requirement, justification requirement, activation duration | Raw policies/rules = AUTO-DIRECT; extracted settings = AUTO-DERIVED | Automated | Presence of PIM policies does not by itself prove that every privileged role required by CIS is fully governed. |
-| 3.1.1 | Microsoft 365 audit log search enabled | `exchange.organization.organization_config` | Exchange Online PowerShell | Full `Get-OrganizationConfig` result | Extracted `audit_disabled` value | Full Exchange config = AUTO-DIRECT; extracted field = AUTO-DERIVED | Automated | `controls.md` maps 3.1.1 to `AuditDisabled = False`, while the collector documentation identifies this evidence specifically with CIS 6.1.1. Mapping consistency should be reviewed. |
+| 3.1.1 | Microsoft 365 audit log search enabled | `exchange.organization.admin_audit_log_config` | Exchange Online PowerShell | Full `Get-AdminAuditLogConfig` result | Extracted `unified_audit_log_ingestion_enabled` value | Full Exchange config = AUTO-DIRECT; extracted field = AUTO-DERIVED | Automated | `controls.md` maps 3.1.1 to `AuditDisabled = False`, while the collector documentation identifies this evidence specifically with CIS 6.1.1. Mapping consistency should be reviewed. |
 | 5.2.2.1 | MFA enabled for all administrative roles | `entra.conditional_access.policies` | Microsoft Graph API | Full Conditional Access policies and policy conditions | Enabled policy counts, MFA policy list and other categorised policy outputs | Raw policies = AUTO-DIRECT; categorised policy outputs = AUTO-DERIVED | Deferred | Collector is implemented, but evidence is not sufficient to confirm coverage of all 15 administrative roles. Manual/GRC verification remains required. |
 
 ---
@@ -138,21 +139,17 @@ A key limitation is that `pim_enabled` is derived from the existence of role-man
 
 ### 4.4 CIS 3.1.1 — Audit Logging
 
-The organization configuration collector uses Exchange Online PowerShell:
+The admin audit log config collector uses Exchange Online PowerShell:
 
-`Get-OrganizationConfig`
+`Get-AdminAuditLogConfig`
 
-The collector returns the full organization configuration and extracts:
+The collector returns the full admin audit log configuration and extracts:
 
-`AuditDisabled`
+`unified_audit_log_ingestion_enabled`
 
-The control inventory states that CIS 3.1.1 should check:
+The control inventory (`controls.md`) previously stated that CIS 3.1.1 should check `AuditDisabled = False` via the `exchange.organization.organization_config` collector. This has been confirmed as a documentation error: `AuditDisabled` and `organization_config` belong to CIS 6.1.1, not 3.1.1. See VH002-F03 for the supporting evidence.
 
-`AuditDisabled = False`
-
-However, the collector documentation associates this audit setting with CIS 6.1.1 rather than 3.1.1.
-
-This should be reviewed for control-to-collector documentation consistency.
+This has now been reviewed for control-to-collector documentation consistency.
 
 ---
 
@@ -206,13 +203,13 @@ This supports the VH-001 distinction between AUTO-DIRECT and AUTO-DERIVED eviden
 
 ---
 
-### VH002-F03 — Control-to-collector documentation inconsistency
+### VH002-F03: Control-to-collector documentation inconsistency (confirmed)
 
-The control inventory maps CIS 3.1.1 to `exchange.organization.organization_config` and states that `AuditDisabled = False` should be checked.
+`controls.md` (line 98) maps CIS 3.1.1 to the `exchange.organization.organization_config` collector and states that `AuditDisabled = False` should be checked. This mapping is incorrect.
 
-The collector documentation identifies the same audit field specifically with CIS 6.1.1.
+`metadata.json` records 3.1.1's real collector as `exchange.organization.admin_audit_log_config`, and the 3.1.1 Rego policy reads `unified_audit_log_ingestion_enabled`, not `AuditDisabled`. The docstring of `admin_audit_log_config.py` confirms it serves CIS 3.1.1. The docstring of `organization_config.py` lists every control it serves (1.3.6, 1.3.9, 6.1.1, 6.5.1, 6.5.2, 6.5.5) and does not include 3.1.1; it names 6.1.1 as the control that checks `AuditDisabled`.
 
-The evidence source may still be technically reusable for both controls, but the mapping should be reviewed so that control documentation remains consistent and traceable.
+`controls.md` needs to be corrected so that 3.1.1 is documented against `admin_audit_log_config` / `unified_audit_log_ingestion_enabled`, matching what is already implemented.
 
 ---
 
