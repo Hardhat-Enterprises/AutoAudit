@@ -115,8 +115,7 @@ class PowerShellClient:
                 ["docker", "build", "-t", self.DOCKER_IMAGE, str(dockerfile_dir)],
                 capture_output=True,
                 text=True,
-                check=False,
-                                          
+                check=False,                                
             )
             if build_result.returncode != 0:
                 raise PowerShellExecutionError(
@@ -346,7 +345,7 @@ try {{
     Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 }}
 """
-       if module == "Compliance":
+        if module == "Compliance":
             return f"""
 Import-Module ExchangeOnlineManagement
 Connect-IPPSSession -AccessToken $env:EXO_TOKEN -Organization "{self.tenant_id}" -ShowBanner:$false
