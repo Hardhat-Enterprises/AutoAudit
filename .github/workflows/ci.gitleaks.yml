@@ -14,6 +14,9 @@ permissions:
 jobs:
   gitleaks:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     env:
       GITLEAKS_VERSION: 8.30.1
     steps:
@@ -31,4 +34,72 @@ jobs:
           sudo mv gitleaks /usr/local/bin/gitleaks
 
       - name: Run gitleaks
-        run: gitleaks detect --source . --log-opts="--all" --redact --baseline-path .gitleaks-baseline.json --exit-code 1
+        id: gitleaks
+        continue-on-error: true
+        run: |
+          gitleaks detect \
+            --source . \
+            --log-opts="--all" \
+            --redact \
+            --baseline-path .gitleaks-baseline.json \
+            --report-format sarif \
+            --report-path gitleaks-results.sarif \
+            --exit-code 1
+
+      # gitleaks --redact scrubs the actual secret value (replaced with "REDACTED")
+      # in every report format, so this summary is safe to print in plain job logs.
+      - name: Summarize findings (redacted)
+        if: always()
+        run: |
+          if [ -s gitleaks-results.sarif ]; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+
+          with open("gitleaks-results.sarif") as f:
+              sarif = json.load(f)
+
+          results = sarif.get("runs", [{}])[0].get("results", [])
+
+          print("## Gitleaks findings\n")
+          if not results:
+              print("No unbaselined leaks found.")
+          else:
+              print(f"Found **{len(results)}** unbaselined finding(s) (secret values redacted):\n")
+              print("| Rule | File | Line | Commit |")
+              print("|---|---|---|---|")
+              for r in results:
+                  rule = r.get("ruleId", "unknown-rule")
+                  loc = r.get("locations", [{}])[0].get("physicalLocation", {})
+                  path = loc.get("artifactLocation", {}).get("uri", "unknown-file")
+                  line = loc.get("region", {}).get("startLine", "?")
+                  props = r.get("properties", {})
+                  commit = props.get("commitSha", "unknown-commit")
+                  print(f"| `{rule}` | `{path}` | {line} | `{commit}` |")
+              print("\nFull details (still redacted): see the SARIF upload in this run's Security tab, or download the `gitleaks-results.sarif` artifact below.")
+          PY
+          else
+            echo "## Gitleaks findings" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "No SARIF report was produced (scan likely errored before completing)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload SARIF report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-results
+          path: gitleaks-results.sarif
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Upload SARIF to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+        with:
+          sarif_file: gitleaks-results.sarif
+
+      - name: Fail if leaks were found
+        if: steps.gitleaks.outcome == 'failure'
+        run: |
+          echo "Gitleaks found unbaselined secrets — see the summary above or the Security tab for details." >&2
+          exit 1
