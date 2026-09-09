@@ -1041,6 +1041,112 @@ def _fix_finding_table_widths(doc: Document) -> None:
             tblPr.append(el)
 
 
+def _fix_table_pagination(doc: Document) -> None:
+    """Prevent tables from splitting awkwardly across a page break.
+
+    Word's default behaviour lets an individual row's content be torn across
+    a page boundary, and a continued table on the next page loses its column
+    header entirely. Every table here also has a data-dependent row count,
+    so none of this can be baked into the static template — it has to run
+    as a post-processing pass after the tables are fully populated.
+
+    Three properties, applied per row:
+      - cantSplit:  a single row's content can't be torn across a page break
+      - tblHeader:  the header row repeats at the top of a continuation page
+      - keepNext (on every row but the last): keeps consecutive rows glued
+        together, so a table can't start with only its header (or one row)
+        stranded at the bottom of a page while the rest spills onto the next
+    """
+    for table in doc.tables:
+        rows = table.rows
+        last_index = len(rows) - 1
+        for i, row in enumerate(rows):
+            trPr = row._tr.get_or_add_trPr()
+            if trPr.find(qn("w:cantSplit")) is None:
+                trPr.append(OxmlElement("w:cantSplit"))
+            if i == 0 and trPr.find(qn("w:tblHeader")) is None:
+                trPr.append(OxmlElement("w:tblHeader"))
+            if i != last_index:
+                for cell in row.cells:
+                    for para in cell.paragraphs:
+                        para.paragraph_format.keep_with_next = True
+
+
+def _force_page_break_for_large_tables(doc: Document, min_rows: int = 15) -> None:
+    """Force a hard page break before a heading whose table is large enough
+    that keepNext alone does not reliably keep it attached in real Word.
+
+    keepNext is structurally correct and present (see
+    _keep_tables_with_heading below), but real Word does not honour it once
+    a table is tall enough -- confirmed in practice with the 18-row finding-
+    detail tables, which left their heading stranded on the previous page
+    with the table starting fresh on the next. The default threshold (15)
+    is set specifically above the next-largest tables in this report (10-11
+    rows, e.g. "2.1 In Scope", "Compliance by Service Area", the Appendix
+    tables), so only the finding-detail tables are forced onto their own
+    page -- everything else keeps flowing naturally.
+    """
+    body = doc.element.body
+    children = list(body)
+    for i, el in enumerate(children):
+        if el.tag != qn("w:tbl"):
+            continue
+        if len(el.findall(qn("w:tr"))) < min_rows:
+            continue
+        j = i - 1
+        heading = None
+        while j >= 0 and children[j].tag == qn("w:p"):
+            p = children[j]
+            pPr = p.find(qn("w:pPr"))
+            style_el = pPr.find(qn("w:pStyle")) if pPr is not None else None
+            style_id = style_el.get(qn("w:val")) if style_el is not None else None
+            if style_id in ("Heading1", "Heading2", "Title"):
+                heading = p
+                break
+            j -= 1
+        if heading is None:
+            continue
+        pPr = heading.find(qn("w:pPr"))
+        if pPr is None:
+            pPr = OxmlElement("w:pPr")
+            heading.insert(0, pPr)
+        if pPr.find(qn("w:pageBreakBefore")) is None:
+            pPr.append(OxmlElement("w:pageBreakBefore"))
+
+
+def _keep_tables_with_heading(doc: Document) -> None:
+    """Keep each table glued to its heading, however many paragraphs sit
+    between them.
+
+    Relying on Heading 1/2's own style-level keep-with-next is not enough in
+    practice -- it does not reliably stop Word from breaking the page
+    between the heading and a table several paragraphs later. So this walks
+    backward from each table through every paragraph in between (heading
+    included) and sets keepNext explicitly on all of them, removing any
+    dependency on style inheritance.
+    """
+    body = doc.element.body
+    children = list(body)
+    for i, el in enumerate(children):
+        if el.tag != qn("w:tbl"):
+            continue
+        j = i - 1
+        while j >= 0 and children[j].tag == qn("w:p"):
+            p = children[j]
+            pPr = p.find(qn("w:pPr"))
+            if pPr is None:
+                pPr = OxmlElement("w:pPr")
+                p.insert(0, pPr)
+            if pPr.find(qn("w:keepNext")) is None:
+                pPr.append(OxmlElement("w:keepNext"))
+
+            style_el = pPr.find(qn("w:pStyle"))
+            style_id = style_el.get(qn("w:val")) if style_el is not None else None
+            if style_id in ("Heading1", "Heading2", "Title"):
+                break
+            j -= 1
+
+
 # ---------------------------------------------------------------------------
 # PDF conversion
 # ---------------------------------------------------------------------------
@@ -1179,6 +1285,9 @@ def _render_report_doc(
     _remove_markers(doc)
     _inject_evidence_extracts(doc, all_controls)
     _fix_finding_table_widths(doc)
+    _fix_table_pagination(doc)
+    _keep_tables_with_heading(doc)
+    _force_page_break_for_large_tables(doc)
 
     return doc, global_mapping
 
