@@ -27,7 +27,8 @@ class BasePowerShellCollector(ABC):
         Returns:
             Dictionary of collected data to be passed to OPA for evaluation.
         """
-        
+
+
 def as_list(
     result: dict[str, Any] | list[dict[str, Any]] | None,
 ) -> list[dict[str, Any]]:
