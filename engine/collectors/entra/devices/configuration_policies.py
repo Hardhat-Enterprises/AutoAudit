@@ -49,6 +49,15 @@ class ConfigurationPoliciesDataCollector(BaseDataCollector):
         # The top-level policy list only returns metadata (name, description) plus
         # the assignments we expanded above. The actual setting IDs and values are
         # in a separate per-policy endpoint.
+        #
+        # Setting shape varies per control and is not predictable from Microsoft's
+        # documentation. Some settings are flat, where the top-level value is the
+        # whole answer and a trailing "_1" means enabled (E8-MAC-1.2, internet macro
+        # block). Others are nested, where the top-level value only says the policy
+        # is switched on and the real answer sits in
+        # choiceSettingValue.children[0].choiceSettingValue.value (E8-MAC-1.1 VBA
+        # notification level, E8-MAC-1.3 AMSI). Check the saved sample response in
+        # engine/samples/ for your specific setting before writing the policy.
         policies_with_settings = []
         for policy in policies:
             policy_id = policy.get("id")
