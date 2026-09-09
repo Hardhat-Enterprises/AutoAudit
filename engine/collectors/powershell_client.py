@@ -32,9 +32,9 @@ from worker.validators import validate_tenant_id
 class PowerShellExecutionError(Exception):
     """Raised when PowerShell execution fails."""
 
-    pass
 
 
+# pylint: disable=too-many-instance-attributes
 class PowerShellClient:
     """Client for PowerShell-based M365 connections using Docker or HTTP service."""
 
@@ -104,6 +104,7 @@ class PowerShellClient:
             ["docker", "images", "-q", self.DOCKER_IMAGE],
             capture_output=True,
             text=True,
+            check=False,
         )
         if not result.stdout.strip():
             print(
@@ -114,6 +115,8 @@ class PowerShellClient:
                 ["docker", "build", "-t", self.DOCKER_IMAGE, str(dockerfile_dir)],
                 capture_output=True,
                 text=True,
+                check=False,
+                                          
             )
             if build_result.returncode != 0:
                 raise PowerShellExecutionError(
@@ -145,8 +148,7 @@ class PowerShellClient:
             )
         if self.service_url:
             return await self._run_via_service(module, cmdlet, params)
-        else:
-            return await self._run_via_docker(module, cmdlet, params)
+        return await self._run_via_docker(module, cmdlet, params)
 
     async def _run_via_service(
         self, module: str, cmdlet: str, params: dict[str, Any]
@@ -292,6 +294,7 @@ class PowerShellClient:
             capture_output=True,
             text=True,
             timeout=120,
+            check=False
         )
 
         if proc.returncode != 0:
@@ -343,7 +346,7 @@ try {{
     Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 }}
 """
-        elif module == "Compliance":
+       if module == "Compliance":
             return f"""
 Import-Module ExchangeOnlineManagement
 Connect-IPPSSession -AccessToken $env:EXO_TOKEN -Organization "{self.tenant_id}" -ShowBanner:$false
@@ -358,7 +361,7 @@ try {{
     Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 }}
 """
-        elif module == "Teams":
+        if module == "Teams":
             # Teams module uses -AccessTokens (plural) with Graph and Teams tokens
             return f"""
 Import-Module MicrosoftTeams
@@ -374,8 +377,7 @@ try {{
     Disconnect-MicrosoftTeams -ErrorAction SilentlyContinue
 }}
 """
-        else:
-            raise ValueError(f"Unsupported module: {module}")
+        raise ValueError(f"Unsupported module: {module}")
 
     def _get_scope_for_module(self, module: str) -> str:
         """Get the appropriate scope for a PowerShell module.
