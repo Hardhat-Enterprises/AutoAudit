@@ -2,16 +2,16 @@ package essential_eight.asd_essential_eight.v2025.test_e8_pa_1_1
 
 import rego.v1
 
-# NOTE: lastReportedDateTime below is an illustrative fixed date close to
-# when this file was written, used for the "recent status" tests. Will
-# need refreshing if the fixed date falls outside the 24 hour window by
-# the time these tests are actually run.
+# recent_time is computed at test-run time, always within the 24 hour
+# window regardless of when these tests are actually run. This replaces
+# the earlier hardcoded date, which went stale after the file was written.
+recent_time := time.format([time.now_ns(), "UTC", "2006-01-02T15:04:05Z"])
 
 test_compliant_all_conditions_met if {
 	result := data.essential_eight.asd_essential_eight.v2025.control_e8_pa_1_1.result with input as {
 		"protection_states": [
-			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": "2026-09-03T00:00:00Z"},
-			{"device_id": "d2", "device_name": "Device2", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": "2026-09-03T00:00:00Z"},
+			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": recent_time},
+			{"device_id": "d2", "device_name": "Device2", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": recent_time},
 		],
 		"software_inventory": [
 			{"device_id": "d1", "softwareName": "Google Chrome", "numberOfWeaknesses": 0, "endOfSupportStatus": "Supported"},
@@ -26,7 +26,7 @@ test_compliant_all_conditions_met if {
 test_non_compliant_signature_overdue if {
 	result := data.essential_eight.asd_essential_eight.v2025.control_e8_pa_1_1.result with input as {
 		"protection_states": [
-			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": true, "realTimeProtectionEnabled": true, "lastReportedDateTime": "2026-09-03T00:00:00Z"},
+			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": true, "realTimeProtectionEnabled": true, "lastReportedDateTime": recent_time},
 		],
 		"software_inventory": [],
 	}
@@ -38,7 +38,7 @@ test_non_compliant_signature_overdue if {
 test_non_compliant_realtime_protection_disabled if {
 	result := data.essential_eight.asd_essential_eight.v2025.control_e8_pa_1_1.result with input as {
 		"protection_states": [
-			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": false, "lastReportedDateTime": "2026-09-03T00:00:00Z"},
+			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": false, "lastReportedDateTime": recent_time},
 		],
 		"software_inventory": [],
 	}
@@ -73,7 +73,7 @@ test_non_compliant_no_status if {
 test_non_compliant_weakness_exceeds_threshold if {
 	result := data.essential_eight.asd_essential_eight.v2025.control_e8_pa_1_1.result with input as {
 		"protection_states": [
-			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": "2026-09-03T00:00:00Z"},
+			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": recent_time},
 		],
 		"software_inventory": [
 			{"device_id": "d1", "softwareName": "Google Chrome", "numberOfWeaknesses": 1, "endOfSupportStatus": "Supported"},
@@ -87,7 +87,7 @@ test_non_compliant_weakness_exceeds_threshold if {
 test_compliant_at_zero_weaknesses if {
 	result := data.essential_eight.asd_essential_eight.v2025.control_e8_pa_1_1.result with input as {
 		"protection_states": [
-			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": "2026-09-03T00:00:00Z"},
+			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": recent_time},
 		],
 		"software_inventory": [
 			{"device_id": "d1", "softwareName": "Google Chrome", "numberOfWeaknesses": 0, "endOfSupportStatus": "Supported"},
@@ -99,7 +99,7 @@ test_compliant_at_zero_weaknesses if {
 test_non_compliant_unsupported_software if {
 	result := data.essential_eight.asd_essential_eight.v2025.control_e8_pa_1_1.result with input as {
 		"protection_states": [
-			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": "2026-09-03T00:00:00Z"},
+			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": recent_time},
 		],
 		"software_inventory": [
 			{"device_id": "d1", "softwareName": "Old PDF Reader", "numberOfWeaknesses": 0, "endOfSupportStatus": "Unsupported"},
@@ -113,8 +113,8 @@ test_non_compliant_unsupported_software if {
 test_non_compliant_multiple_devices_mixed_failures if {
 	result := data.essential_eight.asd_essential_eight.v2025.control_e8_pa_1_1.result with input as {
 		"protection_states": [
-			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": true, "realTimeProtectionEnabled": true, "lastReportedDateTime": "2026-09-03T00:00:00Z"},
-			{"device_id": "d2", "device_name": "Device2", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": "2026-09-03T00:00:00Z"},
+			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": true, "realTimeProtectionEnabled": true, "lastReportedDateTime": recent_time},
+			{"device_id": "d2", "device_name": "Device2", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": recent_time},
 		],
 		"software_inventory": [],
 	}
@@ -135,7 +135,7 @@ test_non_compliant_nothing_configured if {
 test_result_details_structure if {
 	result := data.essential_eight.asd_essential_eight.v2025.control_e8_pa_1_1.result with input as {
 		"protection_states": [
-			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": "2026-09-03T00:00:00Z"},
+			{"device_id": "d1", "device_name": "Device1", "signatureUpdateOverdue": false, "realTimeProtectionEnabled": true, "lastReportedDateTime": recent_time},
 		],
 		"software_inventory": [],
 	}
