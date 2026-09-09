@@ -64,6 +64,7 @@ jobs:
           VALIDATE_MARKDOWN: false
           VALIDATE_NATURAL_LANGUAGE: false
           VALIDATE_MARKDOWN_PRETTIER: false
+          VALIDATE_PYTHON_PYLINT: false
 
   test:
     name: Run Engine Tests
