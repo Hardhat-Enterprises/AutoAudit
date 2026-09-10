@@ -1,6 +1,7 @@
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from collections.abc import AsyncGenerator
+
 from app.db.base import engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 # Create async session factory
 async_session_maker = async_sessionmaker(
