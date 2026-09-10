@@ -30,16 +30,36 @@ def check_file_size(filepath: str, max_size_mb: float = 10.0) -> bool:
         return False
 
 
-def generate_file_hash(filepath: str) -> Optional[str]:
-    """Generates a SHA-256 hash using 4096-byte chunking for safe memory management."""
+def generate_file_hash_and_check_size(
+    filepath: str, max_size_mb: float = 10.0
+) -> Tuple[Optional[str], bool, str]:
+    """Hashes file contents using 4096-byte chunking while enforcing max size on the open handle.
+
+    Prevents race conditions where file size increases during hashing.
+    """
     sha256_hash = hashlib.sha256()
+    max_bytes = int(max_size_mb * 1024 * 1024)
+    total_bytes = 0
+
     try:
         with open(filepath, "rb") as f:
-            for byte_block in iter(lambda: f.read(4096), b""):
-                sha256_hash.update(byte_block)
-        return sha256_hash.hexdigest()
-    except OSError:
-        return None
+            while True:
+                chunk = f.read(4096)
+                if not chunk:
+                    break
+                total_bytes += len(chunk)
+                if total_bytes > max_bytes:
+                    return None, False, f"File size exceeds {max_size_mb} MB limit."
+                sha256_hash.update(chunk)
+        return sha256_hash.hexdigest(), True, "Hashing successful."
+    except OSError as err:
+        return None, False, f"System Error reading file: {err}"
+
+
+def generate_file_hash(filepath: str) -> Optional[str]:
+    """Generates a SHA-256 hash using 4096-byte chunking for safe memory management."""
+    file_hash, within_limit, _ = generate_file_hash_and_check_size(filepath, max_size_mb=float("inf"))
+    return file_hash if within_limit else None
 
 
 def process_ingestion_security_pipeline(
@@ -59,14 +79,8 @@ def process_ingestion_security_pipeline(
         _, ext = os.path.splitext(filepath)
         return False, None, f"Security Violation: Extension '{ext}' is not permitted."
 
-    try:
-        if not check_file_size(filepath, max_size_mb):
-            return False, None, f"Security Violation: File size exceeds {max_size_mb} MB limit."
-    except OSError as e:
-        return False, None, f"System Error: Unable to inspect file size ({e})."
-
-    file_hash = generate_file_hash(filepath)
-    if file_hash is None:
-        return False, None, "System Error: Unable to read file contents for hashing."
+    file_hash, within_limit, hash_msg = generate_file_hash_and_check_size(filepath, max_size_mb)
+    if not within_limit or file_hash is None:
+        return False, None, f"Security Violation: {hash_msg}"
 
     return True, file_hash, "File successfully validated and hashed."
