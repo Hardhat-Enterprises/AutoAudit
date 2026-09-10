@@ -9,6 +9,7 @@ test_enabled_laps_is_compliant if {
 	}
 
 	result.compliant == true
+	result.message == "Microsoft Entra Local Administrator Password Solution (LAPS) is enabled"
 	result.details.laps_enabled == true
 }
 
@@ -19,6 +20,7 @@ test_disabled_laps_is_non_compliant if {
 	}
 
 	result.compliant == false
+	result.message == "Microsoft Entra Local Administrator Password Solution (LAPS) is not enabled"
 	result.details.laps_enabled == false
 }
 
