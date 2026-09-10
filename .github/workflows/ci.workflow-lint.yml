@@ -112,9 +112,11 @@ jobs:
               print("\nFull details: see the SARIF upload in this run's Security tab.")
           PY
           else
-            echo "## zizmor findings" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "No JSON report was produced (scan likely errored before completing)." >> "$GITHUB_STEP_SUMMARY"
+            {
+              echo "## zizmor findings"
+              echo ""
+              echo "No JSON report was produced (scan likely errored before completing)."
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Upload SARIF report artifact

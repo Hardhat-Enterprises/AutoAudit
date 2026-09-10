@@ -10,3 +10,12 @@ paths:
       # do not remove this ignore rule to "fix" the lint without also
       # removing the reasons the guard exists.
       - 'constant expression "false" in condition. remove the if: section'
+  .github/workflows/pr.preview-deploy.yml:
+    ignore:
+      # Pre-existing shellcheck findings in a file this PR does not touch.
+      # actionlint scans every workflow file regardless of what changed, so
+      # these surface here for the first time. Leaving as a follow-up rather
+      # than fixing unrelated scripts in an unrelated PR.
+      - 'SC2129:'
+      - 'SC2034:'
+      - 'SC2086:'
