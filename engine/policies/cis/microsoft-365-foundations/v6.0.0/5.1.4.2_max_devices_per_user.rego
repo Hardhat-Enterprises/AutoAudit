@@ -12,44 +12,46 @@
 #   severity: medium
 #   service: EntraID
 #   requires_permissions:
-#   - Policy.Read.All
+#   - Policy.Read.DeviceConfiguration
 
 package cis.microsoft_365_foundations.v6_0_0.control_5_1_4_2
 
 import rego.v1
 
+recommended_maximum := 20
+
 default compliant := false
 
 compliant if {
-  input.user_device_quota != null
-  is_number(input.user_device_quota)
-  input.user_device_quota <= 20
+	input.user_device_quota != null
+	is_number(input.user_device_quota)
+	input.user_device_quota <= recommended_maximum
 }
 
 result := {
-  "compliant": compliant,
-  "message": message,
-  "details": {
-    "user_device_quota": object.get(input, "user_device_quota", null),
-    "recommended_maximum": 20,
-  },
+	"compliant": compliant,
+	"message": message,
+	"details": {
+		"user_device_quota": object.get(input, "user_device_quota", null),
+		"recommended_maximum": recommended_maximum,
+	},
 }
 
 message := "Maximum devices per user is within the CIS recommended limit" if {
-  compliant
+	compliant
 }
 
 message := "Maximum devices per user exceeds the CIS recommended limit" if {
-  input.user_device_quota != null
-  is_number(input.user_device_quota)
-  input.user_device_quota > 20
+	input.user_device_quota != null
+	is_number(input.user_device_quota)
+	input.user_device_quota > recommended_maximum
 }
 
 message := "Unable to determine maximum devices per user" if {
-  object.get(input, "user_device_quota", null) == null
+	object.get(input, "user_device_quota", null) == null
 }
 
 message := "Maximum devices per user value is invalid" if {
-  input.user_device_quota != null
-  not is_number(input.user_device_quota)
+	input.user_device_quota != null
+	not is_number(input.user_device_quota)
 }
