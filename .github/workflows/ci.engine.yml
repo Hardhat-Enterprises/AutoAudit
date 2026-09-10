@@ -5,10 +5,13 @@ on:
     branches: [main]
     paths:
       - 'engine/**'
+      - '.github/workflows/ci.engine.yml'
   pull_request:
     branches: [main]
     paths:
       - 'engine/**'
+      - '.github/workflows/ci.engine.yml'
+  workflow_dispatch:
   schedule:
     - cron: '32 23 * * 6'
 
@@ -41,7 +44,6 @@ jobs:
         uses: github/codeql-action/analyze@6f5948dfacef28e207b48d0905cf90c03365536d # v3
         with:
           category: "/language:${{matrix.language}}"
-
 
   run-lint:
     name: Linting Code
@@ -90,6 +92,15 @@ jobs:
       - name: Run structural checks
         working-directory: engine
         run: pytest --tb=line tests/test_wiring.py
+
+      - name: Run OPA policy regression tests
+        timeout-minutes: 5
+        run: |
+          docker run --rm \
+            --mount "type=bind,source=${GITHUB_WORKSPACE},target=/workspace,readonly" \
+            openpolicyagent/opa:1.13.1-debug \
+            test /workspace/engine/policies /workspace/engine/tests \
+            --fail-on-empty -v
 
   report:
     name: Report PR status
