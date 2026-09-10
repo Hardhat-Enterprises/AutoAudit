@@ -1621,7 +1621,7 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "sharepoint.pnp.tenant",
       "policy_file": "7.2.10_reauthentication_verification_code.rego",
       "requires_permissions": ["SharePoint.Admin"],
