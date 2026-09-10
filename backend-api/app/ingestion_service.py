@@ -7,6 +7,8 @@ import hashlib
 import os
 from typing import Optional, Tuple
 
+# pylint: disable=too-many-arguments
+
 
 def validate_file_extension(
     filepath: str, allowed_extensions: Optional[set] = None
