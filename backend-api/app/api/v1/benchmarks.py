@@ -33,6 +33,19 @@ def _build_control_read(control: dict) -> ControlRead:
         notes=control.get("notes"),
     )
 
+
+def _benchmark_not_found(
+    framework: str,
+    slug: str,
+    version: str,
+) -> HTTPException:
+    """Build a 404 response for a missing benchmark."""
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Benchmark {framework}/{slug}/{version} not found",
+    )
+
+
 @router.get("", response_model=list[BenchmarkRead])
 async def list_benchmarks(
     current_user: User = Depends(get_current_user),
@@ -76,10 +89,7 @@ async def get_benchmark(
     try:
         data = file_reader.get_benchmark_metadata(framework, slug, version)
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Benchmark {framework}/{slug}/{version} not found",
-        )
+        raise _benchmark_not_found(framework, slug, version)
 
     controls = data.get("controls", [])
     return BenchmarkRead(
@@ -107,10 +117,7 @@ async def list_controls(
     try:
         controls_data = file_reader.list_controls(framework, slug, version)
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Benchmark {framework}/{slug}/{version} not found",
-        )
+        raise _benchmark_not_found(framework, slug, version)
 
     return [_build_control_read(control) for control in controls_data]
 
@@ -132,10 +139,7 @@ async def get_control(
     try:
         control = file_reader.get_control_metadata(framework, slug, version, control_id)
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Benchmark {framework}/{slug}/{version} not found",
-        )
+        raise _benchmark_not_found(framework, slug, version)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
