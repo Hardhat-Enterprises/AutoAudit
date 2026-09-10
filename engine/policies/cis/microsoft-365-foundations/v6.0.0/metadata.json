@@ -20,6 +20,12 @@
       "data_collector_id": "entra.roles.cloud_only_admins",
       "policy_file": "1.1.1_admin_cloud_only.rego",
       "requires_permissions": ["User.Read.All", "RoleManagement.Read.Directory"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": null
     },
     {
@@ -65,6 +71,12 @@
       "data_collector_id": "entra.roles.admin_license_footprint",
       "policy_file": "1.1.4_admin_license_footprint.rego",
       "requires_permissions": ["User.Read.All", "RoleManagement.Read.Directory"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": null
     },
     {
@@ -80,6 +92,12 @@
       "data_collector_id": "entra.groups.groups",
       "policy_file": "1.2.1_no_unmanaged_public_groups.rego",
       "requires_permissions": ["Group.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1213.002",
+          "technique_name": "Data from Information Repositories: SharePoint"
+        }
+      ],
       "notes": "Collector exists but control logic not defined"
     },
     {
@@ -95,6 +113,12 @@
       "data_collector_id": "exchange.mailbox.mailboxes",
       "policy_file": "1.2.2_shared_mailbox_signin_blocked.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Collector and policy implemented"
     },
     {
@@ -155,6 +179,12 @@
       "data_collector_id": "entra.applications.apps_and_services_settings",
       "policy_file": "1.3.4_user_owned_apps_restricted.rego",
       "requires_permissions": ["OrgSettings-AppsAndServices.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1137.006",
+          "technique_name": "Office Application Startup: Add-ins"
+        }
+      ],
       "notes": null
     },
     {
@@ -170,6 +200,12 @@
       "data_collector_id": "entra.applications.forms_settings",
       "policy_file": "1.3.5_forms_internal_phishing_protection.rego",
       "requires_permissions": ["OrgSettings-Forms.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1598",
+          "technique_name": "Phishing for Information"
+        }
+      ],
       "notes": null
     },
     {
@@ -196,10 +232,17 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
+
       "automation_status": "ready",
       "data_collector_id": "entra.applications.third_party_storage_services",
       "policy_file": "1.3.7_third_party_storage_services.rego",
       "requires_permissions": ["Application.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1567.002",
+          "technique_name": "Exfiltration to Cloud Storage"
+        }
+      ],
       "notes": null
     },
     {
@@ -226,10 +269,17 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
+
       "automation_status": "ready",
       "data_collector_id": "exchange.organization.owa_mailbox_policy",
       "policy_file": "1.3.9_bookings_restrictions.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1684.001",
+          "technique_name": "Social Engineering: Impersonation"
+        }
+      ],
       "notes": "Need Bookings API collector"
     },
     {
@@ -245,6 +295,12 @@
       "data_collector_id": "exchange.protection.safe_links_policy",
       "policy_file": "2.1.1_SafeLinks_OfficeApplications_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566.002",
+          "technique_name": "Phishing: Spearphishing Link"
+        }
+      ],
       "notes": null
     },
     {
@@ -260,6 +316,12 @@
       "data_collector_id": "exchange.protection.malware_filter_policy",
       "policy_file": "2.1.2_Common_AttachmentTypes_Filter_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566.001",
+          "technique_name": "Phishing: Spearphishing Attachment"
+        }
+      ],
       "notes": null
     },
     {
@@ -290,6 +352,12 @@
       "data_collector_id": "exchange.protection.safe_attachment_policy",
       "policy_file": "2.1.4_Safe_AttachementsPolicy_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566.001",
+          "technique_name": "Phishing: Spearphishing Attachment"
+        }
+      ],
       "notes": null
     },
     {
@@ -305,6 +373,12 @@
       "data_collector_id": "exchange.protection.atp_policy_o365",
       "policy_file": "2.1.5_Safe_Attachments_SharePoint_OneDrive_MSTeams_Enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1204.002",
+          "technique_name": "User Execution: Malicious File"
+        }
+      ],
       "notes": null
     },
     {
@@ -335,6 +409,12 @@
       "data_collector_id": "exchange.protection.anti_phish_policy",
       "policy_file": "2.1.7_AntiPhishing_Policy_is_created.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": null
     },
     {
@@ -350,6 +430,12 @@
       "data_collector_id": "exchange.dns.dns_security_records",
       "policy_file": "2.1.8_SPF_records_published.rego",
       "requires_permissions": ["Domain.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1684.002",
+          "technique_name": "Social Engineering: Email Spoofing"
+        }
+      ],
       "notes": "DNS lookup for SPF TXT records"
     },
     {
@@ -365,6 +451,12 @@
       "data_collector_id": "exchange.authentication.dkim_signing_config",
       "policy_file": "2.1.9_DKIM_is_enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1684.002",
+          "technique_name": "Social Engineering: Email Spoofing"
+        }
+      ],
       "notes": null
     },
     {
@@ -380,6 +472,12 @@
       "data_collector_id": "exchange.dns.dns_security_records",
       "policy_file": "2.1.10_DMARC_records_published.rego",
       "requires_permissions": ["Domain.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1684.002",
+          "technique_name": "Social Engineering: Email Spoofing"
+        }
+      ],
       "notes": "DNS lookup for DMARC TXT records"
     },
     {
@@ -395,6 +493,12 @@
       "data_collector_id": "exchange.protection.malware_filter_policy",
       "policy_file": "2.1.11_Comprehensive_Attachment_Filtering_Applied.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566.001",
+          "technique_name": "Phishing: Spearphishing Attachment"
+        }
+      ],
       "notes": null
     },
     {
@@ -410,6 +514,12 @@
       "data_collector_id": "exchange.protection.hosted_connection_filter",
       "policy_file": "2.1.12_ConnectionFilter_IPAllowList_not_used.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": null
     },
     {
@@ -425,6 +535,12 @@
       "data_collector_id": "exchange.protection.hosted_connection_filter",
       "policy_file": "2.1.13_Connection_Filter_SafeList_Off.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": null
     },
     {
@@ -440,6 +556,12 @@
       "data_collector_id": "exchange.protection.hosted_content_filter",
       "policy_file": "2.1.14_Inbound_AntiSpam_Policies_DoNot_AllowedDomains.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1684.002",
+          "technique_name": "Social Engineering: Email Spoofing"
+        }
+      ],
       "notes": null
     },
     {
@@ -455,6 +577,12 @@
       "data_collector_id": "exchange.protection.hosted_outbound_spam_filter",
       "policy_file": "2.1.15_Outbound_AntiSpam_MessageLimits_InPlace.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": null
     },
     {
@@ -485,6 +613,12 @@
       "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": null,
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": "Need Priority Account Protection collector"
     },
     {
@@ -500,6 +634,12 @@
       "data_collector_id": "exchange.protection.priority_account_protection",
       "policy_file": "2.4.2_priority_account_strict_protection.rego",
       "requires_permissions": ["Exchange.ManageAsApp"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": "Collector and Rego policy implemented; 7/7 opa tests passing."
     },
     {
@@ -545,6 +685,12 @@
       "data_collector_id": "exchange.organization.admin_audit_log_config",
       "policy_file": "3.1.1_microsoft_365_audit_log_search_enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1685.002",
+          "technique_name": "Disable or Modify Cloud Log"
+        }
+      ],
       "notes": "Check UnifiedAuditLogIngestionEnabled = True"
     },
     {
@@ -620,6 +766,12 @@
       "data_collector_id": "entra.devices.enrollment_restrictions",
       "policy_file": "4.2_block_personal_device_enrollment.rego",
       "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1098.005",
+          "technique_name": "Account Manipulation: Device Registration"
+        }
+      ],
       "notes": null
     },
     {
@@ -650,6 +802,12 @@
       "data_collector_id": "entra.policies.authorization_policy",
       "policy_file": "5.1.2.2_block_third_party_integrated_apps.rego",
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1136.003",
+          "technique_name": "Create Account: Cloud Account"
+        }
+      ],
       "notes": "Check allowedToCreateApps"
     },
     {
@@ -680,6 +838,12 @@
       "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": null,
+      "mitre_attack": [
+        {
+          "technique_id": "T1087.004",
+          "technique_name": "Account Discovery: Cloud Account"
+        }
+      ],
       "notes": "Only available via internal Azure API"
     },
     {
@@ -755,6 +919,12 @@
       "data_collector_id": "entra.devices.device_registration_policy",
       "policy_file": "5.1.4.1_restrict_device_join.rego",
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1098.005",
+          "technique_name": "Account Manipulation: Device Registration"
+        }
+      ],
       "notes": null
     },
     {
@@ -770,6 +940,12 @@
       "data_collector_id": "entra.devices.device_management_settings",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1098.005",
+          "technique_name": "Account Manipulation: Device Registration"
+        }
+      ],
       "notes": null
     },
     {
@@ -845,6 +1021,12 @@
       "data_collector_id": "entra.policies.authorization_policy",
       "policy_file": "5.1.5.1_block_user_app_consent.rego",
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1528",
+          "technique_name": "Steal Application Access Token"
+        }
+      ],
       "notes": null
     },
     {
@@ -890,6 +1072,12 @@
       "data_collector_id": "entra.policies.authorization_policy",
       "policy_file": "5.1.6.2_restrict_guest_user_access.rego",
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1087.004",
+          "technique_name": "Account Discovery: Cloud Account"
+        }
+      ],
       "notes": "Check guestUserRoleId"
     },
     {
@@ -935,6 +1123,12 @@
       "data_collector_id": "entra.conditional_access.policies",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Requires verification of all 15 admin roles"
     },
     {
@@ -950,6 +1144,12 @@
       "data_collector_id": "entra.conditional_access.policies",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Requires verification of exclusions"
     },
     {
@@ -965,6 +1165,12 @@
       "data_collector_id": "entra.conditional_access.legacy_auth_block",
       "policy_file": "5.2.2.3_block_legacy_auth.rego",
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": null
     },
     {
@@ -995,6 +1201,12 @@
       "data_collector_id": "entra.conditional_access.policies",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": "Requires admin role verification"
     },
     {
@@ -1010,6 +1222,12 @@
       "data_collector_id": "entra.conditional_access.policies",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Requires policy coverage verification"
     },
     {
@@ -1025,6 +1243,12 @@
       "data_collector_id": "entra.conditional_access.policies",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Requires policy coverage verification"
     },
     {
@@ -1040,6 +1264,12 @@
       "data_collector_id": "entra.conditional_access.policies",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Requires policy coverage verification"
     },
     {
@@ -1055,6 +1285,12 @@
       "data_collector_id": "entra.conditional_access.policies",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Requires policy coverage verification"
     },
     {
@@ -1070,6 +1306,12 @@
       "data_collector_id": "entra.conditional_access.policies",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1098",
+          "technique_name": "Account Manipulation"
+        }
+      ],
       "notes": "Requires policy coverage verification"
     },
     {
@@ -1085,6 +1327,12 @@
       "data_collector_id": "entra.conditional_access.policies",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1098.005",
+          "technique_name": "Account Manipulation: Device Registration"
+        }
+      ],
       "notes": "Requires policy coverage verification"
     },
     {
@@ -1100,6 +1348,12 @@
       "data_collector_id": "entra.conditional_access.policies",
       "policy_file": null,
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1528",
+          "technique_name": "Steal Application Access Token"
+        }
+      ],
       "notes": "Requires policy coverage verification"
     },
     {
@@ -1115,6 +1369,12 @@
       "data_collector_id": "entra.authentication.mfa_fatigue_protection",
       "policy_file": "5.2.3.1_mfa_fatigue_protection.rego",
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1621",
+          "technique_name": "Multi-Factor Authentication Request Generation"
+        }
+      ],
       "notes": null
     },
     {
@@ -1130,6 +1390,12 @@
       "data_collector_id": "entra.authentication.password_protection",
       "policy_file": "5.2.3.2_custom_banned_passwords_enabled.rego",
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1110",
+          "technique_name": "Brute Force"
+        }
+      ],
       "notes": null
     },
     {
@@ -1145,6 +1411,12 @@
       "data_collector_id": "entra.authentication.password_protection",
       "policy_file": "5.2.3.3_enable_on_prem_password_protection.rego",
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1110",
+          "technique_name": "Brute Force"
+        }
+      ],
       "notes": null
     },
     {
@@ -1160,6 +1432,12 @@
       "data_collector_id": "entra.authentication.mfa_registration_report",
       "policy_file": "5.2.3.4_all_members_mfa_capable.rego",
       "requires_permissions": ["AuditLog.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": null
     },
     {
@@ -1175,6 +1453,12 @@
       "data_collector_id": "entra.authentication.authentication_methods",
       "policy_file": "5.2.3.5_disable_weak_auth_methods.rego",
       "requires_permissions": ["Policy.Read.All"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Check SMS/Voice disabled"
     },
     {
@@ -1235,6 +1519,12 @@
       "data_collector_id": "entra.governance.pim_role_policies",
       "policy_file": "5.3.1_pim_enabled.rego",
       "requires_permissions": ["RoleManagement.Read.Directory"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": null
     },
     {
@@ -1280,6 +1570,12 @@
       "data_collector_id": "entra.governance.pim_role_policies",
       "policy_file": "5.3.4_ga_activation_requires_approval.rego",
       "requires_permissions": ["RoleManagement.Read.Directory"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": null
     },
     {
@@ -1295,6 +1591,12 @@
       "data_collector_id": "entra.governance.pim_role_policies",
       "policy_file": "5.3.5_pra_activation_requires_approval.rego",
       "requires_permissions": ["RoleManagement.Read.Directory"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1098",
+          "technique_name": "Account Manipulation"
+        }
+      ],
       "notes": null
     },
     {
@@ -1310,6 +1612,12 @@
       "data_collector_id": "exchange.organization.organization_config",
       "policy_file": "6.1.1_audit_disabled.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1685.002",
+          "technique_name": "Disable or Modify Cloud Log"
+        }
+      ],
       "notes": null
     },
     {
@@ -1325,6 +1633,12 @@
       "data_collector_id": "exchange.mailbox.mailbox_audit_actions",
       "policy_file": "6.1.2_mailbox_audit_actions.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1685.002",
+          "technique_name": "Disable or Modify Cloud Log"
+        }
+      ],
       "notes": null
     },
     {
@@ -1340,6 +1654,12 @@
       "data_collector_id": "exchange.mailbox.mailbox_audit",
       "policy_file": "6.1.3_audit_bypass.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1685.002",
+          "technique_name": "Disable or Modify Cloud Log"
+        }
+      ],
       "notes": null
     },
     {
@@ -1355,6 +1675,12 @@
       "data_collector_id": "exchange.transport.transport_rules",
       "policy_file": "6.2.1_mail_forwarding_blocked.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1114.003",
+          "technique_name": "Email Collection: Email Forwarding Rule"
+        }
+      ],
       "notes": null
     },
     {
@@ -1370,6 +1696,12 @@
       "data_collector_id": "exchange.transport.transport_rules",
       "policy_file": "6.2.2_transport_whitelist.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": null
     },
     {
@@ -1385,6 +1717,12 @@
       "data_collector_id": "exchange.transport.external_in_outlook",
       "policy_file": "6.2.3_external_sender_tagging.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": null
     },
     {
@@ -1400,6 +1738,12 @@
       "data_collector_id": "exchange.mailbox.role_assignment_policy",
       "policy_file": "6.3.1_outlook_addins.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1137.006",
+          "technique_name": "Office Application Startup: Add-ins"
+        }
+      ],
       "notes": null
     },
     {
@@ -1415,6 +1759,12 @@
       "data_collector_id": "exchange.organization.organization_config",
       "policy_file": "6.5.1_modern_auth.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Check OAuth2ClientProfileEnabled"
     },
     {
@@ -1460,6 +1810,12 @@
       "data_collector_id": "exchange.organization.transport_config",
       "policy_file": "6.5.4_smtp_auth.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": null
     },
     {
@@ -1475,6 +1831,12 @@
       "data_collector_id": "exchange.organization.organization_config",
       "policy_file": "6.5.5_direct_send.rego",
       "requires_permissions": ["Exchange.Manage"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1684.002",
+          "technique_name": "Social Engineering: Email Spoofing"
+        }
+      ],
       "notes": null
     },
     {
@@ -1490,7 +1852,13 @@
       "data_collector_id": "sharepoint.pnp.tenant",
       "policy_file": "7.2.1_modern_auth_sharepoint.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": null
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
+      "notes": "null"
     },
     {
       "control_id": "7.2.2",
@@ -1550,7 +1918,7 @@
       "data_collector_id": "sharepoint.pnp.tenant",
       "policy_file": "7.2.5_guest_resharing.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": null 
+      "notes": null
     },
     {
       "control_id": "7.2.6",
@@ -1565,6 +1933,12 @@
       "data_collector_id": "sharepoint.spo_tenant",
       "policy_file": null,
       "requires_permissions": ["SharePoint.Admin"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1567.002",
+          "technique_name": "Exfiltration to Cloud Storage"
+        }
+      ],
       "notes": "Collector raises NotImplementedError"
     },
     {
@@ -1595,6 +1969,12 @@
       "data_collector_id": "sharepoint.spo_tenant",
       "policy_file": null,
       "requires_permissions": ["SharePoint.Admin"],
+      "mitre_attack": [
+        {
+          "technique_id": "T1567.002",
+          "technique_name": "Exfiltration to Cloud Storage"
+        }
+      ],
       "notes": "Collector raises NotImplementedError; CIS says Manual but can be automated"
     },
     {
@@ -1655,7 +2035,13 @@
       "data_collector_id": "sharepoint.pnp.tenant",
       "policy_file": "7.3.1_disallow_infected_file_download.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": null
+      "mitre_attack": [
+        {
+          "technique_id": "T1204.002",
+          "technique_name": "User Execution: Malicious File"
+        }
+      ],
+      "notes": "null"
     },
     {
       "control_id": "7.3.2",
@@ -1715,6 +2101,12 @@
       "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": null,
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": "Teams module AccessTokens auth not working"
     },
     {
@@ -1730,6 +2122,12 @@
       "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": null,
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": "Teams module AccessTokens auth not working"
     },
     {
@@ -1745,6 +2143,12 @@
       "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": null,
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": "Teams module AccessTokens auth not working"
     },
     {
@@ -1760,6 +2164,12 @@
       "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": null,
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": "Teams module AccessTokens auth not working"
     },
     {
@@ -1895,6 +2305,12 @@
       "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": null,
+      "mitre_attack": [
+        {
+          "technique_id": "T1566",
+          "technique_name": "Phishing"
+        }
+      ],
       "notes": "Teams module AccessTokens auth not working"
     },
     {
@@ -2075,6 +2491,12 @@
       "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": null,
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Fabric API auth untested; CIS says Manual but can be automated"
     },
     {
@@ -2105,8 +2527,13 @@
       "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": null,
+      "mitre_attack": [
+        {
+          "technique_id": "T1078.004",
+          "technique_name": "Valid Accounts: Cloud Accounts"
+        }
+      ],
       "notes": "Fabric API auth untested; CIS says Manual but can be automated"
     }
   ]
 }
-

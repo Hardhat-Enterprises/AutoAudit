@@ -14,6 +14,38 @@ from app.services.benchmark_reader import get_file_reader
 router = APIRouter(prefix="/benchmarks", tags=["Benchmarks"])
 
 
+def _build_control_read(control: dict) -> ControlRead:
+    """Build a ControlRead model from control metadata."""
+    return ControlRead(
+        control_id=control.get("control_id", ""),
+        title=control.get("title", ""),
+        description=control.get("description"),
+        severity=control.get("severity"),
+        service=control.get("service"),
+        level=control.get("level", ""),
+        is_manual=control.get("is_manual", False),
+        benchmark_audit_type=control.get("benchmark_audit_type", ""),
+        automation_status=control.get("automation_status", "not_started"),
+        data_collector_id=control.get("data_collector_id"),
+        policy_file=control.get("policy_file"),
+        requires_permissions=control.get("requires_permissions"),
+        mitre_attack=control.get("mitre_attack"),
+        notes=control.get("notes"),
+    )
+
+
+def _benchmark_not_found(
+    framework: str,
+    slug: str,
+    version: str,
+) -> HTTPException:
+    """Build a 404 response for a missing benchmark."""
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Benchmark {framework}/{slug}/{version} not found",
+    )
+
+
 @router.get("", response_model=list[BenchmarkRead])
 async def list_benchmarks(
     current_user: User = Depends(get_current_user),
@@ -57,10 +89,7 @@ async def get_benchmark(
     try:
         data = file_reader.get_benchmark_metadata(framework, slug, version)
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Benchmark {framework}/{slug}/{version} not found",
-        )
+        raise _benchmark_not_found(framework, slug, version)
 
     controls = data.get("controls", [])
     return BenchmarkRead(
@@ -88,31 +117,9 @@ async def list_controls(
     try:
         controls_data = file_reader.list_controls(framework, slug, version)
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Benchmark {framework}/{slug}/{version} not found",
-        )
+        raise _benchmark_not_found(framework, slug, version)
 
-    result = []
-    for control in controls_data:
-        result.append(
-            ControlRead(
-                control_id=control.get("control_id", ""),
-                title=control.get("title", ""),
-                description=control.get("description"),
-                severity=control.get("severity"),
-                service=control.get("service"),
-                level=control.get("level", ""),
-                is_manual=control.get("is_manual", False),
-                benchmark_audit_type=control.get("benchmark_audit_type", ""),
-                automation_status=control.get("automation_status", "not_started"),
-                data_collector_id=control.get("data_collector_id"),
-                policy_file=control.get("policy_file"),
-                requires_permissions=control.get("requires_permissions"),
-                notes=control.get("notes"),
-            )
-        )
-    return result
+    return [_build_control_read(control) for control in controls_data]
 
 
 @router.get(
@@ -132,28 +139,11 @@ async def get_control(
     try:
         control = file_reader.get_control_metadata(framework, slug, version, control_id)
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Benchmark {framework}/{slug}/{version} not found",
-        )
+        raise _benchmark_not_found(framework, slug, version)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Control {control_id} not found in {framework}/{slug}/{version}",
         )
 
-    return ControlRead(
-        control_id=control.get("control_id", ""),
-        title=control.get("title", ""),
-        description=control.get("description"),
-        severity=control.get("severity"),
-        service=control.get("service"),
-        level=control.get("level", ""),
-        is_manual=control.get("is_manual", False),
-        benchmark_audit_type=control.get("benchmark_audit_type", ""),
-        automation_status=control.get("automation_status", "not_started"),
-        data_collector_id=control.get("data_collector_id"),
-        policy_file=control.get("policy_file"),
-        requires_permissions=control.get("requires_permissions"),
-        notes=control.get("notes"),
-    )
+    return _build_control_read(control)
