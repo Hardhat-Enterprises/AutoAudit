@@ -41,7 +41,10 @@ class ConfigurationPoliciesDataCollector(BaseDataCollector):
             - configuration_policies: Settings Catalog policies with their settings
             - total_configuration_policies: Count of Settings Catalog policies
         """
-        # Settings Catalog policies — covers ML1 (E8-MAC-1.1 to 1.4) and ML3 controls
+        # Settings Catalog policies — covers ML1 (E8-MAC-1.1 to 1.4) and ML3 controls.
+        # $expand=assignments is required: without it Graph returns no assignment
+        # data at all, and a policy that is configured correctly but assigned to
+        # nobody is indistinguishable from one that is actually in force.
         policies = await client.get_all_pages(
             "/deviceManagement/configurationPolicies",
             beta=True,
@@ -49,8 +52,9 @@ class ConfigurationPoliciesDataCollector(BaseDataCollector):
         )
 
         # Fetch the configured setting values for each policy individually.
-        # The top-level policy list returns policy metadata and expanded assignments.
-        # Actual configured setting IDs and values are retrieved per policy below.
+        # The top-level policy list only returns metadata (name, description) plus
+        # the assignments we expanded above. The actual setting IDs and values are
+        # in a separate per-policy endpoint.
         policies_with_settings = []
         for policy in policies:
             policy_id = policy.get("id")
@@ -60,12 +64,13 @@ class ConfigurationPoliciesDataCollector(BaseDataCollector):
                 f"/deviceManagement/configurationPolicies/{policy_id}/settings",
                 beta=True,
             )
-            policies_with_settings.append(
-                {
-                    **policy,
-                    "settings": settings,
-                }
-            )
+            policies_with_settings.append({
+                **policy,
+                # Graph omits the key entirely when a policy has no assignments,
+                # so normalise it: policies read "assigned to nobody", not "unknown".
+                "assignments": policy.get("assignments", []),
+                "settings": settings,
+            })
 
         return {
             "configuration_policies": policies_with_settings,

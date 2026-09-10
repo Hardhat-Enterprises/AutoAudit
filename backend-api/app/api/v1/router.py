@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 from app.api.v1 import (
     auth,
+    azure_connections,
+    aws_connections,
     benchmarks,
     contact,
     evidence,
@@ -10,6 +12,7 @@ from app.api.v1 import (
     scans,
     settings,
     test,
+    verification_templates,
 )
 
 api_router = APIRouter()
@@ -25,6 +28,8 @@ api_router.include_router(platforms.router)
 
 # Cloud connection routes
 api_router.include_router(m365_connections.router)
+api_router.include_router(azure_connections.router)
+api_router.include_router(aws_connections.router)
 
 # Scan routes
 api_router.include_router(scans.router)
@@ -41,5 +46,7 @@ api_router.include_router(contact.router)
 # User settings routes
 api_router.include_router(settings.router)
 
+# Manual control verification template routes
+api_router.include_router(verification_templates.router)
 # Manual verification routes
 api_router.include_router(manual_verification.router)

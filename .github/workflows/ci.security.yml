@@ -16,6 +16,9 @@ on:
   schedule:
     - cron: '32 23 * * 6'
 
+permissions:
+  contents: read
+
 jobs:
   analyze:
     name: Security Analysis on (${{ matrix.language }})
@@ -31,29 +34,32 @@ jobs:
         language: ['python']
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@6f5948dfacef28e207b48d0905cf90c03365536d # v3
         with:
           languages: ${{ matrix.language }}
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@6f5948dfacef28e207b48d0905cf90c03365536d # v3
         with:
           category: "/language:${{matrix.language}}"
 
   run-lint:
     name: Linting Code
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: github/super-linter@454ba4482ce2cd0c505bc592e83c06e1e37ade61 # v4
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
@@ -75,20 +81,33 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      issues: write
     steps:
-      - uses: actions/github-script@v7
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Build report body
+        id: build
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
+            // Fork PRs get a read-only GITHUB_TOKEN; commenting on the upstream PR is forbidden.
+            const headRepo = context.payload.pull_request?.head?.repo?.full_name;
+            const baseRepo = `${context.repo.owner}/${context.repo.repo}`;
+            if (headRepo && headRepo !== baseRepo) {
+              core.info(`Skipping PR comment for fork PR (${headRepo} → ${baseRepo}).`);
+              return;
+            }
+
             const analyze = '${{ needs.analyze.result }}';
             const lint    = '${{ needs.run-lint.result }}';
 
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
             const allPassed = [analyze, lint].every(r => ['success', 'skipped'].includes(r));
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const marker = '<!-- ci-report-security -->'; // used to find and update the existing comment
 
             const body = [
-              marker,
+              '<!-- ci-report-security -->',
               `### CI: Security`,
               ``,
               `| Job | Result |`,
@@ -101,26 +120,10 @@ jobs:
                 : `One or more checks failed. [View logs](${runUrl})`,
             ].join('\n');
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
+            core.setOutput('body', body);
 
-            const existing = comments.find(c => c.body.includes(marker));
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
+      - if: steps.build.outputs.body
+        uses: ./.github/actions/pr-status-comment
+        with:
+          marker: '<!-- ci-report-security -->'
+          body: ${{ steps.build.outputs.body }}
