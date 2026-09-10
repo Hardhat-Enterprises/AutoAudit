@@ -1,2 +1,20 @@
 # .github/CODEOWNERS — every PR needs an AutoAudit-Reviewers approval
 *       @Hardhat-Enterprises/autoaudit-reviewers
+
+# Explicit review boundaries; existing repository review team owns each area.
+/engine/policies/ @Hardhat-Enterprises/autoaudit-reviewers
+/engine/collectors/ @Hardhat-Enterprises/autoaudit-reviewers
+/security/ @Hardhat-Enterprises/autoaudit-reviewers
+/backend-api/alembic/ @Hardhat-Enterprises/autoaudit-reviewers
+/.github/ @Hardhat-Enterprises/autoaudit-reviewers
+/tools/ci/ @Hardhat-Enterprises/autoaudit-reviewers
+
+# Phase 10: the deployment topology, the monitoring rules and the operator tools
+# are the artefacts the plan calls "reviewed IaC". Without an entry they fell
+# through to the `*` catch-all, which is the default rather than a boundary.
+/infrastructure/ @Hardhat-Enterprises/autoaudit-reviewers
+/tools/ops/ @Hardhat-Enterprises/autoaudit-reviewers
+/docker-compose.yml @Hardhat-Enterprises/autoaudit-reviewers
+/docker-compose.production.yml @Hardhat-Enterprises/autoaudit-reviewers
+/docker-compose.compliance.yml @Hardhat-Enterprises/autoaudit-reviewers
+/docker-compose.sharepoint.yml @Hardhat-Enterprises/autoaudit-reviewers
