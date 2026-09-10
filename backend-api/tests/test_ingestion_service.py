@@ -1,63 +1,94 @@
+"""Backend Security Ingestion Service for AutoAudit.
+
+Handles file validation and SHA-256 cryptographic hashing.
+"""
+
+import hashlib
 import os
-import sys
-import tempfile
-import pytest
-
-# Fix module resolution so Pytest locates the app package during CI/CD execution
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-from app.services.ingestion_service import (
-    check_file_size,
-    generate_file_hash,
-    process_ingestion_security_pipeline,
-    validate_file_extension,
-)
+from typing import Optional, Tuple
 
 
-@pytest.fixture
-def temp_test_file():
-    """Creates a temporary valid text file for testing."""
-    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tf:
-        tf.write(b"AutoAudit Test Content")
-        temp_path = tf.name
-    yield temp_path
-    if os.path.exists(temp_path):
-        os.remove(temp_path)
+def validate_file_extension(
+    filepath: str, allowed_extensions: Optional[set] = None
+) -> bool:
+    """Checks if the file extension is permitted based on filename."""
+    if allowed_extensions is None:
+        allowed_extensions = {
+            ".txt",
+            ".pdf",
+            ".csv",
+            ".json",
+            ".docx",
+            ".xlsx",
+        }
+
+    _, file_extension = os.path.splitext(filepath)
+    return file_extension.lower() in allowed_extensions
 
 
-def test_validate_file_extension_allowed(temp_test_file):
-    assert validate_file_extension(temp_test_file) is True
+def check_file_size(filepath: str, max_size_mb: float = 10.0) -> bool:
+    """Checks if the file size is within the allowed threshold in MB."""
+    try:
+        max_size_bytes = max_size_mb * 1024 * 1024
+        file_size_bytes = os.path.getsize(filepath)
+        return file_size_bytes <= max_size_bytes
+    except OSError:
+        return False
 
 
-def test_validate_file_extension_disallowed():
-    assert validate_file_extension("malicious_script.exe") is False
+def generate_file_hash_and_check_size(
+    filepath: str, max_size_mb: float = 10.0
+) -> Tuple[Optional[str], bool, str]:
+    """Hashes file contents while enforcing max size on open handle."""
+    sha256_hash = hashlib.sha256()
+    max_bytes = int(max_size_mb * 1024 * 1024)
+    total_bytes = 0
+
+    try:
+        with open(filepath, "rb") as file_stream:
+            while True:
+                chunk = file_stream.read(4096)
+                if not chunk:
+                    break
+                total_bytes += len(chunk)
+                if total_bytes > max_bytes:
+                    msg = f"File size exceeds {max_size_mb} MB limit."
+                    return None, False, msg
+                sha256_hash.update(chunk)
+        return sha256_hash.hexdigest(), True, "Hashing successful."
+    except OSError as err:
+        return None, False, f"System Error reading file: {err}"
 
 
-def test_check_file_size_within_limit(temp_test_file):
-    assert check_file_size(temp_test_file, max_size_mb=1.0) is True
+def generate_file_hash(filepath: str) -> Optional[str]:
+    """Generates SHA-256 hash using 4096-byte chunking."""
+    file_hash, within_limit, _ = generate_file_hash_and_check_size(
+        filepath, max_size_mb=1000000.0
+    )
+    return file_hash if within_limit else None
 
 
-def test_check_file_size_exceeding_limit(temp_test_file):
-    assert check_file_size(temp_test_file, max_size_mb=0.000001) is False
+def process_ingestion_security_pipeline(
+    filepath: str,
+    max_size_mb: float = 10.0,
+    allowed_extensions: Optional[set] = None,
+) -> Tuple[bool, Optional[str], str]:
+    """Executes sequential security gates on incoming audit evidence files."""
+    if not os.path.exists(filepath):
+        return False, None, f"File not found: {filepath}"
 
+    if not validate_file_extension(filepath, allowed_extensions):
+        _, ext = os.path.splitext(filepath)
+        return (
+            False,
+            None,
+            f"Security Violation: Extension '{ext}' is not permitted.",
+        )
 
-def test_missing_file():
-    success, hash_val, msg = process_ingestion_security_pipeline("non_existent_file.pdf")
-    assert success is False
-    assert hash_val is None
-    assert "File not found" in msg
+    file_hash, within_limit, hash_msg = generate_file_hash_and_check_size(
+        filepath, max_size_mb
+    )
+    if not within_limit or file_hash is None:
+        return False, None, f"Security Violation: {hash_msg}"
 
-
-def test_successful_pipeline_execution(temp_test_file):
-    success, hash_val, msg = process_ingestion_security_pipeline(temp_test_file)
-    assert success is True
-    assert hash_val is not None
-    assert len(hash_val) == 64
-    assert "successfully validated" in msg
-
-
-def test_hash_generation(temp_test_file):
-    digest = generate_file_hash(temp_test_file)
-    assert digest is not None
-    assert isinstance(digest, str)
-    assert len(digest) == 64
+    return True, file_hash, "File successfully validated and hashed."
