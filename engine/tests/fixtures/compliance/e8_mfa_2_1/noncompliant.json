@@ -1,0 +1,16 @@
+{
+  "control_id": "E8-MFA-2.1",
+  "scenario": "No MFA policies configured",
+  "input": {
+    "total_policies": 5,
+    "enabled_policies_count": 5,
+    "mfa_policies_count": 0,
+    "policies_requiring_mfa_for_all_users": [],
+    "policies_requiring_mfa_for_privileged_roles": [],
+    "privileged_roles_count": 4,
+    "all_mfa_policy_names": []
+  },
+  "expected": {
+    "compliant": false
+  }
+}

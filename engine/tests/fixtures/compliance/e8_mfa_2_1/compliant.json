@@ -1,0 +1,32 @@
+{
+  "control_id": "E8-MFA-2.1",
+  "scenario": "MFA enforced for all users and all cloud apps",
+  "input": {
+    "total_policies": 3,
+    "enabled_policies_count": 2,
+    "mfa_policies_count": 1,
+    "policies_requiring_mfa_for_all_users": [
+      {
+        "id": "policy-001",
+        "display_name": "Require MFA for all users",
+        "state": "enabled",
+        "targets_all_users": true,
+        "targets_all_apps": true,
+        "include_roles": [],
+        "include_roles_count": 0,
+        "exclude_users": [],
+        "exclude_groups": [],
+        "has_exclusions": false,
+        "requires_mfa": true
+      }
+    ],
+    "policies_requiring_mfa_for_privileged_roles": [],
+    "privileged_roles_count": 3,
+    "all_mfa_policy_names": [
+      "Require MFA for all users"
+    ]
+  },
+  "expected": {
+    "compliant": true
+  }
+}
