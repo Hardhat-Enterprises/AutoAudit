@@ -1,0 +1,141 @@
+name: Workflow Lint (actionlint + zizmor)
+
+on:
+  push:
+    branches: [main, staging]
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+  pull_request:
+    branches: [main, staging]
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    name: actionlint (workflow syntax/logic)
+    runs-on: ubuntu-latest
+    env:
+      ACTIONLINT_VERSION: 1.7.12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint (verified checksum)
+        run: |
+          set -euo pipefail
+          curl -sSLO "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -sSLO "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_checksums.txt"
+          sha256sum -c <(grep "actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" "actionlint_${ACTIONLINT_VERSION}_checksums.txt")
+          tar -xzf "actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" actionlint
+          sudo mv actionlint /usr/local/bin/actionlint
+
+      - name: Run actionlint
+        run: actionlint -color
+
+  # Report-only for now: the repo has a pre-existing backlog of unpinned
+  # actions (9 workflows Gitanshi's #313 didn't reach) and missing
+  # persist-credentials: false on most checkout steps. Flip this job to
+  # blocking (drop continue-on-error and the exit-0 below) once that
+  # backlog is cleared, so it doesn't fail every PR on day one.
+  zizmor:
+    name: zizmor (GitHub Actions security linter)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      ZIZMOR_VERSION: 1.30.1
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.11'
+
+      - name: Install zizmor
+        run: pip install "zizmor==${ZIZMOR_VERSION}"
+
+      # Offline mode only (no --gh-token): this audits the workflows in this
+      # checkout, not remote action refs, so no GitHub token is needed and
+      # none is granted.
+      - name: Run zizmor
+        id: zizmor
+        continue-on-error: true
+        run: |
+          zizmor --format=json-v1 --min-severity=medium .github/workflows > zizmor-results.json
+
+      - name: Generate SARIF report
+        if: always()
+        run: |
+          zizmor --format=sarif .github/workflows > zizmor-results.sarif
+
+      - name: Summarize findings
+        if: always()
+        run: |
+          if [ -s zizmor-results.json ]; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+
+          with open("zizmor-results.json") as f:
+              findings = json.load(f)
+
+          print("## zizmor findings\n")
+          if not findings:
+              print("No findings at or above medium severity.")
+          else:
+              print(f"Found **{len(findings)}** finding(s) at or above medium severity ")
+              print("(report-only — does not fail this job; mostly pre-existing unpinned-actions/persist-credentials debt):\n")
+              print("| Severity | Rule | File | Description |")
+              print("|---|---|---|---|")
+              for item in findings:
+                  ident = item.get("ident", "unknown-rule")
+                  desc = item.get("desc", "")
+                  severity = item.get("determinations", {}).get("severity", "?")
+                  for loc in item.get("locations", [{}]):
+                      path = (
+                          loc.get("symbolic", {})
+                          .get("key", {})
+                          .get("Local", {})
+                          .get("verbatim_path", "unknown-file")
+                      )
+                      print(f"| {severity} | `{ident}` | `{path}` | {desc} |")
+              print("\nFull details: see the SARIF upload in this run's Security tab.")
+          PY
+          else
+            {
+              echo "## zizmor findings"
+              echo ""
+              echo "No JSON report was produced (scan likely errored before completing)."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload SARIF report artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: zizmor-results
+          path: zizmor-results.sarif
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Upload SARIF to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+        with:
+          sarif_file: zizmor-results.sarif
+
+      - name: Note report-only status
+        if: steps.zizmor.outcome == 'failure'
+        run: |
+          echo "zizmor found workflow security issues at or above medium severity — see the summary above or the Security tab for details." >&2
+          echo "This job is currently report-only pending the existing action-pinning/persist-credentials backlog; it does not fail the build." >&2

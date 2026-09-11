@@ -20,9 +20,8 @@ jobs:
       - name: Delete merged branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
-          BRANCH="${{ github.event.pull_request.head.ref }}"
-
           if [ "$BRANCH" = "main" ]; then
             echo "Skipping: branch is protected (main)"
             exit 0
