@@ -56,7 +56,6 @@ from collectors.entra.devices.enrollment_restrictions import (
 from collectors.entra.devices.windows_update_config import (
     WindowsUpdateConfigDataCollector,
 )
-
 # Domains
 from collectors.entra.domains.password_policy import PasswordPolicyDataCollector
 
