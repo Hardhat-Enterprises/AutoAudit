@@ -1,14 +1,15 @@
 """PnP SharePoint tenant collector.
 
 CIS Microsoft 365 Foundations Benchmark Controls:
-    v6.0.0: 7.2.1, 7.2.2, 7.2.5, 7.2.9, 7.2.10, 7.3.1
+    v6.0.0: 7.2.1, 7.2.2, 7.2.5, 7.2.7, 7.2.9, 7.2.10, 7.3.1
 
 Control Descriptions:
     7.2.1 - Ensure modern authentication for SharePoint applications is required
     7.2.2 - Ensure SharePoint and OneDrive integration with Azure AD B2B is enabled
     7.2.5 - Ensure SharePoint guest users cannot share items they don't own
+    7.2.7 - Ensure link sharing is restricted in SharePoint and OneDrive
     7.2.9 - Ensure guest access to a site or OneDrive will expire automatically
-        7.2.10 - Ensure reauthentication with verification code is restricted
+    7.2.10 - Ensure reauthentication with verification code is restricted
     7.3.1 - Ensure Office 365 SharePoint infected files are disallowed for download
 
 Connection Method: SharePoint Online PowerShell (via PowerShell HTTP service)
@@ -71,6 +72,9 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             ),
             "external_user_expire_in_days": tenant.get(
                 "ExternalUserExpireInDays"
+            ),
+            "default_sharing_link_type": tenant.get(
+                "DefaultSharingLinkType"
             ),
             "restrict_external_domain_sharing":tenant.get(
                 "SharingDomainRestrictionMode"
