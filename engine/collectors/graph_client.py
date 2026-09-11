@@ -36,11 +36,19 @@ class GraphClient:
         )
 
         if "access_token" not in result:
-            error = result.get("error_description", result.get("error", "Unknown error"))
+            error = result.get(
+                "error_description",
+                result.get("error", "Unknown error"),
+            )
             raise Exception(f"Failed to acquire token: {error}")
 
-        self._access_token = result["access_token"]
-        return self._access_token
+        access_token = result.get("access_token")
+
+        if not isinstance(access_token, str):
+            raise Exception("Failed to acquire a valid access token")
+
+        self._access_token = access_token
+        return access_token
 
     async def _request(
         self,
@@ -67,10 +75,18 @@ class GraphClient:
             return response.json() if response.content else {}
 
     async def get(
-        self, endpoint: str, beta: bool = False, params: dict | None = None
+        self,
+        endpoint: str,
+        beta: bool = False,
+        params: dict | None = None,
     ) -> dict[str, Any]:
         """GET request to Graph API."""
-        return await self._request("GET", endpoint, beta=beta, params=params)
+        return await self._request(
+            "GET",
+            endpoint,
+            beta=beta,
+            params=params,
+        )
 
     async def get_all_pages(
         self,
@@ -85,19 +101,25 @@ class GraphClient:
         current_params = params
 
         for _ in range(max_pages):
-            response = await self.get(current_endpoint, beta=beta, params=current_params)
+            response = await self.get(
+                current_endpoint,
+                beta=beta,
+                params=current_params,
+            )
+
             items = response.get("value", [])
             all_items.extend(items)
 
             # Check for next page
             next_link = response.get("@odata.nextLink")
+
             if not next_link:
                 break
 
             # Parse next link - it's a full URL
             base_url = self.GRAPH_BETA_URL if beta else self.GRAPH_BASE_URL
             current_endpoint = next_link.replace(base_url, "")
-            current_params = None  # Params are in the URL
+            current_params = None
 
         return all_items
 
@@ -105,25 +127,43 @@ class GraphClient:
         """Get all users."""
         return await self.get_all_pages(
             "/users",
-            params={"$select": "id,userPrincipalName,displayName,accountEnabled,userType"},
+            params={
+                "$select": (
+                    "id,userPrincipalName,displayName,"
+                    "accountEnabled,userType"
+                )
+            },
         )
 
     async def get_directory_roles(self) -> list[dict[str, Any]]:
         """Get all directory roles."""
         return await self.get_all_pages("/directoryRoles")
 
-    async def get_role_members(self, role_id: str) -> list[dict[str, Any]]:
+    async def get_role_members(
+        self,
+        role_id: str,
+    ) -> list[dict[str, Any]]:
         """Get members of a directory role."""
-        return await self.get_all_pages(f"/directoryRoles/{role_id}/members")
+        return await self.get_all_pages(
+            f"/directoryRoles/{role_id}/members"
+        )
 
-    async def get_conditional_access_policies(self) -> list[dict[str, Any]]:
+    async def get_conditional_access_policies(
+        self,
+    ) -> list[dict[str, Any]]:
         """Get all Conditional Access policies."""
-        return await self.get_all_pages("/identity/conditionalAccess/policies")
+        return await self.get_all_pages(
+            "/identity/conditionalAccess/policies"
+        )
 
-    async def get_authentication_methods(self, user_id: str) -> list[dict[str, Any]]:
+    async def get_authentication_methods(
+        self,
+        user_id: str,
+    ) -> list[dict[str, Any]]:
         """Get authentication methods for a user."""
         response = await self.get(
-            f"/users/{user_id}/authentication/methods", beta=True
+            f"/users/{user_id}/authentication/methods",
+            beta=True,
         )
         return response.get("value", [])
 
@@ -131,9 +171,17 @@ class GraphClient:
         """Get all domains."""
         return await self.get_all_pages("/domains")
 
-    async def get_user_license_details(self, user_id: str) -> list[dict[str, Any]]:
+    async def get_user_license_details(
+        self,
+        user_id: str,
+    ) -> list[dict[str, Any]]:
         """Get license assignments and service plans for a user."""
         return await self.get_all_pages(
             f"/users/{user_id}/licenseDetails",
-            params={"$select": "id,skuId,skuPartNumber,servicePlans"},
+            params={
+                "$select": (
+                    "id,skuId,skuPartNumber,servicePlans"
+                )
+            },
         )
+    
