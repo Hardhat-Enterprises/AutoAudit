@@ -53,7 +53,6 @@ def create_app() -> FastAPI:
         }
 
     @app.get(
-        "/readiness",
         response_model=ReadinessResponse,
         tags=["Health"],
         summary="Check whether the API is ready to serve requests",
@@ -76,6 +75,17 @@ def create_app() -> FastAPI:
             )
 
         return ReadinessResponse(status="ready")
+
+    @app.get("/liveness")
+    def liveness():
+        return {"status": "healthy"}
+
+    @app.get("/version")
+    def version():
+        return {
+            "version": app.version,
+            "name": app.title,
+        }
 
     return app
 
