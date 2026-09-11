@@ -1666,9 +1666,9 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "sharepoint.spo_sync_client_restriction",
-      "policy_file": null,
+      "policy_file": "7.3.2_onedrive_sync_restricted_unmanaged_devices.rego",
       "requires_permissions": ["SharePoint.Admin"],
       "notes": "Collector exists but control logic not defined"
     },

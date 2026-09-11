@@ -159,8 +159,10 @@ from collectors.exchange.transport.transport_rules import TransportRulesDataColl
 # SharePoint - PnP
 from collectors.sharepoint.pnp.tenant import PnpTenantDataCollector
 
-
-
+# SharePoint - SPO
+from collectors.sharepoint.spo_sync_client_restriction import (
+    SpoSyncClientRestrictionDataCollector,
+)
 
 
 # Registry mapping data_collector_id to collector class
@@ -233,6 +235,8 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "exchange.transport.transport_rules": TransportRulesDataCollector,
     "exchange.protection.priority_account_protection": PriorityAccountStrictProtectionDataCollector,
     "sharepoint.pnp.tenant": PnpTenantDataCollector,
+    # SharePoint - SPO
+    "sharepoint.spo_sync_client_restriction": SpoSyncClientRestrictionDataCollector,
 }
 
 def get_collector(collector_id: str) -> BaseDataCollector:

@@ -210,7 +210,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 7.2.10 | L1 | Ensure reauthentication with verification code is restricted | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
 | 7.2.11 | L1 | Ensure the SharePoint default sharing link permission is set | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
 | 7.3.1 | L2 | Ensure Office 365 SharePoint infected files are disallowed for download | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.3.2 | L2 | Ensure OneDrive sync is restricted for unmanaged devices | Automated | Not Started | `sharepoint.spo_sync_client_restriction` | Not Started | Collector exists but control logic not defined |
+| 7.3.2 | L2 | Ensure OneDrive sync is restricted for unmanaged devices | Automated | Automated | `sharepoint.spo_sync_client_restriction` | Implemented | Check TenantRestrictionEnabled = True and AllowedDomainList non-empty |
 
 ---
 
