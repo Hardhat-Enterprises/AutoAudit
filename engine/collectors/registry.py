@@ -52,7 +52,7 @@ from collectors.entra.devices.device_registration_policy import (
 )
 from collectors.entra.devices.enrollment_restrictions import (
     EnrollmentRestrictionsDataCollector,
-) 
+)
 from collectors.entra.devices.windows_update_config import (
     WindowsUpdateConfigDataCollector,
 )
