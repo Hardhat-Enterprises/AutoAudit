@@ -52,6 +52,9 @@ from collectors.entra.devices.device_registration_policy import (
 )
 from collectors.entra.devices.enrollment_restrictions import (
     EnrollmentRestrictionsDataCollector,
+) 
+from collectors.entra.devices.windows_update_config import (
+    WindowsUpdateConfigDataCollector,
 )
 
 # Domains
@@ -79,6 +82,9 @@ from collectors.entra.roles.admin_license_footprint import (
 )
 from collectors.entra.roles.cloud_only_admins import CloudOnlyAdminsDataCollector
 from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
+
+# M365 Backup
+from collectors.m365.backup_restore import BackupRestoreDataCollector
 
 # Exchange - DNS
 from collectors.exchange.dns.dns_security_records import (
@@ -143,6 +149,9 @@ from collectors.exchange.protection.safe_links_policy import (
 from collectors.exchange.protection.teams_protection_policy import (
     TeamsProtectionPolicyDataCollector,
 )
+from collectors.exchange.protection.priority_account_protection import (
+    PriorityAccountStrictProtectionDataCollector,
+)
 
 # Exchange - Transport
 from collectors.exchange.transport.external_in_outlook import (
@@ -179,6 +188,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
+    "entra.devices.windows_update_config": WindowsUpdateConfigDataCollector,
     # Domains
     "entra.domains.password_policy": PasswordPolicyDataCollector,
     # Governance
@@ -194,6 +204,8 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.roles.admin_license_footprint": AdminLicenseFootprintDataCollector,
     "entra.roles.cloud_only_admins": CloudOnlyAdminsDataCollector,
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,
+    # M365 Backup
+    "m365.backup_restore": BackupRestoreDataCollector,
     # Users
     # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
@@ -223,7 +235,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Exchange - Transport
     "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
     "exchange.transport.transport_rules": TransportRulesDataCollector,
-    # SharePoint - PnP
+    "exchange.protection.priority_account_protection": PriorityAccountStrictProtectionDataCollector,
     "sharepoint.pnp.tenant": PnpTenantDataCollector,
 }
 
