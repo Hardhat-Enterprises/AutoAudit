@@ -59,7 +59,7 @@ async def init_db():
         print(f"  Email: {admin_email}")
         print("  Password: (dev default — see backend-api README / Getting Started)")
         print(f"  Role: {Role.ADMIN.value}")
-        print("\nIMPORTANT: Change this password after first login.")
+        print("\nIMPORTANT: Change the default password after first login.")
 
 
 if __name__ == "__main__":

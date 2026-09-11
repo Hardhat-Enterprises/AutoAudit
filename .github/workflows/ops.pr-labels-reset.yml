@@ -1,0 +1,54 @@
+name: PR Labels Reset
+
+# Manual-only "clean slate" tool: clears automatically-managed labels
+# (area:*, size/*, first-contribution, docker, github_actions, and the
+# activity tier labels) from a chosen set of PRs. Never touches manually
+# curated labels (abandoned, needs-adoption, has-conflicts, wontfix, etc.)
+# — see .github/scripts/label-taxonomy.js for the exact managed-label list.
+on:
+  workflow_dispatch:
+    inputs:
+      pr_numbers:
+        description: 'PR numbers, printer-style ranges e.g. "1,5,7-9". Ignored if all_open_prs is checked.'
+        required: false
+      all_open_prs:
+        description: "Target every currently open PR instead of listing numbers above."
+        type: boolean
+        default: false
+      open_only:
+        description: "Skip any listed PR that isn't currently open (no-op when all_open_prs is checked)."
+        type: boolean
+        default: true
+      only_labels:
+        description: 'Optional: restrict to specific managed labels, comma-separated (e.g. "stale,needs-decision,final-notice" or "area: "). Leave blank to reset every managed label.'
+        required: false
+      dry_run:
+        description: "Preview only — logs what would be removed without changing anything. Uncheck to actually apply."
+        type: boolean
+        default: true
+      confirm:
+        description: 'Required when dry_run is unchecked: type RESET exactly to allow real changes.'
+        required: false
+
+permissions:
+  pull-requests: write
+  issues: write # labels live under the Issues API even for PRs
+  contents: read
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    env:
+      PR_NUMBERS: ${{ inputs.pr_numbers }}
+      ALL_OPEN_PRS: ${{ inputs.all_open_prs }}
+      OPEN_ONLY: ${{ inputs.open_only }}
+      ONLY_LABELS: ${{ inputs.only_labels }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      CONFIRM: ${{ inputs.confirm }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const run = require('${{ github.workspace }}/.github/scripts/pr-labels-reset.js');
+            await run({ github, context, core });
