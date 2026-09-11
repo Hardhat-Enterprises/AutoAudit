@@ -39,6 +39,7 @@ async def execute(request: ExecuteRequest):
             client_id=request.client_id,
             sharepoint_admin_url=request.sharepoint_admin_url,
             certificate_alias=request.certificate_alias,
+            organization=request.organization,
         )
         return ExecuteResponse(success=True, data=result)
     except ValueError as e:
