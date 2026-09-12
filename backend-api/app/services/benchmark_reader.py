@@ -31,7 +31,9 @@ class BenchmarkFileReader:
         """Get the path to a benchmark's directory."""
         return self.policies_dir / framework / slug / version
 
-    def get_benchmark_metadata(self, framework: str, slug: str, version: str) -> dict[str, Any]:
+    def get_benchmark_metadata(
+        self, framework: str, slug: str, version: str
+    ) -> dict[str, Any]:
         """Read metadata.json for a benchmark.
 
         Args:
@@ -72,7 +74,9 @@ class BenchmarkFileReader:
         for control in metadata.get("controls", []):
             if control.get("control_id") == control_id:
                 return control
-        raise ValueError(f"Control {control_id} not found in {framework}/{slug}/{version}")
+        raise ValueError(
+            f"Control {control_id} not found in {framework}/{slug}/{version}"
+        )
 
     def list_benchmarks(self) -> list[dict[str, Any]]:
         """List all available benchmarks by scanning the policies directory.
@@ -96,13 +100,17 @@ class BenchmarkFileReader:
                     metadata_file = version_dir / "metadata.json"
                     if metadata_file.exists():
                         try:
-                            metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
+                            metadata = json.loads(
+                                metadata_file.read_text(encoding="utf-8")
+                            )
                             benchmarks.append(metadata)
                         except (json.JSONDecodeError, OSError):
                             pass
         return benchmarks
 
-    def list_controls(self, framework: str, slug: str, version: str) -> list[dict[str, Any]]:
+    def list_controls(
+        self, framework: str, slug: str, version: str
+    ) -> list[dict[str, Any]]:
         """List all controls for a specific benchmark.
 
         Returns:
