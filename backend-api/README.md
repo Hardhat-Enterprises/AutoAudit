@@ -1,6 +1,6 @@
 # AutoAudit API
 
-Automated GCP compliance assessment tool built with FastAPI. This API provides authentication and compliance assessment capabilities for GCP environments.
+Automated cloud security and compliance assessment platform built with FastAPI. The API provides authentication, compliance assessment, and integration capabilities for supported cloud environments.
 
 ## 🚀 Quick Start
 
@@ -168,5 +168,12 @@ If we want to add `authorization` into the mix (verifying a user has not only lo
       return {"message": "Yes, you have admin."}
 ```
 
+### Health Endpoints
+
+- `GET /liveness` returns the basic API health status.
+- `GET /readiness` checks the database dependency.
+- `/readiness` returns `200 ready` when the database is available and `503 not_ready` when it is unavailable.
+
 #This change was made to test grype scans.
+
 <!-- Grype CI baseline test -->
