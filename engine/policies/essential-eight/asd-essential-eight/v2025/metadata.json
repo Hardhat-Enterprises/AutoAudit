@@ -145,11 +145,11 @@
       "maturity_level": "ML3",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "entra.devices.configuration_policies",
-      "policy_file": null,
+      "policy_file": "e8_mac_3_1_signed_macros_only.rego",
       "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
-      "notes": "Partial automation."
+      "notes": "Fully automatable."
     },
     {
       "control_id": "E8-MAC-3.2",
