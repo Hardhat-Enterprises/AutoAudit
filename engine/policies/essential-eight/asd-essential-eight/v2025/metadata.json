@@ -69,9 +69,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": "e8_mac_1_1_macros_disabled.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
     },
     {
@@ -304,9 +302,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.windows_update_config",
       "policy_file": "e8_pos_1_1_os_patch_timeframe.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Threshold of 14 days derived from the ASD ML1 two-week ceiling and Microsoft's slowest reference ring (10 + 2 + 2). Policy logic verified against OPA 1.13.1; collector not yet run against a live tenant. Research basis: 26T2-SEC-KS-001."
     },
     {
@@ -321,9 +317,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementManagedDevices.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementManagedDevices.Read.All"],
       "notes": "Requires managed device OS version inventory, not update ring configuration. Separate collector."
     },
     {
@@ -353,9 +347,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Reuses the E8-POS-1.1 collector with a shorter threshold. The 48-hour exploit condition is not derivable from configuration alone."
     },
     {
