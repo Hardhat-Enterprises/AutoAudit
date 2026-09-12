@@ -1,15 +1,14 @@
-from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.auth import default
-import json 
-import os
+import json
 
-service_account_info = json.loads(os.environ["GCP_CREDENTIALS"])
-creds = service_account.Credentials.from_service_account_info(
-    service_account_info,
-    scopes=["https://www.googleapis.com/auth/cloud-platform"],
-)
+# Authenticates via Application Default Credentials. In CI this is populated
+# by google-github-actions/auth using Workload Identity Federation (see
+# .github/workflows/ops.collector.yml) - no service account JSON key is
+# read from the environment or stored anywhere. Locally, this falls back to
+# whatever `gcloud auth application-default login` has configured.
+creds, _ = default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
 
 crm_policy = build("cloudresourcemanager", "v3", credentials=creds)
 bucket_policy = build("storage", "v1", credentials=creds)
@@ -64,7 +63,7 @@ req = crm_compute.instances().aggregatedList(project=project_id)
 while req is not None:
     resp = req.execute()
     for _, scoped in resp.get("items", {}).items():
-        instances.extend(scoped.get("instances", [])) 
+        instances.extend(scoped.get("instances", []))
     req = crm_compute.instances().aggregatedList_next(previous_request=req, previous_response=resp)
 
 sqlinstances = []
@@ -75,7 +74,7 @@ while req is not None:
     req = sqladmin.instances().list_next(previous_request=req, previous_response=resp)
 
 full_datasets = []
-req = bq.datasets().list(projectId=project_id, all=True) 
+req = bq.datasets().list(projectId=project_id, all=True)
 while req is not None:
     resp = req.execute()
     for ds in resp.get("datasets", []):
@@ -83,7 +82,7 @@ while req is not None:
         ds_id = ds_ref.get("datasetId")
         if not ds_id:
             continue
-        
+
         detail = bq.datasets().get(projectId=project_id, datasetId=ds_id).execute()
         full_datasets.append(detail)
 
@@ -141,33 +140,33 @@ try:
 except HttpError as e:
     print(f"Failed to list managed zones: {e}")
 
-with open("iam_policy.json", "w") as f:
+with open("iam_policy.json", "w", encoding="utf-8") as f:
     json.dump(policy, f, indent=2)
 
-with open("networks.json", "w") as f:
+with open("networks.json", "w", encoding="utf-8") as f:
     json.dump(networks, f, indent=2)
 
-with open("firewalls.json", "w") as f:
+with open("firewalls.json", "w", encoding="utf-8") as f:
     json.dump(firewalls, f, indent=2)
 
-with open("ComputeInstances.json", "w") as f:
+with open("ComputeInstances.json", "w", encoding="utf-8") as f:
     json.dump(instances, f, indent=2)
 
-with open("sql_instances.json", "w") as f:
+with open("sql_instances.json", "w", encoding="utf-8") as f:
     json.dump(sqlinstances, f, indent=2)
 
-with open("bigquery_datasets_full.json", "w") as f:
+with open("bigquery_datasets_full.json", "w", encoding="utf-8") as f:
     json.dump(full_datasets, f, indent=2)
 
-with open("dataproc_clusters.json", "w") as f:
+with open("dataproc_clusters.json", "w", encoding="utf-8") as f:
     json.dump({"project": project_id, "clusters": dataproc_clusters, "errors": errors}, f, indent=2)
-    
-with open("buckets.json", "w") as f:
+
+with open("buckets.json", "w", encoding="utf-8") as f:
     json.dump(buckets, f, indent=2)
 
-with open("bucket_iam_policies.json", "w") as f:
+with open("bucket_iam_policies.json", "w", encoding="utf-8") as f:
     json.dump(bucket_iam_policies, f, indent=2)
 
-with open("dns_zones.json", "w") as f:
+with open("dns_zones.json", "w", encoding="utf-8") as f:
     json.dump(zones, f, indent=2)
 
