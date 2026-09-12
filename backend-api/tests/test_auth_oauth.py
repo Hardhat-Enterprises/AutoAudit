@@ -87,19 +87,20 @@ async def test_change_password_success(
     async def fake_session() -> AsyncGenerator[AsyncMock, None]:
         yield mock_db_session
 
-    async def fake_user_manager(_session) -> AsyncGenerator[MagicMock, None]:
+    async def fake_user_manager() -> AsyncGenerator[MagicMock, None]:
         yield user_manager
 
-    with (
-        patch("app.db.session.get_async_session", fake_session),
-        patch("app.core.users.get_user_manager", fake_user_manager),
-    ):
-        client: AsyncClient = client_factory(viewer_user)
-        async with client:
-            response = await client.post(
-                "/v1/auth/users/me/change-password",
-                json={"current_password": "old", "new_password": "new-secret"},
-            )
+    test_app.dependency_overrides[get_user_manager] = fake_user_manager
+    try:
+        with patch("app.db.session.get_async_session", fake_session):
+            client: AsyncClient = client_factory(viewer_user)
+            async with client:
+                response = await client.post(
+                    "/v1/auth/users/me/change-password",
+                    json={"current_password": "old", "new_password": "new-secret"},
+                )
+    finally:
+        test_app.dependency_overrides.pop(get_user_manager, None)
 
     assert response.status_code == 200
     assert response.json()["message"] == "Password changed successfully"
@@ -122,19 +123,20 @@ async def test_change_password_wrong_current(
     async def fake_session() -> AsyncGenerator[AsyncMock, None]:
         yield mock_db_session
 
-    async def fake_user_manager(_session) -> AsyncGenerator[MagicMock, None]:
+    async def fake_user_manager() -> AsyncGenerator[MagicMock, None]:
         yield user_manager
 
-    with (
-        patch("app.db.session.get_async_session", fake_session),
-        patch("app.core.users.get_user_manager", fake_user_manager),
-    ):
-        client: AsyncClient = client_factory(viewer_user)
-        async with client:
-            response = await client.post(
-                "/v1/auth/users/me/change-password",
-                json={"current_password": "wrong", "new_password": "new-secret"},
-            )
+    test_app.dependency_overrides[get_user_manager] = fake_user_manager
+    try:
+        with patch("app.db.session.get_async_session", fake_session):
+            client: AsyncClient = client_factory(viewer_user)
+            async with client:
+                response = await client.post(
+                    "/v1/auth/users/me/change-password",
+                    json={"current_password": "wrong", "new_password": "new-secret"},
+                )
+    finally:
+        test_app.dependency_overrides.pop(get_user_manager, None)
 
     assert response.status_code == 400
     assert "incorrect" in response.json()["detail"].lower()
@@ -505,6 +507,8 @@ async def test_google_callback_success(
 
     assert response.status_code == 302
     location = response.headers["location"]
-    assert "access_token=jwt-access-token" in location
-    assert "token_type=bearer" in location
+    # The JWT is delivered via a secure HttpOnly cookie, not the URL fragment
+    # (avoids leaking the token through browser history / Referer headers).
+    assert "access_token=" not in location
+    assert response.cookies.get("autoaudit_jwt") == "jwt-access-token"
     user_manager.oauth_callback.assert_awaited()

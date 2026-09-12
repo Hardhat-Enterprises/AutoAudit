@@ -11,6 +11,7 @@ from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
 from app.db.session import get_async_session
 from app.schemas.health import ReadinessResponse
+from prometheus_fastapi_instrumentator import Instrumentator # <-- 1. Added import
 
 settings = get_settings()
 
@@ -27,8 +28,8 @@ def create_app() -> FastAPI:
     # Expose X-Request-ID so the frontend can use it when reporting errors.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.FRONTEND_URL.rstrip("/")],
-        allow_credentials=True,
+        allow_origins=["http://localhost:3000"],  # Explicit origin required when credentials are True
+        allow_credentials=True,                   # Must be True to allow HttpOnly auth cookies
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=["X-Request-ID"],
@@ -77,7 +78,9 @@ def create_app() -> FastAPI:
 
         return ReadinessResponse(status="ready")
 
-    return app
+    # Initialize Prometheus Instrumentator and expose the /metrics endpoint
+    Instrumentator().instrument(app).expose(app) # <-- 2. Added instrumentation
 
+    return app
 
 app = create_app()

@@ -95,19 +95,18 @@ describe('primaryLabel', () => {
     expect(screen.getByText('Signed in')).toBeInTheDocument();
   });
 });
-
+  
 // --- handleLogout ---
 
 describe('handleLogout', () => {
-  it('calls apiLogout with the current token', async () => {
-    setupAuth({ email: 'u@test.com' }, 'my-token');
-    vi.mocked(mockApiLogout).mockResolvedValue(undefined);
+  it('does not call the raw api client directly (avoids duplicate logout requests)', async () => {
+  setupAuth({ email: 'u@test.com' }, 'my-token');
 
-    renderPage();
-    await userEvent.click(screen.getByRole('button', { name: /log out/i }));
+  renderPage();
+  await userEvent.click(screen.getByRole('button', { name: /log out/i }));
 
-    expect(mockApiLogout).toHaveBeenCalledWith('my-token');
-  });
+  expect(mockApiLogout).not.toHaveBeenCalled();
+});
 
   it('calls clearAuth and navigates to / after successful logout', async () => {
     const clearAuth = vi.fn();

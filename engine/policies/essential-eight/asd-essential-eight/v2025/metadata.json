@@ -69,9 +69,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": "e8_mac_1_1_macros_disabled.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
     },
     {
@@ -263,6 +261,21 @@
       "notes": "Research basis: 26T1-SEC-EG-002 and 26T1-SEC-EG-004."
     },
     {
+      "control_id": "E8-UAH-2.1",
+      "title": "Microsoft Office applications blocked from creating child processes",
+      "description": "Checks whether the Attack Surface Reduction rule blocking Office applications from creating child processes is enabled in Block mode, as required by the Essential Eight User Application Hardening mitigation strategy.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML2",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.asr_rules",
+      "policy_file": "e8_uah_2_1_office_child_process_block.rego",
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
+      "notes": "Reuses the entra.devices.asr_rules collector (same Graph profile fetch as E8-MAC-2.1) -- no extra API calls. First control for the User Application Hardening strategy."
+    },
+    {
       "control_id": "E8-POS-0",
       "title": "No operating system patching controls implemented (ML0 baseline)",
       "description": "ML0 represents an organisation that has not deployed operating system patching controls via Intune.",
@@ -289,9 +302,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.windows_update_config",
       "policy_file": "e8_pos_1_1_os_patch_timeframe.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Threshold of 14 days derived from the ASD ML1 two-week ceiling and Microsoft's slowest reference ring (10 + 2 + 2). Policy logic verified against OPA 1.13.1; collector not yet run against a live tenant. Research basis: 26T2-SEC-KS-001."
     },
     {
@@ -306,9 +317,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementManagedDevices.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementManagedDevices.Read.All"],
       "notes": "Requires managed device OS version inventory, not update ring configuration. Separate collector."
     },
     {
@@ -338,9 +347,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Reuses the E8-POS-1.1 collector with a shorter threshold. The 48-hour exploit condition is not derivable from configuration alone."
     },
     {
