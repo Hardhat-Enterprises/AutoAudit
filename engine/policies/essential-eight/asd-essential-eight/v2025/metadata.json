@@ -107,20 +107,22 @@
       "notes": "Partial automation."
     },
     {
-      "control_id": "E8-MAC-1.4",
-      "title": "Users cannot change macro settings",
-      "description": "The macro security policy is enforced such that standard users cannot override or modify the configured macro settings.",
-      "severity": "medium",
-      "service": "Intune",
-      "maturity_level": "ML1",
-      "is_manual": false,
-      "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "entra.devices.configuration_policies",
-      "policy_file": null,
-      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
-      "notes": "Partial automation."
-    },
+    "control_id": "E8-MAC-1.4",
+    "title": "Users cannot change macro settings",
+    "description": "The macro security policy is enforced such that standard users cannot override or modify the configured macro settings.",
+    "severity": "medium",
+    "service": "Intune",
+    "maturity_level": "ML1",
+    "is_manual": false,
+    "benchmark_audit_type": "Automated",
+    "automation_status": "ready",
+    "data_collector_id": "entra.devices.macro_notification_settings",
+    "policy_file": "e8_mac_1_4_user_macro_settings.rego",
+    "requires_permissions": [
+      "DeviceManagementConfiguration.Read.All"
+    ],
+    "notes": "Fully automatable."
+  },
     {
       "control_id": "E8-MAC-2.1",
       "title": "Win32 API calls blocked from Office macros (ASR rule)",
