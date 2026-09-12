@@ -205,7 +205,7 @@ jobs:
       - name: Install and run coverage
         working-directory: backend-api
         run: |
-          uv sync --extra dev
+          uv sync --group dev --extra evidence
           uv run pytest tests/ \
             --cov=app \
             --cov-report=term-missing \

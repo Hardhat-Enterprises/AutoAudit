@@ -1531,21 +1531,21 @@
       "requires_permissions": ["SharePoint.Admin"],
       "notes": null
     },
-   {
-  "control_id": "7.2.4",
-  "title": "Ensure OneDrive content sharing is restricted",
-  "description": "Restrict OneDrive content sharing.",
-  "severity": "medium",
-  "service": "SharePoint",
-  "level": "L2",
-  "is_manual": false,
-  "benchmark_audit_type": "Automated",
-  "automation_status": "ready",
-  "data_collector_id": "sharepoint.pnp.tenant",
-  "policy_file": "7.2.4_onedrive_sharing_restricted.rego",
-  "requires_permissions": ["SharePoint.Admin"],
-  "notes": "Collector and policy implemented using PnP integration"
-},
+    {
+      "control_id": "7.2.4",
+      "title": "Ensure OneDrive content sharing is restricted",
+      "description": "Restrict OneDrive content sharing.",
+      "severity": "medium",
+      "service": "SharePoint",
+      "level": "L2",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.4_onedrive_sharing_restricted.rego",
+      "requires_permissions": ["SharePoint.Admin"],
+      "notes": "Collector and policy implemented using PnP integration"
+    },
     {
       "control_id": "7.2.5",
       "title": "Ensure that SharePoint guest users cannot share items they don't own",
@@ -2118,4 +2118,3 @@
     }
   ]
 }
-
