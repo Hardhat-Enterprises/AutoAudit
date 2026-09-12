@@ -11,7 +11,7 @@ Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 
 from typing import Any
 
-from collectors.powershell_base import BasePowerShellCollector
+from collectors.powershell_base import BasePowerShellCollector, as_dict
 from collectors.powershell_client import PowerShellClient
 
 
@@ -30,7 +30,9 @@ class TeamsProtectionPolicyDataCollector(BasePowerShellCollector):
             - teams_protection_policy: The Teams protection policy
             - zap_enabled: Zero-hour auto purge status for Teams
         """
-        policy = await client.run_cmdlet("ExchangeOnline", "Get-TeamsProtectionPolicy")
+        policy = as_dict(
+            await client.run_cmdlet("ExchangeOnline", "Get-TeamsProtectionPolicy")
+        )
 
         return {
             "teams_protection_policy": policy,

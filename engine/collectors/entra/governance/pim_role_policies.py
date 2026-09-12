@@ -148,7 +148,7 @@ class PimRolePoliciesDataCollector(BaseDataCollector):
             - justification_required: bool
             - max_activation_duration: str (ISO 8601 duration)
         """
-        settings = {
+        settings: dict[str, Any] = {
             "approval_required": None,
             "mfa_required": None,
             "justification_required": None,
