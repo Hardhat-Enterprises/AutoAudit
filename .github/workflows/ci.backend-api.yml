@@ -12,6 +12,9 @@ on:
   schedule:
     - cron: '32 23 * * 6'
 
+permissions:
+  contents: read
+
 jobs:
   analyze:
     name: Security Analysis on (${{ matrix.language }})
@@ -27,15 +30,15 @@ jobs:
         language: ['python']
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.11'
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@6f5948dfacef28e207b48d0905cf90c03365536d # v3
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -51,7 +54,7 @@ jobs:
           exit 1
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@6f5948dfacef28e207b48d0905cf90c03365536d # v3
         with:
           category: "/language:${{matrix.language}}"
 
@@ -66,14 +69,17 @@ jobs:
   run-lint:
     name: Linting Code
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: github/super-linter@454ba4482ce2cd0c505bc592e83c06e1e37ade61 # v4
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
@@ -107,16 +113,58 @@ jobs:
           uv sync --extra dev --extra evidence
           uv run pytest tests/ -q
 
+  coverage:
+    name: Pytest coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install and run coverage
+        working-directory: backend-api
+        run: |
+          uv sync --extra dev
+          uv run pytest tests/ \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov
+          # fail_under is configured in pyproject.toml ([tool.coverage.report])
+
+      - name: Upload coverage HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-api-coverage-html
+          path: backend-api/htmlcov/
+          if-no-files-found: warn
+
+      - name: Upload coverage XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-api-coverage-xml
+          path: backend-api/coverage.xml
+          if-no-files-found: warn
+
   report:
     name: Report PR status
-    needs: [analyze, run-lint, test]
+    needs: [analyze, run-lint, test, coverage]
     if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       issues: write
     steps:
-      - uses: actions/github-script@v7
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Build report body
+        id: build
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             // Fork PRs get a read-only GITHUB_TOKEN; commenting on the upstream PR is forbidden.
@@ -130,14 +178,14 @@ jobs:
             const analyze = '${{ needs.analyze.result }}';
             const lint    = '${{ needs.run-lint.result }}';
             const test    = '${{ needs.test.result }}';
+            const coverage = '${{ needs.coverage.result }}';
 
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
-            const allPassed = [analyze, lint, test].every(r => ['success', 'skipped'].includes(r));
+            const allPassed = [analyze, lint, test, coverage].every(r => ['success', 'skipped'].includes(r));
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const marker = '<!-- ci-report-backend-api -->'; // used to find and update the existing comment
 
             const body = [
-              marker,
+              '<!-- ci-report-backend-api -->',
               `### CI: Backend API`,
               ``,
               `| Job | Result |`,
@@ -145,37 +193,17 @@ jobs:
               `| Security analysis (CodeQL + Bandit) | ${icon(analyze)} \`${analyze}\` |`,
               `| Lint | ${icon(lint)} \`${lint}\` |`,
               `| Pytest | ${icon(test)} \`${test}\` |`,
+              `| Pytest coverage | ${icon(coverage)} \`${coverage}\` |`,
               ``,
               allPassed
                 ? `All checks passed.`
                 : `One or more checks failed. [View logs](${runUrl})`,
             ].join('\n');
 
-            try {
-              const { data: comments } = await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-              });
+            core.setOutput('body', body);
 
-              const existing = comments.find(c => c.body.includes(marker));
-
-              if (existing) {
-                await github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: existing.id,
-                  body,
-                });
-              } else {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  body,
-                });
-              }
-            } catch (err) {
-              // Do not fail the workflow when the token cannot write comments.
-              core.warning(`Could not post CI status comment: ${err.message || err}`);
-            }
+      - if: steps.build.outputs.body
+        uses: ./.github/actions/pr-status-comment
+        with:
+          marker: '<!-- ci-report-backend-api -->'
+          body: ${{ steps.build.outputs.body }}

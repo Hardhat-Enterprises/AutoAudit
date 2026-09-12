@@ -136,9 +136,9 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "exchange.organization.sharing_policy",
-      "policy_file": null,
+      "policy_file": "1.3.3_external_calendar_sharing_restricted.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": "Collector exists but control logic not defined"
     },
@@ -181,9 +181,9 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
+      "automation_status": "ready",
       "data_collector_id": "exchange.organization.organization_config",
-      "policy_file": null,
+      "policy_file": "1.3.6_customer_lockbox_enabled.rego",
       "requires_permissions": ["Exchange.Manage"],
       "notes": null
     },
@@ -491,16 +491,16 @@
       "control_id": "2.4.2",
       "title": "Ensure Priority accounts have 'Strict protection' presets applied",
       "description": "Apply strict protection presets to priority accounts.",
-      "severity": "medium",
+      "severity": "high",
       "service": "Defender",
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": null,
-      "policy_file": null,
-      "requires_permissions": null,
-      "notes": "Need Priority Account Protection collector"
+      "automation_status": "ready",
+      "data_collector_id": "exchange.protection.priority_account_protection",
+      "policy_file": "2.4.2_priority_account_strict_protection.rego",
+      "requires_permissions": ["Exchange.ManageAsApp"],
+      "notes": "Collector and Rego policy implemented; 7/7 opa tests passing."
     },
     {
       "control_id": "2.4.3",
@@ -1486,11 +1486,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.1_modern_auth_sharepoint.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": null
     },
     {
       "control_id": "7.2.2",
@@ -1516,27 +1516,27 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.3_restrict_external_content_sharing.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": null
     },
-    {
-      "control_id": "7.2.4",
-      "title": "Ensure OneDrive content sharing is restricted",
-      "description": "Restrict OneDrive content sharing.",
-      "severity": "medium",
-      "service": "SharePoint",
-      "level": "L2",
-      "is_manual": false,
-      "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
-      "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
-    },
+   {
+  "control_id": "7.2.4",
+  "title": "Ensure OneDrive content sharing is restricted",
+  "description": "Restrict OneDrive content sharing.",
+  "severity": "medium",
+  "service": "SharePoint",
+  "level": "L2",
+  "is_manual": false,
+  "benchmark_audit_type": "Automated",
+  "automation_status": "ready",
+  "data_collector_id": "sharepoint.pnp.tenant",
+  "policy_file": "7.2.4_onedrive_sharing_restricted.rego",
+  "requires_permissions": ["SharePoint.Admin"],
+  "notes": "Collector and policy implemented using PnP integration"
+},
     {
       "control_id": "7.2.5",
       "title": "Ensure that SharePoint guest users cannot share items they don't own",
@@ -1561,11 +1561,11 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.6_restrict_external_domain_sharing.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": null
     },
     {
       "control_id": "7.2.7",
@@ -1576,11 +1576,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.7_link_sharing_restricted.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": "Collector extended with default_sharing_link_type and policy implemented"
     },
     {
       "control_id": "7.2.8",
@@ -1621,11 +1621,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.10_reauthentication_verification_code.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": "Uses the existing sharepoint.pnp.tenant collector with EmailAttestationRequired and EmailAttestationReAuthDays evidence."
     },
     {
       "control_id": "7.2.11",
@@ -1636,11 +1636,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.11_default_sharing_link_permission.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector raises NotImplementedError"
+      "notes": null
     },
     {
       "control_id": "7.3.1",
@@ -2109,3 +2109,4 @@
     }
   ]
 }
+
