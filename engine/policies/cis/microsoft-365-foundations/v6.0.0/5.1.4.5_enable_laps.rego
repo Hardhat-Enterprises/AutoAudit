@@ -13,32 +13,32 @@
 package cis.microsoft_365_foundations.v6_0_0.control_5_1_4_5
 
 default result := {
-    "compliant": false,
-    "message": "Unable to determine whether LAPS is enabled",
-    "details": {}
+	"compliant": false,
+	"message": "Unable to determine whether LAPS is enabled",
+	"details": {},
 }
 
 compliant if {
-    input.laps_enabled == true
+	input.laps_enabled == true
 }
 
-compliant_value := true if {
-    compliant
-} else := false if {
-    true
-}
+compliant_value if {
+	compliant
+} else := false
 
 msg := "Microsoft Entra Local Administrator Password Solution (LAPS) is enabled" if {
-    compliant
-} else := "Microsoft Entra Local Administrator Password Solution (LAPS) is not enabled"
+	input.laps_enabled == true
+} else := "Microsoft Entra Local Administrator Password Solution (LAPS) is not enabled" if {
+	input.laps_enabled == false
+} else := "Unable to determine whether LAPS is enabled"
 
 result := output if {
-    output := {
-        "compliant": compliant_value,
-        "message": msg,
-        "details": {
-            "laps_enabled": input.laps_enabled,
-            "local_admin_password_settings": input.local_admin_password_settings
-        }
-    }
+	output := {
+		"compliant": compliant_value,
+		"message": msg,
+		"details": {
+			"laps_enabled": input.laps_enabled,
+			"local_admin_password_settings": input.local_admin_password_settings,
+		},
+	}
 }
