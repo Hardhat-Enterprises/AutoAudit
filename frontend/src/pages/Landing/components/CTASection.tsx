@@ -23,7 +23,7 @@ const CTASection = ({ onSignInClick }: CTASectionProps) => {
             className="inline-flex justify-center items-center py-3 px-7 font-semibold text-white bg-gradient-to-br rounded-full transition duration-200 hover:-translate-y-0.5 from-[rgb(var(--brand-blue))] to-[rgb(var(--brand-blue-deep))] shadow-[0_8px_30px_rgb(var(--brand-blue)/0.35)] hover:shadow-[0_12px_30px_rgb(var(--brand-blue)/0.5)]"
             onClick={onSignInClick}
           >
-            Start Free Trial
+            Get Started
           </button>
           <Link
             className="inline-flex justify-center items-center py-3 px-7 font-semibold rounded-full border-2 transition duration-200 hover:-translate-y-0.5 border-[rgb(var(--brand-blue))] text-[rgb(var(--brand-blue))] hover:bg-[rgb(var(--brand-blue))] hover:text-[rgb(var(--landing-bg-base))]"
