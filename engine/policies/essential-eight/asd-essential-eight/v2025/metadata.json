@@ -262,7 +262,7 @@
       ],
       "notes": "Research basis: 26T1-SEC-EG-002 and 26T1-SEC-EG-004."
     },
-    {
+        {
       "control_id": "E8-POS-0",
       "title": "No operating system patching controls implemented (ML0 baseline)",
       "description": "ML0 represents an organisation that has not deployed operating system patching controls via Intune.",
@@ -357,6 +357,170 @@
       "policy_file": null,
       "requires_permissions": null,
       "notes": "Driver and firmware update state is not exposed via Windows Update for Business configuration profiles."
+    },
+    {
+      "control_id": "E8-AC-0",
+      "title": "No application control implemented (ML0 baseline)",
+      "description": "ML0 represents an organisation that has not deployed application control via Intune.",
+      "severity": "critical",
+      "service": "Intune",
+      "maturity_level": "ML0",
+      "is_manual": false,
+      "benchmark_audit_type": "Inferred",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "ML0 is inferred from the absence of ML1 policies."
+    },
+    {
+      "control_id": "E8-AC-1.1",
+      "title": "Application control deployed and enforced on workstations",
+      "description": "An Intune application control policy is assigned to workstations and configured to enforce rather than audit. Assessed from the legacy Application control profile (appLockerApplicationControl) and from modern App Control for Business policy settings, using the weakest policy.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.app_control_policy",
+      "policy_file": "e8_ac_1_1_application_control.rego",
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Sources: v1.0 /deviceManagement/deviceConfigurations (windows10EndpointProtectionConfiguration.appLockerApplicationControl) and beta /deviceManagement/configurationPolicies/{id}/settings. Audit mode records execution without blocking it and cannot satisfy the control; Intelligent Security Graph reputation alone is not an organisation approved set. Microsoft documents no Graph property for device-side effective state, so an uninterpretable configuration returns insufficient evidence rather than a pass. Scope is limited to policy existence, enforcement state and assignment; ML1 path and executable-category coverage are tracked as E8-AC-1.2 and E8-AC-1.3. Policy logic verified against OPA 1.13.1; collector not yet run against a live tenant. Research basis: 26T2-SEC-KHS-001 and 26T2-SEC-TD-001."
+    },
+    {
+      "control_id": "E8-AC-1.2",
+      "title": "Application control applied to user profiles and temporary folders",
+      "description": "Application control is applied to user profile directories and temporary folders used by the operating system, web browsers and email clients.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Path coverage is expressed in App Control policy XML rather than in built-in control settings, so it requires an XML parsing collector."
+    },
+    {
+      "control_id": "E8-AC-1.3",
+      "title": "Required executable categories restricted to an organisation approved set",
+      "description": "Executables, software libraries, scripts, installers, compiled HTML, HTML applications and control panel applets are restricted to an organisation approved set.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML1",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Per-file-type rules live in App Control policy XML. The existing evidence-based strategy at security/strategies/application_control.py assesses these seven categories from uploaded evidence text (ML1-AC-01 to ML1-AC-07) and is complementary to, not a substitute for, live tenant assessment."
+    },
+    {
+      "control_id": "E8-AC-2.1",
+      "title": "Application control implemented on internet-facing servers",
+      "description": "Application control is implemented on internet-facing servers in addition to workstations.",
+      "severity": "high",
+      "service": "Intune",
+      "maturity_level": "ML2",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Requires device inventory to distinguish server from workstation scope, not policy configuration alone."
+    },
+    {
+      "control_id": "E8-AC-2.2",
+      "title": "Microsoft recommended application blocklist implemented",
+      "description": "Microsoft's recommended application blocklist is implemented.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML2",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Blocklist rules are carried in policy XML and require XML parsing to confirm."
+    },
+    {
+      "control_id": "E8-AC-2.3",
+      "title": "Application control rulesets validated annually or more frequently",
+      "description": "Application control rulesets are validated on an annual or more frequent basis.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML2",
+      "is_manual": true,
+      "benchmark_audit_type": "Manual",
+      "automation_status": "manual",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "Review cadence is a governance record and is not exposed by Intune. Manual evidence required."
+    },
+    {
+      "control_id": "E8-AC-2.4",
+      "title": "Allowed and blocked application control events centrally logged",
+      "description": "Allowed and blocked application control events are centrally logged and protected from unauthorised modification or deletion.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML2",
+      "is_manual": true,
+      "benchmark_audit_type": "Manual",
+      "automation_status": "manual",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": null,
+      "notes": "Event collection and log protection depend on Defender for Endpoint, Defender XDR or Sentinel configuration outside the Intune configuration surface."
+    },
+    {
+      "control_id": "E8-AC-3.1",
+      "title": "Application control implemented on non-internet-facing servers",
+      "description": "Application control is implemented on non-internet-facing servers.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML3",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Requires device inventory to distinguish server scope, as for E8-AC-2.1."
+    },
+    {
+      "control_id": "E8-AC-3.2",
+      "title": "Drivers restricted to an organisation approved set",
+      "description": "Drivers are restricted to an organisation approved set and Microsoft's vulnerable driver blocklist is implemented.",
+      "severity": "medium",
+      "service": "Intune",
+      "maturity_level": "ML3",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "not_started",
+      "data_collector_id": null,
+      "policy_file": null,
+      "requires_permissions": [
+        "DeviceManagementConfiguration.Read.All"
+      ],
+      "notes": "Driver rules and the vulnerable driver blocklist are carried in App Control policy XML rather than built-in control settings."
     }
   ]
 }
