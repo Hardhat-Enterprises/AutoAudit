@@ -12,9 +12,7 @@
         "name": "E8_MACRO",
         "platforms": "windows10",
         "priorityMetaData": null,
-        "roleScopeTagIds": [
-          "0"
-        ],
+        "roleScopeTagIds": ["0"],
         "settingCount": 7,
         "technologies": "mdm",
         "id": "3e6c6222-4466-401a-8b8d-5c7058c8d432",

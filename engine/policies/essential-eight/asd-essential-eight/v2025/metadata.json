@@ -224,7 +224,7 @@
       "requires_permissions": null,
       "notes": "Not automatable."
     },
-        {
+    {
       "control_id": "E8-UAH-0",
       "title": "No user application hardening controls implemented (ML0 baseline)",
       "description": "ML0 represents an organisation that has not deployed the required User Application Hardening controls via Intune.",
@@ -251,9 +251,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation. Policy-level assessment only, as AutoAudit cannot confirm successful application on every managed device."
     },
     {
@@ -268,9 +266,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation. Policy-level assessment only, as AutoAudit cannot confirm successful application on every managed device."
     },
     {
@@ -285,9 +281,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation. Evaluation requires an approved organisational ad-blocking extension identifier or configurable allowlist."
     },
     {
@@ -302,9 +296,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation. Assessment is based on policy assignment scope because no discrete Settings Catalog lock setting exists."
     },
     {
@@ -475,9 +467,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.app_control_policy",
       "policy_file": "e8_ac_1_1_application_control.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Sources: v1.0 /deviceManagement/deviceConfigurations (windows10EndpointProtectionConfiguration.appLockerApplicationControl) and beta /deviceManagement/configurationPolicies/{id}/settings. Audit mode records execution without blocking it and cannot satisfy the control; Intelligent Security Graph reputation alone is not an organisation approved set. Microsoft documents no Graph property for device-side effective state, so an uninterpretable configuration returns insufficient evidence rather than a pass. Scope is limited to policy existence, enforcement state and assignment; ML1 path and executable-category coverage are tracked as E8-AC-1.2 and E8-AC-1.3. Policy logic verified against OPA 1.13.1; collector not yet run against a live tenant. Research basis: 26T2-SEC-KHS-001 and 26T2-SEC-TD-001."
     },
     {
@@ -492,9 +482,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Path coverage is expressed in App Control policy XML rather than in built-in control settings, so it requires an XML parsing collector."
     },
     {
@@ -509,9 +497,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Per-file-type rules live in App Control policy XML. The existing evidence-based strategy at security/strategies/application_control.py assesses these seven categories from uploaded evidence text (ML1-AC-01 to ML1-AC-07) and is complementary to, not a substitute for, live tenant assessment."
     },
     {
@@ -526,9 +512,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Requires device inventory to distinguish server from workstation scope, not policy configuration alone."
     },
     {
@@ -543,9 +527,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Blocklist rules are carried in policy XML and require XML parsing to confirm."
     },
     {
@@ -590,9 +572,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Requires device inventory to distinguish server scope, as for E8-AC-2.1."
     },
     {
@@ -607,9 +587,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Driver rules and the vulnerable driver blocklist are carried in App Control policy XML rather than built-in control settings."
     }
   ]

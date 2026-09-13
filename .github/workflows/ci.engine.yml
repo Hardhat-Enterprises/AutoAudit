@@ -78,6 +78,12 @@ jobs:
           VALIDATE_JSCPD: false
           VALIDATE_TYPESCRIPT_STANDARD: false
           VALIDATE_PYTHON_RUFF: false
+          # mypy isn't a project dependency and there's no mypy config
+          # anywhere in this repo, so super-linter's mypy step has no
+          # installed stubs for fastapi/sqlalchemy/pydantic/etc and fails
+          # on import-not-found for every Python file touched, regardless
+          # of real type correctness.
+          VALIDATE_PYTHON_MYPY: false
           VALIDATE_PYTHON_PYINK: false
           VALIDATE_CHECKOV: false
           VALIDATE_YAML_PRETTIER: false
