@@ -1,0 +1,19 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "1.1.3",
+  "scenario": "Only one global administrator configured",
+  "input": {
+    "global_admin_count": 1,
+    "global_admins": [
+      {
+        "id": "admin-001",
+        "display_name": "Global Admin 1"
+      }
+    ]
+  },
+  "expected": {
+    "compliant": false
+  }
+}
