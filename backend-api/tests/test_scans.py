@@ -18,9 +18,15 @@ that behaviour (not Celery's delivery of the message) this test verifies.
 its return value (`AsyncResult.id`) the endpoint actually reads.
 """
 
+from datetime import datetime
+from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 import pytest_asyncio
 from sqlalchemy import select
 
+from app.models.compliance import Scan
 from app.models.m365_connection import M365Connection
 from app.models.user import User
 from app.services.encryption import encrypt
@@ -252,3 +258,111 @@ async def test_create_scan_with_control_ids_skips_the_rest(
     assert by_control["1.1.1"] == "pending"  # nosec B101
     skipped = [s for s in by_control.values() if s == "skipped"]
     assert len(skipped) == len(results) - 1  # nosec B101
+
+
+def _execute_returning(single=None, items=None, rows=None) -> MagicMock:
+    result = MagicMock()
+    scalars = MagicMock()
+    scalars.all.return_value = items or []
+    scalars.one_or_none.return_value = single
+    result.scalars.return_value = scalars
+    result.unique.return_value = result
+    result.scalar_one_or_none.return_value = single
+    result.all.return_value = rows or []
+    return result
+
+
+def _scan(*, user_id: int = 1) -> Scan:
+    now = datetime.utcnow()
+    scan = Scan()
+    scan.id = 7
+    scan.user_id = user_id
+    scan.m365_connection_id = 1
+    scan.framework = "cis"
+    scan.benchmark = "microsoft-365-foundations"
+    scan.version = "v3.1.0"
+    scan.status = "completed"
+    scan.started_at = now
+    scan.finished_at = now
+    scan.compliance_score = Decimal("90.00")
+    scan.total_controls = 2
+    scan.passed_count = 1
+    scan.failed_count = 1
+    scan.skipped_count = 0
+    scan.error_count = 0
+    scan.results = []
+    scan.m365_connection = None
+    return scan
+
+
+async def test_list_scans_supports_filters_and_safe_pagination(
+    client_factory,
+    mock_db_session: AsyncMock,
+    viewer_user: User,
+) -> None:
+    """Scan history supports filtering and bounded pagination."""
+
+    scan = _scan(user_id=viewer_user.id)
+
+    mock_db_session.execute = AsyncMock(
+        return_value=_execute_returning(items=[scan])
+    )
+
+    async with client_factory(viewer_user) as client:
+        response = await client.get(
+            "/v1/scans/",
+            params={
+                "status": "completed",
+                "framework": "cis",
+                "benchmark": "microsoft-365-foundations",
+                "limit": 10,
+                "offset": 5,
+            },
+        )
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["status"] == "completed"
+
+    mock_db_session.execute.assert_awaited_once()
+
+    statement = mock_db_session.execute.await_args.args[0]
+
+    sql = str(
+        statement.compile(
+            compile_kwargs={"literal_binds": True}
+        )
+    )
+
+    assert "completed" in sql
+    assert "cis" in sql
+    assert "microsoft-365-foundations" in sql
+    assert "LIMIT 10" in sql
+    assert "OFFSET 5" in sql
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"status": "invalid"},
+        {"limit": 0},
+        {"limit": 101},
+        {"offset": -1},
+    ],
+)
+async def test_list_scans_rejects_invalid_filter_parameters(
+    client_factory,
+    mock_db_session: AsyncMock,
+    viewer_user: User,
+    params: dict,
+) -> None:
+    """Invalid scan filtering parameters return validation errors."""
+
+    async with client_factory(viewer_user) as client:
+        response = await client.get(
+            "/v1/scans/",
+            params=params,
+        )
+
+    assert response.status_code == 422
+    mock_db_session.execute.assert_not_awaited()
