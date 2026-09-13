@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import os
 import sys
 import tempfile
@@ -10,6 +11,9 @@ from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Ensure the monorepo /security package is importable both locally and inside Docker
+logger = logging.getLogger("api")
+
+
 def _find_security_dir() -> Path | None:
     here = Path(__file__).resolve()
     for ancestor in here.parents:
