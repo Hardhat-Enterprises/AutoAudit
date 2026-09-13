@@ -1026,10 +1026,17 @@
   "Date": "2025-09-03T09:32:02Z",
   "Message": "added code in collecter to extract compute networks config",
   "Tags": [],
- "Fingerprint": "4fe952c8849943e7b090e716c4639e6a84188496:engine/test-sa-key.json:private-key:5"
  },
- {
-  {
+{
+  "Fingerprint": "4fe952c8849943e7b090e716c4639e6a84188496:engine/test-sa-key.json:private-key:5"
+},
+{
+  "Fingerprint": "YOUR_FIRST_FINGERPRINT_STRING"
+},
+{
+  "Fingerprint": "YOUR_SECOND_FINGERPRINT_STRING"
+}
+]
     "Fingerprint": "4fe952c8849943e7b090e716c4639e6a84188496:engine/test-sa-key.json:private-key:5"
   },
   {
