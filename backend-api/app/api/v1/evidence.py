@@ -101,8 +101,18 @@ async def scan(
     """
    # --- Ingestion Security Pipeline Gate ---
     original_filename = getattr(evidence, "filename", "") or ""
-    file_ext = os.path.splitext(original_filename)[1]
-    max_bytes = 10 * 1024 * 1024  # 10 MB streaming limit
+    _, file_ext = os.path.splitext(original_filename)
+
+    # 1. Bound extension length & run extension gate before touching the filesystem
+    file_ext = file_ext.lower()
+    if len(file_ext) > 16 or not validate_file_extension(original_filename):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Security Violation: File extension is not permitted or malformed.",
+        )
+
+    # 2. Stream into tempfile safely with a bounded suffix
+    max_bytes = 10 * 1024 * 1024  # 10 MB limit
     total_bytes = 0
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_file:
@@ -131,7 +141,6 @@ async def scan(
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
-
     # Reset file position pointer for downstream validators and scanners
     await evidence.seek(0)
 
