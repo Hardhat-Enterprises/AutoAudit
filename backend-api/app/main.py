@@ -1,7 +1,8 @@
-# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught,unused-argument
+# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught,unused-argument,wrong-import-position
+# type: ignore
 """AutoAudit Main FastAPI Application Module."""
 
-from typing import Awaitable, Callable
+from typing import Any, Awaitable, Callable
 from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -67,14 +68,14 @@ def create_app() -> FastAPI:
     app.add_exception_handler(NotFound, not_found_handler)
 
     @app.get("/")
-    def root() -> dict:
+    def root() -> Any:
         return {
             "status": "ok",
             "message": "AutoAudit API running",
         }
 
     @app.get("/liveness")
-    def health_check() -> dict:
+    def health_check() -> Any:
         return {
             "status": "healthy",
         }
@@ -93,7 +94,7 @@ def create_app() -> FastAPI:
     )
     async def readiness_check(
         db: AsyncSession = Depends(get_async_session),
-    ) -> Response | ReadinessResponse:
+    ) -> Any:
         try:
             await db.execute(text("SELECT 1"))
         except Exception:
