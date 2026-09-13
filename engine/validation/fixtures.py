@@ -15,7 +15,15 @@ def load_fixture(path: Path) -> dict:
     except json.JSONDecodeError as exc:
         raise FixtureError(f"{path}: invalid JSON: {exc}") from exc
 
-    required_fields = {"control_id", "scenario", "input", "expected"}
+    required_fields = {
+        "framework",
+        "benchmark",
+        "version",
+        "control_id", 
+        "scenario", 
+        "input", 
+        "expected"
+    }
 
     missing = required_fields - fixture.keys()
 

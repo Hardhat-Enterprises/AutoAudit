@@ -1,4 +1,7 @@
 {
+  "framework": "essential-eight",
+  "benchmark": "asd-essential-eight",
+  "version": "v2025",
   "control_id": "E8-MFA-2.1",
   "scenario": "MFA enforced for all users and all cloud apps",
   "input": {

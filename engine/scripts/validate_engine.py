@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from validation.discovery import DiscoveryError, discover_controls
 from validation.fixtures import FixtureError, load_fixture
 from validation.opa_runner import OPAExecutionError, run_policy
 
@@ -14,25 +15,16 @@ FIXTURE_DIR = (
     / "e8_mfa_2_1"
 )
 
-POLICY_PATH = (
-    ENGINE_ROOT
-    / "policies"
-    / "essential-eight"
-    / "asd-essential-eight"
-    / "v2025"
-    / "e8_mfa_2_1_ca_enforcement.rego"
-)
-
-QUERY = (
-    "data.essential_eight.asd_essential_eight.v2025."
-    "control_e8_mfa_2_1.result"
-)
-
-
 def main() -> int:
     print("AutoAudit Compliance Engine Verification")
     print("=" * 40)
     print()
+
+    try: 
+        controls = discover_controls(ENGINE_ROOT / "policies")
+    except DiscoveryError as exc:
+        print(f"Discovery failed: {exc}")
+        return 1
 
     passed = 0
     failed = 0
@@ -41,9 +33,24 @@ def main() -> int:
         try:
             fixture = load_fixture(fixture_path)
 
+            key = (
+                fixture["framework"],
+                fixture["benchmark"],
+                fixture["version"],
+                fixture["control_id"],
+            )
+
+            if key not in controls:
+                raise DiscoveryError(
+                    "No policy metadata found for "
+                    f"{'/'.join(key)}"
+                )
+
+            control = controls[key]
+
             result = run_policy(
-                policy_path=POLICY_PATH,
-                query=QUERY,
+                policy_path=control.policy_path,
+                query=control.query,
                 input_data=fixture["input"],
             )
 
@@ -66,7 +73,7 @@ def main() -> int:
                 print(f"      Actual compliant:   {actual}")
                 failed += 1
 
-        except (FixtureError, OPAExecutionError) as exc:
+        except (FixtureError, DiscoveryError, OPAExecutionError) as exc:
             print(f"ERROR {fixture_path.name}")
             print(f"      {exc}")
             failed += 1
