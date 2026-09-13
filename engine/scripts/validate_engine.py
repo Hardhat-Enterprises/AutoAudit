@@ -7,6 +7,10 @@ from validation.fixtures import (
     load_fixture,
 )
 from validation.opa_runner import OPAExecutionError, run_policy
+from validation.validator import (
+    ResultContractError,
+    validate_result_contract,
+)
 
 
 ENGINE_ROOT = Path(__file__).resolve().parents[1]
@@ -63,8 +67,10 @@ def main() -> int:
                 input_data=fixture["input"],
             )
 
+            validate_result_contract(result)
+
             expected = fixture["expected"]["compliant"]
-            actual = result.get("compliant")
+            actual = result["compliant"]
 
             if actual == expected:
                 print(
@@ -82,7 +88,12 @@ def main() -> int:
                 print(f"      Actual compliant:   {actual}")
                 failed += 1
 
-        except (FixtureError, DiscoveryError, OPAExecutionError) as exc:
+        except (
+            FixtureError, 
+            DiscoveryError, 
+            OPAExecutionError,
+            ResultContractError,
+        ) as exc:
             print(f"ERROR {fixture_path.name}")
             print(f"      {exc}")
             failed += 1
