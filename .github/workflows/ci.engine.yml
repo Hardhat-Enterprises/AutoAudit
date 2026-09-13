@@ -61,6 +61,11 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # .secrets.baseline / .gitleaks-baseline.json are machine-generated security
+          # baselines whose hash-like fields (hashed_secret / Commit / Fingerprint) trip
+          # the OTHER tool's generic-secret heuristics; they're already gated by their
+          # own dedicated jobs (ci.detect-secrets.yml, ci.gitleaks.yml).
+          FILTER_REGEX_EXCLUDE: .*\.secrets\.baseline|.*gitleaks-baseline\.json
           VALIDATE_YAML: false
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_PYTHON_BLACK: false
