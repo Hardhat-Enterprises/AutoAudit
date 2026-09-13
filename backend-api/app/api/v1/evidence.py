@@ -1,15 +1,15 @@
 import hashlib
 import json
+import os
+import sys
+import tempfile
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, UploadFile, File, Form
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, status
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Ensure the monorepo /security package is importable both locally and inside Docker
-import sys
-from pathlib import Path
-
-
 def _find_security_dir() -> Path | None:
     here = Path(__file__).resolve()
     for ancestor in here.parents:
@@ -28,6 +28,7 @@ from security.evidence_ui import app as evidence_ui
 
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
+from app.ingestion_service import process_ingestion_security_pipeline
 from app.models.evidence_validation import EvidenceValidation
 from app.models.user import User
 from app.services.encryption import encrypt
@@ -45,7 +46,6 @@ async def strategies():
       - frontend/src/api/client.js -> getEvidenceStrategies()
       - GET /v1/evidence/strategies
     """
-    # Delegate to the existing evidence UI module (security/evidence_ui/app.py).
     return evidence_ui.api_strategies()
 
 
@@ -90,13 +90,30 @@ async def scan(
     Used by frontend/src/pages/Evidence.js via:
       - frontend/src/api/client.js -> scanEvidence()
       - POST /v1/evidence/scan (multipart/form-data)
-
-    Responsibilities in this layer:
-    - (Best-effort) extract text + run validator pre-pass
-    - Delegate the actual scanning to security/evidence_ui/app.py
-    - (Best-effort) store validator output in DB (evidence_validation table)
-    - Return the original scan response shape so the frontend can render it
     """
+    # --- Ingestion Security Pipeline Gate ---
+    original_filename = getattr(evidence, "filename", "") or ""
+    file_ext = os.path.splitext(original_filename)[1]
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_file:
+        while chunk := await evidence.read(4096):
+            temp_file.write(chunk)
+        temp_path = temp_file.name
+
+    try:
+        is_valid, _file_hash, error_msg = process_ingestion_security_pipeline(temp_path)
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_msg,
+            )
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+    # Reset file position pointer for downstream validators and scanners
+    await evidence.seek(0)
+
     # --- Validator pre-pass (best-effort) ---
     extracted_text = ""
     validator_payload: dict | None = None
@@ -121,16 +138,13 @@ async def scan(
         text_hash = None
 
     # Store only a capped excerpt of extracted text to reduce DB bloat.
-    # If encryption isn't configured, skip encryption but do not break scanning.
     try:
         if extracted_text:
             extracted_text_encrypted = encrypt(extracted_text[:20000])
     except Exception:
         extracted_text_encrypted = None
 
-    # delegate to existing implementation
-    # NOTE: evidence_ui.scan is the "real" scanner implementation.
-    # We keep this router thin and focused on integration concerns.
+    # Delegate to existing scanner implementation
     scan_result = await evidence_ui.scan(
         evidence=evidence,
         strategy_name=strategy_name,
@@ -156,12 +170,11 @@ async def scan(
             ok_value = bool(payload.get("ok")) if "ok" in payload else None
             if ok_value is True and validator_payload is not None:
                 payload["validator"] = validator_payload
-            # Return a new JSONResponse to include validator payload.
             scan_result = JSONResponse(payload, status_code=scan_result.status_code)
 
     # --- Persist validator output (best-effort; never blocks scan) ---
     try:
-        status = "success" if ok_value is True else "error"
+        scan_status = "success" if ok_value is True else "error"
         if validator_payload is not None:
             record = EvidenceValidation(
                 user_id=current_user.id,
@@ -170,7 +183,7 @@ async def scan(
                 text_hash=text_hash,
                 extracted_text_encrypted=extracted_text_encrypted,
                 matches_json=validator_payload,
-                status=status,
+                status=scan_status,
             )
             db.add(record)
             await db.commit()
@@ -187,14 +200,9 @@ async def scan(
 async def download_report(
     filename: str,
     current_user: User = Depends(get_current_user),
-    ):
+):
     """
     Backend API: download a generated report file.
     Requires authentication. Protected against path traversal.
-
-    The frontend links to this URL using:
-      - frontend/src/api/client.js -> getEvidenceReportUrl()
-      - GET /v1/evidence/reports/{filename}
     """
-    # Reuse existing download handler in security/evidence_ui/app.py
     return evidence_ui.download_report(filename)
