@@ -12,7 +12,7 @@ export const landingFeatures: LandingFeature[] = [
     icon: Link2,
     title: "Microsoft 365 Integration",
     description:
-      "Secure Graph API integration monitors MFA enforcement, audit logging, and conditional access policies in real-time.",
+      "Secure Graph API integration reads MFA enforcement, audit logging, and conditional access policies when you run a scan.",
   },
   {
     icon: ClipboardList,
@@ -24,7 +24,7 @@ export const landingFeatures: LandingFeature[] = [
     icon: Bolt,
     title: "Automated Scanning",
     description:
-      "Continuous monitoring of security settings, sharing permissions, and policies catches issues before they escalate.",
+      "On-demand scans of security settings, sharing permissions and policies, with every result carrying the evidence it was assessed from.",
   },
   {
     icon: BarChart3,
@@ -36,12 +36,12 @@ export const landingFeatures: LandingFeature[] = [
     icon: Shield,
     title: "Enterprise-Grade Security",
     description:
-      "Bank-level encrypted data handling with a zero-knowledge architecture keeps your sensitive data in your control.",
+      "Review supported Microsoft 365 settings and the evidence used to assess them.",
   },
   {
     icon: Rocket,
     title: "Fast & Automated",
     description:
-      "Automated workflows reduce manual checks and cut audit preparation time by 80%.",
+      "Automated workflows collect configuration evidence and evaluate it against the benchmark, so preparation is not a manual gathering exercise.",
   },
 ];
