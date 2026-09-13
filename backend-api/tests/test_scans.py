@@ -222,3 +222,77 @@ async def test_get_summary_results_delete_and_readiness(
     assert deleted.status_code == 204
     assert ready.status_code == 200
     assert ready.json()["ready"] is True
+
+@pytest.mark.asyncio
+async def test_list_scans_supports_filters_and_safe_pagination(
+    client_factory,
+    mock_db_session: AsyncMock,
+    viewer_user: User,
+) -> None:
+    """Scan history supports filtering and bounded pagination."""
+
+    scan = _scan(user_id=viewer_user.id)
+
+    mock_db_session.execute = AsyncMock(
+        return_value=_execute_returning(items=[scan])
+    )
+
+    async with client_factory(viewer_user) as client:
+        response = await client.get(
+            "/v1/scans/",
+            params={
+                "status": "completed",
+                "framework": "cis",
+                "benchmark": "microsoft-365-foundations",
+                "limit": 10,
+                "offset": 5,
+            },
+        )
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["status"] == "completed"
+
+    mock_db_session.execute.assert_awaited_once()
+
+    statement = mock_db_session.execute.await_args.args[0]
+
+    sql = str(
+        statement.compile(
+            compile_kwargs={"literal_binds": True}
+        )
+    )
+
+    assert "completed" in sql
+    assert "cis" in sql
+    assert "microsoft-365-foundations" in sql
+    assert "LIMIT 10" in sql
+    assert "OFFSET 5" in sql
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"status": "invalid"},
+        {"limit": 0},
+        {"limit": 101},
+        {"offset": -1},
+    ],
+)
+@pytest.mark.asyncio
+async def test_list_scans_rejects_invalid_filter_parameters(
+    client_factory,
+    mock_db_session: AsyncMock,
+    viewer_user: User,
+    params: dict,
+) -> None:
+    """Invalid scan filtering parameters return validation errors."""
+
+    async with client_factory(viewer_user) as client:
+        response = await client.get(
+            "/v1/scans/",
+            params=params,
+        )
+
+    assert response.status_code == 422
+    mock_db_session.execute.assert_not_awaited()
