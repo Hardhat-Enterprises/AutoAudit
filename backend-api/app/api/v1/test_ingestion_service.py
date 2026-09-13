@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long,wrong-import-position,missing-function-docstring
 # bandit: disable=B101,B108
+# type: ignore
 """Unit tests for backend security ingestion service."""
 
 import os
@@ -7,10 +8,9 @@ import sys
 import tempfile
 import pytest
 
-# Ensure Pytest resolves the app package from backend-api/
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.ingestion_service import (
+from app.ingestion_service import (  # noqa: E402
     check_file_size,
     generate_file_hash,
     process_ingestion_security_pipeline,
