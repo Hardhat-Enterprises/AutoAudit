@@ -21,6 +21,10 @@ def validate_file_extension(
             ".json",
             ".docx",
             ".xlsx",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".log",
         }
 
     _, file_extension = os.path.splitext(filepath)
