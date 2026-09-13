@@ -7,13 +7,13 @@ produces a Word document or PDF report.
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `report_service.py` | The report generator — this is the only file you need to import |
-| `AutoAudit_Report_Template.docx` | Word template with `{placeholder}` tokens |
-| `generate_report_from_scan.py` | Transforms live API scan results into the dataset schema and generates the report |
-| `run_test.py` | Smoke test runner |
-| `fake_dataset.json` | Sample dataset for local testing |
+| File                             | Purpose                                                                           |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| `report_service.py`              | The report generator — this is the only file you need to import                   |
+| `AutoAudit_Report_Template.docx` | Word template with `{placeholder}` tokens                                         |
+| `generate_report_from_scan.py`   | Transforms live API scan results into the dataset schema and generates the report |
+| `run_test.py`                    | Smoke test runner                                                                 |
+| `fake_dataset.json`              | Sample dataset for local testing                                                  |
 
 ---
 
@@ -144,18 +144,18 @@ python generate_report_from_scan.py \
 
 ### Options
 
-| Flag | Description |
-|------|-------------|
-| `--api-url URL` | AutoAudit API base URL (live mode) |
-| `--token TOKEN` | Bearer token, or set `AUTOAUDIT_TOKEN` env var |
-| `--scan-id ID` | Scan ID to fetch and report on (live mode) |
-| `--results FILE` | Path to scan results JSON (offline mode) |
-| `--meta FILE` | Path to scan metadata JSON (offline mode, optional) |
+| Flag              | Description                                                        |
+| ----------------- | ------------------------------------------------------------------ |
+| `--api-url URL`   | AutoAudit API base URL (live mode)                                 |
+| `--token TOKEN`   | Bearer token, or set `AUTOAUDIT_TOKEN` env var                     |
+| `--scan-id ID`    | Scan ID to fetch and report on (live mode)                         |
+| `--results FILE`  | Path to scan results JSON (offline mode)                           |
+| `--meta FILE`     | Path to scan metadata JSON (offline mode, optional)                |
 | `--template FILE` | Path to template .docx (default: `AutoAudit_Report_Template.docx`) |
-| `--output DIR` | Output directory (default: `reports_out`) |
-| `--pdf` | Also convert output to PDF |
-| `--keep-docx` | Keep .docx when `--pdf` is set |
-| `--save-dataset` | Save the intermediate transformed JSON for inspection |
+| `--output DIR`    | Output directory (default: `reports_out`)                          |
+| `--pdf`           | Also convert output to PDF                                         |
+| `--keep-docx`     | Keep .docx when `--pdf` is set                                     |
+| `--save-dataset`  | Save the intermediate transformed JSON for inspection              |
 
 ### Example output
 
@@ -183,11 +183,11 @@ The service reads these top-level keys:
 
 ```json
 {
-  "tenant":            {},
-  "summary":           {},
-  "controls":          [],
+  "tenant": {},
+  "summary": {},
+  "controls": [],
   "evidence_register": [],
-  "remediation_plan":  []
+  "remediation_plan": []
 }
 ```
 
@@ -201,20 +201,20 @@ all resolve to the same field.
 
 ```json
 {
-  "Tenant_Name":       "Contoso Ltd",
-  "Tenant_Domain":     "contoso.com",
-  "Assessor_Name":     "Jane Smith",
-  "Frameworks_Used":   "CIS M365 v3.0, ISO 27001:2022",
+  "Tenant_Name": "Contoso Ltd",
+  "Tenant_Domain": "contoso.com",
+  "Assessor_Name": "Jane Smith",
+  "Frameworks_Used": "CIS M365 v3.0, ISO 27001:2022",
   "Assessment_Period": "April 2025",
-  "Assessment_Date":   "30 April 2025",
-  "Classification":    "Confidential",
-  "Report_Version":    "1.0",
-  "Distribution":      "IT Security, Management",
-  "Prepared_By":       "Jane Smith",
-  "Reviewed_By":       "John Doe",
-  "Team_Function":     "GRC",
-  "Limitations":       "On-premises AD excluded",
-  "Scope_Owner":       "IT Security Manager"
+  "Assessment_Date": "30 April 2025",
+  "Classification": "Confidential",
+  "Report_Version": "1.0",
+  "Distribution": "IT Security, Management",
+  "Prepared_By": "Jane Smith",
+  "Reviewed_By": "John Doe",
+  "Team_Function": "GRC",
+  "Limitations": "On-premises AD excluded",
+  "Scope_Owner": "IT Security Manager"
 }
 ```
 
@@ -222,26 +222,26 @@ all resolve to the same field.
 
 ```json
 {
-  "Overall_Score":          "72%",
-  "Overall_Risk_Posture":   "Medium",
-  "Executive_Summary":      "...",
-  "Key_Recommendation":     "...",
-  "Total_Controls":         "42",
-  "Total_Pass":             "30",
-  "Total_Fail":             "12",
-  "Total_Critical":         "2",
-  "Total_High":             "4",
-  "Total_Medium":           "4",
-  "Total_Low":              "2",
-  "Top_Risk_1":             "DMARC not enforced",
-  "Top_Risk_2":             "MFA not required for all users",
-  "Top_Risk_3":             "Legacy auth not blocked",
-  "Strength_1":             "MFA enabled for admins",
-  "Strength_1_Evidence":    "AAD-MFA-001",
-  "Cat_1_Pass":             "8",
-  "Cat_1_Fail":             "2",
-  "Cat_1_Total":            "10",
-  "Cat_1_Comment":          "Email security needs attention"
+  "Overall_Score": "72%",
+  "Overall_Risk_Posture": "Medium",
+  "Executive_Summary": "...",
+  "Key_Recommendation": "...",
+  "Total_Controls": "42",
+  "Total_Pass": "30",
+  "Total_Fail": "12",
+  "Total_Critical": "2",
+  "Total_High": "4",
+  "Total_Medium": "4",
+  "Total_Low": "2",
+  "Top_Risk_1": "DMARC not enforced",
+  "Top_Risk_2": "MFA not required for all users",
+  "Top_Risk_3": "Legacy auth not blocked",
+  "Strength_1": "MFA enabled for admins",
+  "Strength_1_Evidence": "AAD-MFA-001",
+  "Cat_1_Pass": "8",
+  "Cat_1_Fail": "2",
+  "Cat_1_Total": "10",
+  "Cat_1_Comment": "Email security needs attention"
 }
 ```
 
@@ -256,32 +256,32 @@ each level is used.
 
 ```json
 {
-  "UniqueID":             "AAD-DMARC-001",
-  "Control_Name":         "Ensure DMARC policy is set to reject or quarantine",
-  "CIS_Section":          "1.1.14",
-  "ISO_Mapping":          "A.9.4.3",
-  "Strategy":             "Email / Exchange Online",
-  "Sub_Strategy":         "Email Authentication",
-  "Test_id":              "EXO-DMARC-001",
-  "Level":                "L1",
-  "Compliance_Status":    "Non-Compliant",
-  "Risk_Rating":          "High",
-  "Priority":             "Within 30 Days",
-  "Pass/Fail":            "FAIL",
-  "Description":          "DMARC must be configured with p=quarantine or p=reject.",
-  "Observations":         "The DMARC TXT record is configured with p=none.",
-  "Justification":        "DNS TXT lookup returned: v=DMARC1; p=none; ...",
-  "Evidence_Type":        "DNS TXT record",
-  "File Name":            "dns_dmarc_contoso_20250430.txt",
-  "Extract":              "v=DMARC1; p=none; rua=mailto:dmarc-reports@contoso.com",
-  "Confidence":           "High",
+  "UniqueID": "AAD-DMARC-001",
+  "Control_Name": "Ensure DMARC policy is set to reject or quarantine",
+  "CIS_Section": "1.1.14",
+  "ISO_Mapping": "A.9.4.3",
+  "Strategy": "Email / Exchange Online",
+  "Sub_Strategy": "Email Authentication",
+  "Test_id": "EXO-DMARC-001",
+  "Level": "L1",
+  "Compliance_Status": "Non-Compliant",
+  "Risk_Rating": "High",
+  "Priority": "Within 30 Days",
+  "Pass/Fail": "FAIL",
+  "Description": "DMARC must be configured with p=quarantine or p=reject.",
+  "Observations": "The DMARC TXT record is configured with p=none.",
+  "Justification": "DNS TXT lookup returned: v=DMARC1; p=none; ...",
+  "Evidence_Type": "DNS TXT record",
+  "File Name": "dns_dmarc_contoso_20250430.txt",
+  "Extract": "v=DMARC1; p=none; rua=mailto:dmarc-reports@contoso.com",
+  "Confidence": "High",
   "Evidence_Explanation": "p=none instructs mail servers to take no action on DMARC failures.",
-  "Impact":               "Threat actors can send spoofed emails from @contoso.com addresses.",
-  "Root_Cause":           "DMARC was deployed in monitoring mode and never moved to enforcement.",
-  "Remediation":          "1. Review DMARC aggregate reports. 2. Change p=none to p=quarantine.",
-  "Owner":                "IT Security",
-  "Target_Date":          "30 May 2025",
-  "Remediation_Status":   "Open"
+  "Impact": "Threat actors can send spoofed emails from @contoso.com addresses.",
+  "Root_Cause": "DMARC was deployed in monitoring mode and never moved to enforcement.",
+  "Remediation": "1. Review DMARC aggregate reports. 2. Change p=none to p=quarantine.",
+  "Owner": "IT Security",
+  "Target_Date": "30 May 2025",
+  "Remediation_Status": "Open"
 }
 ```
 
@@ -289,11 +289,11 @@ each level is used.
 
 ```json
 {
-  "Evidence_ID":          "EV-001",
+  "Evidence_ID": "EV-001",
   "Evidence_Description": "DNS TXT record for _dmarc.contoso.com",
-  "Evidence_Source":      "DNS lookup via MXToolbox",
-  "Mapped_Control":       "AAD-DMARC-001",
-  "Date_Captured":        "30 April 2025"
+  "Evidence_Source": "DNS lookup via MXToolbox",
+  "Mapped_Control": "AAD-DMARC-001",
+  "Date_Captured": "30 April 2025"
 }
 ```
 
@@ -301,10 +301,10 @@ each level is used.
 
 ```json
 {
-  "Remediation_Action":   "Update DMARC policy from p=none to p=quarantine",
-  "Owner":                "IT Security",
-  "Target_Date":          "30 May 2025",
-  "Status":               "Open"
+  "Remediation_Action": "Update DMARC policy from p=none to p=quarantine",
+  "Owner": "IT Security",
+  "Target_Date": "30 May 2025",
+  "Status": "Open"
 }
 ```
 
