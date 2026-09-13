@@ -95,14 +95,27 @@ async def scan(
       - frontend/src/api/client.js -> scanEvidence()
       - POST /v1/evidence/scan (multipart/form-data)
     """
-    # --- Ingestion Security Pipeline Gate ---
+   # --- Ingestion Security Pipeline Gate ---
     original_filename = getattr(evidence, "filename", "") or ""
     file_ext = os.path.splitext(original_filename)[1]
+    max_bytes = 10 * 1024 * 1024  # 10 MB streaming limit
+    total_bytes = 0
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_file:
-        while chunk := await evidence.read(4096):
-            temp_file.write(chunk)
         temp_path = temp_file.name
+        try:
+            while chunk := await evidence.read(4096):
+                total_bytes += len(chunk)
+                if total_bytes > max_bytes:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Security Violation: File size exceeds 10 MB limit.",
+                    )
+                temp_file.write(chunk)
+        except Exception:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            raise
 
     try:
         is_valid, _file_hash, error_msg = process_ingestion_security_pipeline(temp_path)
