@@ -1,3 +1,6 @@
+# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught
+"""AutoAudit Backend API Application Entry Point."""
+
 from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -17,7 +20,7 @@ settings = get_settings()
 
 
 class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
-    """Rejects payload requests exceeding max_upload_size (with buffer for multipart overhead) before FastAPI spools files."""
+    """Rejects payload requests exceeding max_upload_size before FastAPI spools files."""
 
     def __init__(self, app, max_upload_size: int = 12 * 1024 * 1024):
         super().__init__(app)
@@ -47,13 +50,9 @@ def create_app() -> FastAPI:
     setup_logging()
     app = FastAPI(title="AutoAudit API", version="0.1.0")
 
-    # LimitUploadSizeMiddleware runs early in ASGI pipeline (12 MB threshold covers 10 MB file + form metadata)
     app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=12 * 1024 * 1024)
-
-    # RequestLoggingMiddleware must be added before CORSMiddleware
     app.add_middleware(RequestLoggingMiddleware)
 
-    # Allow the configured frontend to make credentialed API requests.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[settings.FRONTEND_URL.rstrip("/")],
@@ -64,8 +63,6 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router, prefix=settings.API_PREFIX)
-
-    # Error handler
     app.add_exception_handler(NotFound, not_found_handler)
 
     @app.get("/")
