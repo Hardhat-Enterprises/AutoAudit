@@ -33,30 +33,20 @@ Grype unchanged.
 
 ## Testing
 
-Local validation passed: actionlint checked workflow syntax and expressions,
-configured inputs were verified against the v5 action definition, and Git diff
-whitespace checks passed. Grype has no diff. Live GitHub pass/fail and PR-comment
-behavior have not yet been tested; use the plan below. No vulnerable dependencies
-were added to the implementation branch.
+Local validation passed: actionlint checked workflow syntax and expressions, configured inputs were verified against the v5 action definition, and Git diff whitespace checks passed. Grype has no diff and was not modified.
 
-1. Open the implementation PR. Confirm the workflow starts and that a change
-   without new vulnerable dependencies passes. Save the run URL and job summary.
-2. Create a separate temporary branch from the implementation branch and open a
-   clearly labelled **DO NOT MERGE: dependency review test** PR targeting the
-   implementation branch (or main after the implementation is merged).
-3. Only on that temporary branch, add a dependency version covered by a current
-   high/critical GitHub advisory and update its manifest/lockfile consistently.
-   Record the advisory ID and affected version. Do not run application code with
-   the vulnerable dependency; disable install scripts when generating test data.
-4. Confirm the check fails with the package/advisory and a patched version where
-   available. On a same-repository PR, confirm the failure comment appears.
-5. Repeat with the dependency in development scope to verify that scope is gated.
-   Upgrade to a patched version and confirm the check passes on the next push.
-6. Use a separate temporary fork PR if available to verify that review and job
-   summaries work without a comment or comment-permission error. Obtain any
-   required workflow approval from a maintainer.
-7. Close all temporary test PRs without merging and delete their branches. Keep
-   the run URLs as evidence. Never merge vulnerable test changes.
+Live GitHub testing was completed after opening the implementation PR.
+
+Testing completed:
+1. The Dependency Review workflow passed on the clean implementation PR, confirming that the workflow can run successfully without blocking valid dependency/documentation workflow changes.
+2. A separate temporary **DO NOT MERGE** test PR was created in my fork to test failure behaviour.
+3. The temporary test PR introduced `lodash 4.17.18` only on the test branch.
+4. Dependency Review failed as expected and reported high severity vulnerabilities, affected package details, and patched versions.
+5. The vulnerable test PR was used only for validation and must not be merged.
+
+No vulnerable dependencies were added to the implementation branch.
+
+PR comment behaviour remains permission-dependent. The workflow is configured to post failure summaries where the GitHub token allows it, but contributors should rely on the Actions job summary and check logs as the consistent source of dependency review results.
 
 ## Limitations and maintainer setup
 
