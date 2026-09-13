@@ -1,6 +1,7 @@
-# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught
-"""AutoAudit Backend API Application Entry Point."""
+# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught,unused-argument
+"""AutoAudit Main FastAPI Application Module."""
 
+from typing import Awaitable, Callable
 from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -22,11 +23,11 @@ settings = get_settings()
 class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
     """Rejects payload requests exceeding max_upload_size before FastAPI spools files."""
 
-    def __init__(self, app, max_upload_size: int = 12 * 1024 * 1024):
+    def __init__(self, app: FastAPI, max_upload_size: int = 12 * 1024 * 1024) -> None:
         super().__init__(app)
-        self.max_upload_size = max_upload_size
+        self.max_upload_size: int = max_upload_size
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         if request.method == "POST" and "/evidence/scan" in request.url.path:
             content_length = request.headers.get("content-length")
             transfer_encoding = request.headers.get("transfer-encoding", "").lower()
@@ -66,14 +67,14 @@ def create_app() -> FastAPI:
     app.add_exception_handler(NotFound, not_found_handler)
 
     @app.get("/")
-    def root():
+    def root() -> dict:
         return {
             "status": "ok",
             "message": "AutoAudit API running",
         }
 
     @app.get("/liveness")
-    def health_check():
+    def health_check() -> dict:
         return {
             "status": "healthy",
         }
@@ -92,7 +93,7 @@ def create_app() -> FastAPI:
     )
     async def readiness_check(
         db: AsyncSession = Depends(get_async_session),
-    ):
+    ) -> Response | ReadinessResponse:
         try:
             await db.execute(text("SELECT 1"))
         except Exception:
