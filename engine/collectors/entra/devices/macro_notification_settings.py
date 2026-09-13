@@ -70,6 +70,7 @@ class MacroNotificationSettingsDataCollector(BaseDataCollector):
         policies = await client.get_all_pages(
             "/deviceManagement/configurationPolicies",
             beta=True,
+            params={"$expand": "assignments"},
         )
 
         findings: list[dict[str, Any]] = []
@@ -79,6 +80,9 @@ class MacroNotificationSettingsDataCollector(BaseDataCollector):
 
             if not policy_id:
                 continue
+
+            assignments = policy.get("assignments", [])
+            is_assigned = len(assignments) > 0
 
             settings = await client.get_all_pages(
                 f"/deviceManagement/configurationPolicies/{policy_id}/settings",
@@ -108,6 +112,8 @@ class MacroNotificationSettingsDataCollector(BaseDataCollector):
                     {
                         "application": _get_application(definition_id),
                         "state": _get_policy_state(choice_value),
+                        "assigned": is_assigned,
+                        "assignment_count": len(assignments),
                         "policy_name": policy.get("name"),
                         "policy_id": policy_id,
                         "setting_definition_id": definition_id,
@@ -121,4 +127,3 @@ class MacroNotificationSettingsDataCollector(BaseDataCollector):
             "source": "intune_settings_catalog",
             "total_policies_checked": len(policies),
         }
-    
