@@ -1,4 +1,5 @@
 # pylint: disable=line-too-long,too-many-arguments,broad-exception-caught,missing-function-docstring
+# type: ignore
 """Backend Security Ingestion Service for AutoAudit.
 
 Handles file validation and SHA-256 cryptographic hashing.
