@@ -1,4 +1,4 @@
-# pylint: disable=line-too-long,too-many-arguments,broad-exception-caught
+# pylint: disable=line-too-long,too-many-arguments,broad-exception-caught,missing-function-docstring
 """Backend Security Ingestion Service for AutoAudit.
 
 Handles file validation and SHA-256 cryptographic hashing.
@@ -6,10 +6,11 @@ Handles file validation and SHA-256 cryptographic hashing.
 
 import hashlib
 import os
-from typing import Optional, Tuple
+from typing import Optional, Set, Tuple
+
 
 def validate_file_extension(
-    filepath: str, allowed_extensions: Optional[set] = None
+    filepath: str, allowed_extensions: Optional[Set[str]] = None
 ) -> bool:
     """Checks if the file extension is permitted based on filename."""
     if allowed_extensions is None:
@@ -84,7 +85,7 @@ def generate_file_hash(filepath: str) -> Optional[str]:
 def process_ingestion_security_pipeline(
     filepath: str,
     max_size_mb: float = 10.0,
-    allowed_extensions: Optional[set] = None,
+    allowed_extensions: Optional[Set[str]] = None,
 ) -> Tuple[bool, Optional[str], str]:
     """Executes sequential security gates on incoming audit evidence files."""
     if not os.path.exists(filepath):
