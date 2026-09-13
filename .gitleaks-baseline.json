@@ -987,9 +987,7 @@
   "Fingerprint": "4d8e074a653a7cc7b749d11e6eb773e1123155d6:database/tprm_scanner/checkers/threat_intel_checker.py:generic-api-key:4"
  },
  {
-
- {
-    "RuleID": "rapidapi-access-token",
+ "RuleID": "rapidapi-access-token",
     "Description": "Uncovered a RapidAPI Access Token, which could lead to unauthorized access to various APIs and data services.",
     "StartLine": 16,
     "EndLine": 16,
