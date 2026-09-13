@@ -7,8 +7,17 @@ import sys
 import tempfile
 import pytest
 
-# Fix module resolution so Pytest locates the app package during CI/CD
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Dynamically locate the directory containing the 'app' module
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = current_dir
+while parent_dir and not os.path.exists(os.path.join(parent_dir, "app")):
+    new_parent = os.path.dirname(parent_dir)
+    if new_parent == parent_dir:
+        break
+    parent_dir = new_parent
+
+if parent_dir and parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 from app.ingestion_service import (
     check_file_size,
