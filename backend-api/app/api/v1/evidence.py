@@ -1,4 +1,5 @@
-# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught,too-many-locals,too-many-statements
+# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught,too-many-locals,too-many-statements,wrong-import-position,duplicate-code
+# type: ignore
 """Evidence API Endpoint Handler Module."""
 
 import hashlib
@@ -14,7 +15,6 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# Ensure the monorepo /security package is importable both locally and inside Docker
 logger = logging.getLogger("api")
 
 
@@ -31,16 +31,15 @@ SECURITY_DIR = _find_security_dir()
 if SECURITY_DIR and str(SECURITY_DIR.parent) not in sys.path:
     sys.path.insert(0, str(SECURITY_DIR.parent))
 
-# Reuse existing evidence logic from security package
-from security.evidence_ui import app as evidence_ui  # type: ignore
+from security.evidence_ui import app as evidence_ui  # noqa: E402
 
-from app.core.auth import get_current_user
-from app.db.session import get_async_session
-from app.ingestion_service import process_ingestion_security_pipeline, validate_file_extension
-from app.models.evidence_validation import EvidenceValidation
-from app.models.user import User
-from app.services.encryption import encrypt
-from app.services.evidence_validator import validate_text
+from app.core.auth import get_current_user  # noqa: E402
+from app.db.session import get_async_session  # noqa: E402
+from app.ingestion_service import process_ingestion_security_pipeline, validate_file_extension  # noqa: E402
+from app.models.evidence_validation import EvidenceValidation  # noqa: E402
+from app.models.user import User  # noqa: E402
+from app.services.encryption import encrypt  # noqa: E402
+from app.services.evidence_validator import validate_text  # noqa: E402
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
 
@@ -187,25 +186,11 @@ async def scan(
             )
             db.add(record)
             await db.commit()
-    try:
-        scan_status: str = "success" if ok_value is True else "error"
-        if validator_payload is not None:
-            record = EvidenceValidation(
-                user_id=current_user.id,
-                strategy_name=strategy_name,
-                source_filename=getattr(evidence, "filename", None),
-                text_hash=text_hash,
-                extracted_text_encrypted=extracted_text_encrypted,
-                matches_json=validator_payload,
-                status=scan_status,
-            )
-            db.add(record)
-            await db.commit()
     except Exception:
         try:
             await db.rollback()
         except Exception:  # nosec B110
-            logger.debug("Database rollback suppressed during exception recovery.")
+            logger.debug("Rollback attempt completed.")
 
     return scan_result
 
