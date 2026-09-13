@@ -1,2 +1,3 @@
-FIRST_FINGERPRINT_STRING
-SECOND_FINGERPRINT_STRING
+# Real fingerprint hashes from Gitleaks CI log
+<your-actual-fingerprint-hash-1>
+<your-actual-fingerprint-hash-2>
