@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'engine/**'
+      - "engine/**"
   pull_request:
     branches: [main]
     paths:
-      - 'engine/**'
+      - "engine/**"
   schedule:
-    - cron: '32 23 * * 6'
+    - cron: "32 23 * * 6"
 
 jobs:
   analyze:
@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['python']
+        language: ["python"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,7 +38,6 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{matrix.language}}"
-
 
   run-lint:
     name: Linting Code
@@ -75,7 +74,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install dependencies
         working-directory: engine
@@ -96,7 +95,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install engine dependencies
         working-directory: engine
