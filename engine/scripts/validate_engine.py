@@ -11,6 +11,7 @@ from validation.validator import (
     ResultContractError,
     validate_result_contract,
 )
+from validation.coverage import calculate_behavioral_coverage
 
 
 ENGINE_ROOT = Path(__file__).resolve().parents[1]
@@ -41,6 +42,7 @@ def main() -> int:
 
     passed = 0
     failed = 0
+    tested_control_keys = set()
 
     for fixture_path in fixture_paths:
         try:
@@ -58,6 +60,8 @@ def main() -> int:
                     "No policy metadata found for "
                     f"{'/'.join(key)}"
                 )
+
+            tested_control_keys.add(key)
 
             control = controls[key]
 
@@ -98,10 +102,22 @@ def main() -> int:
             print(f"      {exc}")
             failed += 1
 
+        coverage = calculate_behavioral_coverage(
+            controls,
+            tested_control_keys,
+        )
+
     print()
     print(f"Fixtures executed: {passed + failed}")
     print(f"Passed:            {passed}")
     print(f"Failed:            {failed}")
+    print()
+    print(f"Ready automated controls:   {coverage.ready_controls}")
+    print(f"Behaviour-tested controls:  {coverage.tested_controls}")
+    print(
+        f"Behavioural coverage:        "
+        f"{coverage.coverage_percent:.1f}%"
+    )
 
     return 1 if failed else 0
 

@@ -18,6 +18,8 @@ class ControlDefinition:
     package: str
     query: str
     metadata_path: Path
+    automation_status: str | None
+    benchmark_audit_type: str | None
 
 
 def _walk_objects(value):
@@ -123,6 +125,8 @@ def discover_controls(
                 package=package,
                 query=f"data.{package}.result",
                 metadata_path=metadata_path,
+                automation_status=item.get("automation_status"),
+                benchmark_audit_type=item.get("benchmark_audit_type"),
             )
 
     return controls
