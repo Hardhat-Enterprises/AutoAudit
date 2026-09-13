@@ -28,7 +28,7 @@ def create_app() -> FastAPI:
     # Expose X-Request-ID so the frontend can use it when reporting errors.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"],  # Explicit origin required when credentials are True
+        allow_origins=[settings.FRONTEND_URL.rstrip("/")],  # Explicit origin required when credentials are True
         allow_credentials=True,                   # Must be True to allow HttpOnly auth cookies
         allow_methods=["*"],
         allow_headers=["*"],
