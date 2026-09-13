@@ -1029,9 +1029,13 @@
  "Fingerprint": "4fe952c8849943e7b090e716c4639e6a84188496:engine/test-sa-key.json:private-key:5"
  },
  {
-  "Fingerprint": "PASTE_FIRST_FINGERPRINT_HERE"
- },
- {
-  "Fingerprint": "PASTE_SECOND_FINGERPRINT_HERE"
- }
+  {
+    "Fingerprint": "4fe952c8849943e7b090e716c4639e6a84188496:engine/test-sa-key.json:private-key:5"
+  },
+  {
+    "Fingerprint": "YOUR_FIRST_FINGERPRINT_STRING"
+  },
+  {
+    "Fingerprint": "YOUR_SECOND_FINGERPRINT_STRING"
+  }
 ]
