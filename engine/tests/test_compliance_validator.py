@@ -1,3 +1,6 @@
+"""Tests for compliance policy result contract validation."""
+
+# pylint: disable=missing-function-docstring
 import pytest
 
 from validation.validator import (

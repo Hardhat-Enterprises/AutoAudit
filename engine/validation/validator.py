@@ -1,3 +1,4 @@
+"""Validate the standard result contract returned by compliance policies."""
 class ResultContractError(Exception):
     """Raised when a policy result does not follow the expected contract."""
 

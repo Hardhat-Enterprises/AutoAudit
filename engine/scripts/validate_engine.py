@@ -1,8 +1,9 @@
+"""Run behavioural verification for AutoAudit compliance policies."""
 from pathlib import Path
 
 from validation.discovery import DiscoveryError, discover_controls
 from validation.fixtures import (
-    FixtureError, 
+    FixtureError,
     discover_fixtures,
     load_fixture,
 )
@@ -24,11 +25,13 @@ FIXTURES_ROOT = (
 )
 
 def main() -> int:
+    """Run compliance policy verification and print a summary. """
+
     print("AutoAudit Compliance Engine Verification")
     print("=" * 40)
     print()
 
-    try: 
+    try:
         controls = discover_controls(ENGINE_ROOT / "policies")
     except DiscoveryError as exc:
         print(f"Discovery failed: {exc}")
@@ -93,8 +96,8 @@ def main() -> int:
                 failed += 1
 
         except (
-            FixtureError, 
-            DiscoveryError, 
+            FixtureError,
+            DiscoveryError,
             OPAExecutionError,
             ResultContractError,
         ) as exc:

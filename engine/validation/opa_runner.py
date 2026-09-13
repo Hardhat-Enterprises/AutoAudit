@@ -1,3 +1,5 @@
+"""Execute AutoAudit Rego policies through the OPA command-line interface."""
+
 import json
 import shutil
 import subprocess
@@ -37,6 +39,7 @@ def run_policy(
         input=json.dumps(input_data),
         text=True,
         capture_output=True,
+        check=False,
     )
 
     if process.returncode != 0:

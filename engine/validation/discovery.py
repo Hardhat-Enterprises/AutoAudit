@@ -1,3 +1,5 @@
+"""Discover AutoAudit compliance controls and their associated Rego policies."""
+
 import json
 import re
 from dataclasses import dataclass
@@ -7,9 +9,11 @@ from pathlib import Path
 class DiscoveryError(Exception):
     """Raised when a compliance control or policy cannot be discovered."""
 
-
+#pylint: disable=too-many-instance-attributes
 @dataclass
 class ControlDefinition:
+    """Metadata required to loacte and execute a compliance control."""
+
     framework: str
     benchmark: str
     version: str
@@ -67,8 +71,7 @@ def discover_controls(
 
     for metadata_path in policies_root.rglob("metadata.json"):
 
-        relative_path = metadata_path.parent.relative_to(policies_root)
-        parts = relative_path.parts
+        parts = metadata_path.parent.relative_to(policies_root).parts
 
         if len(parts) < 3:
             raise DiscoveryError(

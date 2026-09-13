@@ -1,3 +1,4 @@
+"""Calculate behavioural verification coverage for AutoAudit controls."""
 from dataclasses import dataclass
 
 from validation.discovery import ControlDefinition
@@ -8,6 +9,8 @@ ControlKey = tuple[str, str, str, str]
 
 @dataclass
 class CoverageSummary:
+    """Summary of behavioural verification coverage. """
+
     ready_controls: int
     tested_controls: int
     coverage_percent: float

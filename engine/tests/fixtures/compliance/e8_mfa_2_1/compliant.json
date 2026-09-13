@@ -25,9 +25,7 @@
     ],
     "policies_requiring_mfa_for_privileged_roles": [],
     "privileged_roles_count": 3,
-    "all_mfa_policy_names": [
-      "Require MFA for all users"
-    ]
+    "all_mfa_policy_names": ["Require MFA for all users"]
   },
   "expected": {
     "compliant": true

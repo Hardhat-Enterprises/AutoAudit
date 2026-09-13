@@ -1,3 +1,5 @@
+"""Load, validate, and discover compliance verification fixtures."""
+
 import json
 from pathlib import Path
 
@@ -9,7 +11,7 @@ def discover_fixtures(fixtures_root: Path) -> list[Path]:
     """Discover all compliance verification fixtures recursively."""
 
     if not fixtures_root.is_dir():
-        raise FixtureErrror(
+        raise FixtureError(
             f"Fixture directory does not exist: {fixtures_root}"
         )
 
@@ -36,9 +38,9 @@ def load_fixture(path: Path) -> dict:
         "framework",
         "benchmark",
         "version",
-        "control_id", 
-        "scenario", 
-        "input", 
+        "control_id",
+        "scenario",
+        "input",
         "expected"
     }
 

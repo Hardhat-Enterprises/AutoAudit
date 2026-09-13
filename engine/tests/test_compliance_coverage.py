@@ -1,3 +1,6 @@
+"""Tests for behavioural coverage calculation."""
+
+# pylint: disable=missing-function-docstring
 from pathlib import Path
 
 import pytest

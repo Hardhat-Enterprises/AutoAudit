@@ -9,9 +9,7 @@
     "number_matching_enabled": true,
     "display_app_information_enabled": true,
     "display_location_information_enabled": true,
-    "include_targets": [
-      "all_users"
-    ],
+    "include_targets": ["all_users"],
     "exclude_targets": []
   },
   "expected": {
