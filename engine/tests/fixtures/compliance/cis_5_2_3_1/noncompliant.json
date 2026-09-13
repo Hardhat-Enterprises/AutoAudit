@@ -1,0 +1,20 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "5.2.3.1",
+  "scenario": "MFA number matching disabled",
+  "input": {
+    "state": "enabled",
+    "number_matching_enabled": false,
+    "display_app_information_enabled": true,
+    "display_location_information_enabled": true,
+    "include_targets": [
+      "all_users"
+    ],
+    "exclude_targets": []
+  },
+  "expected": {
+    "compliant": false
+  }
+}
