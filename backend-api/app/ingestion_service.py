@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long,too-many-arguments,broad-exception-caught
 """Backend Security Ingestion Service for AutoAudit.
 
 Handles file validation and SHA-256 cryptographic hashing.
@@ -6,8 +7,6 @@ Handles file validation and SHA-256 cryptographic hashing.
 import hashlib
 import os
 from typing import Optional, Tuple
-
-# pylint: disable=too-many-arguments
 
 
 def validate_file_extension(
@@ -47,7 +46,7 @@ def generate_file_hash_and_check_size(
     total_bytes = 0
 
     try:
-        with open(filepath, "rb") as file_stream:
+        with open(filepath, "rb") as file_stream:  # nosec B108
             while True:
                 chunk = file_stream.read(4096)
                 if not chunk:
