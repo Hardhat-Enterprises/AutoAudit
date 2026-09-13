@@ -43,19 +43,14 @@ Automated GCP compliance assessment tool built with FastAPI. This API provides a
 
 ## Running tests
 
-Install test tooling via the `dev` extra (not included in a plain `uv sync`):
+Install the `dev` extra, then run the pytest suite from `backend-api/`:
 
 ```bash
 uv sync --extra dev
-```
-
-Run the pytest suite from `backend-api/`:
-
-```bash
 uv run pytest tests/ -q
 ```
 
-Use `-v` instead of `-q` for more detail. CI runs the same install and test commands on changes under `backend-api/**`.
+Use `-v` instead of `-q` for more detail. CI runs the same command on changes under `backend-api/**`.
 
 ## 🐳 Docker Startup and Database Migrations
 
@@ -104,7 +99,7 @@ backend-api/
 │   │
 │   └── main.py               # FastAPI app
 │
-├── tests/                    # Pytest suite (fixtures + endpoint tests)
+├── tests/                    # Pytest suite (fixtures + endpoint smoke tests)
 │
 ├── .env.example              # Environment variables template
 ├── pyproject.toml            # Project dependencies & metadata
