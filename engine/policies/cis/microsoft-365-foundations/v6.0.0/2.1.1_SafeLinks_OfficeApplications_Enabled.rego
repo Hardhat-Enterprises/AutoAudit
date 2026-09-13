@@ -14,7 +14,7 @@
 #   benchmark: microsoft-365-foundations
 #   version: v6.0.0
 #   severity: high
-#   service: Exchange
+#   service: Defender
 #   requires_permissions:
 #   - Exchange.Manage
 
