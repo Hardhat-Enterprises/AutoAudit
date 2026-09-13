@@ -95,7 +95,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 
 | Control ID | Level | Title | CIS Suggested Audit Type | Our Audit Type | Collector ID | Status | Notes |
 |------------|-------|-------|--------------------------|----------------|--------------|--------|-------|
-| 3.1.1 | L1 | Ensure Microsoft 365 audit log search is Enabled | Automated | Automated | `exchange.organization.organization_config` | Implemented | Check AuditDisabled = False |
+| 3.1.1 | L1 | Ensure Microsoft 365 audit log search is Enabled | Automated | Automated | `exchange.organization.admin_audit_log_config` | Implemented | Check unified_audit_log_ingestion_enabled = True |
 | 3.2.1 | L1 | Ensure DLP policies are enabled | Automated | Blocked | | Pending | IPPSSession requires certificate auth |
 | 3.2.2 | L1 | Ensure DLP policies are enabled for Microsoft Teams | Automated | Blocked | | Pending | IPPSSession requires certificate auth |
 | 3.3.1 | L1 | Ensure Information Protection sensitivity label policies are published | Automated | Blocked | | Pending | IPPSSession requires certificate auth |
