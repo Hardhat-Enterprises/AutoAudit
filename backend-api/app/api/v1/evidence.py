@@ -187,11 +187,25 @@ async def scan(
             )
             db.add(record)
             await db.commit()
+    try:
+        scan_status: str = "success" if ok_value is True else "error"
+        if validator_payload is not None:
+            record = EvidenceValidation(
+                user_id=current_user.id,
+                strategy_name=strategy_name,
+                source_filename=getattr(evidence, "filename", None),
+                text_hash=text_hash,
+                extracted_text_encrypted=extracted_text_encrypted,
+                matches_json=validator_payload,
+                status=scan_status,
+            )
+            db.add(record)
+            await db.commit()
     except Exception:
         try:
             await db.rollback()
-        except Exception:
-            pass
+        except Exception:  # nosec B110
+            logger.debug("Database rollback suppressed during exception recovery.")
 
     return scan_result
 
