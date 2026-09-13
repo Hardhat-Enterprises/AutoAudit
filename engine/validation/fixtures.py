@@ -5,6 +5,23 @@ from pathlib import Path
 class FixtureError(Exception):
     """Raised when a compliance verification fixture is invalid."""
 
+def discover_fixtures(fixtures_root: Path) -> list[Path]:
+    """Discover all compliance verification fixtures recursively."""
+
+    if not fixtures_root.is_dir():
+        raise FixtureErrror(
+            f"Fixture directory does not exist: {fixtures_root}"
+        )
+
+    fixtures = sorted(fixtures_root.rglob("*.json"))
+
+    if not fixtures:
+        raise FixtureError(
+            f"No compliance fixtures found under: {fixtures_root}"
+        )
+
+    return fixtures
+
 
 def load_fixture(path: Path) -> dict:
     """Load and perform basic validation of a compliance fixture."""

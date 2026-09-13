@@ -1,18 +1,21 @@
 from pathlib import Path
 
 from validation.discovery import DiscoveryError, discover_controls
-from validation.fixtures import FixtureError, load_fixture
+from validation.fixtures import (
+    FixtureError, 
+    discover_fixtures,
+    load_fixture,
+)
 from validation.opa_runner import OPAExecutionError, run_policy
 
 
 ENGINE_ROOT = Path(__file__).resolve().parents[1]
 
-FIXTURE_DIR = (
+FIXTURES_ROOT = (
     ENGINE_ROOT
     / "tests"
     / "fixtures"
     / "compliance"
-    / "e8_mfa_2_1"
 )
 
 def main() -> int:
@@ -26,10 +29,16 @@ def main() -> int:
         print(f"Discovery failed: {exc}")
         return 1
 
+    try:
+        fixture_paths = discover_fixtures(FIXTURES_ROOT)
+    except FixtureError as exc:
+        print(f"Fixture discovery failed: {exc}")
+        return 1
+
     passed = 0
     failed = 0
 
-    for fixture_path in sorted(FIXTURE_DIR.glob("*.json")):
+    for fixture_path in fixture_paths:
         try:
             fixture = load_fixture(fixture_path)
 
