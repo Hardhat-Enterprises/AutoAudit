@@ -8,7 +8,6 @@ import hashlib
 import os
 from typing import Optional, Tuple
 
-
 def validate_file_extension(
     filepath: str, allowed_extensions: Optional[set] = None
 ) -> bool:
@@ -25,6 +24,15 @@ def validate_file_extension(
             ".jpg",
             ".jpeg",
             ".log",
+            ".tif",
+            ".tiff",
+            ".bmp",
+            ".webp",
+            ".reg",
+            ".ini",
+            ".xml",
+            ".htm",
+            ".html",
         }
 
     _, file_extension = os.path.splitext(filepath)
