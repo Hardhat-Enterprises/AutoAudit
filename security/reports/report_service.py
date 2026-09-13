@@ -914,119 +914,6 @@ _FINDING_ROW_LABELS = {
 }
 
 
-def _inject_evidence_extracts(doc: Document, controls: list) -> None:
-    """
-    For each finding table in section 6, inject a styled evidence extract
-    paragraph immediately after the table.
-
-    The paragraph shows:
-        Evidence file: <File_Name>
-        <Extract text>
-
-    Matching is done by order: finding tables appear in document order,
-    and failing controls are iterated in the same order they were placed
-    (Critical → High → Medium → Low, multiple per severity in insertion order).
-    Only controls with a non-empty Extract are injected.
-    """
-    # Build ordered list of failing controls that have extract data.
-    order_sev = ["Critical", "High", "Medium", "Low"]
-
-    def _sev_key(ctrl):
-        sv = _normalize_keys(ctrl).get("risk rating", "") or _normalize_keys(ctrl).get("severity", "")
-        return order_sev.index(sv) if sv in order_sev else 99
-
-    def _is_fail(ctrl):
-        n  = _normalize_keys(ctrl)
-        pf = _pick(n, "pass fail", "pass/fail", "passfail").upper()
-        if not pf:
-            status = _pick(n, "compliance status", "compliance_status").lower()
-            if "non" in status or "partial" in status:
-                return True
-            return False
-        return pf == "FAIL"
-
-    failing = sorted([c for c in controls if _is_fail(c)], key=_sev_key)
-
-    # Identify finding tables in document order.
-    finding_tables = []
-    for table in doc.tables:
-        left_labels = {row.cells[0].text.strip() for row in table.rows if row.cells}
-        if len(left_labels & _FINDING_ROW_LABELS) >= 4:
-            finding_tables.append(table)
-
-    for table, ctrl in zip(finding_tables, failing):
-        n        = _normalize_keys(ctrl)
-        extract  = _pick(n, "extract", "evidence extract").strip()
-        filename = _pick(n, "file name", "file_name", "filename").strip()
-
-        if not extract and not filename:
-            continue
-
-        # Build the paragraph XML inline.
-        # Style: 9pt Times New Roman, grey label + monospace-ish extract body.
-        label_line = f"Evidence file: {filename}" if filename else ""
-        body_line  = extract
-
-        def _make_run(text: str, bold: bool = False, colour: str = "595959") -> "lxml.etree._Element":
-            r = OxmlElement("w:r")
-            rPr = OxmlElement("w:rPr")
-            fonts = OxmlElement("w:rFonts")
-            fonts.set(qn("w:ascii"), "Courier New")
-            fonts.set(qn("w:hAnsi"), "Courier New")
-            fonts.set(qn("w:cs"),    "Courier New")
-            rPr.append(fonts)
-            if bold:
-                rPr.append(OxmlElement("w:b"))
-            col = OxmlElement("w:color")
-            col.set(qn("w:val"), colour)
-            rPr.append(col)
-            sz = OxmlElement("w:sz")
-            sz.set(qn("w:val"), "18")   # 9pt
-            rPr.append(sz)
-            szCs = OxmlElement("w:szCs")
-            szCs.set(qn("w:val"), "18")
-            rPr.append(szCs)
-            r.append(rPr)
-            t = OxmlElement("w:t")
-            t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
-            t.text = _sanitise(text)
-            r.append(t)
-            return r
-
-        def _make_para(*runs) -> "lxml.etree._Element":
-            p = OxmlElement("w:p")
-            pPr = OxmlElement("w:pPr")
-            spacing = OxmlElement("w:spacing")
-            spacing.set(qn("w:before"), "40")
-            spacing.set(qn("w:after"),  "40")
-            spacing.set(qn("w:line"),   "240")
-            spacing.set(qn("w:lineRule"), "auto")
-            pPr.append(spacing)
-            ind = OxmlElement("w:ind")
-            ind.set(qn("w:left"), "360")
-            pPr.append(ind)
-            shd = OxmlElement("w:shd")
-            shd.set(qn("w:val"),   "clear")
-            shd.set(qn("w:color"), "auto")
-            shd.set(qn("w:fill"),  "F2F2F2")
-            pPr.append(shd)
-            p.append(pPr)
-            for run in runs:
-                p.append(run)
-            return p
-
-        paras = []
-        if label_line:
-            paras.append(_make_para(_make_run(label_line, bold=True, colour="404040")))
-        if body_line:
-            paras.append(_make_para(_make_run(body_line, colour="595959")))
-
-        # Insert paragraphs immediately after the table element.
-        tbl_el = table._tbl
-        for para in reversed(paras):
-            tbl_el.addnext(para)
-
-
 def _fix_finding_table_widths(doc: Document) -> None:
     for table in doc.tables:
         left_labels = {row.cells[0].text.strip() for row in table.rows if row.cells}
@@ -1050,23 +937,25 @@ def _fix_table_pagination(doc: Document) -> None:
     so none of this can be baked into the static template — it has to run
     as a post-processing pass after the tables are fully populated.
 
-    Three properties, applied per row:
+    Two properties, applied per row, plus one on the header row only:
       - cantSplit:  a single row's content can't be torn across a page break
       - tblHeader:  the header row repeats at the top of a continuation page
-      - keepNext (on every row but the last): keeps consecutive rows glued
-        together, so a table can't start with only its header (or one row)
-        stranded at the bottom of a page while the rest spills onto the next
+      - keepNext (header row only, to row 1): keeps the header from being
+        stranded alone at the bottom of a page. Deliberately NOT applied to
+        every row — chaining every row together turns the whole table into
+        one unsplittable block, which for large tables forces Word to shove
+        the entire table onto the next page instead of starting it right
+        under its heading, leaving a mostly-blank page behind.
     """
     for table in doc.tables:
         rows = table.rows
-        last_index = len(rows) - 1
         for i, row in enumerate(rows):
             trPr = row._tr.get_or_add_trPr()
             if trPr.find(qn("w:cantSplit")) is None:
                 trPr.append(OxmlElement("w:cantSplit"))
-            if i == 0 and trPr.find(qn("w:tblHeader")) is None:
-                trPr.append(OxmlElement("w:tblHeader"))
-            if i != last_index:
+            if i == 0:
+                if trPr.find(qn("w:tblHeader")) is None:
+                    trPr.append(OxmlElement("w:tblHeader"))
                 for cell in row.cells:
                     for para in cell.paragraphs:
                         para.paragraph_format.keep_with_next = True
@@ -1283,7 +1172,6 @@ def _render_report_doc(
     _substitute_evidence_table(doc, data.get("evidence_register", [])[:10], ev_table)
     _substitute_global(doc, global_mapping)
     _remove_markers(doc)
-    _inject_evidence_extracts(doc, all_controls)
     _fix_finding_table_widths(doc)
     _fix_table_pagination(doc)
     _keep_tables_with_heading(doc)
