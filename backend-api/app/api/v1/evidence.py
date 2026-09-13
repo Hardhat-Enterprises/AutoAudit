@@ -193,7 +193,7 @@ async def scan(
             logger.debug("Rollback attempt completed.")
 
     return scan_result
-
+    
 
 @router.get("/reports/{filename}")
 async def download_report(
