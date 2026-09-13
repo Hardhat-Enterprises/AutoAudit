@@ -1,10 +1,10 @@
 # METADATA
 # title: Ensure Exchange Online Spam Policies are set to notify administrators
 # description: |
-#   In Microsoft 365 organizations with mailboxes in Exchange Online or 
+#   In Microsoft 365 organizations with mailboxes in Exchange Online or
 #   standalone Exchange Online Protection organizations without Exchange
 #   Online mailboxes, email messages are automatically protected against spam (junk email) by EOP.
-#  
+#
 # related_resources:
 # - ref: https://www.cisecurity.org/benchmark/microsoft_365
 #   description: CIS Microsoft 365 Foundations Benchmark
@@ -20,82 +20,69 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_2_1_6
 
-default result := {"compliant": false, "message": "Evaluation failed"}
+import rego.v1
+
+default assessed_result := {"compliant": null, "message": "Evaluation failed"}
 
 bcc_suspicious_outbound_mail := object.get(
-    input,
-    "bcc_suspicious_outbound_mail",
-    object.get(object.get(input, "default_policy", {}), "BccSuspiciousOutboundMail", null)
+	input,
+	"bcc_suspicious_outbound_mail",
+	object.get(object.get(input, "default_policy", {}), "BccSuspiciousOutboundMail", null),
 )
 
 notify_outbound_spam := object.get(
-    input,
-    "notify_outbound_spam",
-    object.get(object.get(input, "default_policy", {}), "NotifyOutboundSpam", null)
+	input,
+	"notify_outbound_spam",
+	object.get(object.get(input, "default_policy", {}), "NotifyOutboundSpam", null),
 )
 
 bcc_additional_recipients := object.get(
-    object.get(input, "default_policy", {}),
-    "BccSuspiciousOutboundAdditionalRecipients",
-    null
+	object.get(input, "default_policy", {}),
+	"BccSuspiciousOutboundAdditionalRecipients",
+	null,
 )
 
 notify_outbound_spam_recipients := object.get(
-    object.get(input, "default_policy", {}),
-    "NotifyOutboundSpamRecipients",
-    null
+	object.get(input, "default_policy", {}),
+	"NotifyOutboundSpamRecipients",
+	null,
 )
 
 bcc_recipients_count := count(bcc_additional_recipients) if {
-    bcc_additional_recipients != null
+	bcc_additional_recipients != null
 } else := 0
 
 notify_recipients_count := count(notify_outbound_spam_recipients) if {
-    notify_outbound_spam_recipients != null
+	notify_outbound_spam_recipients != null
 } else := 0
 
-outbound_spam_monitoring_enabled := true if {
-    bcc_suspicious_outbound_mail == true
-    notify_outbound_spam == true
-    bcc_additional_recipients != null
-    notify_outbound_spam_recipients != null
-    bcc_recipients_count > 0
-    notify_recipients_count > 0
+outbound_spam_monitoring_enabled if monitoring_enabled
+
+else := false
+
+monitoring_enabled if {
+	every address in bcc_additional_recipients { trim_space(address) != "" }
+	every address in notify_outbound_spam_recipients { trim_space(address) != "" }
+	bcc_suspicious_outbound_mail == true
+	notify_outbound_spam == true
+	bcc_recipients_count > 0
+	notify_recipients_count > 0
 }
 
-outbound_spam_monitoring_enabled := false if {
-    bcc_suspicious_outbound_mail != true
-} else := false if {
-    notify_outbound_spam != true
-} else := false if {
-    bcc_additional_recipients != null
-    bcc_recipients_count == 0
-} else := false if {
-    notify_outbound_spam_recipients != null
-    notify_recipients_count == 0
-}
+assessed_result := output if {
+	compliant := outbound_spam_monitoring_enabled == true
 
-outbound_spam_monitoring_enabled := null if {
-    bcc_suspicious_outbound_mail == null
-    notify_outbound_spam == null
-    bcc_additional_recipients == null
-    notify_outbound_spam_recipients == null
-}
-
-result := output if {
-    compliant := outbound_spam_monitoring_enabled == true
-
-    output := {
-        "compliant": compliant,
-        "message": generate_message(outbound_spam_monitoring_enabled),
-        "affected_resources": generate_affected_resources(outbound_spam_monitoring_enabled),
-        "details": {
-            "bcc_suspicious_outbound_mail": bcc_suspicious_outbound_mail,
-            "bcc_additional_recipients": bcc_additional_recipients,
-            "notify_outbound_spam": notify_outbound_spam,
-            "notify_outbound_spam_recipients": notify_outbound_spam_recipients
-        }
-    }
+	output := {
+		"compliant": compliant,
+		"message": generate_message(outbound_spam_monitoring_enabled),
+		"affected_resources": generate_affected_resources(outbound_spam_monitoring_enabled),
+		"details": {
+			"bcc_suspicious_outbound_mail": bcc_suspicious_outbound_mail,
+			"bcc_additional_recipients": bcc_additional_recipients,
+			"notify_outbound_spam": notify_outbound_spam,
+			"notify_outbound_spam_recipients": notify_outbound_spam_recipients,
+		},
+	}
 }
 
 generate_message(true) := "Outbound spam Bcc and notification settings are enabled and recipients are configured"
@@ -105,3 +92,34 @@ generate_message(null) := "Unable to determine outbound spam Bcc or notification
 generate_affected_resources(true) := []
 generate_affected_resources(false) := ["HostedOutboundSpamFilterPolicy"]
 generate_affected_resources(null) := ["HostedOutboundSpamFilterPolicy status unknown"]
+
+# Typed, complete collector evidence is required before an assessed result is emitted.
+# Kept in this module so captured-source evaluation remains self-contained.
+default result := {
+	"compliant": null,
+	"message": "Unable to evaluate: required evidence is missing, malformed, or incomplete",
+	"affected_resources": [],
+	"details": {"evaluation_status": "indeterminate"},
+}
+
+result := assessed_result if evidence_complete
+
+evidence_complete if {
+	is_object(input)
+	not evidence_error
+	is_boolean(bcc_suspicious_outbound_mail)
+	is_boolean(notify_outbound_spam)
+	is_array(bcc_additional_recipients)
+	every value in bcc_additional_recipients { is_string(value) }
+	is_array(notify_outbound_spam_recipients)
+	every value in notify_outbound_spam_recipients { is_string(value) }
+}
+
+# A nested collector error invalidates a partial response as well as a top-level error.
+evidence_error if {
+	some path, value
+	walk(input, [path, value])
+	count(path) > 0
+	path[count(path) - 1] in {"collector_error", "error"}
+	value != null
+}
