@@ -2,15 +2,25 @@
 
 ## Overview
 
-The Compliance Engine Verification Framework provides reusable behavioural testing for AutoAudit's active compliance policies.
+The Compliance Engine Verification Framework provides reusable behavioural
+testing for AutoAudit's active compliance policies.
 
-AutoAudit already includes structural validation that checks whether policy metadata, collectors, Rego files, package declarations, and control IDs are wired together correctly. Structural correctness, however, does not guarantee that a policy will make the correct compliance decision when given known input data.
+AutoAudit already includes structural validation that checks whether policy
+metadata, collectors, Rego files, package declarations, and control IDs are
+wired together correctly. Structural correctness, however, does not guarantee
+that a policy will make the correct compliance decision when given known input
+data.
 
-This framework complements the existing structural tests by executing real Rego policies through Open Policy Agent (OPA) against predefined compliant and non-compliant fixtures. It then validates the returned result structure, compares the actual compliance decision with the expected outcome, and reports behavioural coverage across ready automated controls.
+This framework complements the existing structural tests by executing real Rego
+policies through Open Policy Agent (OPA) against predefined compliant and
+non-compliant fixtures. It then validates the returned result structure,
+compares the actual compliance decision with the expected outcome, and reports
+behavioural coverage across ready automated controls.
 
 The core purpose of the framework is:
 
-> Verify that AutoAudit compliance policies do not only exist and connect correctly, but also behave correctly.
+> Verify that AutoAudit compliance policies do not only exist and connect
+> correctly, but also behave correctly.
 
 ---
 
@@ -26,7 +36,8 @@ For example, a policy could:
 - reference a registered collector;
 - still return `compliant: true` for a configuration that should fail.
 
-The verification framework addresses this gap by testing policy behaviour against known scenarios.
+The verification framework addresses this gap by testing policy behaviour
+against known scenarios.
 
 A fixture defines:
 
@@ -34,7 +45,8 @@ A fixture defines:
 2. a known input configuration;
 3. the expected compliance decision.
 
-The framework then executes the real AutoAudit policy and compares the returned result against the expected outcome.
+The framework then executes the real AutoAudit policy and compares the returned
+result against the expected outcome.
 
 ---
 
@@ -109,7 +121,8 @@ The framework searches metadata entries containing both:
 
 The associated Rego file is then located relative to the metadata file.
 
-The framework also reads the Rego package declaration directly from the policy file and constructs the OPA result query automatically.
+The framework also reads the Rego package declaration directly from the policy
+file and constructs the OPA result query automatically.
 
 For example:
 
@@ -123,13 +136,16 @@ becomes:
 data.essential_eight.asd_essential_eight.v2025.control_e8_mfa_2_1.result
 ```
 
-This means contributors do not need to manually define policy paths or OPA queries in the verification runner.
+This means contributors do not need to manually define policy paths or OPA
+queries in the verification runner.
 
 ### Fully-qualified control identity
 
 Control IDs are not globally unique across AutoAudit.
 
-For example, the control ID `1.1.1` exists in multiple CIS Microsoft 365 benchmark versions. Because of this, controls are identified using the following fully-qualified key:
+For example, the control ID `1.1.1` exists in multiple CIS Microsoft 365
+benchmark versions. Because of this, controls are identified using the following
+fully-qualified key:
 
 ```text
 framework + benchmark + version + control_id
@@ -147,7 +163,8 @@ is treated as a different control from:
 cis / microsoft-365-foundations / v3.1.0 / 1.1.1
 ```
 
-This prevents fixtures from being matched to a policy from the wrong framework or benchmark version.
+This prevents fixtures from being matched to a policy from the wrong framework
+or benchmark version.
 
 ---
 
@@ -159,7 +176,8 @@ Behavioural fixtures are stored under:
 engine/tests/fixtures/compliance/
 ```
 
-The framework discovers fixture files recursively, so new controls can be added without modifying the runner.
+The framework discovers fixture files recursively, so new controls can be added
+without modifying the runner.
 
 A fixture uses the following structure:
 
@@ -209,13 +227,15 @@ or:
 }
 ```
 
-The `input` object should represent the data structure expected by the real Rego policy.
+The `input` object should represent the data structure expected by the real Rego
+policy.
 
 ---
 
 ## Adding Behavioural Verification for a New Control
 
-In most cases, contributors should not need to modify the Python verification framework.
+In most cases, contributors should not need to modify the Python verification
+framework.
 
 ### 1. Locate the control metadata
 
@@ -273,7 +293,8 @@ From `engine/`:
 python -m scripts.validate_engine
 ```
 
-If the fixture metadata matches an existing policy-backed control, the framework will automatically:
+If the fixture metadata matches an existing policy-backed control, the framework
+will automatically:
 
 - discover the fixture;
 - find the control metadata;
@@ -293,7 +314,8 @@ No control-specific Python changes should be required.
 
 The framework executes the real Rego policy through the OPA CLI.
 
-The fixture `input` object is passed directly to OPA. The runner then extracts the evaluated `result` object returned by the policy.
+The fixture `input` object is passed directly to OPA. The runner then extracts
+the evaluated `result` object returned by the policy.
 
 Conceptually:
 
@@ -307,7 +329,8 @@ real AutoAudit Rego policy
 policy result
 ```
 
-If OPA cannot be found, policy execution fails, or OPA returns an unexpected result structure, the framework reports an error and exits unsuccessfully.
+If OPA cannot be found, policy execution fails, or OPA returns an unexpected
+result structure, the framework reports an error and exits unsuccessfully.
 
 OPA must therefore be available on the developer or CI environment `PATH`.
 
@@ -315,7 +338,8 @@ OPA must therefore be available on the developer or CI environment `PATH`.
 
 ## Result Contract Validation
 
-Before comparing the expected compliance decision, the framework validates that the policy result follows the standard AutoAudit result contract.
+Before comparing the expected compliance decision, the framework validates that
+the policy result follows the standard AutoAudit result contract.
 
 The required result structure is:
 
@@ -353,7 +377,8 @@ Actual:   compliant = true
 
 ### Contract regression
 
-The policy returns a malformed result that may not be safely consumed by the rest of AutoAudit.
+The policy returns a malformed result that may not be safely consumed by the
+rest of AutoAudit.
 
 Example:
 
@@ -364,13 +389,15 @@ Example:
 }
 ```
 
-Even if the logical decision is correct, this does not satisfy the expected AutoAudit result contract.
+Even if the logical decision is correct, this does not satisfy the expected
+AutoAudit result contract.
 
 ---
 
 ## Behavioural Coverage
 
-The framework reports the proportion of ready automated policy-backed controls that currently have behavioural verification fixtures.
+The framework reports the proportion of ready automated policy-backed controls
+that currently have behavioural verification fixtures.
 
 A control is included in the coverage denominator when:
 
@@ -380,9 +407,12 @@ AND
 benchmark_audit_type == "Automated"
 ```
 
-A control counts as behaviour-tested when at least one valid fixture maps to its fully-qualified control identity.
+A control counts as behaviour-tested when at least one valid fixture maps to its
+fully-qualified control identity.
 
-A failing fixture still counts as behavioural coverage. Coverage measures whether verification exists, not whether the policy currently passes its verification.
+A failing fixture still counts as behavioural coverage. Coverage measures
+whether verification exists, not whether the policy currently passes its
+verification.
 
 At the time of writing, the framework reports:
 
@@ -431,7 +461,8 @@ number matching disabled → non-compliant
 
 ### Essential Eight E8-MFA-2.1 — MFA enforcement
 
-The policy checks whether qualifying Conditional Access policies enforce MFA for privileged users or all users across Microsoft 365 services.
+The policy checks whether qualifying Conditional Access policies enforce MFA for
+privileged users or all users across Microsoft 365 services.
 
 Current fixtures verify:
 
@@ -444,7 +475,8 @@ no MFA policies present       → non-compliant
 
 ## Running Locally
 
-From the `engine/` directory, activate the project virtual environment and install development dependencies:
+From the `engine/` directory, activate the project virtual environment and
+install development dependencies:
 
 ```bash
 source .venv/bin/activate
@@ -478,13 +510,21 @@ pytest --tb=line tests/test_wiring.py
 Run static type checking:
 
 ```bash
-mypy   validation   scripts/validate_engine.py   tests/test_compliance_validator.py   tests/test_compliance_coverage.py
+mypy \
+  validation \
+  scripts/validate_engine.py \
+  tests/test_compliance_validator.py \
+  tests/test_compliance_coverage.py
 ```
 
 Run Pylint:
 
 ```bash
-pylint   validation   scripts/validate_engine.py   tests/test_compliance_validator.py   tests/test_compliance_coverage.py
+pylint \
+  validation \
+  scripts/validate_engine.py \
+  tests/test_compliance_validator.py \
+  tests/test_compliance_coverage.py
 ```
 
 ---
@@ -514,7 +554,8 @@ Behaviour-tested controls:  3
 Behavioural coverage:        3.8%
 ```
 
-If a fixture does not match the real policy result, the runner reports the difference and exits with a non-zero status.
+If a fixture does not match the real policy result, the runner reports the
+difference and exits with a non-zero status.
 
 Example:
 
@@ -530,7 +571,8 @@ This allows the same runner to act as a CI gate.
 
 ## CI Integration
 
-The verification framework is integrated into the Engine GitHub Actions workflow as a dedicated compliance verification job.
+The verification framework is integrated into the Engine GitHub Actions workflow
+as a dedicated compliance verification job.
 
 The CI job:
 
@@ -541,7 +583,8 @@ The CI job:
 5. runs framework unit tests;
 6. runs the behavioural verification framework.
 
-Because `validate_engine.py` returns a non-zero exit status when verification fails, incorrect policy behaviour causes the CI job to fail.
+Because `validate_engine.py` returns a non-zero exit status when verification
+fails, incorrect policy behaviour causes the CI job to fail.
 
 This allows behavioural regressions to be detected before changes are merged.
 
@@ -572,7 +615,8 @@ The existing structural checks validate relationships such as:
 
 The behavioural framework answers a different question:
 
-> Given known input data, does the policy make the correct compliance decision and return that decision in the expected result structure?
+> Given known input data, does the policy make the correct compliance decision
+> and return that decision in the expected result structure?
 
 Both layers are required for stronger confidence in the compliance engine.
 
@@ -582,14 +626,18 @@ Both layers are required for stronger confidence in the compliance engine.
 
 The framework currently has several intentional limitations:
 
-- Behavioural coverage is still low relative to the full set of ready automated controls.
+- Behavioural coverage is still low relative to the full set of ready automated
+  controls.
 - Fixtures must currently be authored manually.
 - Coverage is reported at control level rather than scenario or branch level.
-- The result contract validates the common top-level fields but does not enforce control-specific `details` schemas.
-- The framework executes policies through the local OPA CLI rather than the runtime OPA REST service.
+- The result contract validates the common top-level fields but does not enforce
+  control-specific `details` schemas.
+- The framework executes policies through the local OPA CLI rather than the
+  runtime OPA REST service.
 - There is currently no dashboard or persistent historical coverage tracking.
 
-These limitations do not prevent the framework from being used. They represent opportunities for future contributors to extend the verification capability.
+These limitations do not prevent the framework from being used. They represent
+opportunities for future contributors to extend the verification capability.
 
 ---
 
@@ -602,12 +650,15 @@ Future contributors may extend the framework by:
 - defining optional control-specific result schemas;
 - producing JSON or Markdown verification reports as CI artifacts;
 - tracking behavioural coverage changes between pull requests;
-- enforcing a minimum behavioural coverage threshold once sufficient baseline coverage exists;
+- enforcing a minimum behavioural coverage threshold once sufficient baseline
+  coverage exists;
 - adding fixture schema validation;
 - adding changed-policy-aware execution for faster CI;
 - expanding verification to additional benchmarks as AutoAudit grows.
 
-The preferred expansion path is to increase coverage through fixtures without changing the underlying runner unless a genuine new framework requirement is identified.
+The preferred expansion path is to increase coverage through fixtures without
+changing the underlying runner unless a genuine new framework requirement is
+identified.
 
 ---
 
@@ -619,34 +670,45 @@ The framework was built around the following principles:
    The runner should not contain control-specific policy paths or queries.
 
 2. **Metadata-driven discovery**  
-   Existing AutoAudit metadata should remain the source of truth for locating policies.
+   Existing AutoAudit metadata should remain the source of truth for locating
+   policies.
 
 3. **Version-aware identity**  
-   Controls are identified by framework, benchmark, version, and control ID rather than control ID alone.
+   Controls are identified by framework, benchmark, version, and control ID
+   rather than control ID alone.
 
 4. **Fixture-driven extensibility**  
-   Adding verification for a new control should normally require only new fixture data.
+   Adding verification for a new control should normally require only new
+   fixture data.
 
 5. **Real policy execution**  
-   Tests execute the actual Rego policy through OPA instead of recreating policy logic in Python.
+   Tests execute the actual Rego policy through OPA instead of recreating policy
+   logic in Python.
 
 6. **Separation of structure and behaviour**  
-   Existing wiring tests remain responsible for structural consistency, while this framework validates behavioural correctness.
+   Existing wiring tests remain responsible for structural consistency, while
+   this framework validates behavioural correctness.
 
 7. **CI-enforceable failures**  
-   Verification failures must produce a non-zero exit code so policy regressions can be blocked in CI.
+   Verification failures must produce a non-zero exit code so policy regressions
+   can be blocked in CI.
 
 ---
 
 ## Summary
 
-The Compliance Engine Verification Framework provides AutoAudit with a reusable mechanism for continuously checking the behavioural correctness of its compliance policies.
+The Compliance Engine Verification Framework provides AutoAudit with a reusable
+mechanism for continuously checking the behavioural correctness of its
+compliance policies.
 
-Rather than only confirming that policies are present and correctly wired, the framework verifies that real Rego policies:
+Rather than only confirming that policies are present and correctly wired, the
+framework verifies that real Rego policies:
 
 - receive known inputs;
 - produce the expected compliance decisions;
 - return a valid AutoAudit result structure;
 - remain verifiable as the policy catalogue evolves.
 
-Future contributors can expand behavioural coverage primarily by adding fixtures, allowing the verification capability to grow alongside AutoAudit without requiring repeated changes to the core framework.
+Future contributors can expand behavioural coverage primarily by adding
+fixtures, allowing the verification capability to grow alongside AutoAudit
+without requiring repeated changes to the core framework.
