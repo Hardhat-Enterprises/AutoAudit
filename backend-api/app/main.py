@@ -1,4 +1,3 @@
-# pylint: disable=line-too-long,broad-exception-caught,too-many-locals,too-many-statements,duplicate-code,too-many-arguments,unused-argument,too-many-branches,too-many-nested-blocks,import-outside-toplevel
 """AutoAudit Main FastAPI Application Module."""
 
 from typing import Any, Awaitable, Callable
@@ -9,6 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
 
+# pylint: disable=wrong-import-position
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import NotFound, not_found_handler
@@ -16,6 +16,7 @@ from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
 from app.db.session import get_async_session
 from app.schemas.health import ReadinessResponse
+# pylint: enable=wrong-import-position
 
 settings = get_settings()
 
@@ -97,6 +98,7 @@ def create_app() -> FastAPI:
             }
         },
     )
+    # pylint: disable=broad-exception-caught
     async def readiness_check(
         db: AsyncSession = Depends(get_async_session),
     ) -> Any:
