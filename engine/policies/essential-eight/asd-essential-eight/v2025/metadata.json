@@ -69,9 +69,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": "e8_mac_1_1_macros_disabled.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
     },
     {
@@ -86,9 +84,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": "e8_mac_1_2_internet_macros_blocked.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
     },
     {
@@ -103,9 +99,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": "e8_mac_1_3_amsi_scanning.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
     },
     {
@@ -120,9 +114,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.macro_notification_settings",
       "policy_file": "e8_mac_1_4_user_macro_settings.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Fully automatable."
     },
     {
@@ -137,9 +129,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.asr_rules",
       "policy_file": "e8_mac_2_1_win32_api_block.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Fully automatable."
     },
     {
@@ -154,9 +144,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
     },
     {
@@ -186,9 +174,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
     },
     {
@@ -203,9 +189,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation."
     },
     {
@@ -265,9 +249,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation. Policy-level assessment only, as AutoAudit cannot confirm successful application on every managed device."
     },
     {
@@ -282,9 +264,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation. Policy-level assessment only, as AutoAudit cannot confirm successful application on every managed device."
     },
     {
@@ -299,9 +279,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation. Evaluation requires an approved organisational ad-blocking extension identifier or configurable allowlist."
     },
     {
@@ -316,9 +294,7 @@
       "automation_status": "not_started",
       "data_collector_id": "entra.devices.configuration_policies",
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Partial automation. Assessment is based on policy assignment scope because no discrete Settings Catalog lock setting exists."
     },
     {
@@ -402,9 +378,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.windows_update_config",
       "policy_file": "e8_pos_1_1_os_patch_timeframe.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Threshold of 14 days derived from the ASD ML1 two-week ceiling and Microsoft's slowest reference ring (10 + 2 + 2). Policy logic verified against OPA 1.13.1; collector not yet run against a live tenant. Research basis: 26T2-SEC-KS-001."
     },
     {
@@ -419,9 +393,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementManagedDevices.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementManagedDevices.Read.All"],
       "notes": "Requires managed device OS version inventory, not update ring configuration. Separate collector."
     },
     {
@@ -451,9 +423,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Reuses the E8-POS-1.1 collector with a shorter threshold. The 48-hour exploit condition is not derivable from configuration alone."
     },
     {
@@ -498,9 +468,7 @@
       "automation_status": "ready",
       "data_collector_id": "entra.devices.app_control_policy",
       "policy_file": "e8_ac_1_1_application_control.rego",
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Sources: v1.0 /deviceManagement/deviceConfigurations (windows10EndpointProtectionConfiguration.appLockerApplicationControl) and beta /deviceManagement/configurationPolicies/{id}/settings. Audit mode records execution without blocking it and cannot satisfy the control; Intelligent Security Graph reputation alone is not an organisation approved set. Microsoft documents no Graph property for device-side effective state, so an uninterpretable configuration returns insufficient evidence rather than a pass. Scope is limited to policy existence, enforcement state and assignment; ML1 path and executable-category coverage are tracked as E8-AC-1.2 and E8-AC-1.3. Policy logic verified against OPA 1.13.1; collector not yet run against a live tenant. Research basis: 26T2-SEC-KHS-001 and 26T2-SEC-TD-001."
     },
     {
@@ -515,9 +483,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Path coverage is expressed in App Control policy XML rather than in built-in control settings, so it requires an XML parsing collector."
     },
     {
@@ -532,9 +498,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Per-file-type rules live in App Control policy XML. The existing evidence-based strategy at security/strategies/application_control.py assesses these seven categories from uploaded evidence text (ML1-AC-01 to ML1-AC-07) and is complementary to, not a substitute for, live tenant assessment."
     },
     {
@@ -549,9 +513,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Requires device inventory to distinguish server from workstation scope, not policy configuration alone."
     },
     {
@@ -566,9 +528,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Blocklist rules are carried in policy XML and require XML parsing to confirm."
     },
     {
@@ -613,9 +573,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Requires device inventory to distinguish server scope, as for E8-AC-2.1."
     },
     {
@@ -630,9 +588,7 @@
       "automation_status": "not_started",
       "data_collector_id": null,
       "policy_file": null,
-      "requires_permissions": [
-        "DeviceManagementConfiguration.Read.All"
-      ],
+      "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
       "notes": "Driver rules and the vulnerable driver blocklist are carried in App Control policy XML rather than built-in control settings."
     }
   ]
