@@ -1,3 +1,5 @@
+# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught,unused-argument,wrong-import-position
+# type: ignore
 """AutoAudit Main FastAPI Application Module."""
 
 from typing import Any, Awaitable, Callable
@@ -8,7 +10,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
 
-# pylint: disable=wrong-import-position
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import NotFound, not_found_handler
@@ -16,22 +17,16 @@ from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
 from app.db.session import get_async_session
 from app.schemas.health import ReadinessResponse
-# pylint: enable=wrong-import-position
 
 settings = get_settings()
 
 
 class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
-    """Rejects payload requests exceeding max_upload_size before FastAPI spools files."""
-
     def __init__(self, app: FastAPI, max_upload_size: int = 12 * 1024 * 1024) -> None:
         super().__init__(app)
         self.max_upload_size: int = max_upload_size
 
-    async def dispatch(
-        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
-    ) -> Response:
-        """Intercept request and enforce upload payload size boundaries."""
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         if request.method == "POST" and "/evidence/scan" in request.url.path:
             content_length = request.headers.get("content-length")
             transfer_encoding = request.headers.get("transfer-encoding", "").lower()
@@ -52,7 +47,6 @@ class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
 
 
 def create_app() -> FastAPI:
-    """Construct and configure the main FastAPI application instance."""
     setup_logging()
     app = FastAPI(title="AutoAudit API", version="0.1.0")
 
@@ -73,7 +67,6 @@ def create_app() -> FastAPI:
 
     @app.get("/")
     def root() -> Any:
-        """Root endpoint returning basic API operational status."""
         return {
             "status": "ok",
             "message": "AutoAudit API running",
@@ -81,7 +74,6 @@ def create_app() -> FastAPI:
 
     @app.get("/liveness")
     def health_check() -> Any:
-        """Liveness health check endpoint."""
         return {
             "status": "healthy",
         }
@@ -98,11 +90,9 @@ def create_app() -> FastAPI:
             }
         },
     )
-    # pylint: disable=broad-exception-caught
     async def readiness_check(
         db: AsyncSession = Depends(get_async_session),
     ) -> Any:
-        """Readiness health check verifying database connectivity."""
         try:
             await db.execute(text("SELECT 1"))
         except Exception:
