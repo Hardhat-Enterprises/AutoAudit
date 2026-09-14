@@ -21,6 +21,7 @@ from app.api.v1 import (
     scans,
     settings,
     test as test_routes,
+    verification_templates,
 )
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
@@ -45,6 +46,7 @@ test_app.include_router(benchmarks.router, prefix="/v1")
 test_app.include_router(manual_verification.router, prefix="/v1")
 test_app.include_router(scans.router, prefix="/v1")
 test_app.include_router(m365_connections.router, prefix="/v1")
+test_app.include_router(verification_templates.router, prefix="/v1")
 
 
 def make_user(*, role: str, user_id: int = 1) -> User:
