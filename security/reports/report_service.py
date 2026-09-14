@@ -1,5 +1,3 @@
-# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught,too-many-locals,too-many-statements,wrong-import-position,duplicate-code,too-many-arguments,unused-argument
-# type: ignore
 """Security report generation service module for AutoAudit.
 
 Renders DOCX and PDF audit reports from evidence processing data.
@@ -12,13 +10,14 @@ import subprocess  # nosec B404
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from docx import Document
 from docx.shared import Inches
 from fpdf import FPDF
 
 
+# pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def generate_pdf(
     data: Mapping[str, Any],
     *,
@@ -28,6 +27,7 @@ def generate_pdf(
     image_marker: str = "[Embed evidence here]",
     unique_id_override: Optional[str] = None,
 ) -> Path:
+    """Render a single PDF from the in-memory mapping produced by the OCR step."""
     mapping, embed_path, unique_id = _map_to_placeholders(data, Path(base_dir))
 
     if unique_id_override:
@@ -61,7 +61,9 @@ def generate_pdf(
     return pdf_path
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _normalize_keys(d: Mapping[str, Any]) -> Dict[str, str]:
+    """Normalize dictionary keys for consistent field lookup."""
     norm: Dict[str, str] = {}
     for k, v in d.items():
         key = " ".join(str(k).strip().lower().replace("_", " ").replace("-", " ").replace("/", " ").split())
@@ -69,7 +71,9 @@ def _normalize_keys(d: Mapping[str, Any]) -> Dict[str, str]:
     return norm
 
 
+# pylint: disable=invalid-name
 def _pick(norm: Dict[str, str], *names: str) -> str:
+    """Select the first matching key value from normalized dictionary."""
     for n in names:
         key = " ".join(n.strip().lower().split())
         if key in norm:
@@ -77,7 +81,9 @@ def _pick(norm: Dict[str, str], *names: str) -> str:
     return ""
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _map_to_placeholders(data: Mapping[str, Any], base_dir: Path) -> Tuple[Dict[str, str], Optional[Path], str]:
+    """Map OCR dictionary entries to template placeholder fields and evidence paths."""
     n = _normalize_keys(data)
 
     unique_id = _pick(n, "uniqueid", "unique id", "userid", "user id") or str(uuid.uuid4())
@@ -120,36 +126,29 @@ def _map_to_placeholders(data: Mapping[str, Any], base_dir: Path) -> Tuple[Dict[
         "UniqueID": unique_id,
         "Unique ID": unique_id,
         "UserID": unique_id,
-
         "Strategy": strategy,
         "Test_id": testid,
         "Sub-Strategy": substrat,
-
         "level": level,
         "Level": level,
-
         "Pass/Fail": passfail,
         "Priority": priority,
-
         "Recommendations": rec,
-
         "extract": extract,
         "Extract": extract,
-
         "Description": descr,
         "description": descr,
         "Confidence": confidence or "",
-
         "file name": file_name,
         "File Name": file_name,
-
         "Date Generated": datetime.now().strftime("%d %b %Y"),
     }
     _expand_placeholder_variants(mapping)
     return mapping, embed_path, unique_id
 
 
-def _iter_paragraphs(doc):
+def _iter_paragraphs(doc: Any) -> Any:
+    """Iterate over all paragraphs in docx body and embedded table cells."""
     for p in doc.paragraphs:
         yield p
     for tbl in doc.tables:
@@ -159,7 +158,8 @@ def _iter_paragraphs(doc):
                     yield p
 
 
-def _replace_in_runs(paragraph, mapping: Mapping[str, Any]) -> bool:
+def _replace_in_runs(paragraph: Any, mapping: Mapping[str, Any]) -> bool:
+    """Replace placeholder tokens directly inside paragraph text runs."""
     changed = False
     for run in paragraph.runs:
         txt = run.text
@@ -172,7 +172,8 @@ def _replace_in_runs(paragraph, mapping: Mapping[str, Any]) -> bool:
     return changed
 
 
-def _rebuild_paragraph_text(paragraph, mapping: Mapping[str, Any]) -> None:
+def _rebuild_paragraph_text(paragraph: Any, mapping: Mapping[str, Any]) -> None:
+    """Rebuild paragraph text when placeholder tokens span across multiple runs."""
     full = "".join(run.text for run in paragraph.runs)
     repl = full
     for k, v in mapping.items():
@@ -183,14 +184,19 @@ def _rebuild_paragraph_text(paragraph, mapping: Mapping[str, Any]) -> None:
         paragraph.add_run(repl)
 
 
-def _replace_braced_placeholders_everywhere(doc, mapping: Mapping[str, Any]) -> None:
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
+def _replace_braced_placeholders_everywhere(doc: Any, mapping: Mapping[str, Any]) -> None:
+    """Replace braced tokens in all document paragraphs and table contents."""
     for p in _iter_paragraphs(doc):
         if not _replace_in_runs(p, mapping):
             _rebuild_paragraph_text(p, mapping)
 
 
-def _replace_xml_text_everywhere(doc, mapping: Mapping[str, Any]) -> None:
-    def replace_in_part(part):
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
+def _replace_xml_text_everywhere(doc: Any, mapping: Mapping[str, Any]) -> None:
+    """Replace {tokens} in all text nodes across main doc, headers, and footers."""
+    def replace_in_part(part: Any) -> None:
+        """Process XML replacements inside document part."""
         root = part.element
         texts = []
         try:
@@ -224,7 +230,8 @@ def _replace_xml_text_everywhere(doc, mapping: Mapping[str, Any]) -> None:
             pass
 
 
-def _insert_image_at_marker(doc, marker: str, image_path: os.PathLike | str, width_inches: float = 6.0) -> bool:
+def _insert_image_at_marker(doc: Any, marker: str, image_path: os.PathLike | str, width_inches: float = 6.0) -> bool:
+    """Insert an image picture at a designated text marker in the document."""
     ip = Path(image_path)
     if not ip.exists():
         return False
@@ -245,9 +252,11 @@ def _insert_image_at_marker(doc, marker: str, image_path: os.PathLike | str, wid
     return True
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
+    """Convert DOCX file to PDF using docx2pdf, LibreOffice, or pure-Python FPDF fallback."""
     try:
-        from docx2pdf import convert
+        from docx2pdf import convert  # pylint: disable=import-outside-toplevel
         convert(str(input_docx), str(output_pdf))
         return
     except Exception:
@@ -274,7 +283,9 @@ def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
     )
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
+    """Fallback PDF generator using fpdf2 when external converters are unavailable."""
     try:
         doc = Document(str(input_docx))
         pdf = FPDF()
@@ -282,7 +293,8 @@ def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
         pdf.add_page()
         pdf.set_font("Helvetica", size=12)
 
-        def _safe_text(text: str) -> str:
+        def _safe_text(text: Optional[str]) -> str:
+            """Sanitize input text for latin-1 font encoding compatibility."""
             if text is None:
                 return ""
             try:
@@ -290,7 +302,8 @@ def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
             except Exception:
                 return text.encode("ascii", "replace").decode("ascii")
 
-        def _write_line(line: str):
+        def _write_line(line: str) -> None:
+            """Write individual paragraph line into PDF layout cell."""
             line = _safe_text(line)
             if not line:
                 return
@@ -312,7 +325,9 @@ def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
         return False
 
 
-def _remove_markers_everywhere(doc, markers: list[str]) -> None:
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
+def _remove_markers_everywhere(doc: Any, markers: List[str]) -> None:
+    """Remove target marker strings from document body, headers, and footers."""
     for p in _iter_paragraphs(doc):
         full = "".join(r.text for r in p.runs)
         new_full = full
@@ -323,7 +338,8 @@ def _remove_markers_everywhere(doc, markers: list[str]) -> None:
                 r.text = ""
             p.add_run(new_full)
 
-    def scrub_part(part):
+    def scrub_part(part: Any) -> None:
+        """Scrub markers from individual XML element part."""
         root = part.element
         texts = []
         try:
@@ -356,7 +372,9 @@ def _remove_markers_everywhere(doc, markers: list[str]) -> None:
             pass
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _expand_placeholder_variants(mapping: Dict[str, str]) -> None:
+    """Make token replacement tolerant to dashes, non-ASCII hyphens, and spaces."""
     hyphens = ["-", "\u2010", "\u2011", "\u2013", "\u2014"]
     to_add: Dict[str, str] = {}
 
