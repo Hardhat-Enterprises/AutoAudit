@@ -1,4 +1,3 @@
-# pylint: disable=line-too-long,broad-exception-caught,too-many-locals,too-many-statements,duplicate-code,too-many-arguments,unused-argument,too-many-branches,too-many-nested-blocks,import-outside-toplevel
 """Backend Security Ingestion Service for AutoAudit.
 
 Handles file validation and SHA-256 cryptographic hashing.
@@ -15,25 +14,9 @@ def validate_file_extension(
     """Check if the file extension is permitted based on filename."""
     if allowed_extensions is None:
         allowed_extensions = {
-            ".txt",
-            ".pdf",
-            ".csv",
-            ".json",
-            ".docx",
-            ".xlsx",
-            ".png",
-            ".jpg",
-            ".jpeg",
-            ".log",
-            ".tif",
-            ".tiff",
-            ".bmp",
-            ".webp",
-            ".reg",
-            ".ini",
-            ".xml",
-            ".htm",
-            ".html",
+            ".txt", ".pdf", ".csv", ".json", ".docx", ".xlsx",
+            ".png", ".jpg", ".jpeg", ".log", ".tif", ".tiff",
+            ".bmp", ".webp", ".reg", ".ini", ".xml", ".htm", ".html",
         }
 
     _, file_extension = os.path.splitext(filepath)
@@ -50,6 +33,7 @@ def check_file_size(filepath: str, max_size_mb: float = 10.0) -> bool:
         return False
 
 
+# pylint: disable=broad-exception-caught
 def generate_file_hash_and_check_size(
     filepath: str, max_size_mb: float = 10.0
 ) -> Tuple[Optional[str], bool, str]:
