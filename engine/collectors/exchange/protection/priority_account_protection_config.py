@@ -34,8 +34,6 @@ class PriorityAccountProtectionDataCollector(BasePowerShellCollector):
             - total_priority_accounts: Number of priority accounts
         """
 
-        #tenant_settings is required for v6.0.0 control 2.4.1
-        #accounts is required for v6.0.0 control 2.4.2
         tenant_settings = await client.run_cmdlet("ExchangeOnline", "Get-EmailTenantSettings")
         accounts = await client.run_cmdlet("ExchangeOnline", "Get-User", IsVIP=True)
 

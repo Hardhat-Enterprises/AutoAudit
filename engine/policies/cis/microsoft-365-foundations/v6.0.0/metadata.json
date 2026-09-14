@@ -482,7 +482,7 @@
       "is_manual": false,
       "benchmark_audit_type": "Automated",
       "automation_status": "blocked",
-      "data_collector_id": "exchange.protection.priority_account_protection",
+      "data_collector_id": "exchange.protection.priority_account_protection_config",
       "policy_file": null,
       "requires_permissions": ["Exchange.Manage"],
       "notes": "IPPSSession requires certificate auth"
@@ -500,7 +500,7 @@
       "data_collector_id": null,
       "policy_file": null,
       "requires_permissions": ["Exchange.Manage"],
-      "notes": "Need Priority Account Protection collector"
+      "notes": "Requires collector"
     },
     {
       "control_id": "2.4.3",
