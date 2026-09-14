@@ -1,11 +1,16 @@
+"""Security report generation service module for AutoAudit.
+
+Renders DOCX and PDF audit reports from evidence processing data.
+"""
+
 from __future__ import annotations
 
 import os
+import subprocess  # nosec B404
 import uuid
-import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Mapping, Any, Optional, Dict, Tuple
+from typing import Any, Dict, Mapping, Optional, Tuple
 
 from docx import Document
 from docx.shared import Inches
@@ -18,22 +23,22 @@ def generate_pdf(
     template_path: os.PathLike | str = "templates/report_template.docx",
     output_dir: os.PathLike | str = "reports_out",
     base_dir: os.PathLike | str = ".",
-    image_marker: str = "[Embed evidence here]",   
+    image_marker: str = "[Embed evidence here]",
     unique_id_override: Optional[str] = None,
 ) -> Path:
-    """
-    Render a single PDF from the in-memory mapping produced by the OCR/rules step.
+    """Render a single PDF from the in-memory mapping produced by the OCR/rules step.
 
     Expected keys in `data` (case/spacing tolerant):
       UniqueID or UserID -> becomes UniqueID in template
-      Evidence -> path to original evidence file 
-      Evidence Preview (optional) -> path to an image to embed 
+      Evidence -> path to original evidence file
+      Evidence Preview (optional) -> path to an image to embed
       Strategy, TestID, Sub-Strategy, ML Level, Pass/Fail, Priority,
       Recommendation -> Recommendations, Evidence Extract -> Extract
-      Description 
-      Confidence 
+      Description
+      Confidence
 
-    Returns: Path to the generated PDF.
+    Returns:
+        Path: Path to the generated PDF.
     """
     mapping, embed_path, unique_id = _map_to_placeholders(data, Path(base_dir))
 
@@ -71,41 +76,46 @@ def generate_pdf(
 # ---------- Mapping (OCR dict -> template placeholders) ----------
 
 def _normalize_keys(d: Mapping[str, Any]) -> Dict[str, str]:
+    """Normalize dictionary keys for consistent field lookup."""
     norm: Dict[str, str] = {}
     for k, v in d.items():
         key = " ".join(str(k).strip().lower().replace("_", " ").replace("-", " ").replace("/", " ").split())
         norm[key] = "" if v is None else str(v)
     return norm
 
+
 def _pick(norm: Dict[str, str], *names: str) -> str:
+    """Select the first matching key value from normalized dictionary."""
     for n in names:
         key = " ".join(n.strip().lower().split())
         if key in norm:
             return norm[key]
     return ""
 
+
 def _map_to_placeholders(data: Mapping[str, Any], base_dir: Path) -> Tuple[Dict[str, str], Optional[Path], str]:
+    """Map OCR dictionary entries to template placeholder fields and evidence paths."""
     n = _normalize_keys(data)
 
     # Inputs (tolerant keys)
     unique_id = _pick(n, "uniqueid", "unique id", "userid", "user id") or str(uuid.uuid4())
-    strategy  = _pick(n, "strategy")
-    testid    = _pick(n, "testid", "test id")
-    substrat  = _pick(n, "sub-strategy", "sub strategy")
-    level     = _pick(n, "ml level", "level")
-    passfail  = _pick(n, "pass/fail", "pass fail")
-    priority  = _pick(n, "priority")
-    rec       = _pick(n, "recommendation", "recommendations")
-    extract   = _pick(n, "evidence extract", "extract")
-    descr     = _pick(n, "description")
-    confidence = _pick(n, "confidence")  
+    strategy = _pick(n, "strategy")
+    testid = _pick(n, "testid", "test id")
+    substrat = _pick(n, "sub-strategy", "sub strategy")
+    level = _pick(n, "ml level", "level")
+    passfail = _pick(n, "pass/fail", "pass fail")
+    priority = _pick(n, "priority")
+    rec = _pick(n, "recommendation", "recommendations")
+    extract = _pick(n, "evidence extract", "extract")
+    descr = _pick(n, "description")
+    confidence = _pick(n, "confidence")
 
     # Evidence paths
     evidence_path_str = _pick(n, "evidence", "evidence path", "file", "file path", "filepath", "image", "screenshot")
-    preview_path_str  = _pick(n, "evidence preview", "preview", "embed path")
+    preview_path_str = _pick(n, "evidence preview", "preview", "embed path")
 
     # Resolve paths
-    embed_path: Optional[Path] = None  
+    embed_path: Optional[Path] = None
     file_name = ""
     if evidence_path_str:
         ep = Path(evidence_path_str)
@@ -126,11 +136,11 @@ def _map_to_placeholders(data: Mapping[str, Any], base_dir: Path) -> Tuple[Dict[
             if ep.exists() and ep.suffix.lower() in {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"}:
                 embed_path = ep
 
-    # Mapping to template placeholders (support a couple of variants)
+    # Mapping to template placeholders
     mapping: Dict[str, str] = {
         "UniqueID": unique_id,
         "Unique ID": unique_id,
-        "UserID": unique_id,            
+        "UserID": unique_id,
 
         "Strategy": strategy,
         "Test_id": testid,
@@ -163,6 +173,7 @@ def _map_to_placeholders(data: Mapping[str, Any], base_dir: Path) -> Tuple[Dict[
 # ---------- DOCX helpers ----------
 
 def _iter_paragraphs(doc):
+    """Iterate over all paragraphs in docx body and embedded table cells."""
     for p in doc.paragraphs:
         yield p
     for tbl in doc.tables:
@@ -171,7 +182,9 @@ def _iter_paragraphs(doc):
                 for p in cell.paragraphs:
                     yield p
 
+
 def _replace_in_runs(paragraph, mapping: Mapping[str, Any]) -> bool:
+    """Replace placeholder tokens directly inside paragraph text runs."""
     changed = False
     for run in paragraph.runs:
         txt = run.text
@@ -183,7 +196,9 @@ def _replace_in_runs(paragraph, mapping: Mapping[str, Any]) -> bool:
             changed = True
     return changed
 
+
 def _rebuild_paragraph_text(paragraph, mapping: Mapping[str, Any]) -> None:
+    """Rebuild paragraph text when placeholder tokens span across multiple runs."""
     full = "".join(run.text for run in paragraph.runs)
     repl = full
     for k, v in mapping.items():
@@ -193,16 +208,16 @@ def _rebuild_paragraph_text(paragraph, mapping: Mapping[str, Any]) -> None:
             r.text = ""
         paragraph.add_run(repl)
 
+
 def _replace_braced_placeholders_everywhere(doc, mapping: Mapping[str, Any]) -> None:
+    """Replace braced tokens in all document paragraphs and table contents."""
     for p in _iter_paragraphs(doc):
         if not _replace_in_runs(p, mapping):
             _rebuild_paragraph_text(p, mapping)
 
+
 def _replace_xml_text_everywhere(doc, mapping: Mapping[str, Any]) -> None:
-    """
-    Replace {tokens} in all <w:t> text nodes across main doc part,
-    headers, and footers. Works even with older python-docx (no namespaces kwarg).
-    """
+    """Replace {tokens} in all text nodes across main doc, headers, and footers."""
     def replace_in_part(part):
         root = part.element
         texts = []
@@ -236,7 +251,9 @@ def _replace_xml_text_everywhere(doc, mapping: Mapping[str, Any]) -> None:
         except Exception:
             pass
 
+
 def _insert_image_at_marker(doc, marker: str, image_path: os.PathLike | str, width_inches: float = 6.0) -> bool:
+    """Insert an image picture at a designated text marker in the document."""
     ip = Path(image_path)
     if not ip.exists():
         return False
@@ -256,11 +273,9 @@ def _insert_image_at_marker(doc, marker: str, image_path: os.PathLike | str, wid
         doc.add_picture(str(ip), width=Inches(width_inches))
     return True
 
+
 def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
-    """
-    Try docx2pdf (uses Word on Windows/macOS). If unavailable, fall back to LibreOffice.
-    """
-    # Preferred: docx2pdf
+    """Convert DOCX file to PDF using docx2pdf, LibreOffice, or pure-Python FPDF fallback."""
     try:
         from docx2pdf import convert
         convert(str(input_docx), str(output_pdf))
@@ -268,10 +283,9 @@ def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
     except Exception:
         pass
 
-    # Fallback: LibreOffice
     try:
         out_dir = str(output_pdf.parent.resolve())
-        subprocess.run(
+        subprocess.run(  # nosec B603 B607
             ["soffice", "--headless", "--convert-to", "pdf", "--outdir", out_dir, str(input_docx.resolve())],
             check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -282,7 +296,6 @@ def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
     except Exception:
         pass
 
-    # Final fallback: generate a simple text PDF (no external binaries)
     if _simple_pdf_from_docx(input_docx, output_pdf):
         return
 
@@ -292,9 +305,7 @@ def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
 
 
 def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
-    """
-    Pure-Python fallback using fpdf2 to ensure a downloadable PDF is always produced.
-    """
+    """Fallback PDF generator using fpdf2 when external converters are unavailable."""
     try:
         doc = Document(str(input_docx))
         pdf = FPDF()
@@ -303,7 +314,6 @@ def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
         pdf.set_font("Helvetica", size=12)
 
         def _safe_text(text: str) -> str:
-            """fpdf core fonts are latin-1; strip/replace unsupported chars."""
             if text is None:
                 return ""
             try:
@@ -331,8 +341,10 @@ def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
         return True
     except Exception:
         return False
-        
+
+
 def _remove_markers_everywhere(doc, markers: list[str]) -> None:
+    """Remove target marker strings from document body, headers, and footers."""
     for p in _iter_paragraphs(doc):
         full = "".join(r.text for r in p.runs)
         new_full = full
@@ -375,16 +387,10 @@ def _remove_markers_everywhere(doc, markers: list[str]) -> None:
         except Exception:
             pass
 
-# ---------- Tolerant placeholder variants ----------
 
 def _expand_placeholder_variants(mapping: Dict[str, str]) -> None:
-    """
-    Make our {token} replacement tolerant to:
-      - non-ASCII hyphens/dashes (‐, -, –, —)
-      - optional spaces inside braces: { Token } as well as {Token}
-    This only adds alias keys; it does NOT change original keys/values.
-    """
-    hyphens = ["-", "\u2010", "\u2011", "\u2013", "\u2014"] 
+    """Make token replacement tolerant to dashes, non-ASCII hyphens, and spaces."""
+    hyphens = ["-", "\u2010", "\u2011", "\u2013", "\u2014"]
     to_add: Dict[str, str] = {}
 
     for k, v in list(mapping.items()):
