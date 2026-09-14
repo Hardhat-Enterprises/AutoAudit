@@ -37,9 +37,13 @@ from collectors.entra.conditional_access.e8_mfa_enforcement import (
 )
 
 # Devices
+from collectors.entra.devices.app_control_policy import AppControlPolicyDataCollector
 from collectors.entra.devices.asr_rules import ASRRulesDataCollector
 from collectors.entra.devices.configuration_policies import (
     ConfigurationPoliciesDataCollector,
+)
+from collectors.entra.devices.macro_notification_settings import (
+    MacroNotificationSettingsDataCollector,
 )
 from collectors.entra.devices.device_management_settings import (
     DeviceManagementSettingsDataCollector,
@@ -49,11 +53,10 @@ from collectors.entra.devices.device_registration_policy import (
 )
 from collectors.entra.devices.enrollment_restrictions import (
     EnrollmentRestrictionsDataCollector,
-) 
+)
 from collectors.entra.devices.windows_update_config import (
     WindowsUpdateConfigDataCollector,
 )
-
 # Domains
 from collectors.entra.domains.password_policy import PasswordPolicyDataCollector
 
@@ -179,8 +182,10 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.conditional_access.legacy_auth_block": LegacyAuthBlockDataCollector,
     "entra.conditional_access.e8_mfa_enforcement": E8MfaEnforcementDataCollector,
     # Devices
+    "entra.devices.app_control_policy": AppControlPolicyDataCollector,
     "entra.devices.asr_rules": ASRRulesDataCollector,
     "entra.devices.configuration_policies": ConfigurationPoliciesDataCollector,
+    "entra.devices.macro_notification_settings": MacroNotificationSettingsDataCollector,
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,

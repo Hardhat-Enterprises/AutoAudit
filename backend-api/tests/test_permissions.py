@@ -83,3 +83,9 @@ def test_role_checker_rejects_unlisted_role():
 
     assert exc_info.value.status_code == 403
     assert "Insufficient permissions" in exc_info.value.detail
+
+
+def test_make_user_defaults() -> None:
+    user = make_user(role=Role.VIEWER.value)
+    assert user.email.endswith("@example.com")
+    assert user.is_active is True
