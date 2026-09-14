@@ -22,38 +22,48 @@ function sizeTier(totalLines, filesChanged) {
 }
 
 // --- first-contribution ---
-// The Search API has a much stricter *secondary* rate limit (30
-// requests/minute) than every other endpoint this codebase calls — easy
-// to exceed calling it once per PR when backfilling many at once, which
-// is exactly what happened the first time a real backfill ran at scale.
-// Rather than just tolerating that limit (retries, pacing delays), this
-// avoids the endpoint entirely: fetch the full PR list once per process
-// (a handful of calls against the generous core rate limit, however many
-// PRs exist), cache it, and derive "is this author's first PR" from that
-// — O(PRs/100) calls total for an entire run, not one Search call per PR.
-let prCountsByAuthorPromise = null;
-
-async function getPrCountsByAuthor(github, owner, repo) {
-  if (!prCountsByAuthorPromise) {
-    prCountsByAuthorPromise = github
-      .paginate(github.rest.pulls.list, { owner, repo, state: "all", per_page: 100 })
-      .then((allPrs) => {
-        const counts = new Map();
-        for (const p of allPrs) {
-          const login = p.user?.login;
-          if (!login) continue;
-          counts.set(login, (counts.get(login) || 0) + 1);
-        }
-        return counts;
-      });
-  }
-  return prCountsByAuthorPromise;
-}
-
+// Deliberately NOT using GitHub's Search API here — it has a much
+// stricter *secondary* rate limit (30/min) than everything else this
+// codebase calls, and hitting it once per PR is what caused a real
+// backfill to fail partway the first time this ran at scale.
+//
+// Also deliberately NOT fetching the repo's full PR history and caching
+// it in memory (an earlier version of this file did exactly that): that
+// works fine for a single backfill process looping over many PRs, but
+// pr.area-labeler.yml runs this in a FRESH process for every single
+// real-time PR event — so that cache was empty every time it mattered,
+// and "fixing" the backfill case reintroduced the same scaling problem
+// on the far more frequent real-time path (every open/push/reopen event,
+// on every PR, forever, would refetch the entire repo's PR history just
+// to check one author).
+//
+// Instead: `creator` filters server-side to just this one author's items
+// — cheap in both contexts regardless of total repo size — and this
+// stops paginating the instant it's seen enough to know the answer.
 async function isFirstContribution(github, owner, repo, author) {
   try {
-    const counts = await getPrCountsByAuthor(github, owner, repo);
-    return (counts.get(author) || 0) <= 1;
+    let prCount = 0;
+    let page = 1;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { data } = await github.rest.issues.listForRepo({
+        owner,
+        repo,
+        creator: author,
+        state: "all",
+        per_page: 100,
+        page,
+      });
+      for (const item of data) {
+        // listForRepo returns issues AND PRs by this author — `pull_request`
+        // is only present on the PR ones, which is all we're counting.
+        if (item.pull_request) prCount++;
+        if (prCount > 1) return false; // already confirmed not their first — stop here, no need to see the rest
+      }
+      if (data.length < 100) break; // last page
+      page++;
+    }
+    return prCount <= 1;
   } catch (e) {
     // A missing "nice to have" label is a much smaller problem than
     // letting this crash the caller's loop — log and move on.
