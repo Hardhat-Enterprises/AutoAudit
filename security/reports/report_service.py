@@ -10,7 +10,7 @@ import subprocess  # nosec B404
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from docx import Document
 from docx.shared import Inches
@@ -147,7 +147,7 @@ def _map_to_placeholders(data: Mapping[str, Any], base_dir: Path) -> Tuple[Dict[
     return mapping, embed_path, unique_id
 
 
-def _iter_paragraphs(doc):
+def _iter_paragraphs(doc: Any) -> Any:
     """Iterate over all paragraphs in docx body and embedded table cells."""
     for p in doc.paragraphs:
         yield p
@@ -158,7 +158,7 @@ def _iter_paragraphs(doc):
                     yield p
 
 
-def _replace_in_runs(paragraph, mapping: Mapping[str, Any]) -> bool:
+def _replace_in_runs(paragraph: Any, mapping: Mapping[str, Any]) -> bool:
     """Replace placeholder tokens directly inside paragraph text runs."""
     changed = False
     for run in paragraph.runs:
@@ -172,7 +172,7 @@ def _replace_in_runs(paragraph, mapping: Mapping[str, Any]) -> bool:
     return changed
 
 
-def _rebuild_paragraph_text(paragraph, mapping: Mapping[str, Any]) -> None:
+def _rebuild_paragraph_text(paragraph: Any, mapping: Mapping[str, Any]) -> None:
     """Rebuild paragraph text when placeholder tokens span across multiple runs."""
     full = "".join(run.text for run in paragraph.runs)
     repl = full
@@ -185,7 +185,7 @@ def _rebuild_paragraph_text(paragraph, mapping: Mapping[str, Any]) -> None:
 
 
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
-def _replace_braced_placeholders_everywhere(doc, mapping: Mapping[str, Any]) -> None:
+def _replace_braced_placeholders_everywhere(doc: Any, mapping: Mapping[str, Any]) -> None:
     """Replace braced tokens in all document paragraphs and table contents."""
     for p in _iter_paragraphs(doc):
         if not _replace_in_runs(p, mapping):
@@ -193,9 +193,9 @@ def _replace_braced_placeholders_everywhere(doc, mapping: Mapping[str, Any]) -> 
 
 
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
-def _replace_xml_text_everywhere(doc, mapping: Mapping[str, Any]) -> None:
+def _replace_xml_text_everywhere(doc: Any, mapping: Mapping[str, Any]) -> None:
     """Replace {tokens} in all text nodes across main doc, headers, and footers."""
-    def replace_in_part(part):
+    def replace_in_part(part: Any) -> None:
         root = part.element
         texts = []
         try:
@@ -229,7 +229,7 @@ def _replace_xml_text_everywhere(doc, mapping: Mapping[str, Any]) -> None:
             pass
 
 
-def _insert_image_at_marker(doc, marker: str, image_path: os.PathLike | str, width_inches: float = 6.0) -> bool:
+def _insert_image_at_marker(doc: Any, marker: str, image_path: os.PathLike | str, width_inches: float = 6.0) -> bool:
     """Insert an image picture at a designated text marker in the document."""
     ip = Path(image_path)
     if not ip.exists():
@@ -300,7 +300,7 @@ def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
             except Exception:
                 return text.encode("ascii", "replace").decode("ascii")
 
-        def _write_line(line: str):
+        def _write_line(line: str) -> None:
             line = _safe_text(line)
             if not line:
                 return
@@ -323,7 +323,7 @@ def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
 
 
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
-def _remove_markers_everywhere(doc, markers: list[str]) -> None:
+def _remove_markers_everywhere(doc: Any, markers: List[str]) -> None:
     """Remove target marker strings from document body, headers, and footers."""
     for p in _iter_paragraphs(doc):
         full = "".join(r.text for r in p.runs)
@@ -335,7 +335,7 @@ def _remove_markers_everywhere(doc, markers: list[str]) -> None:
                 r.text = ""
             p.add_run(new_full)
 
-    def scrub_part(part):
+    def scrub_part(part: Any) -> None:
         root = part.element
         texts = []
         try:
