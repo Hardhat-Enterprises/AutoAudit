@@ -7,20 +7,17 @@ name: Backfill All PR Labels (existing open PRs)
 on:
   workflow_dispatch: {}
 
-permissions:
-  pull-requests: write
-  issues: write # labels/labels-list live under the Issues API even for PRs
-  contents: read
-
 jobs:
   list-open-prs:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     outputs:
       json: ${{ steps.list.outputs.json }} # e.g. [3,2,1] — for embedding into JS array literals
       lines: ${{ steps.list.outputs.lines }} # e.g. "3\n2\n1" with REAL newlines — for actions/labeler's pr-number input
     steps:
       - id: list
-        uses: actions/github-script@v9
+        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         with:
           script: |
             const prs = await github.paginate(github.rest.pulls.list, {
@@ -41,9 +38,14 @@ jobs:
     needs: list-open-prs
     if: needs.list-open-prs.outputs.json != '[]'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v7 # without this, actions/labeler can't find .github/labeler.yml locally and re-fetches it via the API once per PR in the list — harmless but noisy, and this avoids it
-      - uses: actions/labeler@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7 — without this, actions/labeler can't find .github/labeler.yml locally and re-fetches it via the API once per PR in the list — harmless but noisy, and this avoids it
+        with:
+          persist-credentials: false
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7
         with:
           configuration-path: .github/labeler.yml
           pr-number: ${{ needs.list-open-prs.outputs.lines }}
@@ -52,14 +54,22 @@ jobs:
   metadata-labels-backfill:
     needs: [list-open-prs, area-labels-backfill]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read # REQUIRED: this job's own script calls pulls.get directly (to fetch each PR before calling labelOne)
+      issues: write # labels/labels-list live under the Issues API even for PRs
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/github-script@v9
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
+        env:
+          PR_NUMBERS_JSON: ${{ needs.list-open-prs.outputs.json }}
         with:
           script: |
             const { labelOne } = require('${{ github.workspace }}/.github/scripts/pr-metadata-labeler.js');
             const { owner, repo } = context.repo;
-            const prNumbers = ${{ needs.list-open-prs.outputs.json }};
+            const prNumbers = JSON.parse(process.env.PR_NUMBERS_JSON);
 
             for (const pr_number of prNumbers) {
               try {
@@ -80,9 +90,15 @@ jobs:
     needs: metadata-labels-backfill
     if: always() # runs even if metadata-labels-backfill reported a failure — the two are independent (this script does its own full open-PR scan and doesn't depend on metadata-labels-backfill's output), so one weak spot shouldn't also block the other job that would otherwise work fine on its own
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read # REQUIRED: activity-labeler.js calls pulls.list/listCommits/listReviewComments/listReviews — the identical script gets pull-requests: write in ops.pr-activity-labeler.yml for the same reason
+      issues: write # labels/labels-list live under the Issues API even for PRs
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/github-script@v9
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         with:
           script: |
             const run = require('${{ github.workspace }}/.github/scripts/activity-labeler.js');
