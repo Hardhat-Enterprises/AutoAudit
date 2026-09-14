@@ -1,4 +1,3 @@
-# pylint: disable=line-too-long,broad-exception-caught,too-many-locals,too-many-statements,duplicate-code,too-many-arguments,unused-argument,too-many-branches,too-many-nested-blocks,import-outside-toplevel
 """Evidence API Endpoint Handler Module."""
 
 import hashlib
@@ -31,15 +30,16 @@ SECURITY_DIR = _find_security_dir()
 if SECURITY_DIR and str(SECURITY_DIR.parent) not in sys.path:
     sys.path.insert(0, str(SECURITY_DIR.parent))
 
-from security.evidence_ui import app as evidence_ui  # noqa: E402 # pylint: disable=wrong-import-position
-
-from app.core.auth import get_current_user  # noqa: E402 # pylint: disable=wrong-import-position
-from app.db.session import get_async_session  # noqa: E402 # pylint: disable=wrong-import-position
-from app.ingestion_service import process_ingestion_security_pipeline, validate_file_extension  # noqa: E402 # pylint: disable=wrong-import-position
-from app.models.evidence_validation import EvidenceValidation  # noqa: E402 # pylint: disable=wrong-import-position
-from app.models.user import User  # noqa: E402 # pylint: disable=wrong-import-position
-from app.services.encryption import encrypt  # noqa: E402 # pylint: disable=wrong-import-position
-from app.services.evidence_validator import validate_text  # noqa: E402 # pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position
+from security.evidence_ui import app as evidence_ui  # noqa: E402
+from app.core.auth import get_current_user  # noqa: E402
+from app.db.session import get_async_session  # noqa: E402
+from app.ingestion_service import process_ingestion_security_pipeline, validate_file_extension  # noqa: E402
+from app.models.evidence_validation import EvidenceValidation  # noqa: E402
+from app.models.user import User  # noqa: E402
+from app.services.encryption import encrypt  # noqa: E402
+from app.services.evidence_validator import validate_text  # noqa: E402
+# pylint: enable=wrong-import-position
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
 
@@ -81,6 +81,7 @@ async def scan_log_redirect() -> RedirectResponse:
 
 
 @router.post("/scan")
+# pylint: disable=too-many-locals,too-many-statements,broad-exception-caught,too-many-branches
 async def scan(
     evidence: UploadFile = File(...),
     strategy_name: str = Form(...),
