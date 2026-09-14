@@ -1,15 +1,21 @@
 name: Run Collector
 
 # DISABLED as of this commit - do not re-enable the push trigger until:
-#   1. The GCP_CREDENTIALS secret (a long-lived service account JSON key)
-#      has been rotated/deleted in GCP IAM and replaced with Workload
-#      Identity Federation (OIDC) auth, per Workstream 4 (secrets and
-#      identity).
-#   2. This workflow no longer commits live GCP infrastructure data
-#      (IAM policies, firewall rules, SQL/BigQuery/Dataproc details, DNS
-#      zones) into the repository. Auto-committing a full infra snapshot
-#      on every push, even with a properly scoped credential, exposes
-#      more about the project's attack surface than a test fixture needs.
+#   1. DONE (this change) - auth now uses Workload Identity Federation
+#      (google-github-actions/auth) instead of a long-lived GCP_CREDENTIALS
+#      JSON key. Requires the vars.GCP_WORKLOAD_IDENTITY_PROVIDER and
+#      vars.GCP_SERVICE_ACCOUNT_EMAIL repository variables to be set by
+#      running infrastructure/gcp/setup-workload-identity.sh once someone
+#      with GCP IAM access is available - see docs/DevSecOps/
+#      workload-identity-federation.md. The old GCP_CREDENTIALS secret
+#      should still be deleted from repo settings once that's confirmed.
+#   2. STILL UNMET - this workflow still commits live GCP infrastructure
+#      data (IAM policies, firewall rules, SQL/BigQuery/Dataproc details,
+#      DNS zones) into the repository. Auto-committing a full infra
+#      snapshot on every push, even with a properly scoped credential,
+#      exposes more about the project's attack surface than a test
+#      fixture needs. This needs a redesign (e.g. workflow artifact
+#      instead of a git commit) before the trigger is restored.
 # See the Workstream 4 findings writeup for details. Restore the push
 # trigger only after both are addressed and reviewed.
 on:
@@ -34,10 +40,17 @@ jobs:
     if: false
     permissions:
       contents: write
+      id-token: write # required to request the OIDC token for Workload Identity Federation
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
+
+      - name: Authenticate to GCP via Workload Identity Federation
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -48,8 +61,6 @@ jobs:
         run: pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
 
       - name: Run GCP Access Collector
-        env: 
-          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
           set -euo pipefail
           python3 engine/legacy/engine/GCPAccess.py

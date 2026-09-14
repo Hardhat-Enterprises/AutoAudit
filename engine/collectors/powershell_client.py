@@ -37,9 +37,9 @@ from worker.validators import validate_tenant_id
 class PowerShellExecutionError(Exception):
     """Raised when PowerShell execution fails."""
 
-    pass
 
 
+# pylint: disable=too-many-instance-attributes
 class PowerShellClient:
     """Client for PowerShell-based M365 connections using Docker or HTTP service."""
 
@@ -115,6 +115,7 @@ class PowerShellClient:
             ["docker", "images", "-q", self.DOCKER_IMAGE],
             capture_output=True,
             text=True,
+            check=False,
         )
         if not result.stdout.strip():
             print(
@@ -125,6 +126,7 @@ class PowerShellClient:
                 ["docker", "build", "-t", self.DOCKER_IMAGE, str(dockerfile_dir)],
                 capture_output=True,
                 text=True,
+                check=False,
             )
             if build_result.returncode != 0:
                 raise PowerShellExecutionError(
@@ -136,7 +138,7 @@ class PowerShellClient:
 
     async def run_cmdlet(
         self, module: str, cmdlet: str, **params: Any
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | list[dict[str, Any]] | None:
         """Execute a PowerShell cmdlet.
 
         Uses HTTP service if service_url is configured, otherwise spawns Docker container.
@@ -161,8 +163,7 @@ class PowerShellClient:
             )
         if self.service_url:
             return await self._run_via_service(module, cmdlet, params)
-        else:
-            return await self._run_via_docker(module, cmdlet, params)
+        return await self._run_via_docker(module, cmdlet, params)
 
     async def _run_via_service(
         self, module: str, cmdlet: str, params: dict[str, Any]
@@ -182,7 +183,7 @@ class PowerShellClient:
                 raise ValueError(
                     "SharePointOnline requires sharepoint_admin_url and certificate_alias"
                 )
-            payload = {
+            payload: dict[str, Any] = {
                 "module": module,
                 "cmdlet": cmdlet,
                 "params": params,
@@ -322,6 +323,7 @@ class PowerShellClient:
             capture_output=True,
             text=True,
             timeout=120,
+            check=False
         )
 
         if proc.returncode != 0:
@@ -373,7 +375,7 @@ try {{
     Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 }}
 """
-        elif module == "Teams":
+        if module == "Teams":
             # Teams module uses -AccessTokens (plural) with Graph and Teams tokens
             return f"""
 Import-Module MicrosoftTeams
@@ -389,8 +391,7 @@ try {{
     Disconnect-MicrosoftTeams -ErrorAction SilentlyContinue
 }}
 """
-        else:
-            raise ValueError(f"Unsupported module: {module}")
+        raise ValueError(f"Unsupported module: {module}")
 
     def _get_scope_for_module(self, module: str) -> str:
         """Get the appropriate scope for a PowerShell module.

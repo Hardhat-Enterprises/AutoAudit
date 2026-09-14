@@ -28,3 +28,6 @@ testpaths = ["tests"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
+[[tool.mypy.overrides]]
+module = ["msal.*", "dns.*"]
+ignore_missing_imports = true
