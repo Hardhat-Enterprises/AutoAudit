@@ -1,15 +1,17 @@
-# pylint: disable=line-too-long,broad-exception-caught,too-many-locals,too-many-statements,duplicate-code,too-many-arguments,unused-argument,too-many-branches,too-many-nested-blocks,import-outside-toplevel
 """Tests for the ingestion service module."""
 
 import os
 import tempfile
 import pytest
+
+# pylint: disable=wrong-import-position
 from app.ingestion_service import (
     check_file_size,
     generate_file_hash,
     process_ingestion_security_pipeline,
     validate_file_extension,
 )
+# pylint: enable=wrong-import-position
 
 
 def test_validate_file_extension_valid():
@@ -40,7 +42,7 @@ def test_check_file_size_valid():
 def test_generate_file_hash():
     """Test SHA-256 generation on sample content."""
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:  # nosec B108
-        temp_file.write(b"AutoAudit SHA256 Test Payload")
+        temp_file.write(b"AutoAudit SHA256 Test Payload")  # pragma: allowlist secret
         temp_path = temp_file.name
 
     try:
