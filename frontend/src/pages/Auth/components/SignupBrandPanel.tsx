@@ -3,8 +3,8 @@ import { BarChart3, Lock, Zap, type LucideIcon } from "lucide-react";
 
 const featureItems: { icon: LucideIcon; text: string }[] = [
   { icon: Zap, text: "Setup in minutes, not hours" },
-  { icon: Lock, text: "Bank-level security & encryption" },
-  { icon: BarChart3, text: "Real-time compliance monitoring" },
+  { icon: Lock, text: "Microsoft 365 configuration assessments" },
+  { icon: BarChart3, text: "On-demand compliance assessments" },
 ];
 
 const particles = [
