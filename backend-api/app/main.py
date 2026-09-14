@@ -9,6 +9,7 @@ from app.core.config import get_settings
 from app.core.errors import NotFound, not_found_handler
 from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
+from app.core.users import current_active_superuser
 from app.db.session import get_async_session
 from app.schemas.health import ReadinessResponse
 from prometheus_fastapi_instrumentator import Instrumentator # <-- 1. Added import
@@ -78,8 +79,12 @@ def create_app() -> FastAPI:
 
         return ReadinessResponse(status="ready")
 
-    # Initialize Prometheus Instrumentator and expose the /metrics endpoint
-    Instrumentator().instrument(app).expose(app) # <-- 2. Added instrumentation
+    # Initialize Prometheus Instrumentator and expose the /metrics endpoint.
+    # Restricted to superusers: this exposes internal request/latency data
+    # (endpoint paths, traffic volume, timing) that shouldn't be public.
+    Instrumentator().instrument(app).expose(
+        app, dependencies=[Depends(current_active_superuser)]
+    )
 
     return app
 

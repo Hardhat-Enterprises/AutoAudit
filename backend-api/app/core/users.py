@@ -96,3 +96,8 @@ fastapi_users = FastAPIUsers[User, int](
 
 # Dependencies for getting current user
 current_active_user = fastapi_users.current_user(active=True)
+
+# Restricted to superusers only -- used to gate internal/operational
+# endpoints (e.g. /metrics) that shouldn't be reachable by regular users
+# or the public internet.
+current_active_superuser = fastapi_users.current_user(active=True, superuser=True)
