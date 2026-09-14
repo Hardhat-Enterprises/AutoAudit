@@ -55,6 +55,9 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             - disallow_infected_file_download: Infected-file download status (CIS 7.3.1)
         """
         tenant = await client.run_cmdlet("SharePointOnline", "Get-PnPTenant")
+        sync_client_restriction = await client.run_cmdlet(
+            "SharePointOnline", "Get-PnPTenantSyncClientRestriction"
+)
 
         return {
             "tenant": tenant,
@@ -92,4 +95,5 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             "email_attestation_reauth_days": tenant.get(
                 "EmailAttestationReAuthDays"
             ),
+            "allowed_domain_list": sync_client_restriction.get("AllowedDomainList") or [],
         }

@@ -19,7 +19,9 @@ package cis.microsoft_365_foundations.v6_0_0.control_7_3_2
 
 default result := {
     "compliant": false,
-    "message": "Evaluation failed"
+    "message": "Evaluation failed: unable to determine OneDrive sync client restriction status",
+    "affected_resources": [],
+    "details": {}
 }
 
 result := output if {
@@ -29,35 +31,53 @@ result := output if {
         null
     )
 
-    compliant := restricted == true
+    restricted != null
+
+    domains := object.get(input, "allowed_domain_list", [])
+    domain_count := count(domains)
+
+    compliant := is_restricted(restricted, domain_count)
 
     output := {
         "compliant": compliant,
-        "message": generate_message(restricted),
+        "message": generate_message(restricted, domain_count),
         "affected_resources": generate_affected_resources(compliant),
         "details": {
-            "is_unmanaged_sync_client_for_tenant_restricted": restricted
+            "is_unmanaged_sync_client_for_tenant_restricted": restricted,
+            "allowed_domain_list": domains,
+            "allowed_domain_count": domain_count
         }
     }
 }
 
-generate_message(restricted) := msg if {
+# CIS 7.3.2 requires the restriction to be enabled and at least one
+# allowed domain GUID to be configured. The policy cannot verify that
+# the configured GUIDs are the organisation's correct trusted domains,
+# so the domain list is returned in details for human review.
+is_restricted(restricted, domain_count) := true if {
     restricted == true
-    msg := "OneDrive sync is restricted for unmanaged devices"
+    domain_count > 0
+} else := false
+
+generate_message(restricted, domain_count) := msg if {
+    restricted == true
+    domain_count > 0
+    msg := sprintf("OneDrive sync is restricted to %d allowed domain(s)", [domain_count])
 }
 
-generate_message(restricted) := msg if {
+generate_message(restricted, domain_count) := msg if {
+    restricted == true
+    domain_count == 0
+    msg := "OneDrive sync restriction is enabled but no allowed domain GUIDs are configured"
+}
+
+generate_message(restricted, _domain_count) := msg if {
     restricted == false
     msg := "OneDrive sync is not restricted for unmanaged devices"
-}
-
-generate_message(restricted) := msg if {
-    restricted == null
-    msg := "Unable to determine OneDrive unmanaged-device sync restriction status"
 }
 
 generate_affected_resources(true) := []
 
 generate_affected_resources(false) := [
-    "OneDrive sync is permitted from unmanaged devices"
+    "OneDrive sync restriction configuration does not meet CIS 7.3.2 requirements"
 ]
