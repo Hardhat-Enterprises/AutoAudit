@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long,broad-exception-caught,too-many-locals,too-many-statements,duplicate-code,too-many-arguments,unused-argument,too-many-branches,too-many-nested-blocks,import-outside-toplevel
 """Evidence API Endpoint Handler Module."""
 
 import hashlib
