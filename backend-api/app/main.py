@@ -1,17 +1,12 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.health import router as health_router
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import NotFound, not_found_handler
 from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
-from app.db.session import get_async_session
-from app.schemas.health import ReadinessResponse
-from app.api.health import router as health_router
 
 settings = get_settings()
 
