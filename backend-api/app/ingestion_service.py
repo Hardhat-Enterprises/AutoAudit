@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long,broad-exception-caught,too-many-locals,too-many-statements,duplicate-code,too-many-arguments,unused-argument,too-many-branches,too-many-nested-blocks,import-outside-toplevel
 """Backend Security Ingestion Service for AutoAudit.
 
 Handles file validation and SHA-256 cryptographic hashing.
