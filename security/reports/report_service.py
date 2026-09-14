@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long,broad-exception-caught,too-many-locals,too-many-statements,too-many-branches,too-many-arguments,unused-argument,duplicate-code,import-outside-toplevel
 """Security report generation service module for AutoAudit.
 
 Renders DOCX and PDF audit reports from evidence processing data.
@@ -17,7 +18,6 @@ from docx.shared import Inches
 from fpdf import FPDF
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def generate_pdf(
     data: Mapping[str, Any],
     *,
@@ -61,7 +61,6 @@ def generate_pdf(
     return pdf_path
 
 
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _normalize_keys(d: Mapping[str, Any]) -> Dict[str, str]:
     """Normalize dictionary keys for consistent field lookup."""
     norm: Dict[str, str] = {}
@@ -71,7 +70,6 @@ def _normalize_keys(d: Mapping[str, Any]) -> Dict[str, str]:
     return norm
 
 
-# pylint: disable=invalid-name
 def _pick(norm: Dict[str, str], *names: str) -> str:
     """Select the first matching key value from normalized dictionary."""
     for n in names:
@@ -81,7 +79,6 @@ def _pick(norm: Dict[str, str], *names: str) -> str:
     return ""
 
 
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _map_to_placeholders(data: Mapping[str, Any], base_dir: Path) -> Tuple[Dict[str, str], Optional[Path], str]:
     """Map OCR dictionary entries to template placeholder fields and evidence paths."""
     n = _normalize_keys(data)
@@ -184,7 +181,6 @@ def _rebuild_paragraph_text(paragraph: Any, mapping: Mapping[str, Any]) -> None:
         paragraph.add_run(repl)
 
 
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _replace_braced_placeholders_everywhere(doc: Any, mapping: Mapping[str, Any]) -> None:
     """Replace braced tokens in all document paragraphs and table contents."""
     for p in _iter_paragraphs(doc):
@@ -192,7 +188,6 @@ def _replace_braced_placeholders_everywhere(doc: Any, mapping: Mapping[str, Any]
             _rebuild_paragraph_text(p, mapping)
 
 
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _replace_xml_text_everywhere(doc: Any, mapping: Mapping[str, Any]) -> None:
     """Replace {tokens} in all text nodes across main doc, headers, and footers."""
     def replace_in_part(part: Any) -> None:
@@ -252,11 +247,10 @@ def _insert_image_at_marker(doc: Any, marker: str, image_path: os.PathLike | str
     return True
 
 
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
     """Convert DOCX file to PDF using docx2pdf, LibreOffice, or pure-Python FPDF fallback."""
     try:
-        from docx2pdf import convert  # pylint: disable=import-outside-toplevel
+        from docx2pdf import convert
         convert(str(input_docx), str(output_pdf))
         return
     except Exception:
@@ -283,7 +277,6 @@ def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
     )
 
 
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
     """Fallback PDF generator using fpdf2 when external converters are unavailable."""
     try:
@@ -325,7 +318,6 @@ def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
         return False
 
 
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _remove_markers_everywhere(doc: Any, markers: List[str]) -> None:
     """Remove target marker strings from document body, headers, and footers."""
     for p in _iter_paragraphs(doc):
@@ -372,7 +364,6 @@ def _remove_markers_everywhere(doc: Any, markers: List[str]) -> None:
             pass
 
 
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _expand_placeholder_variants(mapping: Dict[str, str]) -> None:
     """Make token replacement tolerant to dashes, non-ASCII hyphens, and spaces."""
     hyphens = ["-", "\u2010", "\u2011", "\u2013", "\u2014"]
