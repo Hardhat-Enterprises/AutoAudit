@@ -37,6 +37,20 @@ def _oauth_settings(**overrides) -> Settings:
 # --- helpers -----------------------------------------------------------------
 
 
+def _state_cookie_cleared(response) -> bool:
+    """True if the response tells the browser to delete the OAuth state
+    cookie (Max-Age=0), regardless of what other cookies are set.
+
+    httpx drops Max-Age=0 cookies from response.cookies entirely (it reads
+    them as "already expired, nothing to store"), so the deletion has to be
+    checked on the raw Set-Cookie header instead.
+    """
+    return any(
+        GOOGLE_OAUTH_STATE_COOKIE in header and "Max-Age=0" in header
+        for header in response.headers.get_list("set-cookie")
+    )
+
+
 def test_google_redirect_uri() -> None:
     with patch("app.api.v1.auth.get_settings", return_value=_oauth_settings()):
         assert _google_redirect_uri() == "http://localhost:8000/v1/auth/google/callback"
@@ -221,6 +235,9 @@ async def test_google_callback_invalid_state(client_factory) -> None:
 
     assert response.status_code == 302
     assert "error=invalid_state" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the invalid_state failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -237,6 +254,9 @@ async def test_google_callback_missing_code(client_factory) -> None:
 
     assert response.status_code == 302
     assert "error=missing_code" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the missing_code failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -269,6 +289,9 @@ async def test_google_callback_token_exchange_failed(
 
     assert response.status_code == 302
     assert "error=token_exchange_failed" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the token_exchange_failed failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -308,6 +331,9 @@ async def test_google_callback_userinfo_failed(
 
     assert response.status_code == 302
     assert "error=userinfo_failed" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the userinfo_failed failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -351,6 +377,9 @@ async def test_google_callback_invalid_profile(
 
     assert response.status_code == 302
     assert "error=invalid_profile" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the invalid_profile failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -398,6 +427,9 @@ async def test_google_callback_email_not_verified(
 
     assert response.status_code == 302
     assert "error=email_not_verified" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the email_not_verified failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -448,6 +480,9 @@ async def test_google_callback_user_link_failed(
 
     assert response.status_code == 302
     assert "error=user_link_failed" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the user_link_failed failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio

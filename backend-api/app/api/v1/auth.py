@@ -113,6 +113,30 @@ def _frontend_google_callback_url(fragment_params: dict[str, str]) -> str:
     return f"{base}/auth/google/callback#{fragment}"
 
 
+def _google_callback_error_redirect(fragment_params: dict[str, str]) -> RedirectResponse:
+    """Redirect to the frontend with an error AND clear the OAuth state cookie.
+
+    Every callback outcome -- success or failure -- must consume the state
+    cookie. Otherwise a failed attempt leaves a still-valid state sitting in
+    the browser for up to its 10-minute max_age, reusable by a later
+    callback request instead of being tied to the one authorization attempt
+    it was issued for.
+    """
+    settings = get_settings()
+    response = RedirectResponse(
+        _frontend_google_callback_url(fragment_params),
+        status_code=status.HTTP_302_FOUND,
+    )
+    response.delete_cookie(
+        GOOGLE_OAUTH_STATE_COOKIE,
+        path=f"{settings.API_PREFIX}/auth/google/callback",
+        secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
+        httponly=True,
+        samesite="lax",
+    )
+    return response
+
+
 def _google_oauth_client() -> GoogleOAuth2:
     settings = get_settings()
     if not settings.GOOGLE_OAUTH_CLIENT_ID or not settings.GOOGLE_OAUTH_CLIENT_SECRET:
@@ -180,25 +204,19 @@ async def google_callback(
 
     cookie_state = request.cookies.get(GOOGLE_OAUTH_STATE_COOKIE)
     if not state or not cookie_state or state != cookie_state:
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "invalid_state",
-                    "error_description": "Invalid OAuth state. Please try again.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "invalid_state",
+                "error_description": "Invalid OAuth state. Please try again.",
+            }
         )
 
     if not code:
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "missing_code",
-                    "error_description": "Google did not return an authorization code.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "missing_code",
+                "error_description": "Google did not return an authorization code.",
+            }
         )
 
     client = _google_oauth_client()
@@ -208,14 +226,11 @@ async def google_callback(
         google_access_token = token["access_token"]
     except Exception:
         logger.exception("Google OAuth token exchange failed")
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "token_exchange_failed",
-                    "error_description": "Failed to exchange authorization code for tokens.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "token_exchange_failed",
+                "error_description": "Failed to exchange authorization code for tokens.",
+            }
         )
 
     # Fetch OIDC userinfo for email + verification + stable subject identifier (sub).
@@ -229,14 +244,11 @@ async def google_callback(
         profile = resp.json()
     except Exception:
         logger.exception("Google OAuth userinfo fetch failed")
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "userinfo_failed",
-                    "error_description": "Failed to fetch Google user profile.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "userinfo_failed",
+                "error_description": "Failed to fetch Google user profile.",
+            }
         )
 
     email = profile.get("email")
@@ -244,26 +256,20 @@ async def google_callback(
     sub = profile.get("sub")
 
     if not email or not sub:
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "invalid_profile",
-                    "error_description": "Google profile is missing required fields.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "invalid_profile",
+                "error_description": "Google profile is missing required fields.",
+            }
         )
 
     # Link-by-email requires the email to be verified to avoid account takeover.
     if email_verified is not True:
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "email_not_verified",
-                    "error_description": "Google account email is not verified.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "email_not_verified",
+                "error_description": "Google account email is not verified.",
+            }
         )
 
     try:
@@ -280,14 +286,11 @@ async def google_callback(
         )
     except Exception:
         logger.exception("Google OAuth account linking failed")
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "user_link_failed",
-                    "error_description": "Failed to link Google account to user.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "user_link_failed",
+                "error_description": "Failed to link Google account to user.",
+            }
         )
 
     # fastapi-users JWTStrategy.write_token is async in the version used by the backend container.
