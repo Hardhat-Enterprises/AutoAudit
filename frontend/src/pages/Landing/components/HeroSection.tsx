@@ -9,15 +9,18 @@ type FloatingCard = {
 };
 
 const floatingCards: FloatingCard[] = [
+  // "99.9% Uptime" was an availability commitment with no SLA behind it, and
+  // "Real-Time Monitoring" described a scheduler the product does not have:
+  // every scan is started by a person or an API call.
   {
     icon: Lock,
-    title: "99.9% Uptime",
-    subtitle: "Enterprise-grade reliability you can trust",
+    title: "Evidence You Can Check",
+    subtitle: "Every result carries the configuration it was assessed from",
   },
   {
     icon: Bolt,
-    title: "Real-Time Monitoring",
-    subtitle: "Instant alerts and comprehensive insights",
+    title: "On-Demand Scans",
+    subtitle: "Run a benchmark against your tenant whenever you need one",
   },
   {
     icon: BarChart3,
@@ -50,7 +53,7 @@ const HeroSection = ({ onSignInClick }: HeroSectionProps) => {
           <p className="text-[1.2rem] leading-relaxed text-[rgb(var(--landing-text-soft))]">
             Compliance made easy for you. View your dashboards anytime,
             anywhere. Automate security monitoring and stay ahead of threats
-            with real-time insights.
+            with evidence you can check.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4 max-lg:justify-center">
