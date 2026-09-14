@@ -1,4 +1,3 @@
-# pylint: disable=line-too-long,broad-exception-caught,too-many-locals,too-many-statements,duplicate-code,too-many-arguments,unused-argument,too-many-branches,too-many-nested-blocks,import-outside-toplevel
 """Security report generation service module for AutoAudit.
 
 Renders DOCX and PDF audit reports from evidence processing data.
@@ -18,6 +17,7 @@ from docx.shared import Inches
 from fpdf import FPDF
 
 
+# pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def generate_pdf(
     data: Mapping[str, Any],
     *,
@@ -27,20 +27,7 @@ def generate_pdf(
     image_marker: str = "[Embed evidence here]",
     unique_id_override: Optional[str] = None,
 ) -> Path:
-    """Render a single PDF from the in-memory mapping produced by the OCR/rules step.
-
-    Expected keys in `data` (case/spacing tolerant):
-      UniqueID or UserID -> becomes UniqueID in template
-      Evidence -> path to original evidence file
-      Evidence Preview (optional) -> path to an image to embed
-      Strategy, TestID, Sub-Strategy, ML Level, Pass/Fail, Priority,
-      Recommendation -> Recommendations, Evidence Extract -> Extract
-      Description
-      Confidence
-
-    Returns:
-        Path: Path to the generated PDF.
-    """
+    """Render a single PDF from the in-memory mapping produced by the OCR/rules step."""
     mapping, embed_path, unique_id = _map_to_placeholders(data, Path(base_dir))
 
     if unique_id_override:
@@ -74,8 +61,7 @@ def generate_pdf(
     return pdf_path
 
 
-# ---------- Mapping (OCR dict -> template placeholders) ----------
-
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _normalize_keys(d: Mapping[str, Any]) -> Dict[str, str]:
     """Normalize dictionary keys for consistent field lookup."""
     norm: Dict[str, str] = {}
@@ -85,6 +71,7 @@ def _normalize_keys(d: Mapping[str, Any]) -> Dict[str, str]:
     return norm
 
 
+# pylint: disable=invalid-name
 def _pick(norm: Dict[str, str], *names: str) -> str:
     """Select the first matching key value from normalized dictionary."""
     for n in names:
@@ -94,11 +81,11 @@ def _pick(norm: Dict[str, str], *names: str) -> str:
     return ""
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _map_to_placeholders(data: Mapping[str, Any], base_dir: Path) -> Tuple[Dict[str, str], Optional[Path], str]:
     """Map OCR dictionary entries to template placeholder fields and evidence paths."""
     n = _normalize_keys(data)
 
-    # Inputs (tolerant keys)
     unique_id = _pick(n, "uniqueid", "unique id", "userid", "user id") or str(uuid.uuid4())
     strategy = _pick(n, "strategy")
     testid = _pick(n, "testid", "test id")
@@ -111,11 +98,9 @@ def _map_to_placeholders(data: Mapping[str, Any], base_dir: Path) -> Tuple[Dict[
     descr = _pick(n, "description")
     confidence = _pick(n, "confidence")
 
-    # Evidence paths
     evidence_path_str = _pick(n, "evidence", "evidence path", "file", "file path", "filepath", "image", "screenshot")
     preview_path_str = _pick(n, "evidence preview", "preview", "embed path")
 
-    # Resolve paths
     embed_path: Optional[Path] = None
     file_name = ""
     if evidence_path_str:
@@ -137,41 +122,30 @@ def _map_to_placeholders(data: Mapping[str, Any], base_dir: Path) -> Tuple[Dict[
             if ep.exists() and ep.suffix.lower() in {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"}:
                 embed_path = ep
 
-    # Mapping to template placeholders
     mapping: Dict[str, str] = {
         "UniqueID": unique_id,
         "Unique ID": unique_id,
         "UserID": unique_id,
-
         "Strategy": strategy,
         "Test_id": testid,
         "Sub-Strategy": substrat,
-
         "level": level,
         "Level": level,
-
         "Pass/Fail": passfail,
         "Priority": priority,
-
         "Recommendations": rec,
-
         "extract": extract,
         "Extract": extract,
-
         "Description": descr,
         "description": descr,
         "Confidence": confidence or "",
-
         "file name": file_name,
         "File Name": file_name,
-
         "Date Generated": datetime.now().strftime("%d %b %Y"),
     }
     _expand_placeholder_variants(mapping)
     return mapping, embed_path, unique_id
 
-
-# ---------- DOCX helpers ----------
 
 def _iter_paragraphs(doc):
     """Iterate over all paragraphs in docx body and embedded table cells."""
@@ -210,6 +184,7 @@ def _rebuild_paragraph_text(paragraph, mapping: Mapping[str, Any]) -> None:
         paragraph.add_run(repl)
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _replace_braced_placeholders_everywhere(doc, mapping: Mapping[str, Any]) -> None:
     """Replace braced tokens in all document paragraphs and table contents."""
     for p in _iter_paragraphs(doc):
@@ -217,6 +192,7 @@ def _replace_braced_placeholders_everywhere(doc, mapping: Mapping[str, Any]) -> 
             _rebuild_paragraph_text(p, mapping)
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _replace_xml_text_everywhere(doc, mapping: Mapping[str, Any]) -> None:
     """Replace {tokens} in all text nodes across main doc, headers, and footers."""
     def replace_in_part(part):
@@ -275,10 +251,11 @@ def _insert_image_at_marker(doc, marker: str, image_path: os.PathLike | str, wid
     return True
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
     """Convert DOCX file to PDF using docx2pdf, LibreOffice, or pure-Python FPDF fallback."""
     try:
-        from docx2pdf import convert
+        from docx2pdf import convert  # pylint: disable=import-outside-toplevel
         convert(str(input_docx), str(output_pdf))
         return
     except Exception:
@@ -305,6 +282,7 @@ def _convert_docx_to_pdf(input_docx: Path, output_pdf: Path) -> None:
     )
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
     """Fallback PDF generator using fpdf2 when external converters are unavailable."""
     try:
@@ -344,6 +322,7 @@ def _simple_pdf_from_docx(input_docx: Path, output_pdf: Path) -> bool:
         return False
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _remove_markers_everywhere(doc, markers: list[str]) -> None:
     """Remove target marker strings from document body, headers, and footers."""
     for p in _iter_paragraphs(doc):
@@ -389,6 +368,7 @@ def _remove_markers_everywhere(doc, markers: list[str]) -> None:
             pass
 
 
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements,broad-exception-caught,invalid-name,protected-access
 def _expand_placeholder_variants(mapping: Dict[str, str]) -> None:
     """Make token replacement tolerant to dashes, non-ASCII hyphens, and spaces."""
     hyphens = ["-", "\u2010", "\u2011", "\u2013", "\u2014"]
