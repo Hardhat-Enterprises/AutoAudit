@@ -32,9 +32,9 @@ from worker.validators import validate_tenant_id
 class PowerShellExecutionError(Exception):
     """Raised when PowerShell execution fails."""
 
-    pass
 
 
+# pylint: disable=too-many-instance-attributes
 class PowerShellClient:
     """Client for PowerShell-based M365 connections using Docker or HTTP service."""
 
@@ -51,6 +51,8 @@ class PowerShellClient:
         client_id: str,
         client_secret: str,
         service_url: str | None = None,
+        sharepoint_admin_url: str | None = None,
+        certificate_alias: str | None = None,
     ):
         """Initialize PowerShell client.
 
@@ -60,11 +62,16 @@ class PowerShellClient:
             client_secret: Client secret for authentication
             service_url: Optional URL of PowerShell HTTP service (e.g., http://powershell-service:8001).
                          If provided, uses HTTP instead of spawning Docker containers.
+            sharepoint_admin_url: SharePoint admin URL (required for SharePointOnline)
+            certificate_alias: Certificate alias resolved by the PowerShell service
+                               (required for SharePointOnline)
         """
         self.tenant_id = validate_tenant_id(tenant_id)
         self.client_id = client_id
         self.client_secret = client_secret
         self.service_url = service_url
+        self.sharepoint_admin_url = sharepoint_admin_url
+        self.certificate_alias = certificate_alias
         self._msal_app = ConfidentialClientApplication(
             client_id=client_id,
             client_credential=client_secret,
@@ -97,14 +104,18 @@ class PowerShellClient:
             ["docker", "images", "-q", self.DOCKER_IMAGE],
             capture_output=True,
             text=True,
+            check=False,
         )
         if not result.stdout.strip():
-            print(f"Building {self.DOCKER_IMAGE} Docker image (this may take a few minutes)...")
+            print(
+                f"Building {self.DOCKER_IMAGE} Docker image (this may take a few minutes)..."
+            )
             dockerfile_dir = Path(__file__).parent.parent / "docker" / "powershell"
             build_result = subprocess.run(
                 ["docker", "build", "-t", self.DOCKER_IMAGE, str(dockerfile_dir)],
                 capture_output=True,
                 text=True,
+                check=False,
             )
             if build_result.returncode != 0:
                 raise PowerShellExecutionError(
@@ -114,7 +125,9 @@ class PowerShellClient:
 
         self._image_checked = True
 
-    async def run_cmdlet(self, module: str, cmdlet: str, **params: Any) -> dict[str, Any]:
+    async def run_cmdlet(
+        self, module: str, cmdlet: str, **params: Any
+    ) -> dict[str, Any] | list[dict[str, Any]] | None:
         """Execute a PowerShell cmdlet.
 
         Uses HTTP service if service_url is configured, otherwise spawns Docker container.
@@ -127,10 +140,14 @@ class PowerShellClient:
         Returns:
             Dict containing cmdlet output.
         """
+        if module == "SharePointOnline" and not self.service_url:
+            raise PowerShellExecutionError(
+                "SharePointOnline requires the PowerShell HTTP service; "
+                "Docker fallback is not supported"
+            )
         if self.service_url:
             return await self._run_via_service(module, cmdlet, params)
-        else:
-            return await self._run_via_docker(module, cmdlet, params)
+        return await self._run_via_docker(module, cmdlet, params)
 
     async def _run_via_service(
         self, module: str, cmdlet: str, params: dict[str, Any]
@@ -145,43 +162,62 @@ class PowerShellClient:
         Returns:
             Dict containing cmdlet output.
         """
-        # Acquire tokens
-        graph_token = None
-        if module == "Teams":
-            # Teams needs both Graph and Teams tokens
-            graph_result = self._msal_app.acquire_token_for_client(
-                scopes=["https://graph.microsoft.com/.default"]
-            )
-            if "access_token" not in graph_result:
-                error_desc = graph_result.get("error_description", str(graph_result))
-                raise RuntimeError(f"Graph token acquisition failed: {error_desc}")
-            graph_token = graph_result["access_token"]
-
-            teams_result = self._msal_app.acquire_token_for_client(
-                scopes=[self.TEAMS_SCOPE]
-            )
-            if "access_token" not in teams_result:
-                error_desc = teams_result.get("error_description", str(teams_result))
-                raise RuntimeError(f"Teams token acquisition failed: {error_desc}")
-            token = teams_result["access_token"]
+        if module == "SharePointOnline":
+            if not self.sharepoint_admin_url or not self.certificate_alias:
+                raise ValueError(
+                    "SharePointOnline requires sharepoint_admin_url and certificate_alias"
+                )
+            payload: dict[str, Any] = {
+                "module": module,
+                "cmdlet": cmdlet,
+                "params": params,
+                "tenant_id": self.tenant_id,
+                "client_id": self.client_id,
+                "sharepoint_admin_url": self.sharepoint_admin_url,
+                "certificate_alias": self.certificate_alias,
+            }
         else:
-            # Exchange and Compliance use single token
-            scope = self._get_scope_for_module(module)
-            result = self._msal_app.acquire_token_for_client(scopes=[scope])
-            if "access_token" not in result:
-                error_desc = result.get("error_description", str(result))
-                raise RuntimeError(f"Token acquisition failed: {error_desc}")
-            token = result["access_token"]
+            # Acquire tokens
+            graph_token = None
+            if module == "Teams":
+                # Teams needs both Graph and Teams tokens
+                graph_result = self._msal_app.acquire_token_for_client(
+                    scopes=["https://graph.microsoft.com/.default"]
+                )
+                if "access_token" not in graph_result:
+                    error_desc = graph_result.get(
+                        "error_description", str(graph_result)
+                    )
+                    raise RuntimeError(f"Graph token acquisition failed: {error_desc}")
+                graph_token = graph_result["access_token"]
 
-        # Build request payload
-        payload = {
-            "module": module,
-            "cmdlet": cmdlet,
-            "params": params,
-            "tenant_id": self.tenant_id,
-            "token": token,
-            "graph_token": graph_token,
-        }
+                teams_result = self._msal_app.acquire_token_for_client(
+                    scopes=[self.TEAMS_SCOPE]
+                )
+                if "access_token" not in teams_result:
+                    error_desc = teams_result.get(
+                        "error_description", str(teams_result)
+                    )
+                    raise RuntimeError(f"Teams token acquisition failed: {error_desc}")
+                token = teams_result["access_token"]
+            else:
+                # Exchange and Compliance use single token
+                scope = self._get_scope_for_module(module)
+                result = self._msal_app.acquire_token_for_client(scopes=[scope])
+                if "access_token" not in result:
+                    error_desc = result.get("error_description", str(result))
+                    raise RuntimeError(f"Token acquisition failed: {error_desc}")
+                token = result["access_token"]
+
+            # Build request payload
+            payload = {
+                "module": module,
+                "cmdlet": cmdlet,
+                "params": params,
+                "tenant_id": self.tenant_id,
+                "token": token,
+                "graph_token": graph_token,
+            }
 
         # Call HTTP service
         async with httpx.AsyncClient(timeout=120.0) as client:
@@ -233,8 +269,10 @@ class PowerShellClient:
                 raise RuntimeError(f"Teams token acquisition failed: {error_desc}")
 
             env_vars = [
-                "-e", f"GRAPH_TOKEN={graph_result['access_token']}",
-                "-e", f"TEAMS_TOKEN={teams_result['access_token']}",
+                "-e",
+                f"GRAPH_TOKEN={graph_result['access_token']}",
+                "-e",
+                f"TEAMS_TOKEN={teams_result['access_token']}",
             ]
         else:
             # Exchange and Compliance use single token
@@ -255,10 +293,13 @@ class PowerShellClient:
             capture_output=True,
             text=True,
             timeout=120,
+            check=False
         )
 
         if proc.returncode != 0:
-            raise PowerShellExecutionError(f"PowerShell execution failed:\n{proc.stderr}")
+            raise PowerShellExecutionError(
+                f"PowerShell execution failed:\n{proc.stderr}"
+            )
 
         # Parse JSON output
         try:
@@ -290,7 +331,7 @@ class PowerShellClient:
                 param_str += f" -{key} {value}"
 
         if module == "ExchangeOnline":
-            return f'''
+            return f"""
 Import-Module ExchangeOnlineManagement
 Connect-ExchangeOnline -AccessToken $env:EXO_TOKEN -Organization "{self.tenant_id}" -ShowBanner:$false
 try {{
@@ -303,9 +344,9 @@ try {{
 }} finally {{
     Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 }}
-'''
-        elif module == "Compliance":
-            return f'''
+"""
+        if module == "Compliance":
+            return f"""
 Import-Module ExchangeOnlineManagement
 Connect-IPPSSession -AccessToken $env:EXO_TOKEN -Organization "{self.tenant_id}" -ShowBanner:$false
 try {{
@@ -318,10 +359,10 @@ try {{
 }} finally {{
     Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 }}
-'''
-        elif module == "Teams":
+"""
+        if module == "Teams":
             # Teams module uses -AccessTokens (plural) with Graph and Teams tokens
-            return f'''
+            return f"""
 Import-Module MicrosoftTeams
 Connect-MicrosoftTeams -AccessTokens @($env:GRAPH_TOKEN, $env:TEAMS_TOKEN) -TenantId "{self.tenant_id}"
 try {{
@@ -334,9 +375,8 @@ try {{
 }} finally {{
     Disconnect-MicrosoftTeams -ErrorAction SilentlyContinue
 }}
-'''
-        else:
-            raise ValueError(f"Unsupported module: {module}")
+"""
+        raise ValueError(f"Unsupported module: {module}")
 
     def _get_scope_for_module(self, module: str) -> str:
         """Get the appropriate scope for a PowerShell module.

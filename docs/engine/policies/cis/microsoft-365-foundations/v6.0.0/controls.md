@@ -85,7 +85,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 2.1.15 | L1 | Ensure outbound anti-spam message limits are in place | Automated | Automated | `exchange.protection.hosted_outbound_spam_filter` | Implemented | |
 | 2.2.1 | L1 | Ensure emergency access account activity is monitored | Manual | Manual | | N/A | Organizational policy; requires defining which accounts to monitor |
 | 2.4.1 | L1 | Ensure Priority account protection is enabled and configured | Automated | Blocked | | Blocked | IPPSSession requires certificate auth |
-| 2.4.2 | L1 | Ensure Priority accounts have 'Strict protection' presets applied | Automated | Not Started | | Not Started | Requires collector |
+| 2.4.2 | L1 | Ensure Priority accounts have 'Strict protection' presets applied | Automated | Automated | `exchange.protection.priority_account_protection` | Implemented | |
 | 2.4.3 | L2 | Ensure Microsoft Defender for Cloud Apps is enabled and configured | Manual | Manual | | N/A | MCAS configuration requires portal verification |
 | 2.4.4 | L1 | Ensure Zero-hour auto purge for Microsoft Teams is on | Automated | Automated | `exchange.protection.teams_protection_policy` | Implemented | |
 
@@ -95,7 +95,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 
 | Control ID | Level | Title | CIS Suggested Audit Type | Our Audit Type | Collector ID | Status | Notes |
 |------------|-------|-------|--------------------------|----------------|--------------|--------|-------|
-| 3.1.1 | L1 | Ensure Microsoft 365 audit log search is Enabled | Automated | Automated | `exchange.organization.organization_config` | Implemented | Check AuditDisabled = False |
+| 3.1.1 | L1 | Ensure Microsoft 365 audit log search is Enabled | Automated | Automated | `exchange.organization.admin_audit_log_config` | Implemented | Check unified_audit_log_ingestion_enabled = True |
 | 3.2.1 | L1 | Ensure DLP policies are enabled | Automated | Blocked | | Pending | IPPSSession requires certificate auth |
 | 3.2.2 | L1 | Ensure DLP policies are enabled for Microsoft Teams | Automated | Blocked | | Pending | IPPSSession requires certificate auth |
 | 3.3.1 | L1 | Ensure Information Protection sensitivity label policies are published | Automated | Blocked | | Pending | IPPSSession requires certificate auth |

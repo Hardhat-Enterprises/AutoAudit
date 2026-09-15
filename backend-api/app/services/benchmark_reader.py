@@ -24,14 +24,16 @@ class BenchmarkFileReader:
     def __init__(self, policies_dir: Path | str | None = None):
         if policies_dir is None:
             settings = get_settings()
-            policies_dir = getattr(settings, "POLICIES_DIR", "/app/policies")
+            policies_dir = settings.POLICIES_DIR or "/app/policies"
         self.policies_dir = Path(policies_dir)
 
     def get_benchmark_path(self, framework: str, slug: str, version: str) -> Path:
         """Get the path to a benchmark's directory."""
         return self.policies_dir / framework / slug / version
 
-    def get_benchmark_metadata(self, framework: str, slug: str, version: str) -> dict[str, Any]:
+    def get_benchmark_metadata(
+        self, framework: str, slug: str, version: str
+    ) -> dict[str, Any]:
         """Read metadata.json for a benchmark.
 
         Args:
@@ -72,7 +74,9 @@ class BenchmarkFileReader:
         for control in metadata.get("controls", []):
             if control.get("control_id") == control_id:
                 return control
-        raise ValueError(f"Control {control_id} not found in {framework}/{slug}/{version}")
+        raise ValueError(
+            f"Control {control_id} not found in {framework}/{slug}/{version}"
+        )
 
     def list_benchmarks(self) -> list[dict[str, Any]]:
         """List all available benchmarks by scanning the policies directory.
@@ -80,7 +84,7 @@ class BenchmarkFileReader:
         Returns:
             List of benchmark metadata dicts.
         """
-        benchmarks = []
+        benchmarks: list[dict[str, Any]] = []
         if not self.policies_dir.exists():
             return benchmarks
 
@@ -96,13 +100,17 @@ class BenchmarkFileReader:
                     metadata_file = version_dir / "metadata.json"
                     if metadata_file.exists():
                         try:
-                            metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
+                            metadata = json.loads(
+                                metadata_file.read_text(encoding="utf-8")
+                            )
                             benchmarks.append(metadata)
                         except (json.JSONDecodeError, OSError):
                             pass
         return benchmarks
 
-    def list_controls(self, framework: str, slug: str, version: str) -> list[dict[str, Any]]:
+    def list_controls(
+        self, framework: str, slug: str, version: str
+    ) -> list[dict[str, Any]]:
         """List all controls for a specific benchmark.
 
         Returns:

@@ -445,7 +445,7 @@ const Evidence = ({ sidebarWidth = 220, isDarkMode = true }: EvidencePageProps) 
                     className="report-link"
                     onClick={() => downloadEvidenceReport(token, reportFiles[0])}
                   >
-                    Download PDF
+                    Download report
                   </button>
                 )}
                 <span className="inline-flex justify-center items-center py-1.5 px-2.5 text-xs font-semibold leading-none whitespace-nowrap rounded-full border border-border-subtle bg-border-subtle text-text-strong">

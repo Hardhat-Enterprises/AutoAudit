@@ -34,3 +34,6 @@ env/
 
 # Engine legacy generated outputs
 engine/legacy/engine/autoaudit_reports.json
+
+# Local SharePoint runtime override
+docker-compose.sharepoint.override.yml

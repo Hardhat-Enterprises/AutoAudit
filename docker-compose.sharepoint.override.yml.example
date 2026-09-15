@@ -1,0 +1,13 @@
+# Copy to docker-compose.sharepoint.override.yml and change only the two host paths.
+
+services:
+  worker:
+    environment:
+      - SHAREPOINT_ADMIN_URL=https://t8sjf-admin.sharepoint.com
+      - SHAREPOINT_CERT_ALIAS=t8sjf
+  powershell-service:
+    environment:
+      - SHAREPOINT_CERT_ALIASES={"t8sjf":{"path":"/certs/aliases/t8sjf.pfx","password_file":"/certs/aliases/t8sjf.password"}}
+    volumes:
+      - /home/<USER>/autoaudit-sharepoint-cert/t8sjf.pfx:/certs/aliases/t8sjf.pfx:ro
+      - /home/<USER>/autoaudit-sharepoint-cert/t8sjf.password:/certs/aliases/t8sjf.password:ro
