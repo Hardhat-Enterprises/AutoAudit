@@ -15,8 +15,10 @@ from app.core.config import get_settings
 from app.core.errors import NotFound, not_found_handler
 from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
+from app.core.users import current_active_superuser
 from app.db.session import get_async_session
 from app.schemas.health import ReadinessResponse
+from prometheus_fastapi_instrumentator import Instrumentator # <-- 1. Added import
 
 settings = get_settings()
 
@@ -55,8 +57,8 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.FRONTEND_URL.rstrip("/")],
-        allow_credentials=True,
+        allow_origins=[settings.FRONTEND_URL.rstrip("/")],  # Explicit origin required when credentials are True
+        allow_credentials=True,                   # Must be True to allow HttpOnly auth cookies
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=["X-Request-ID"],
@@ -103,7 +105,13 @@ def create_app() -> FastAPI:
 
         return ReadinessResponse(status="ready")
 
-    return app
+    # Initialize Prometheus Instrumentator and expose the /metrics endpoint.
+    # Restricted to superusers: this exposes internal request/latency data
+    # (endpoint paths, traffic volume, timing) that shouldn't be public.
+    Instrumentator().instrument(app).expose(
+        app, dependencies=[Depends(current_active_superuser)]
+    )
 
+    return app
 
 app = create_app()

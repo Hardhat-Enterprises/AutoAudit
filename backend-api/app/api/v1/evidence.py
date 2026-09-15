@@ -1,6 +1,6 @@
-# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught,too-many-locals,too-many-statements,wrong-import-position,duplicate-code,too-many-arguments,unused-argument
 # type: ignore
 """Evidence API Endpoint Handler Module."""
+
 import hashlib
 import json
 import logging
@@ -11,10 +11,9 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-logger = logging.getLogger("api")
 
 def _find_security_dir() -> Optional[Path]:
     here = Path(__file__).resolve()
@@ -33,13 +32,18 @@ from security.evidence_ui import app as evidence_ui  # noqa: E402
 
 from app.core.auth import get_current_user  # noqa: E402
 from app.db.session import get_async_session  # noqa: E402
-from app.ingestion_service import process_ingestion_security_pipeline, validate_file_extension  # noqa: E402
+from app.ingestion_service import (  # noqa: E402
+    process_ingestion_security_pipeline,
+    validate_file_extension,
+)
 from app.models.evidence_validation import EvidenceValidation  # noqa: E402
 from app.models.user import User  # noqa: E402
 from app.services.encryption import encrypt  # noqa: E402
 from app.services.evidence_validator import validate_text  # noqa: E402
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.get("/strategies")
@@ -187,9 +191,8 @@ async def scan(
     except Exception:
         try:
             await db.rollback()
-        except Exception:  # nosec B110
-            logger.debug("Rollback attempt completed.")
-
+        except Exception:
+            logger.warning("Rollback after evidence validation failure also failed", exc_info=True)
     return scan_result
 
 
