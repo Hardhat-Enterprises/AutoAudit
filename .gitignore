@@ -37,3 +37,12 @@ engine/legacy/engine/autoaudit_reports.json
 
 # Local SharePoint runtime override
 docker-compose.sharepoint.override.yml
+
+# Local Security & Compliance runtime override
+docker-compose.compliance.override.yml
+
+# Certificate and password patterns
+*.pfx
+*.p12
+*.key
+*.password
