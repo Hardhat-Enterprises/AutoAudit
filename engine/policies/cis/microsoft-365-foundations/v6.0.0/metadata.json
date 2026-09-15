@@ -766,10 +766,10 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "entra.devices.device_management_settings",
-      "policy_file": null,
-      "requires_permissions": ["Policy.Read.All"],
+      "automation_status": "ready",
+      "data_collector_id": "entra.devices.device_registration_policy",
+      "policy_file": "5.1.4.2_max_devices_per_user.rego",
+      "requires_permissions": ["Policy.Read.DeviceConfiguration"],
       "notes": null
     },
     {
