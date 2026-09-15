@@ -1,4 +1,4 @@
-package essential_eight.asd_essential_eight.v2025.test_28_mac_3_1
+package essential_eight.asd_essential_eight.v2025.test_e8_mac_3_1
 
 import rego.v1
 

@@ -38,7 +38,7 @@ vba_leaf := "l_vbawarningspolicy"
 # is the only setting that satisfies ML3.
 # Unlike E8-MAC-1.1, which accepts {"2","3","4"} as baseline, this control is strict check,
 # so only "3" counts.
-complaint_levels := {"3"}
+compliant_levels := {"3"}
 
 # The three office apps this controller covers
 required_apps := {"excel", "ppt", "word"}
@@ -73,7 +73,7 @@ enum_suffix(value)  := suffix if {
     suffix := parts[count(parts) - 1]
 }
 
-# Extracts the app key (excel/ppt/word) from settingDefinitionId's prefixe
+# Extracts the app key (excel/ppt/word) from settingDefinitionId's prefix
 # by trimming off its first "~" delimited segment.
 app_of(definition_id) := app if {
     prefix := split(definition_id, "~")[0]
@@ -122,17 +122,17 @@ vba_settings contains entry if {
 }
 
 
-# -----Complaince Rules-----
+# -----Compliance Rules-----
 
 # Compliant only if the policy is on, locked to level 3, and assigned.
 # A correct but unassigned policy reaches no device, so it doesn't count.
 setting_compliant(entry) if {
     entry.policy_enabled
-    entry.level in complaint_levels
+    entry.level in compliant_levels
     entry.assigned
 }
 
-# Called out seperately since the fix is an assignment, and not a configuration change
+# Called out separately since the fix is an assignment, and not a configuration change
 apps_unassigned contains entry.app if {
     some entry in vba_settings
     not entry.assigned
@@ -165,7 +165,7 @@ compliant if {
 compliant_value := true if {compliant} else := false if { true }
 
 msg := sprintf(
-    "Only digitally signed macros ffrom trusted publishers can execute for %s.",
+    "Only digitally signed macros from trusted publishers can execute for %s.",
     [concat(", ", labels(required_apps))],
 ) if {
     compliant
