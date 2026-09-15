@@ -1,0 +1,12 @@
+[allowlist]
+description = "Allowlist test keys and scanners"
+paths = [
+  '''engine/test-sa-key\.json''',
+  '''database/tprm_scanner/.*'''p
+  '''backend-api/tests/.''',
+  '''security/reports/.*'''
+]
+regexes = [
+  '''YourPassword1!''',
+  '''example_secret_key_string'''
+]

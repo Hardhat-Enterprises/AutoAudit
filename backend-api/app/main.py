@@ -1,8 +1,14 @@
-from fastapi import Depends, FastAPI
+# pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught,unused-argument,wrong-import-position
+# type: ignore
+"""AutoAudit Main FastAPI Application Module."""
+
+from typing import Any, Awaitable, Callable
+from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
@@ -17,16 +23,38 @@ from prometheus_fastapi_instrumentator import Instrumentator # <-- 1. Added impo
 settings = get_settings()
 
 
+class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app: FastAPI, max_upload_size: int = 12 * 1024 * 1024) -> None:
+        super().__init__(app)
+        self.max_upload_size: int = max_upload_size
+
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        if request.method == "POST" and "/evidence/scan" in request.url.path:
+            content_length = request.headers.get("content-length")
+            transfer_encoding = request.headers.get("transfer-encoding", "").lower()
+
+            if content_length and int(content_length) > self.max_upload_size:
+                return Response(
+                    content="Security Violation: File size exceeds 10 MB limit.",
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                )
+
+            if transfer_encoding == "chunked" and not content_length:
+                return Response(
+                    content="Security Violation: Chunked transfers without Content-Length not permitted for scans.",
+                    status_code=status.HTTP_411_LENGTH_REQUIRED,
+                )
+
+        return await call_next(request)
+
+
 def create_app() -> FastAPI:
     setup_logging()
     app = FastAPI(title="AutoAudit API", version="0.1.0")
 
-    # RequestLoggingMiddleware must be added before CORSMiddleware
-    # (middleware executes in reverse order - last added runs first)
+    app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=12 * 1024 * 1024)
     app.add_middleware(RequestLoggingMiddleware)
 
-    # Allow the configured frontend to make credentialed API requests.
-    # Expose X-Request-ID so the frontend can use it when reporting errors.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[settings.FRONTEND_URL.rstrip("/")],  # Explicit origin required when credentials are True
@@ -37,19 +65,17 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router, prefix=settings.API_PREFIX)
-
-    # Error handler
     app.add_exception_handler(NotFound, not_found_handler)
 
     @app.get("/")
-    def root():
+    def root() -> Any:
         return {
             "status": "ok",
             "message": "AutoAudit API running",
         }
 
     @app.get("/liveness")
-    def health_check():
+    def health_check() -> Any:
         return {
             "status": "healthy",
         }
@@ -68,7 +94,7 @@ def create_app() -> FastAPI:
     )
     async def readiness_check(
         db: AsyncSession = Depends(get_async_session),
-    ):
+    ) -> Any:
         try:
             await db.execute(text("SELECT 1"))
         except Exception:
