@@ -1,7 +1,6 @@
 # pylint: disable=line-too-long,missing-function-docstring,broad-exception-caught,too-many-locals,too-many-statements,wrong-import-position,duplicate-code,too-many-arguments,unused-argument
 # type: ignore
 """Evidence API Endpoint Handler Module."""
-
 import hashlib
 import json
 import logging
@@ -16,7 +15,6 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger("api")
-
 
 def _find_security_dir() -> Optional[Path]:
     here = Path(__file__).resolve()

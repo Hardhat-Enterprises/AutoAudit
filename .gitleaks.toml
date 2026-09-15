@@ -2,8 +2,8 @@
 description = "Allowlist test keys and scanners"
 paths = [
   '''engine/test-sa-key\.json''',
-  '''database/tprm_scanner/.*''',
-  '''backend-api/tests/.*''',
+  '''database/tprm_scanner/.*'''p
+  '''backend-api/tests/.''',
   '''security/reports/.*'''
 ]
 regexes = [
