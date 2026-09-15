@@ -121,11 +121,12 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "deferred",
-      "data_collector_id": "entra.conditional_access.policies",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "entra.policies.activity_based_timeout",
+      "policy_file": "1.3.2_idle_session_timeout.rego",
       "requires_permissions": ["Policy.Read.All"],
-      "notes": "Requires CA policy coverage verification"
+      "notes": "Collector and Rego policy implemented; OPA tests passing with mock data. Uses documented Graph endpoint /policies/activityBasedTimeoutPolicies. Not yet run end-to-end against a real tenant; flip to 'verified' once confirmed."
+
     },
     {
       "control_id": "1.3.3",
