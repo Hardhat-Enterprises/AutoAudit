@@ -78,9 +78,11 @@ jobs:
               print("\nFull details (still redacted): see the SARIF upload in this run's Security tab, or download the `gitleaks-results.sarif` artifact below.")
           PY
           else
-            echo "## Gitleaks findings" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "No SARIF report was produced (scan likely errored before completing)." >> "$GITHUB_STEP_SUMMARY"
+            {
+              echo "## Gitleaks findings"
+              echo ""
+              echo "No SARIF report was produced (scan likely errored before completing)."
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Upload SARIF report artifact
