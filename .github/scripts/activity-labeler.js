@@ -225,6 +225,8 @@ module.exports = async ({ github, context, core }) => {
     }
   }
 
+  let scanFailures = 0;
+
   for (const pr of prs) {
     try {
       await processOnePr(pr);
@@ -236,6 +238,18 @@ module.exports = async ({ github, context, core }) => {
       // run both scan every open PR in a single pass; without this, one
       // bad PR would silently kill that night's entire backstop scan.
       core.warning(`#${pr.number}: failed during activity scan, skipping (${e.message})`);
+      scanFailures += 1;
     }
+  }
+
+  // Per-PR isolation (above) stops one bad PR from killing the whole scan,
+  // but it also means a SHARED failure (rate limit, API outage) would hit
+  // every remaining PR the same way — each one caught, logged, and skipped
+  // individually — and the job would still exit green with nothing actually
+  // done. Failing the job here (after the loop, not per-PR) surfaces that
+  // case as a run someone will notice and rerun, without giving up the
+  // per-PR isolation itself.
+  if (scanFailures > 0) {
+    core.setFailed(`Activity scan failed for ${scanFailures} of ${prs.length} PR(s) — see warnings above for details.`);
   }
 };
