@@ -61,6 +61,11 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # .secrets.baseline / .gitleaks-baseline.json are machine-generated security
+          # baselines whose hash-like fields (hashed_secret / Commit / Fingerprint) trip
+          # the OTHER tool's generic-secret heuristics; they're already gated by their
+          # own dedicated jobs (ci.detect-secrets.yml, ci.gitleaks.yml).
+          FILTER_REGEX_EXCLUDE: .*\.secrets\.baseline|.*gitleaks-baseline\.json
           VALIDATE_YAML: false
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_PYTHON_BLACK: false
@@ -70,9 +75,21 @@ jobs:
           VALIDATE_MARKDOWN: false
           VALIDATE_NATURAL_LANGUAGE: false
           VALIDATE_MARKDOWN_PRETTIER: false
-          VALIDATE_PYTHON_RUFF: false
-          VALIDATE_PYTHON_PYINK: false
+          # Matches ci.backend-api.yml: JSCPD and TS_STANDARD are not enforced
+          # in this repo. Without these, super-linter's PR-diff mode (VALIDATE_ALL_CODEBASE:
+          # false) also re-lints frontend/ files changed earlier in the same PR whenever
+          # this engine/**-triggered workflow runs, even though this job only exists to
+          # gate engine/ changes.
           VALIDATE_JSCPD: false
+          VALIDATE_TYPESCRIPT_STANDARD: false
+          VALIDATE_PYTHON_RUFF: false
+          # mypy isn't a project dependency and there's no mypy config
+          # anywhere in this repo, so super-linter's mypy step has no
+          # installed stubs for fastapi/sqlalchemy/pydantic/etc and fails
+          # on import-not-found for every Python file touched, regardless
+          # of real type correctness.
+          VALIDATE_PYTHON_MYPY: false
+          VALIDATE_PYTHON_PYINK: false
           VALIDATE_CHECKOV: false
           VALIDATE_YAML_PRETTIER: false
 
