@@ -12,7 +12,6 @@ import type { SignUpFormData, SignUpSubmitPayload } from "../signUpTypes";
 
 const TERMS_ERROR_MESSAGE = "Please agree to the terms and privacy policy";
 const PASSWORD_MISMATCH_MESSAGE = "These passwords do not match"; // pragma: allowlist secret
-
 type SignupFormPanelProps = {
   formData: SignUpFormData;
   onFormChange: (field: keyof SignUpFormData, value: string) => void;

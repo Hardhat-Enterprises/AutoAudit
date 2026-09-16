@@ -18,9 +18,7 @@
     },
     {
       "role": "roles/owner",
-      "members": [
-        "user:owner@example.com"
-      ]
+      "members": ["user:owner@example.com"]
     }
   ]
 }

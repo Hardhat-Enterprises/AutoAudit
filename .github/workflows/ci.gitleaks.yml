@@ -33,6 +33,11 @@ jobs:
           tar -xzf "gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" gitleaks
           sudo mv gitleaks /usr/local/bin/gitleaks
 
+      # No --baseline-path: that mechanism required a committed JSON report
+      # containing real Match/Secret values to match against, which is unsafe
+      # to store in the repo. Suppression of known findings is handled instead
+      # by .gitleaksignore (fingerprints only, no secret content) and
+      # .gitleaks.toml (path-based allowlist for the baseline metadata files).
       - name: Run gitleaks
         id: gitleaks
         continue-on-error: true
@@ -41,7 +46,7 @@ jobs:
             --source . \
             --log-opts="--all" \
             --redact \
-            --baseline-path .gitleaks-baseline.json \
+            --config .gitleaks.toml \
             --report-format sarif \
             --report-path gitleaks-results.sarif \
             --exit-code 1
@@ -78,9 +83,11 @@ jobs:
               print("\nFull details (still redacted): see the SARIF upload in this run's Security tab, or download the `gitleaks-results.sarif` artifact below.")
           PY
           else
-            echo "## Gitleaks findings" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "No SARIF report was produced (scan likely errored before completing)." >> "$GITHUB_STEP_SUMMARY"
+            {
+              echo "## Gitleaks findings"
+              echo ""
+              echo "No SARIF report was produced (scan likely errored before completing)."
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Upload SARIF report artifact
