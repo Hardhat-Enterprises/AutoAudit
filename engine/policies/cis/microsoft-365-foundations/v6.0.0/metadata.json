@@ -19,7 +19,10 @@
       "automation_status": "ready",
       "data_collector_id": "entra.roles.cloud_only_admins",
       "policy_file": "1.1.1_admin_cloud_only.rego",
-      "requires_permissions": ["User.Read.All", "RoleManagement.Read.Directory"],
+      "requires_permissions": [
+        "User.Read.All",
+        "RoleManagement.Read.Directory"
+      ],
       "mitre_attack": [
         {
           "technique_id": "T1078.004",
@@ -55,7 +58,10 @@
       "automation_status": "ready",
       "data_collector_id": "entra.roles.privileged_roles",
       "policy_file": "1.1.3_global_admin_count.rego",
-      "requires_permissions": ["RoleManagement.Read.Directory", "User.Read.All"],
+      "requires_permissions": [
+        "RoleManagement.Read.Directory",
+        "User.Read.All"
+      ],
       "notes": null
     },
     {
@@ -1138,9 +1144,9 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "deferred",
+      "automation_status": "ready",
       "data_collector_id": "entra.conditional_access.policies",
-      "policy_file": null,
+      "policy_file": "5.2.2.2_mfa_all_users.rego",
       "requires_permissions": ["Policy.Read.All"],
       "mitre_attack": [
         {
@@ -1148,7 +1154,7 @@
           "technique_name": "Valid Accounts: Cloud Accounts"
         }
       ],
-      "notes": "Requires verification of exclusions"
+      "notes": "Automated: at least one enabled CA policy requires MFA for all users across all cloud apps. Exclusions are surfaced in details for assessor review, not treated as an automatic fail."
     },
     {
       "control_id": "5.2.2.3",
@@ -1279,9 +1285,9 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "deferred",
+      "automation_status": "ready",
       "data_collector_id": "entra.conditional_access.policies",
-      "policy_file": null,
+      "policy_file": "5.2.2.9_managed_device_required.rego",
       "requires_permissions": ["Policy.Read.All"],
       "mitre_attack": [
         {
@@ -1289,7 +1295,7 @@
           "technique_name": "Valid Accounts: Cloud Accounts"
         }
       ],
-      "notes": "Requires policy coverage verification"
+      "notes": "Automated: at least one enabled CA policy requires a compliant device for all users across all cloud apps."
     },
     {
       "control_id": "5.2.2.10",
@@ -1342,9 +1348,9 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "deferred",
+      "automation_status": "ready",
       "data_collector_id": "entra.conditional_access.policies",
-      "policy_file": null,
+      "policy_file": "5.2.2.12_block_device_code_flow.rego",
       "requires_permissions": ["Policy.Read.All"],
       "mitre_attack": [
         {
@@ -1352,7 +1358,7 @@
           "technique_name": "Steal Application Access Token"
         }
       ],
-      "notes": "Requires policy coverage verification"
+      "notes": "Automated: at least one enabled CA policy blocks the device code sign-in flow (conditions.authenticationFlows.transferMethods == 'deviceCodeFlow') with a block grant control."
     },
     {
       "control_id": "5.2.3.1",
@@ -1888,21 +1894,21 @@
       "requires_permissions": ["SharePoint.Admin"],
       "notes": null
     },
-   {
-  "control_id": "7.2.4",
-  "title": "Ensure OneDrive content sharing is restricted",
-  "description": "Restrict OneDrive content sharing.",
-  "severity": "medium",
-  "service": "SharePoint",
-  "level": "L2",
-  "is_manual": false,
-  "benchmark_audit_type": "Automated",
-  "automation_status": "ready",
-  "data_collector_id": "sharepoint.pnp.tenant",
-  "policy_file": "7.2.4_onedrive_sharing_restricted.rego",
-  "requires_permissions": ["SharePoint.Admin"],
-  "notes": "Collector and policy implemented using PnP integration"
-},
+    {
+      "control_id": "7.2.4",
+      "title": "Ensure OneDrive content sharing is restricted",
+      "description": "Restrict OneDrive content sharing.",
+      "severity": "medium",
+      "service": "SharePoint",
+      "level": "L2",
+      "is_manual": false,
+      "benchmark_audit_type": "Automated",
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.4_onedrive_sharing_restricted.rego",
+      "requires_permissions": ["SharePoint.Admin"],
+      "notes": "Collector and policy implemented using PnP integration"
+    },
     {
       "control_id": "7.2.5",
       "title": "Ensure that SharePoint guest users cannot share items they don't own",
@@ -1916,7 +1922,7 @@
       "data_collector_id": "sharepoint.pnp.tenant",
       "policy_file": "7.2.5_guest_resharing.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": null 
+      "notes": null
     },
     {
       "control_id": "7.2.6",
@@ -2050,11 +2056,11 @@
       "level": "L2",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_sync_client_restriction",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.3.2_restrict_onedrive_sync_unmanaged_devices.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Collector exists but control logic not defined"
+      "notes": null
     },
     {
       "control_id": "8.1.1",
@@ -2535,4 +2541,3 @@
     }
   ]
 }
-

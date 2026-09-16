@@ -79,7 +79,7 @@ export default function Dashboard({
   isDarkMode,
 }: DashboardProps) {
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +108,9 @@ export default function Dashboard({
 
   useEffect(() => {
     async function loadDashboard() {
-      if (!token) return;
+      // Auth is cookie-based now (token is always null); gate on
+      // isAuthenticated instead, or this effect never runs for anyone.
+      if (!isAuthenticated) return;
       setIsLoading(true);
       setError(null);
 
@@ -154,7 +156,7 @@ export default function Dashboard({
     }
 
     loadDashboard();
-  }, [token]);
+  }, [isAuthenticated, token]);
 
   const benchmarkOptions = useMemo(() => {
     const m365 = (benchmarks || []).filter(
@@ -257,7 +259,7 @@ export default function Dashboard({
 
   useEffect(() => {
     async function loadScanDetails() {
-      if (!token) return;
+      if (!isAuthenticated) return;
       const id = latestRelevantScan?.id;
       if (!id) return;
 
@@ -276,7 +278,7 @@ export default function Dashboard({
     }
 
     loadScanDetails();
-  }, [token, latestRelevantScan?.id]);
+  }, [isAuthenticated, token, latestRelevantScan?.id]);
 
   const summary = useMemo(() => {
     const s = latestRelevantScan;
