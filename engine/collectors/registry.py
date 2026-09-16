@@ -68,6 +68,9 @@ from collectors.entra.governance.pim_role_policies import PimRolePoliciesDataCol
 from collectors.entra.groups.groups import GroupsDataCollector
 
 # Policies
+from collectors.entra.policies.activity_based_timeout import (
+    ActivityBasedTimeoutDataCollector,
+)
 from collectors.entra.policies.admin_consent_request_policy import (
     AdminConsentRequestPolicyDataCollector,
 )
@@ -198,6 +201,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     # Groups
     "entra.groups.groups": GroupsDataCollector,
     # Policies
+    "entra.policies.activity_based_timeout": ActivityBasedTimeoutDataCollector,
     "entra.policies.admin_consent_request_policy": AdminConsentRequestPolicyDataCollector,
     "entra.policies.authorization_policy": AuthorizationPolicyDataCollector,
     "entra.policies.b2b_policy": B2BPolicyDataCollector,
