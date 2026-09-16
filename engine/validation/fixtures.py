@@ -1,0 +1,70 @@
+"""Load, validate, and discover compliance verification fixtures."""
+
+import json
+from pathlib import Path
+
+
+class FixtureError(Exception):
+    """Raised when a compliance verification fixture is invalid."""
+
+def discover_fixtures(fixtures_root: Path) -> list[Path]:
+    """Discover all compliance verification fixtures recursively."""
+
+    if not fixtures_root.is_dir():
+        raise FixtureError(
+            f"Fixture directory does not exist: {fixtures_root}"
+        )
+
+    fixtures = sorted(fixtures_root.rglob("*.json"))
+
+    if not fixtures:
+        raise FixtureError(
+            f"No compliance fixtures found under: {fixtures_root}"
+        )
+
+    return fixtures
+
+
+def load_fixture(path: Path) -> dict:
+    """Load and perform basic validation of a compliance fixture."""
+
+    try:
+        with path.open("r", encoding="utf-8") as file:
+            fixture = json.load(file)
+    except json.JSONDecodeError as exc:
+        raise FixtureError(f"{path}: invalid JSON: {exc}") from exc
+
+    required_fields = {
+        "framework",
+        "benchmark",
+        "version",
+        "control_id",
+        "scenario",
+        "input",
+        "expected"
+    }
+
+    missing = required_fields - fixture.keys()
+
+    if missing:
+        raise FixtureError(
+            f"{path}: missing required field(s): {', '.join(sorted(missing))}"
+        )
+
+    if not isinstance(fixture["input"], dict):
+        raise FixtureError(f"{path}: 'input' must be a JSON object")
+
+    if not isinstance(fixture["expected"], dict):
+        raise FixtureError(f"{path}: 'expected' must be a JSON object")
+
+    if "compliant" not in fixture["expected"]:
+        raise FixtureError(
+            f"{path}: expected result must define 'compliant'"
+        )
+
+    if not isinstance(fixture["expected"]["compliant"], bool):
+        raise FixtureError(
+            f"{path}: expected.compliant must be true or false"
+        )
+
+    return fixture
