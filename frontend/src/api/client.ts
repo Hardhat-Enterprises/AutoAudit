@@ -50,6 +50,7 @@ async function fetchWithAuth<T = any>(
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -82,12 +83,13 @@ async function fetchWithAuth<T = any>(
 }
 
 // Auth endpoints
-export async function login(email: string, password: string): Promise<any> {
+export async function login(email: string, password: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/v1/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
+    credentials: "include",
     body: new URLSearchParams({
       username: email,
       password,
@@ -105,7 +107,8 @@ export async function login(email: string, password: string): Promise<any> {
     );
   }
 
-  return response.json();
+  // Cookie-based login returns 204 No Content on success — the JWT is set
+  // via Set-Cookie and is never exposed in the response body.
 }
 
 export type RegisterPayload = {
@@ -129,16 +132,19 @@ export async function register(payload: RegisterPayload): Promise<any> {
   });
 }
 
-export async function logout(token: AuthToken): Promise<any> {
-  // Backend uses FastAPI Users; JWT logout typically returns 204 No Content.
-  // This is best-effort because JWTs are stateless; the client must clear local auth.
-  if (!token) return;
+export async function logout(token?: AuthToken): Promise<any> {
+  // Cookie-based logout: the backend reads the HttpOnly cookie itself and
+  // clears it in the response. No Authorization header is required; we
+  // still forward one if a caller happens to pass it.
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   const response = await fetch(`${API_BASE_URL}/v1/auth/logout`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -155,10 +161,8 @@ export async function logout(token: AuthToken): Promise<any> {
     );
   }
 
-  // 204 No Content (common for logout); nothing to parse.
   if (response.status === 204) return;
 
-  // If the backend ever returns JSON, tolerate empty bodies.
   return response.json().catch(() => null);
 }
 
@@ -249,6 +253,7 @@ export async function deleteContactSubmission(
     headers: {
       Authorization: `Bearer ${token || ""}`,
     },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -360,6 +365,7 @@ export async function deleteConnection(
     headers: {
       Authorization: `Bearer ${token || ""}`,
     },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -466,6 +472,7 @@ export async function deleteScan(
     headers: {
       Authorization: `Bearer ${token || ""}`,
     },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -529,6 +536,7 @@ export async function scanEvidence(
   const response = await fetch(`${API_BASE_URL}/v1/evidence/scan`, {
     method: "POST",
     headers,
+    credentials: "include",
     body: formData,
   });
 
@@ -560,7 +568,10 @@ export function getEvidenceReportUrl(filename: string): string {
   return `${API_BASE_URL}/v1/evidence/reports/${encodeURIComponent(filename)}`;
 }
 
-export async function downloadEvidenceReport(token: AuthToken, filename: string): Promise<void> {
+export async function downloadEvidenceReport(
+  token: AuthToken,
+  filename: string,
+): Promise<void> {
   // Downloads a report file by fetching it with the Bearer token attached.
   // Uses fetch() instead of a plain <a href> so the Authorization header is sent.
   // A plain anchor tag does not send Authorization headers on click, which causes 401.
@@ -573,7 +584,7 @@ export async function downloadEvidenceReport(token: AuthToken, filename: string)
 
   const response = await fetch(
     `${API_BASE_URL}/v1/evidence/reports/${encodeURIComponent(filename)}`,
-    { method: 'GET', headers }
+    { method: "GET", headers, credentials: "include" },
   );
 
   if (!response.ok) {
@@ -582,7 +593,7 @@ export async function downloadEvidenceReport(token: AuthToken, filename: string)
 
   const blob = await response.blob();
   const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
