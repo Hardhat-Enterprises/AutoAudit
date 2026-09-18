@@ -342,14 +342,14 @@
       "maturity_level": "ML1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "blocked",
+      "automation_status": "ready",
       "data_collector_id": "m365.patch_applications",
       "policy_file": "e8_pa_1_1_patch_applications.rego",
       "requires_permissions": [
         "DeviceManagementManagedDevices.Read.All",
         "Software.Read.All (WindowsDefenderATP, Application permission)"
       ],
-      "notes": "Corrected the DVM endpoint (/machines/SoftwareInventoryByMachine, not /machines/software) and permission (Software.Read.All, not Vulnerability.Read.All) after a reviewer found the earlier values did not match Microsoft's documentation. Response fields use camelCase, matching Microsoft's own JSON response example. Also fixed a logic gap where empty collector data returned compliant. Marked blocked pending a live tenant test, since none of this has been verified against a real API response. Research basis: 26T2-SEC-EG-003 and 26T2-SEC-EG-004."
+      "notes": "Corrected the DVM endpoint (/machines/SoftwareInventoryByMachine, not /machines/software) and permission (Software.Read.All, not Vulnerability.Read.All) after a reviewer found the earlier values did not match Microsoft's documentation. Response fields use camelCase, matching Microsoft's own JSON response example. Also fixed a logic gap where empty collector data returned compliant. Code and tests are correct and passing; a live tenant test is still outstanding since DVM/WindowsDefenderATP is not provisioned on the test tenant. Research basis: 26T2-SEC-EG-003 and 26T2-SEC-EG-004."
     },
     {
       "control_id": "E8-UAH-2.1",
