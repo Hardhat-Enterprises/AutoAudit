@@ -5,15 +5,17 @@ Graph, and requires its own Entra app registration and permission,
 distinct from the app registration AutoAudit's existing Graph and
 PowerShell collectors use.
 
-** PERMISSION NAME CONFIRMED **
-This client requests the "Vulnerability.Read.All" application permission,
-under the WindowsDefenderATP API. Confirmed against Microsoft's own
-documentation (Get all vulnerabilities - Microsoft Defender for
-Endpoint, learn.microsoft.com), not from the E8-PA-1.1 report, which
-did not specify a permission name. Register the app permission via
-Entra: API permissions > Add permission > APIs my organization uses >
-WindowsDefenderATP > Application permissions > Vulnerability.Read.All.
-This has NOT yet been tested against the live t8sjf tenant.
+** PERMISSION NAME CORRECTED **
+This client requests the "Software.Read.All" application permission,
+under the WindowsDefenderATP API, per Microsoft's own documentation for
+the /api/machines/SoftwareInventoryByMachine endpoint. An earlier
+version of this file incorrectly requested "Vulnerability.Read.All",
+which is the permission for a different endpoint
+(SoftwareVulnerabilitiesByMachine), not software inventory.
+Register the app permission via Entra: API permissions > Add permission
+> APIs my organization uses > WindowsDefenderATP > Application
+permissions > Software.Read.All.
+This has NOT yet been tested against a live tenant.
 See app registration 7fdf4478-709b-4729-9e0d-e51ca822f465.
 """
 
@@ -67,7 +69,7 @@ class DVMClient:
         """Make a GET request to the DVM API.
 
         Args:
-            endpoint: API path, e.g. "/machines/software"
+            endpoint: API path, e.g. "/machines/SoftwareInventoryByMachine"
             params: Optional query parameters (e.g. OData $filter)
 
         Returns:
@@ -121,8 +123,13 @@ class DVMClient:
     async def get_software_inventory(self) -> list[dict[str, Any]]:
         """Get per-device software inventory from DVM.
 
-        UNVERIFIED: exact endpoint path not confirmed against a live
-        tenant. Based on report 26T2-SEC-EG-003 reference 5:
-        https://learn.microsoft.com/en-us/defender-vulnerability-management/tvm-software-inventory
+        Endpoint and permission confirmed against Microsoft's own docs:
+        https://learn.microsoft.com/en-us/defender-endpoint/api/get-assessment-software-inventory
+        Response fields use camelCase per Microsoft's own JSON response
+        example: deviceId, softwareVendor, softwareName, softwareVersion,
+        numberOfWeaknesses, endOfSupportStatus, endOfSupportDate (the
+        docs' property table lists these as PascalCase column labels,
+        but the actual response body shown uses camelCase). Not yet
+        verified against a live tenant response.
         """
-        return await self.get_all_pages("/machines/software")
+        return await self.get_all_pages("/machines/SoftwareInventoryByMachine")

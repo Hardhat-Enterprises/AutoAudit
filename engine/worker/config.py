@@ -33,6 +33,15 @@ class WorkerSettings(BaseSettings):
     # V1 uses a single mounted alias.
     SHAREPOINT_CERT_ALIAS: str = "default"
 
+    # Defender Vulnerability Management (optional). Used only when constructing
+    # DVMClient for multi-client collectors that declare "dvm" as a required
+    # client. Per 26T2-SEC-EG-003, DVM needs its own, separately registered
+    # Entra app (cannot reuse Graph's existing app registration), so these are
+    # static app-level settings, not per-connection tenant credentials.
+    DVM_TENANT_ID: str | None = None
+    DVM_CLIENT_ID: str | None = None
+    DVM_CLIENT_SECRET: str | None = None
+
     # Security & Compliance (optional). Connect-IPPSSession requires certificate-based
     # app-only auth, so these are needed for any compliance.* collector to run.
     # It must be the tenant's primary .onmicrosoft.com domain -- a tenant GUID is
