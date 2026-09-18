@@ -24,16 +24,16 @@ DVM credentials are assumed SEPARATE from Graph's, matching report
 registration and permissions... distinct from the app registration
 AutoAudit's existing collectors use." UNVERIFIED against the live
 tenant, see the "dvm" branch in tasks.py for where those credentials
-are sourced (settings.DVM_TENANT_ID etc., which do not exist yet).
+are sourced (settings.DVM_TENANT_ID etc., added to worker/config.py).
 
 Data sources:
 - Microsoft Graph, deviceManagement/managedDevices (windowsProtectionState)
   Required permission: DeviceManagementManagedDevices.Read.All
 - Microsoft Defender Vulnerability Management, software inventory
-  Required permission: Confirmed as "Vulnerability.Read.All", application
-  type, under the WindowsDefenderATP API (confirmed against Microsoft's
-  own docs, not the E8-PA-1.1 report, which did not specify a name).
-  Not yet tested against the live t8sjf tenant.
+  Required permission: Software.Read.All, application type, under the
+  WindowsDefenderATP API, confirmed against Microsoft's own docs for
+  the /machines/SoftwareInventoryByMachine endpoint. Not yet tested
+  against a live tenant.
 """
 
 from typing import Any
@@ -141,13 +141,18 @@ class PatchApplicationsDataCollector(BaseMultiClientCollector):
 
         covered = []
         for item in software_raw:
+            # Field names use camelCase, per Microsoft's own JSON response
+            # example for this endpoint (the property table lists
+            # PascalCase names as column labels, but the actual response
+            # body shown in Microsoft's docs uses camelCase: deviceId,
+            # softwareName, numberOfWeaknesses, endOfSupportStatus, etc).
             software_name = (item.get("softwareName") or "").lower()
             if not any(kw in software_name for kw in COVERED_CATEGORY_KEYWORDS):
                 continue
 
             covered.append(
                 {
-                    "device_id": item.get("deviceId") or item.get("machineId"),
+                    "device_id": item.get("deviceId"),
                     "softwareName": item.get("softwareName"),
                     "softwareVendor": item.get("softwareVendor"),
                     "softwareVersion": item.get("softwareVersion"),

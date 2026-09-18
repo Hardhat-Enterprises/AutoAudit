@@ -9,6 +9,13 @@ collect() now takes a dict of clients ({"graph": ..., "dvm": ...}),
 built and injected by tasks.py based on required_clients. Tests use
 plain mocks for both, no need to patch DVMClient at the class level
 since it's no longer built internally.
+
+DVM software inventory fixtures use camelCase field names (softwareName,
+deviceId, numberOfWeaknesses, etc.), matching the actual JSON response
+example in Microsoft's docs for /machines/SoftwareInventoryByMachine
+(the docs' property table lists PascalCase as column labels, but the
+real response body uses camelCase). Earlier fixtures wrongly used
+PascalCase based on a misread of that table.
 """
 
 
@@ -171,17 +178,20 @@ def test_collect_software_inventory_no_covered_software_returns_empty():
     assert result == []
 
 
-def test_collect_software_inventory_machine_id_fallback():
-    # Some DVM responses may use machineId instead of deviceId - UNVERIFIED,
-    # test documents the fallback behaviour either way.
+def test_collect_software_inventory_missing_device_id_is_none():
+    # deviceId is the confirmed real field per Microsoft's own JSON
+    # response example for /machines/SoftwareInventoryByMachine. There
+    # is no machineId fallback in the real API, so a missing deviceId
+    # should surface as None rather than silently falling back to
+    # something else.
     client = _make_dvm_client(
-        [{"machineId": "m1", "softwareName": "Mozilla Firefox", "numberOfWeaknesses": 0}]
+        [{"softwareName": "Mozilla Firefox", "numberOfWeaknesses": 0}]
     )
     collector = PatchApplicationsDataCollector()
 
     result = asyncio.run(collector._collect_software_inventory(client))
 
-    assert result[0]["device_id"] == "m1"
+    assert result[0]["device_id"] is None
 
 
 # --- full collect() integration ---

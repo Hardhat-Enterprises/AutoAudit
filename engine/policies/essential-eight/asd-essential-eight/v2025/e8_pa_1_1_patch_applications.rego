@@ -22,7 +22,7 @@
 #   service: MicrosoftDefender
 #   requires_permissions:
 #   - DeviceManagementManagedDevices.Read.All
-#   - UNVERIFIED (DVM permission, see dvm_client.py)
+#   - Software.Read.All (WindowsDefenderATP, Application permission)
 
 package essential_eight.asd_essential_eight.v2025.control_e8_pa_1_1
 
@@ -78,6 +78,7 @@ software_unsupported := [s |
 # --- Overall compliance ---
 
 is_compliant if {
+	count(input.protection_states) > 0
 	count(devices_signature_overdue) == 0
 	count(devices_realtime_protection_disabled) == 0
 	count(devices_stale_status) == 0
@@ -108,10 +109,15 @@ message := "Patch Applications compliant: Defender is current and active on all 
 	is_compliant
 }
 
+message := "Unable to evaluate Patch Applications: no devices reported protection status, cannot confirm compliance" if {
+	count(input.protection_states) == 0
+}
+
 message := sprintf(
 	"Patch Applications non-compliant: Defender signature overdue on %d device(s)",
 	[count(devices_signature_overdue)],
 ) if {
+	count(input.protection_states) > 0
 	count(devices_signature_overdue) > 0
 }
 

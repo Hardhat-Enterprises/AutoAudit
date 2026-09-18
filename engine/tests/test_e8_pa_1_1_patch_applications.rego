@@ -122,12 +122,17 @@ test_non_compliant_multiple_devices_mixed_failures if {
 	count(result.details.devices_signature_overdue) == 1
 }
 
-test_non_compliant_nothing_configured if {
+test_non_compliant_no_devices_reported if {
+	# Previously named test_non_compliant_nothing_configured and wrongly
+	# asserted compliant == true. A reviewer correctly identified that
+	# empty collector data (e.g. an auth failure returning nothing)
+	# should not be indistinguishable from a genuinely compliant tenant.
 	result := data.essential_eight.asd_essential_eight.v2025.control_e8_pa_1_1.result with input as {
 		"protection_states": [],
 		"software_inventory": [],
 	}
-	result.compliant == true
+	result.compliant == false
+	contains(result.message, "no devices reported")
 	result.details.total_devices == 0
 	result.details.total_covered_software == 0
 }
