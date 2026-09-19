@@ -30,14 +30,13 @@ on:
         description: 'Required when dry_run is unchecked: type RESET exactly to allow real changes.'
         required: false
 
-permissions:
-  pull-requests: write
-  issues: write # labels live under the Issues API even for PRs
-  contents: read
-
 jobs:
   reset:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write # labels live under the Issues API even for PRs
+      contents: read
     env:
       PR_NUMBERS: ${{ inputs.pr_numbers }}
       ALL_OPEN_PRS: ${{ inputs.all_open_prs }}
@@ -46,8 +45,10 @@ jobs:
       DRY_RUN: ${{ inputs.dry_run }}
       CONFIRM: ${{ inputs.confirm }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/github-script@v9
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         with:
           script: |
             const run = require('${{ github.workspace }}/.github/scripts/pr-labels-reset.js');
