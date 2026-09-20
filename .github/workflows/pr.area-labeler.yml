@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: write # REQUIRED for PRs from forks: under pull_request_target, issues.addLabels on a fork PR returns 403 "Resource not accessible by integration" with issues: write alone (same-repo PRs pass either way) — see run #294 on PR #378
       issues: write # labels/labels-list live under the Issues API even for PRs
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
