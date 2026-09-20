@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read # REQUIRED: this job's own script calls pulls.get directly (to fetch each PR before calling labelOne)
+      pull-requests: write # REQUIRED: this job's own script calls pulls.get directly (to fetch each PR before calling labelOne), and write (not read) so issues.addLabels succeeds on PRs from forks — see pr.area-labeler.yml
       issues: write # labels/labels-list live under the Issues API even for PRs
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
