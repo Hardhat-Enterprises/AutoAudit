@@ -124,12 +124,16 @@ async def probe_tenant_details(*, access_token: str) -> TenantDetails:
     display_name = org.get("displayName")
 
     verified = org.get("verifiedDomains") or []
-    verified_domains = [d.get("name") for d in verified if isinstance(d, dict) and d.get("name")]
+    verified_domains = [
+        name for d in verified if isinstance(d, dict) and (name := d.get("name"))
+    ]
     default_domain = next(
         (
-            d.get("name")
+            name
             for d in verified
-            if isinstance(d, dict) and d.get("isDefault") and d.get("name")
+            if isinstance(d, dict) and d.get("isDefault")
+            for name in [d.get("name")]
+            if isinstance(name, str) and name
         ),
         None,
     )
@@ -151,5 +155,3 @@ async def validate_m365_connection(
         client_secret=client_secret,
     )
     return await probe_tenant_details(access_token=token)
-
-

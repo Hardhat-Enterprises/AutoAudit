@@ -1,0 +1,7 @@
+name: Missing permissions fixture
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "linting"

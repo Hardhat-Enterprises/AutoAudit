@@ -12,8 +12,11 @@ ENV PATH="/root/.local/bin:$PATH"
 RUN pwsh -NoProfile -Command " \
     Set-PSRepository PSGallery -InstallationPolicy Trusted; \
     Install-Module -Name ExchangeOnlineManagement -Scope AllUsers -Force; \
-    Install-Module -Name MicrosoftTeams -Scope AllUsers -Force \
+    Install-Module -Name MicrosoftTeams -Scope AllUsers -Force; \
+    Install-Module -Name PnP.PowerShell -RequiredVersion 3.4.0 -Scope AllUsers -Force \
     "
+
+ENV PNPPOWERSHELL_UPDATECHECK=Off
 
 # Create non-root user early, before any COPYs
 RUN tdnf install -y shadow-utils && tdnf clean all \

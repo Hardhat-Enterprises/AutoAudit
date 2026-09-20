@@ -1,12 +1,15 @@
 """Scan API endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from collections import defaultdict
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from collections import defaultdict
 
 from app.core.auth import get_current_user
+from app.core.permissions import require_auditor_or_above
 from app.db.session import get_async_session
 from app.models.compliance import Scan
 from app.models.m365_connection import M365Connection
@@ -37,7 +40,7 @@ router = APIRouter(prefix="/scans", tags=["Scans"])
 @router.post("/", response_model=ScanCreatedResponse, status_code=status.HTTP_201_CREATED)
 async def create_scan(
     scan_data: ScanCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_auditor_or_above),
     db: AsyncSession = Depends(get_async_session),
 ) -> ScanCreatedResponse:
     """Create a new compliance scan.
@@ -128,18 +131,58 @@ async def create_scan(
 async def list_scans(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
-    limit: int = 50,
-    offset: int = 0,
+    scan_status: Literal[
+        "pending",
+        "running",
+        "completed",
+        "failed",
+    ]
+    | None = Query(default=None, alias="status"),
+    framework: str | None = Query(
+        default=None,
+        min_length=1,
+        max_length=50,
+    ),
+    benchmark: str | None = Query(
+        default=None,
+        min_length=1,
+        max_length=100,
+    ),
+    limit: int = Query(
+        default=50,
+        ge=1,
+        le=100,
+    ),
+    offset: int = Query(
+        default=0,
+        ge=0,
+    ),
 ) -> list[Scan]:
-    """List scans for the current user."""
-    result = await db.execute(
+    """List and filter scans belonging to the current user."""
+
+    query = (
         select(Scan)
         .options(selectinload(Scan.m365_connection))
         .where(Scan.user_id == current_user.id)
-        .order_by(Scan.started_at.desc())
+    )
+
+    if scan_status is not None:
+        query = query.where(Scan.status == scan_status)
+
+    if framework is not None:
+        query = query.where(Scan.framework == framework)
+
+    if benchmark is not None:
+        query = query.where(Scan.benchmark == benchmark)
+
+    query = (
+        query.order_by(Scan.started_at.desc())
         .limit(limit)
         .offset(offset)
     )
+
+    result = await db.execute(query)
+
     return list(result.scalars().all())
 
 # Get scan readiness status for a given M365 connection and benchmark. This is used by the frontend before starting a scan to validate the connection and provide feedback on any issues that might cause the scan to fail or have incomplete results.
@@ -330,7 +373,7 @@ async def get_scan_results(
 @router.delete("/{scan_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_scan(
     scan_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_auditor_or_above),
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete a scan (hard delete) and its results."""

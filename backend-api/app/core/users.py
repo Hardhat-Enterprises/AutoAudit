@@ -6,7 +6,7 @@ Official documentation: https://fastapi-users.github.io/fastapi-users/
 
 Key components:
 - UserManager: Handles user lifecycle events (registration, password reset, etc.)
-- Authentication backend: JWT-based authentication with Bearer tokens
+- Authentication backend: JWT-based authentication with secure HTTP-only cookies
 - Dependencies: get_user_db, get_user_manager for dependency injection
 """
 
@@ -16,7 +16,7 @@ from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, IntegerIDMixin
 from fastapi_users.authentication import (
     AuthenticationBackend,
-    BearerTransport,
+    CookieTransport,
     JWTStrategy,
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
@@ -39,7 +39,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         """Called after user registration."""
-        print(f"User {user.id} has registered.")
+        logger.info("User %s has registered.", user.id)
 
     async def on_after_forgot_password(
         self, user: User, token: str, request: Optional[Request] = None
@@ -91,13 +91,19 @@ def get_jwt_strategy() -> JWTStrategy:
     )
 
 
-# Bearer transport for JWT tokens
-bearer_transport = BearerTransport(tokenUrl="api/v1/auth/login")
+# Secure Cookie transport for JWT tokens
+cookie_transport = CookieTransport(
+    cookie_name="autoaudit_jwt",
+    cookie_max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    cookie_secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
+    cookie_httponly=True,
+    cookie_samesite="strict",
+)
 
 # Authentication backend
 auth_backend = AuthenticationBackend(
     name="jwt",
-    transport=bearer_transport,
+    transport=cookie_transport,
     get_strategy=get_jwt_strategy,
 )
 
@@ -109,3 +115,8 @@ fastapi_users = FastAPIUsers[User, int](
 
 # Dependencies for getting current user
 current_active_user = fastapi_users.current_user(active=True)
+
+# Restricted to superusers only -- used to gate internal/operational
+# endpoints (e.g. /metrics) that shouldn't be reachable by regular users
+# or the public internet.
+current_active_superuser = fastapi_users.current_user(active=True, superuser=True)
