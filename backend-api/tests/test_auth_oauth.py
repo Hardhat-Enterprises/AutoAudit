@@ -37,6 +37,20 @@ def _oauth_settings(**overrides) -> Settings:
 # --- helpers -----------------------------------------------------------------
 
 
+def _state_cookie_cleared(response) -> bool:
+    """True if the response tells the browser to delete the OAuth state
+    cookie (Max-Age=0), regardless of what other cookies are set.
+
+    httpx drops Max-Age=0 cookies from response.cookies entirely (it reads
+    them as "already expired, nothing to store"), so the deletion has to be
+    checked on the raw Set-Cookie header instead.
+    """
+    return any(
+        GOOGLE_OAUTH_STATE_COOKIE in header and "Max-Age=0" in header
+        for header in response.headers.get_list("set-cookie")
+    )
+
+
 def test_google_redirect_uri() -> None:
     with patch("app.api.v1.auth.get_settings", return_value=_oauth_settings()):
         assert _google_redirect_uri() == "http://localhost:8000/v1/auth/google/callback"
@@ -87,19 +101,20 @@ async def test_change_password_success(
     async def fake_session() -> AsyncGenerator[AsyncMock, None]:
         yield mock_db_session
 
-    async def fake_user_manager(_session) -> AsyncGenerator[MagicMock, None]:
+    async def fake_user_manager() -> AsyncGenerator[MagicMock, None]:
         yield user_manager
 
-    with (
-        patch("app.db.session.get_async_session", fake_session),
-        patch("app.core.users.get_user_manager", fake_user_manager),
-    ):
-        client: AsyncClient = client_factory(viewer_user)
-        async with client:
-            response = await client.post(
-                "/v1/auth/users/me/change-password",
-                json={"current_password": "old", "new_password": "new-secret"},
-            )
+    test_app.dependency_overrides[get_user_manager] = fake_user_manager
+    try:
+        with patch("app.db.session.get_async_session", fake_session):
+            client: AsyncClient = client_factory(viewer_user)
+            async with client:
+                response = await client.post(
+                    "/v1/auth/users/me/change-password",
+                    json={"current_password": "old", "new_password": "new-secret"},
+                )
+    finally:
+        test_app.dependency_overrides.pop(get_user_manager, None)
 
     assert response.status_code == 200
     assert response.json()["message"] == "Password changed successfully"
@@ -122,19 +137,20 @@ async def test_change_password_wrong_current(
     async def fake_session() -> AsyncGenerator[AsyncMock, None]:
         yield mock_db_session
 
-    async def fake_user_manager(_session) -> AsyncGenerator[MagicMock, None]:
+    async def fake_user_manager() -> AsyncGenerator[MagicMock, None]:
         yield user_manager
 
-    with (
-        patch("app.db.session.get_async_session", fake_session),
-        patch("app.core.users.get_user_manager", fake_user_manager),
-    ):
-        client: AsyncClient = client_factory(viewer_user)
-        async with client:
-            response = await client.post(
-                "/v1/auth/users/me/change-password",
-                json={"current_password": "wrong", "new_password": "new-secret"},
-            )
+    test_app.dependency_overrides[get_user_manager] = fake_user_manager
+    try:
+        with patch("app.db.session.get_async_session", fake_session):
+            client: AsyncClient = client_factory(viewer_user)
+            async with client:
+                response = await client.post(
+                    "/v1/auth/users/me/change-password",
+                    json={"current_password": "wrong", "new_password": "new-secret"},
+                )
+    finally:
+        test_app.dependency_overrides.pop(get_user_manager, None)
 
     assert response.status_code == 400
     assert "incorrect" in response.json()["detail"].lower()
@@ -219,6 +235,9 @@ async def test_google_callback_invalid_state(client_factory) -> None:
 
     assert response.status_code == 302
     assert "error=invalid_state" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the invalid_state failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -235,6 +254,9 @@ async def test_google_callback_missing_code(client_factory) -> None:
 
     assert response.status_code == 302
     assert "error=missing_code" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the missing_code failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -267,6 +289,9 @@ async def test_google_callback_token_exchange_failed(
 
     assert response.status_code == 302
     assert "error=token_exchange_failed" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the token_exchange_failed failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -306,6 +331,9 @@ async def test_google_callback_userinfo_failed(
 
     assert response.status_code == 302
     assert "error=userinfo_failed" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the userinfo_failed failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -349,6 +377,9 @@ async def test_google_callback_invalid_profile(
 
     assert response.status_code == 302
     assert "error=invalid_profile" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the invalid_profile failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -396,6 +427,9 @@ async def test_google_callback_email_not_verified(
 
     assert response.status_code == 302
     assert "error=email_not_verified" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the email_not_verified failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -446,6 +480,9 @@ async def test_google_callback_user_link_failed(
 
     assert response.status_code == 302
     assert "error=user_link_failed" in response.headers["location"]
+    assert _state_cookie_cleared(response), (
+        "expected the user_link_failed failure path to clear the OAuth state cookie"
+    )
 
 
 @pytest.mark.asyncio
@@ -505,6 +542,8 @@ async def test_google_callback_success(
 
     assert response.status_code == 302
     location = response.headers["location"]
-    assert "access_token=jwt-access-token" in location
-    assert "token_type=bearer" in location
+    # The JWT is delivered via a secure HttpOnly cookie, not the URL fragment
+    # (avoids leaking the token through browser history / Referer headers).
+    assert "access_token=" not in location
+    assert response.cookies.get("autoaudit_jwt") == "jwt-access-token"
     user_manager.oauth_callback.assert_awaited()

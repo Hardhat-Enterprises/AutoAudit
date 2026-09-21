@@ -67,7 +67,7 @@ Register and log in to get a token:
 ```bash
 curl -X POST http://localhost:8000/v1/auth/register \
     -H 'Content-Type: application/json' \
-    -d '{"email": "you@example.com", "password": "YourPassword1!", "username": "yourname"}'
+    -d '{"email": "you@example.com", "password": "YourPassword1!", "username": "yourname"}'  # pragma: allowlist secret
 
 curl -X POST http://localhost:8000/v1/auth/login \
     -H 'Content-Type: application/x-www-form-urlencoded' \
