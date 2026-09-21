@@ -7,68 +7,26 @@ import BrandPanel from "./components/BrandPanel";
 import LandingFooter from "../Landing/components/LandingFooter";
 import { useAuth } from "../../context/AuthContext";
 
-const CALLBACK_CACHE_KEY = "autoaudit.oauth.google.callback.params";
-
-type OAuthCallbackPayload = {
-  access_token?: string | null;
-  token_type?: string | null;
-  error?: string | null;
-  error_description?: string | null;
-};
-
-function safeJsonParse(value: string | null): unknown {
-  if (!value) return null;
-  try {
-    return JSON.parse(value) as unknown;
-  } catch {
-    return null;
-  }
-}
-
-function readCachedCallbackParams(): OAuthCallbackPayload | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const parsed = safeJsonParse(window.sessionStorage.getItem(CALLBACK_CACHE_KEY));
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return parsed as OAuthCallbackPayload;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function writeCachedCallbackParams(payload: OAuthCallbackPayload): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.setItem(CALLBACK_CACHE_KEY, JSON.stringify(payload));
-  } catch {
-    // best-effort
-  }
-}
-
-function clearCachedCallbackParams(): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.removeItem(CALLBACK_CACHE_KEY);
-  } catch {
-    // best-effort
-  }
-}
-
-function getOAuthParams(): URLSearchParams {
-  const rawHash = typeof window !== "undefined" ? window.location.hash : "";
-  const hash = rawHash.startsWith("#") ? rawHash.slice(1) : rawHash;
-  const merged = new URLSearchParams(hash);
-
+function getOAuthErrorParams(): {
+  error: string | null;
+  errorDescription: string | null;
+} {
   const rawSearch = typeof window !== "undefined" ? window.location.search : "";
-  const search = rawSearch.startsWith("?") ? rawSearch.slice(1) : rawSearch;
-  const searchParams = new URLSearchParams(search);
-  for (const [key, value] of searchParams.entries()) {
-    if (!merged.has(key)) merged.set(key, value);
-  }
+  const searchParams = new URLSearchParams(
+    rawSearch.startsWith("?") ? rawSearch.slice(1) : rawSearch,
+  );
 
-  return merged;
+  const rawHash = typeof window !== "undefined" ? window.location.hash : "";
+  const hashParams = new URLSearchParams(
+    rawHash.startsWith("#") ? rawHash.slice(1) : rawHash,
+  );
+
+  return {
+    error: searchParams.get("error") || hashParams.get("error"),
+    errorDescription:
+      searchParams.get("error_description") ||
+      hashParams.get("error_description"),
+  };
 }
 
 const GoogleCallbackPage = () => {
@@ -81,38 +39,10 @@ const GoogleCallbackPage = () => {
     let cancelled = false;
 
     async function finish() {
-      const params = getOAuthParams();
-
-      const urlPayload: OAuthCallbackPayload = {
-        access_token:
-          params.get("access_token") || params.get("token") || params.get("accessToken"),
-        token_type: params.get("token_type") || params.get("tokenType"),
-        error: params.get("error"),
-        error_description: params.get("error_description") || params.get("errorDescription"),
-      };
-
-      if (urlPayload.access_token || urlPayload.error) {
-        writeCachedCallbackParams(urlPayload);
-      }
-
-      const cachedPayload = readCachedCallbackParams();
-      const accessToken = urlPayload.access_token || cachedPayload?.access_token;
-      const oauthError = urlPayload.error || cachedPayload?.error;
-      const oauthErrorDescription = urlPayload.error_description || cachedPayload?.error_description;
+      const { error: oauthError, errorDescription } = getOAuthErrorParams();
 
       if (oauthError) {
-        if (!cancelled) {
-          setError(oauthErrorDescription || oauthError);
-        }
-        clearCachedCallbackParams();
-        return;
-      }
-
-      if (!accessToken) {
-        if (!cancelled) {
-          setError("Missing access token. Please try signing in again.");
-        }
-        clearCachedCallbackParams();
+        if (!cancelled) setError(errorDescription || oauthError);
         return;
       }
 
@@ -123,17 +53,19 @@ const GoogleCallbackPage = () => {
       }
 
       try {
-        await auth.loginWithAccessToken(accessToken, false);
-        clearCachedCallbackParams();
+        // The backend already set the HttpOnly session cookie before
+        // redirecting here (auth.py `/google/callback`). There is no token
+        // in the URL any more — just confirm the session is live.
+        await auth.completeOAuthLogin();
         if (!cancelled) {
           window.location.replace("/dashboard");
         }
       } catch (err) {
         if (!cancelled) {
-          const msg = err instanceof Error ? err.message : "Google sign-in failed. Please try again.";
+          const msg =
+            err instanceof Error ? err.message : "Google sign-in failed. Please try again.";
           setError(msg);
         }
-        clearCachedCallbackParams();
       }
     }
 

@@ -14,7 +14,7 @@ Required Permissions: Exchange.ManageAsApp + Exchange role assignment
 
 from typing import Any
 
-from collectors.powershell_base import BasePowerShellCollector
+from collectors.powershell_base import BasePowerShellCollector, as_dict
 from collectors.powershell_client import PowerShellClient
 
 
@@ -34,8 +34,9 @@ class AdminAuditLogConfigDataCollector(BasePowerShellCollector):
             - unified_audit_log_ingestion_enabled: Unified audit log
               ingestion status (CIS 3.1.1)
         """
-        config = await client.run_cmdlet("ExchangeOnline", "Get-AdminAuditLogConfig")
-
+        config = as_dict(
+            await client.run_cmdlet("ExchangeOnline", "Get-AdminAuditLogConfig")
+        )
         return {
             "admin_audit_log_config": config,
             "unified_audit_log_ingestion_enabled": config.get(

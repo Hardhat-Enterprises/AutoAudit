@@ -8,8 +8,11 @@ from fastapi_users import exceptions
 from fastapi.responses import RedirectResponse
 from httpx_oauth.clients.google import GoogleOAuth2
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import get_settings
 from app.core.users import auth_backend, fastapi_users, get_jwt_strategy, get_user_manager
+from app.db.session import get_async_session
 from app.schemas.user import UserRead, UserCreate, UserRegister, UserUpdate
 from app.core.auth import get_current_user
 from app.models.user import User
@@ -24,7 +27,7 @@ router.include_router(
     prefix="",
 )
 
-# Login endpoint
+# Login and Logout endpoints using secure HttpOnly cookies via auth_backend
 router.include_router(
     fastapi_users.get_auth_router(auth_backend),
     prefix="",
@@ -44,29 +47,21 @@ async def read_users_me(user: User = Depends(get_current_user)):
 async def update_users_me(
     user_update: UserUpdate,
     user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Update current authenticated user's profile information."""
-    from app.db.session import get_async_session
-
-    async for session in get_async_session():
-        db_user = await session.get(User, user.id)
-
-        if db_user is None:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        if user_update.first_name is not None:
-            db_user.first_name = user_update.first_name
-
-        if user_update.last_name is not None:
-            db_user.last_name = user_update.last_name
-
-        if user_update.organization_name is not None:
-            db_user.organization_name = user_update.organization_name
-
-        await session.commit()
-        await session.refresh(db_user)
-
-        return db_user
+    db_user = await db.get(User, user.id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user_update.first_name is not None:
+        db_user.first_name = user_update.first_name
+    if user_update.last_name is not None:
+        db_user.last_name = user_update.last_name
+    if user_update.organization_name is not None:
+        db_user.organization_name = user_update.organization_name
+    await db.commit()
+    await db.refresh(db_user)
+    return db_user
 
 
 # Change password endpoint
@@ -81,36 +76,22 @@ class PasswordChange(BaseModel):
 async def change_password(
     password_data: PasswordChange,
     user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+    user_manager=Depends(get_user_manager),
 ):
     """Change current user's password."""
-    from app.db.session import get_async_session
-    from app.core.users import get_user_manager
-
-    async for session in get_async_session():
-        db_user = await session.get(User, user.id)
-
-        if db_user is None:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        async for user_manager in get_user_manager(session):
-            verified, _ = user_manager.password_helper.verify_and_update(
-                password_data.current_password,
-                db_user.hashed_password,
-            )
-
-            if not verified:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Current password is incorrect",
-                )
-
-            db_user.hashed_password = user_manager.password_helper.hash(
-                password_data.new_password
-            )
-
-            await session.commit()
-
-            return {"message": "Password changed successfully"}
+    db_user = await db.get(User, user.id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    verified, _ = user_manager.password_helper.verify_and_update(
+        password_data.current_password,
+        db_user.hashed_password,
+    )
+    if not verified:
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    db_user.hashed_password = user_manager.password_helper.hash(password_data.new_password)
+    await db.commit()
+    return {"message": "Password changed successfully"}
 
 
 # Include users router
@@ -130,6 +111,30 @@ def _frontend_google_callback_url(fragment_params: dict[str, str]) -> str:
     base = settings.FRONTEND_URL.rstrip("/")
     fragment = urlencode(fragment_params)
     return f"{base}/auth/google/callback#{fragment}"
+
+
+def _google_callback_error_redirect(fragment_params: dict[str, str]) -> RedirectResponse:
+    """Redirect to the frontend with an error AND clear the OAuth state cookie.
+
+    Every callback outcome -- success or failure -- must consume the state
+    cookie. Otherwise a failed attempt leaves a still-valid state sitting in
+    the browser for up to its 10-minute max_age, reusable by a later
+    callback request instead of being tied to the one authorization attempt
+    it was issued for.
+    """
+    settings = get_settings()
+    response = RedirectResponse(
+        _frontend_google_callback_url(fragment_params),
+        status_code=status.HTTP_302_FOUND,
+    )
+    response.delete_cookie(
+        GOOGLE_OAUTH_STATE_COOKIE,
+        path=f"{settings.API_PREFIX}/auth/google/callback",
+        secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
+        httponly=True,
+        samesite="lax",
+    )
+    return response
 
 
 def _google_oauth_client() -> GoogleOAuth2:
@@ -199,25 +204,19 @@ async def google_callback(
 
     cookie_state = request.cookies.get(GOOGLE_OAUTH_STATE_COOKIE)
     if not state or not cookie_state or state != cookie_state:
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "invalid_state",
-                    "error_description": "Invalid OAuth state. Please try again.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "invalid_state",
+                "error_description": "Invalid OAuth state. Please try again.",
+            }
         )
 
     if not code:
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "missing_code",
-                    "error_description": "Google did not return an authorization code.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "missing_code",
+                "error_description": "Google did not return an authorization code.",
+            }
         )
 
     client = _google_oauth_client()
@@ -227,14 +226,11 @@ async def google_callback(
         google_access_token = token["access_token"]
     except Exception:
         logger.exception("Google OAuth token exchange failed")
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "token_exchange_failed",
-                    "error_description": "Failed to exchange authorization code for tokens.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "token_exchange_failed",
+                "error_description": "Failed to exchange authorization code for tokens.",
+            }
         )
 
     # Fetch OIDC userinfo for email + verification + stable subject identifier (sub).
@@ -248,14 +244,11 @@ async def google_callback(
         profile = resp.json()
     except Exception:
         logger.exception("Google OAuth userinfo fetch failed")
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "userinfo_failed",
-                    "error_description": "Failed to fetch Google user profile.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "userinfo_failed",
+                "error_description": "Failed to fetch Google user profile.",
+            }
         )
 
     email = profile.get("email")
@@ -263,26 +256,20 @@ async def google_callback(
     sub = profile.get("sub")
 
     if not email or not sub:
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "invalid_profile",
-                    "error_description": "Google profile is missing required fields.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "invalid_profile",
+                "error_description": "Google profile is missing required fields.",
+            }
         )
 
     # Link-by-email requires the email to be verified to avoid account takeover.
     if email_verified is not True:
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "email_not_verified",
-                    "error_description": "Google account email is not verified.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "email_not_verified",
+                "error_description": "Google account email is not verified.",
+            }
         )
 
     try:
@@ -299,25 +286,36 @@ async def google_callback(
         )
     except Exception:
         logger.exception("Google OAuth account linking failed")
-        return RedirectResponse(
-            _frontend_google_callback_url(
-                {
-                    "error": "user_link_failed",
-                    "error_description": "Failed to link Google account to user.",
-                }
-            ),
-            status_code=status.HTTP_302_FOUND,
+        return _google_callback_error_redirect(
+            {
+                "error": "user_link_failed",
+                "error_description": "Failed to link Google account to user.",
+            }
         )
 
     # fastapi-users JWTStrategy.write_token is async in the version used by the backend container.
     autoaudit_token = await get_jwt_strategy().write_token(user)
-    redirect_url = _frontend_google_callback_url(
-        {"access_token": autoaudit_token, "token_type": "bearer"}  # nosec B105
+
+    # Redirect to frontend without the token in the URL fragment
+    redirect_url = _frontend_google_callback_url({})
+    response = RedirectResponse(redirect_url, status_code=status.HTTP_302_FOUND)
+
+    # Set the token in a secure, HttpOnly cookie
+    response.set_cookie(
+        key="autoaudit_jwt",
+        value=autoaudit_token,
+        httponly=True,
+        secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
 
-    response = RedirectResponse(redirect_url, status_code=status.HTTP_302_FOUND)
+    # Clean up the OAuth state cookie
     response.delete_cookie(
         GOOGLE_OAUTH_STATE_COOKIE,
         path=f"{settings.API_PREFIX}/auth/google/callback",
+        secure=settings.BACKEND_PUBLIC_URL.startswith("https://"),
+        httponly=True,
+        samesite="lax",
     )
     return response

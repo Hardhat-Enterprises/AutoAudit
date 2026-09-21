@@ -1,0 +1,24 @@
+name: Sync Labels
+
+on:
+  push:
+    branches: [main]
+    paths: [".github/labels.yml"]
+  workflow_dispatch: {} # run manually any time to re-sync
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # REQUIRED for actions/checkout to read the repo — this was missing and caused the "repository not found" failure
+      issues: write # labels API lives under Issues
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: crazy-max/ghaction-github-labeler@548a7c3603594ec17c819e1239f281a3b801ab4d # v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          yaml-file: .github/labels.yml
+          skip-delete: true # never delete labels not listed here — safety first
+          dry-run: false

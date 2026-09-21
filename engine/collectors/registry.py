@@ -37,9 +37,13 @@ from collectors.entra.conditional_access.e8_mfa_enforcement import (
 )
 
 # Devices
+from collectors.entra.devices.app_control_policy import AppControlPolicyDataCollector
 from collectors.entra.devices.asr_rules import ASRRulesDataCollector
 from collectors.entra.devices.configuration_policies import (
     ConfigurationPoliciesDataCollector,
+)
+from collectors.entra.devices.macro_notification_settings import (
+    MacroNotificationSettingsDataCollector,
 )
 from collectors.entra.devices.device_management_settings import (
     DeviceManagementSettingsDataCollector,
@@ -50,7 +54,9 @@ from collectors.entra.devices.device_registration_policy import (
 from collectors.entra.devices.enrollment_restrictions import (
     EnrollmentRestrictionsDataCollector,
 )
-
+from collectors.entra.devices.windows_update_config import (
+    WindowsUpdateConfigDataCollector,
+)
 # Domains
 from collectors.entra.domains.password_policy import PasswordPolicyDataCollector
 
@@ -76,6 +82,9 @@ from collectors.entra.roles.admin_license_footprint import (
 )
 from collectors.entra.roles.cloud_only_admins import CloudOnlyAdminsDataCollector
 from collectors.entra.roles.privileged_roles import PrivilegedRolesDataCollector
+
+# M365 Backup
+from collectors.m365.backup_restore import BackupRestoreDataCollector
 
 # Exchange - DNS
 from collectors.exchange.dns.dns_security_records import (
@@ -131,6 +140,9 @@ from collectors.exchange.protection.hosted_outbound_spam_filter import (
 from collectors.exchange.protection.malware_filter_policy import (
     MalwareFilterPolicyDataCollector,
 )
+from collectors.exchange.protection.priority_account_protection_config import (
+    PriorityAccountProtectionDataCollector,
+)
 from collectors.exchange.protection.safe_attachment_policy import (
     SafeAttachmentPolicyDataCollector,
 )
@@ -139,6 +151,9 @@ from collectors.exchange.protection.safe_links_policy import (
 )
 from collectors.exchange.protection.teams_protection_policy import (
     TeamsProtectionPolicyDataCollector,
+)
+from collectors.exchange.protection.priority_account_protection import (
+    PriorityAccountStrictProtectionDataCollector,
 )
 
 # Exchange - Transport
@@ -170,11 +185,14 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.conditional_access.legacy_auth_block": LegacyAuthBlockDataCollector,
     "entra.conditional_access.e8_mfa_enforcement": E8MfaEnforcementDataCollector,
     # Devices
+    "entra.devices.app_control_policy": AppControlPolicyDataCollector,
     "entra.devices.asr_rules": ASRRulesDataCollector,
     "entra.devices.configuration_policies": ConfigurationPoliciesDataCollector,
+    "entra.devices.macro_notification_settings": MacroNotificationSettingsDataCollector,
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
+    "entra.devices.windows_update_config": WindowsUpdateConfigDataCollector,
     # Domains
     "entra.domains.password_policy": PasswordPolicyDataCollector,
     # Governance
@@ -190,6 +208,8 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.roles.admin_license_footprint": AdminLicenseFootprintDataCollector,
     "entra.roles.cloud_only_admins": CloudOnlyAdminsDataCollector,
     "entra.roles.privileged_roles": PrivilegedRolesDataCollector,
+    # M365 Backup
+    "m365.backup_restore": BackupRestoreDataCollector,
     # Users
     # Exchange - DNS
     "exchange.dns.dns_security_records": DnsSecurityRecordsDataCollector,
@@ -213,13 +233,14 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "exchange.protection.hosted_content_filter": HostedContentFilterDataCollector,
     "exchange.protection.hosted_outbound_spam_filter": HostedOutboundSpamFilterDataCollector,
     "exchange.protection.malware_filter_policy": MalwareFilterPolicyDataCollector,
+    "exchange.protection.priority_account_protection_config": PriorityAccountProtectionDataCollector,
     "exchange.protection.safe_attachment_policy": SafeAttachmentPolicyDataCollector,
     "exchange.protection.safe_links_policy": SafeLinksPolicyDataCollector,
     "exchange.protection.teams_protection_policy": TeamsProtectionPolicyDataCollector,
     # Exchange - Transport
     "exchange.transport.external_in_outlook": ExternalInOutlookDataCollector,
     "exchange.transport.transport_rules": TransportRulesDataCollector,
-    # SharePoint - PnP
+    "exchange.protection.priority_account_protection": PriorityAccountStrictProtectionDataCollector,
     "sharepoint.pnp.tenant": PnpTenantDataCollector,
 }
 
