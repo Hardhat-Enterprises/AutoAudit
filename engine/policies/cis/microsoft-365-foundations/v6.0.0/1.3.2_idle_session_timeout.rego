@@ -36,6 +36,10 @@ collector_failed := true if {
   input.collector_error != ""
 } else := false if { true }
 
+unknown := true if {
+  not has_evidence
+} else := false if { true }
+
 compliant := true if {
   not collector_failed
   has_evidence
@@ -45,18 +49,18 @@ compliant := true if {
 
 result := output if {
   timeout := input.idle_timeout_minutes
-  unknown := not has_evidence
-  failed := collector_failed
+  is_unknown := unknown
+  is_failed := collector_failed
 
   output := {
     "compliant": compliant,
-    "message": generate_message(compliant, unknown, failed),
-    "affected_resources": generate_affected(compliant, unknown, failed),
+    "message": generate_message(compliant, is_unknown, is_failed),
+    "affected_resources": generate_affected(compliant, is_unknown, is_failed),
     "details": {
       "idle_timeout_minutes": timeout,
       "idle_timeout_hours": timeout_hours(timeout),
-      "total_policies": input.total_policies,
-      "collector_error": input.collector_error
+      "total_policies": object.get(input, "total_policies", null),
+      "collector_error": object.get(input, "collector_error", null)
     }
   }
 }
