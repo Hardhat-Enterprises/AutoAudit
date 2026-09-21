@@ -94,9 +94,9 @@ Before counting a control as implemented evidence coverage, verify:
 - The policy exists and reads the returned fields.
 - Validation claims identify whether they come from inspection, tests or tenant execution.
 
-### 4.1 Declared but unavailable: 7.2.8 and 7.2.10
+### 4.1 Declared but unavailable: 7.2.8
 
-**Verified repository behaviour:** both controls reference `sharepoint.spo_tenant` in metadata. The corresponding `spo_tenant.py` method raises `NotImplementedError`, and that collector ID is not registered. Both controls are `not_started` and have no policy file.
+**Verified repository behaviour:** control 7.2.8 references `sharepoint.spo_tenant` in metadata. The corresponding `spo_tenant.py` method raises `NotImplementedError`, and that collector ID is not registered. The control remains `not_started` and has no policy file.
 
 These references describe intended wiring, not an available evidence source. They must not be counted as implemented coverage simply because a collector name and Python file exist.
 
@@ -275,8 +275,8 @@ VH-003 does not introduce `compliant_with_review` or any other runtime status. R
 
 | Control | Validation issue | Evidence quality lesson | Required action |
 |---|---|---|---|
-| 7.2.8 / 7.2.10 | Declared collector is stubbed and unregistered. | Metadata is not implemented coverage. | Verify execution and wiring before claiming availability. |
-| 7.3.2 | Domain configuration needs independent organizational validation; main remains a stub. | Non-empty does not mean approved or correct. | Separate intended collection from domain-ownership review. |
+| 7.2.8 | Declared collector is stubbed and unregistered. | Metadata is not implemented coverage. | Verify execution and wiring before claiming availability. |
+| 7.3.2 | Recorded here as a stub; the control is now implemented and `ready` on main. | Repository state changes after validation; documentation can fall behind implementation. | Recheck evidence against current main before finalising documentation. |
 | 5.2.2.3 | Derived coverage omits exclusion context. | A flag may lose material scope information. | Review raw conditions and exclusions; retain the source-level caveat. |
 | 12 deferred CA controls | Contextual coverage remains unresolved. | Configuration collection is not complete compliance assessment. | Record role, exclusion and coverage review requirements. |
 | 3.1.1 | Documentation conflicts with implemented evidence wiring. | Traceability requires reconciliation. | Track the documentation correction separately. |
