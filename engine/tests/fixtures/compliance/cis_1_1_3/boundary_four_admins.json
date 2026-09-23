@@ -7,11 +7,25 @@
   "input": {
     "global_admin_count": 4,
     "global_admins": [
-      {"id": "admin-001", "display_name": "Global Admin 1"},
-      {"id": "admin-002", "display_name": "Global Admin 2"},
-      {"id": "admin-003", "display_name": "Global Admin 3"},
-      {"id": "admin-004", "display_name": "Global Admin 4"}
+      {
+        "id": "admin-001",
+        "display_name": "Global Admin 1"
+      },
+      {
+        "id": "admin-002",
+        "display_name": "Global Admin 2"
+      },
+      {
+        "id": "admin-003",
+        "display_name": "Global Admin 3"
+      },
+      {
+        "id": "admin-004",
+        "display_name": "Global Admin 4"
+      }
     ]
   },
-  "expected": {"compliant": true}
+  "expected": {
+    "compliant": true
+  }
 }
