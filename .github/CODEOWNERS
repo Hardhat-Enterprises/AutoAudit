@@ -1,10 +1,20 @@
-# This file defines required reviewers for all PRs
-# Last updated: March 2026
+# .github/CODEOWNERS — every PR needs an AutoAudit-Reviewers approval
+*       @Hardhat-Enterprises/autoaudit-reviewers
 
-# Default reviewer(s) for everything
-# For T1 2026 the list is primarily du-dhartley and more will be added. Any repository or organisation admins can also review and merge, even if not explicitly listed.
-# Additional contributors can be easily added here.
-*    @du-dhartley @6igby @liyunze-coding
+# Explicit review boundaries; existing repository review team owns each area.
+/engine/policies/ @Hardhat-Enterprises/autoaudit-reviewers
+/engine/collectors/ @Hardhat-Enterprises/autoaudit-reviewers
+/security/ @Hardhat-Enterprises/autoaudit-reviewers
+/backend-api/alembic/ @Hardhat-Enterprises/autoaudit-reviewers
+/.github/ @Hardhat-Enterprises/autoaudit-reviewers
+/tools/ci/ @Hardhat-Enterprises/autoaudit-reviewers
 
-# You can add more specific rules later, e.g.:
-# /docs/    @docs-reviewer
+# Phase 10: the deployment topology, the monitoring rules and the operator tools
+# are the artefacts the plan calls "reviewed IaC". Without an entry they fell
+# through to the `*` catch-all, which is the default rather than a boundary.
+/infrastructure/ @Hardhat-Enterprises/autoaudit-reviewers
+/tools/ops/ @Hardhat-Enterprises/autoaudit-reviewers
+/docker-compose.yml @Hardhat-Enterprises/autoaudit-reviewers
+/docker-compose.production.yml @Hardhat-Enterprises/autoaudit-reviewers
+/docker-compose.compliance.yml @Hardhat-Enterprises/autoaudit-reviewers
+/docker-compose.sharepoint.yml @Hardhat-Enterprises/autoaudit-reviewers

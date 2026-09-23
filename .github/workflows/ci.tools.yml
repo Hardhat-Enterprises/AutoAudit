@@ -1,0 +1,44 @@
+name: "Repository Tools CI"
+
+# tools/tests holds repository-level gates that read the source tree rather than
+# import it. test_product_claims.py asserts that the user-visible frontend copy
+# does not claim a capability the product has not shipped.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/**'
+      - 'frontend/src/**'
+      - '.github/workflows/ci.tools.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/**'
+      - 'frontend/src/**'
+      - '.github/workflows/ci.tools.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Product claim gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        # The gate reads files with pathlib and re; pytest is its only dependency.
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Run product claim gate
+        run: python -m pytest tools/tests/test_product_claims.py -q

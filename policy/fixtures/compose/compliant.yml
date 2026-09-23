@@ -1,0 +1,13 @@
+services:
+  api:
+    image: example/api@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3

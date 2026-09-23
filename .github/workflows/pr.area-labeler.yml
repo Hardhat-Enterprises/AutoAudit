@@ -1,0 +1,44 @@
+name: PR Area & Size Labeler
+
+# pull_request_target (not pull_request): PRs from forks run this with a
+# read-only GITHUB_TOKEN under `pull_request`, which can't write labels.
+# We only read file paths/metadata here — we never check out or execute
+# any code from the fork — so this is safe. actions/checkout below
+# defaults to the base branch's ref on this event, not the fork's head,
+# so it never pulls untrusted code either.
+on:
+  pull_request_target: # zizmor: ignore[dangerous-triggers] — we only read file paths/metadata here, never check out or execute fork code; see the note above.
+    types: [opened, synchronize, reopened]
+
+jobs:
+  area-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read # REQUIRED: this job has no checkout step, so actions/labeler fetches .github/labeler.yml via the API — that needs contents: read (see actions/labeler's own docs)
+    steps:
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7
+        with:
+          configuration-path: .github/labeler.yml
+          sync-labels: true # remove area labels that no longer match after new commits
+
+  metadata-labels:
+    needs: area-labels
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write # labels/labels-list live under the Issues API even for PRs
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
+        with:
+          script: |
+            const { labelOne } = require('${{ github.workspace }}/.github/scripts/pr-metadata-labeler.js');
+            await labelOne({
+              github,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pr: context.payload.pull_request,
+            });

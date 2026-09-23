@@ -1,0 +1,12 @@
+self-hosted-runner:
+  labels: []
+
+paths:
+  .github/workflows/ops.collector.yml:
+    ignore:
+      # `if: false` here is a deliberate, permanent hard-disable of a job that
+      # handles a live GCP service-account credential and pushes infra data
+      # to the repo. See the comment above the guard for the full rationale —
+      # do not remove this ignore rule to "fix" the lint without also
+      # removing the reasons the guard exists.
+      - 'constant expression "false" in condition. remove the if: section'

@@ -4,13 +4,16 @@ on:
   push:
     branches: [main]
     paths:
-      - 'engine/**'
+      - "engine/**"
   pull_request:
     branches: [main]
     paths:
-      - 'engine/**'
+      - "engine/**"
   schedule:
-    - cron: '32 23 * * 6'
+    - cron: "32 23 * * 6"
+
+permissions:
+  contents: read
 
 jobs:
   analyze:
@@ -24,37 +27,44 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['python']
+        language: ["python"]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@6f5948dfacef28e207b48d0905cf90c03365536d # v3
         with:
           languages: ${{ matrix.language }}
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@6f5948dfacef28e207b48d0905cf90c03365536d # v3
         with:
           category: "/language:${{matrix.language}}"
-
 
   run-lint:
     name: Linting Code
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: super-linter/super-linter@b92721f792f381cedc002ecdbb9847a15ece5bb8 # v7.1.0
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # .secrets.baseline / .gitleaks-baseline.json are machine-generated security
+          # baselines whose hash-like fields (hashed_secret / Commit / Fingerprint) trip
+          # the OTHER tool's generic-secret heuristics; they're already gated by their
+          # own dedicated jobs (ci.detect-secrets.yml, ci.gitleaks.yml).
+          FILTER_REGEX_EXCLUDE: .*\.secrets\.baseline|.*gitleaks-baseline\.json
           VALIDATE_YAML: false
           VALIDATE_GITHUB_ACTIONS: false
           VALIDATE_PYTHON_BLACK: false
@@ -64,18 +74,35 @@ jobs:
           VALIDATE_MARKDOWN: false
           VALIDATE_NATURAL_LANGUAGE: false
           VALIDATE_MARKDOWN_PRETTIER: false
+          # Matches ci.backend-api.yml: JSCPD and TS_STANDARD are not enforced
+          # in this repo. Without these, super-linter's PR-diff mode (VALIDATE_ALL_CODEBASE:
+          # false) also re-lints frontend/ files changed earlier in the same PR whenever
+          # this engine/**-triggered workflow runs, even though this job only exists to
+          # gate engine/ changes.
+          VALIDATE_JSCPD: false
+          VALIDATE_TYPESCRIPT_STANDARD: false
+          VALIDATE_PYTHON_RUFF: false
+          # mypy isn't a project dependency and there's no mypy config
+          # anywhere in this repo, so super-linter's mypy step has no
+          # installed stubs for fastapi/sqlalchemy/pydantic/etc and fails
+          # on import-not-found for every Python file touched, regardless
+          # of real type correctness.
+          VALIDATE_PYTHON_MYPY: false
+          VALIDATE_PYTHON_PYINK: false
+          VALIDATE_CHECKOV: false
+          VALIDATE_YAML_PRETTIER: false
 
   test:
     name: Run Engine Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install dependencies
         working-directory: engine
@@ -85,28 +112,69 @@ jobs:
         working-directory: engine
         run: pytest --tb=line tests/test_wiring.py
 
+  compliance-verification:
+    name: Compliance Engine Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install engine dependencies
+        working-directory: engine
+        run: pip install -e ".[dev]"
+
+      - name: Install OPA CLI
+        run: |
+          curl -fsSL -o /tmp/opa \
+            https://openpolicyagent.org/downloads/v1.13.1/opa_linux_amd64_static
+          chmod +x /tmp/opa
+          sudo mv /tmp/opa /usr/local/bin/opa
+          opa version
+
+      - name: Run verification framework unit tests
+        working-directory: engine
+        run: |
+          pytest --tb=line \
+            tests/test_compliance_validator.py \
+            tests/test_compliance_coverage.py
+
+      - name: Run compliance engine verification
+        working-directory: engine
+        run: python -m scripts.validate_engine
+
   report:
     name: Report PR status
-    needs: [analyze, run-lint, test]
+    needs: [analyze, run-lint, test, compliance-verification]
     if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
     steps:
-      - uses: actions/github-script@v7
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Build report body
+        id: build
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const analyze = '${{ needs.analyze.result }}';
             const lint    = '${{ needs.run-lint.result }}';
             const test    = '${{ needs.test.result }}';
+            const verify  = '${{ needs.compliance-verification.result }}';
 
             const icon = r => ({ success: '✅', failure: '❌', cancelled: '🚫', skipped: '⏭️' }[r] ?? '❓');
-            const allPassed = [analyze, lint, test].every(r => ['success', 'skipped'].includes(r));
+            const allPassed = [analyze, lint, test, verify].every(r => ['success', 'skipped'].includes(r));
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const marker = '<!-- ci-report-engine -->'; // used to find and update the existing comment
 
             const body = [
-              marker,
+              '<!-- ci-report-engine -->',
               `### CI: Engine`,
               ``,
               `| Job | Result |`,
@@ -114,32 +182,16 @@ jobs:
               `| Security analysis (CodeQL) | ${icon(analyze)} \`${analyze}\` |`,
               `| Lint | ${icon(lint)} \`${lint}\` |`,
               `| Tests | ${icon(test)} \`${test}\` |`,
+              `| Compliance verification | ${icon(verify)} \`${verify}\` |`,
               ``,
               allPassed
                 ? `All checks passed.`
                 : `One or more checks failed. [View logs](${runUrl})`,
             ].join('\n');
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
+            core.setOutput('body', body);
 
-            const existing = comments.find(c => c.body.includes(marker));
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
+      - uses: ./.github/actions/pr-status-comment
+        with:
+          marker: '<!-- ci-report-engine -->'
+          body: ${{ steps.build.outputs.body }}

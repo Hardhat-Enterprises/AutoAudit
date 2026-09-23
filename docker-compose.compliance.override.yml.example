@@ -1,0 +1,33 @@
+# Copy to docker-compose.compliance.override.yml and change only the two host paths.
+#
+# This reuses the SAME certificate as the SharePoint runtime. AutoAudit passes the
+# M365 connection's client_id to both Connect-PnPOnline and Connect-IPPSSession, so
+# both connections authenticate as the same app registration.
+#
+# Reusing the Sharepoint certificate does NOT remove the Entra prerequisites for S&C PowerShell.
+. The app still needs:
+#   - Exchange.ManageAsApp on Microsoft Exchange Online Protection
+#   - a directory role VALID FOR SECURITY & COMPLIANCE. Global Reader is tested and validated.
+#
+# COMPLIANCE_CERT_ALIASES is kept separate from SHAREPOINT_CERT_ALIASES.
+# A dedicated compliance-only certificate could be swapped in later if desired
+# by editing config only (such as if the user does not want the app to have access
+# to Sharepoint but does want it to access Compliance).
+#
+# COMPLIANCE_ORGANIZATION must be the tenant's primary .onmicrosoft.com domain.
+# A tenant GUID is rejected. Confirm the value in Entra > Settings > Domain names.
+#
+# Safe to use alongside docker-compose.sharepoint.override.yml. The mounts below
+# target the same container paths, so Compose merges them rather than duplicating.
+
+services:
+  worker:
+    environment:
+      - COMPLIANCE_ORGANIZATION=t8sjf.onmicrosoft.com
+      - COMPLIANCE_CERT_ALIAS=t8sjf
+  powershell-service:
+    environment:
+      - COMPLIANCE_CERT_ALIASES={"t8sjf":{"path":"/certs/aliases/t8sjf.pfx","password_file":"/certs/aliases/t8sjf.password"}}
+    volumes:
+      - /home/<USER>/autoaudit-sharepoint-cert/t8sjf.pfx:/certs/aliases/t8sjf.pfx:ro
+      - /home/<USER>/autoaudit-sharepoint-cert/t8sjf.password:/certs/aliases/t8sjf.password:ro

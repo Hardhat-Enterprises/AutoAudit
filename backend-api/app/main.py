@@ -1,45 +1,78 @@
-from fastapi import FastAPI
+"""AutoAudit FastAPI Application Entry Point."""
+
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.logging import setup_logging
+from fastapi.responses import JSONResponse
+from prometheus_fastapi_instrumentator import Instrumentator
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+
+from app.api.health import router as health_router
 from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.core.errors import NotFound, not_found_handler
+from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
-from app.core.errors import not_found_handler, NotFound
+from app.core.users import current_active_superuser
+
 settings = get_settings()
+
+
+class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
+    """Middleware to enforce maximum payload size limit on incoming requests."""
+
+    def __init__(self, app, max_upload_size: int = 10 * 1024 * 1024):
+        super().__init__(app)
+        self.max_upload_size = max_upload_size
+
+    async def dispatch(self, request: Request, call_next):
+        if request.method in ("POST", "PUT", "PATCH"):
+            content_length = request.headers.get("content-length")
+            if content_length and int(content_length) > self.max_upload_size:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "detail": "Security Violation: File size exceeds 10 MB limit."
+                    },
+                )
+        return await call_next(request)
 
 
 def create_app() -> FastAPI:
     setup_logging()
     app = FastAPI(title="AutoAudit API", version="0.1.0")
 
-    # RequestLoggingMiddleware must be added before CORSMiddleware
-    # (middleware executes in reverse order - last added runs first)
+    app.add_middleware(LimitUploadSizeMiddleware)
+
     app.add_middleware(RequestLoggingMiddleware)
 
-    # Allow frontend (localhost:3000 and others) to call the API during development.
-    # CORS must be added last so it runs first and wraps all responses including errors.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # permissive for dev; adjust in prod
-        allow_credentials=False,  # must be False when using wildcard origins
+        allow_origins=[settings.FRONTEND_URL.rstrip("/")],
+        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["X-Request-ID"],
     )
-    app.include_router(api_router, prefix=settings.API_PREFIX)
 
-    # error handler
+    app.include_router(api_router, prefix=settings.API_PREFIX)
+    app.include_router(health_router)
+
     app.add_exception_handler(NotFound, not_found_handler)
 
     @app.get("/")
     def root():
-        return {"status": "ok", "message": "AutoAudit API running"}
-
-    @app.get("/liveness")
-    def health_check():
         return {
-            "status": "healthy",
+            "status": "ok",
+            "message": "AutoAudit API running",
         }
-        
+
+    Instrumentator().instrument(app).expose(
+        app,
+        dependencies=[Depends(current_active_superuser)],
+    )
+
     return app
+
 
 app = create_app()

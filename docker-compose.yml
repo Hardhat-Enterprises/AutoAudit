@@ -18,6 +18,13 @@
 #
 # To test collectors with PowerShell service:
 #   cd engine && uv run python -m scripts.test_collector -c exchange.organization.organization_config --use-service http://localhost:8001
+#
+# NOTE: If you're upgrading an existing local environment after this change,
+# your postgres_data volume still has the OLD password baked in, and any
+# saved connections in your dev DB were encrypted with the OLD ENCRYPTION_KEY.
+# Reset your local state with:
+#   docker compose down -v
+# before starting with the new .env values. This is dev-only data — safe to discard.
 
 services:
   # =============================================================================
@@ -29,7 +36,7 @@ services:
     container_name: autoaudit-db
     environment:
       POSTGRES_USER: autoaudit
-      POSTGRES_PASSWORD: autoaudit_dev_password  # pragma: allowlist secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD not set — see env.example}
       POSTGRES_DB: autoaudit
     ports:
       - "5432:5432"
@@ -101,10 +108,10 @@ services:
       - APP_ENV=dev
 
       # Required: Database connection (PostgreSQL with asyncpg driver)
-      - DATABASE_URL=postgresql+asyncpg://autoaudit:autoaudit_dev_password@db:5432/autoaudit
+      - DATABASE_URL=postgresql+asyncpg://autoaudit:${POSTGRES_PASSWORD}@db:5432/autoaudit
 
       # Required: JWT signing key (CHANGE IN PRODUCTION)
-      - SECRET_KEY=dev-secret-key-change-in-production
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY not set — see env.example}
 
       # Public URLs (used for OAuth redirects)
       - BACKEND_PUBLIC_URL=http://localhost:8000
@@ -123,7 +130,7 @@ services:
       # Required: Fernet encryption key for M365 credentials at rest
       # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
       # This will be passed in with a secret provider in production. This is for local use only.
-      - ENCRYPTION_KEY=Ps-HiS3ww5QzQPc_Mdu5-JyA_jCNbdFHMdiwWSlAfgM=
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY not set — see env.example}
 
       # Optional: Path to policies directory (default: /app/policies)
       - POLICIES_DIR=/app/policies
@@ -154,7 +161,7 @@ services:
     container_name: autoaudit-worker
     environment:
       # Required: Database connection (PostgreSQL - worker uses sync driver)
-      - DATABASE_URL=postgresql+asyncpg://autoaudit:autoaudit_dev_password@db:5432/autoaudit
+      - DATABASE_URL=postgresql+asyncpg://autoaudit:${POSTGRES_PASSWORD}@db:5432/autoaudit
 
       # Required: Redis URL for Celery broker
       - REDIS_URL=redis://redis:6379
@@ -163,7 +170,7 @@ services:
       - OPA_URL=http://opa:8181
 
       # Required: Must match ENCRYPTION_KEY in backend-api for credential decryption
-      - ENCRYPTION_KEY=Ps-HiS3ww5QzQPc_Mdu5-JyA_jCNbdFHMdiwWSlAfgM=
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?ENCRYPTION_KEY not set — see env.example}
 
       # Optional: PowerShell service URL for Exchange/Teams cmdlets
       # When set, worker uses HTTP service instead of spawning Docker containers

@@ -11,7 +11,6 @@ import {
   X,
 } from "lucide-react";
 import {
-  logout as apiLogout,
   updateCurrentUser,
   changePassword,
 } from "../api/client";
@@ -156,25 +155,24 @@ export default function AccountPage({
     }
   };
 
-  // const primaryLabel =
-  //   user?.email ||
-  //   user?.username ||
-  //   user?.name ||
-  //   (user?.id != null ? String(user.id) : null) ||
-  //   "Signed in";
+  const primaryLabel =
+    user?.email ||
+    user?.username ||
+    user?.name ||
+    (user?.id != null ? String(user.id) : null) ||
+    "Signed in";
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
 
-    try {
-      await apiLogout(token);
-    } catch (error) {
-      console.warn("Logout request failed; clearing local auth anyway:", error);
-    } finally {
-      clearAuth();
-      navigate("/");
-    }
+    // clearAuth() is AuthContext's logout(): it already calls the
+    // /v1/auth/logout endpoint and clears local state, with a guard against
+    // duplicate calls. Calling apiLogout(token) here too was firing a
+    // second, redundant request that always came back 401 once the first
+    // had already cleared the session cookie.
+    await clearAuth();
+    navigate("/");
   };
 
   const handleUpdatePassword = async () => {
@@ -321,10 +319,10 @@ export default function AccountPage({
 
               <div>
                 <span className="block text-xs font-semibold uppercase tracking-widest text-slate-400">
-                  Email
+                  Account identifier
                 </span>
                 <span className="mt-2 block text-base font-semibold">
-                  {user?.email || "Not available"}
+                  {primaryLabel}
                 </span>
               </div>
 

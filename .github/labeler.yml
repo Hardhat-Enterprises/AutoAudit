@@ -1,0 +1,58 @@
+# Path-based area labels.
+# Matched top-to-bottom against changed files in the PR. A PR can (and often
+# will) match multiple areas — that's expected; the "area: multi" rollup
+# label is added separately by pr-area-labeler.yml when >1 area matches.
+
+"area: backend-api":
+  - changed-files:
+      - any-glob-to-any-file: "backend-api/**"
+
+"area: security":
+  - changed-files:
+      - any-glob-to-any-file: "security/**"
+
+"area: frontend":
+  - changed-files:
+      - any-glob-to-any-file: "frontend/**"
+
+"area: engine":
+  - changed-files:
+      - any-glob-to-any-file: "engine/**"
+
+"area: infrastructure":
+  - changed-files:
+      - any-glob-to-any-file: "infrastructure/**"
+
+"area: tools":
+  - changed-files:
+      - any-glob-to-any-file: "tools/**"
+
+"area: docs":
+  - changed-files:
+      - any-glob-to-any-file: "docs/**"
+
+"area: ci-cd":
+  - changed-files:
+      # Covers workflows/, CODEOWNERS, dependabot.yml, PR template — all
+      # GitHub-automation/meta config, not just the workflows subfolder.
+      - any-glob-to-any-file: ".github/**"
+
+# Catch-all: loose root-level files (no subfolder) plus IDE project noise
+# (.idea/) that isn't really "owned" by any work area.
+"area: root":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*" # bare "*" (no "/") only matches files with no path separator
+          - ".idea/**"
+
+# ── your two existing manual labels, now automated by path ──
+docker:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/Dockerfile*"
+          - "**/docker-compose*.yml"
+          - "**/.dockerignore"
+
+github_actions:
+  - changed-files:
+      - any-glob-to-any-file: ".github/workflows/**"

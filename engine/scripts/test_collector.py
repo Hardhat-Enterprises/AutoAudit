@@ -13,6 +13,9 @@ Environment Variables:
     M365_TENANT_ID: Azure AD tenant ID
     M365_CLIENT_ID: App registration client ID
     M365_CLIENT_SECRET: App registration client secret
+
+    COMPLIANCE_ORGANIZATION: Primary .onmicrosoft.com domain (compliance.* collectors)
+    COMPLIANCE_CERT_ALIAS: Certificate alias mounted in the PowerShell service
 """
 
 import argparse
@@ -111,7 +114,16 @@ async def test_collector(
     # Create collector and appropriate client
     collector = get_collector(collector_id)
     if isinstance(collector, BasePowerShellCollector):
-        client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
+        client = PowerShellClient(
+            tenant_id,
+            client_id,
+            client_secret,
+            service_url=service_url,
+            sharepoint_admin_url=os.environ.get("SHAREPOINT_ADMIN_URL"),
+            certificate_alias=os.environ.get("SHAREPOINT_CERT_ALIAS"),
+            compliance_organization=os.environ.get("COMPLIANCE_ORGANIZATION"),
+            compliance_cert_alias=os.environ.get("COMPLIANCE_CERT_ALIAS"),
+        )
     else:
         client = GraphClient(tenant_id, client_id, client_secret)
 
@@ -133,6 +145,9 @@ async def test_collector(
         sys.exit(1)
     except Exception as e:
         print(f"Error during collection: {type(e).__name__}: {e}")
+        response = getattr(e, "response", None)
+        if response is not None:
+            print(f"Response body: {response.text}")
         if verbose:
             import traceback
             traceback.print_exc()
@@ -186,7 +201,16 @@ async def test_all_collectors(
         # Use appropriate client based on collector type
         if isinstance(collector, BasePowerShellCollector):
             if ps_client is None:
-                ps_client = PowerShellClient(tenant_id, client_id, client_secret, service_url=service_url)
+                ps_client = PowerShellClient(
+                    tenant_id,
+                    client_id,
+                    client_secret,
+                    service_url=service_url,
+                    sharepoint_admin_url=os.environ.get("SHAREPOINT_ADMIN_URL"),
+                    certificate_alias=os.environ.get("SHAREPOINT_CERT_ALIAS"),
+                    compliance_organization=os.environ.get("COMPLIANCE_ORGANIZATION"),
+                    compliance_cert_alias=os.environ.get("COMPLIANCE_CERT_ALIAS"),
+                )
             client = ps_client
         else:
             client = graph_client
@@ -267,9 +291,11 @@ Examples:
   python -m scripts.test_collector -c exchange.organization.organization_config --use-service http://localhost:8001
 
 Environment Variables:
-  M365_TENANT_ID      Azure AD tenant ID
-  M365_CLIENT_ID      App registration client ID
-  M365_CLIENT_SECRET  App registration client secret
+  M365_TENANT_ID           Azure AD tenant ID
+  M365_CLIENT_ID           App registration client ID
+  M365_CLIENT_SECRET       App registration client secret
+  COMPLIANCE_ORGANIZATION  Primary .onmicrosoft.com domain (compliance.* collectors)
+  COMPLIANCE_CERT_ALIAS    Certificate alias mounted in the PowerShell service
         """,
     )
     parser.add_argument(

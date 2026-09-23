@@ -1,0 +1,10 @@
+name: Compliant workflow fixture
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "linting"

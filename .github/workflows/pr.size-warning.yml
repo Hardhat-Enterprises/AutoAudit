@@ -30,14 +30,52 @@ jobs:
             // without blocking normal development work.
             const fileWarn = 30;
             const lineWarn = 500;
+            const docsPath = "docs/DevSecOps/pr-size-warning.md";
+
+            const summary = core.summary
+              .addHeading("PR size check")
+              .addTable([
+                [
+                  { data: "Metric", header: true },
+                  { data: "PR total", header: true },
+                  { data: "Warning threshold", header: true }
+                ],
+                ["Files changed", String(files), `More than ${fileWarn}`],
+                ["Lines changed", String(total), `More than ${lineWarn}`],
+                ["Additions", String(additions), "-"],
+                ["Deletions", String(deletions), "-"]
+              ]);
 
             if (files > fileWarn || total > lineWarn) {
               core.warning(
                 `PR is large: ${files} files, ${additions} additions, ${deletions} deletions (${total} total). ` +
-                `Consider splitting it into smaller PRs where possible.`
+                `Open this workflow run's job summary for next steps. Split unrelated changes where possible; ` +
+                `otherwise explain why the PR must remain large and identify size increases from generated files, ` +
+                `lock files, migrations, or formatting-only changes. See ${docsPath}. This warning does not block the PR.`
               );
+
+              summary
+                .addRaw(
+                  "**Warning only:** This PR exceeds a size threshold. The check does not block the PR.",
+                  true
+                )
+                .addHeading("Recommended next steps", 2)
+                .addList([
+                  "Split unrelated changes into smaller PRs where possible.",
+                  "Avoid combining frontend, backend, engine, documentation, and workflow changes unless they are directly related.",
+                  "If the PR cannot be split, explain in the PR description why it must remain large.",
+                  "Mention generated files, lock file updates, migrations, or formatting-only changes if they increased the PR size."
+                ])
+                .addRaw(`See \`${docsPath}\` for the contributor guide.`, true);
             } else {
               core.info(
                 `PR size OK: ${files} files, ${additions} additions, ${deletions} deletions (${total} total).`
               );
+
+              summary.addRaw(
+                `This PR is within the warning thresholds. See \`${docsPath}\` for guidance.`,
+                true
+              );
             }
+
+            await summary.write();

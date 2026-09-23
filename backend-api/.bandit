@@ -1,0 +1,5 @@
+# Project-level Bandit options for backend-api (INI).
+# Discovered automatically when scanning this directory; also used by CI.
+# Pytest assert (B101) is expected in tests/ and must not fail security analysis.
+[bandit]
+exclude = tests,.venv,venv
