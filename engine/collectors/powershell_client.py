@@ -8,14 +8,19 @@ can happen either:
 
 Supported modules:
 - ExchangeOnlineManagement (Exchange Online via -AccessToken)
-- ExchangeOnlineManagement (IPPSSession via -AccessToken)
+- ExchangeOnlineManagement (IPPSSession via certificate-based app-only auth)
 - MicrosoftTeams (via -AccessTokens)
 
-Authentication Flow:
+Authentication Flow (Exchange Online, Teams):
 1. Use MSAL ConfidentialClientApplication with client_id + client_secret
 2. Acquire token for the appropriate scope
 3. Pass token to Docker container (via env var) or HTTP service (via request body)
 4. Container/service runs PowerShell cmdlet and returns JSON
+
+Authentication Flow (Compliance):
+1. Use a certificate mounted read-only into the PowerShell service container
+2. Pass a certificate alias to the HTTP service (via request body), never a path
+3. Service runs PowerShell cmdlet and returns JSON
 """
 
 import json
@@ -32,16 +37,14 @@ from worker.validators import validate_tenant_id
 class PowerShellExecutionError(Exception):
     """Raised when PowerShell execution fails."""
 
-    pass
 
 
+# pylint: disable=too-many-instance-attributes
 class PowerShellClient:
     """Client for PowerShell-based M365 connections using Docker or HTTP service."""
 
-    # Service-specific scopes for token acquisition
     EXCHANGE_SCOPE = "https://outlook.office365.com/.default"
     TEAMS_SCOPE = "https://api.interfaces.records.teams.microsoft.com/.default"
-    COMPLIANCE_SCOPE = "https://ps.compliance.protection.outlook.com/.default"
 
     DOCKER_IMAGE = "autoaudit-powershell"
 
@@ -53,6 +56,8 @@ class PowerShellClient:
         service_url: str | None = None,
         sharepoint_admin_url: str | None = None,
         certificate_alias: str | None = None,
+        compliance_organization: str | None = None,
+        compliance_cert_alias: str | None = None,
     ):
         """Initialize PowerShell client.
 
@@ -65,6 +70,10 @@ class PowerShellClient:
             sharepoint_admin_url: SharePoint admin URL (required for SharePointOnline)
             certificate_alias: Certificate alias resolved by the PowerShell service
                                (required for SharePointOnline)
+            compliance_organization: Primary .onmicrosoft.com domain of the tenant
+                                     (required for Compliance)
+            compliance_cert_alias: Certificate alias resolved by the PowerShell service
+                                   from COMPLIANCE_CERT_ALIASES (required for Compliance)
         """
         self.tenant_id = validate_tenant_id(tenant_id)
         self.client_id = client_id
@@ -72,6 +81,8 @@ class PowerShellClient:
         self.service_url = service_url
         self.sharepoint_admin_url = sharepoint_admin_url
         self.certificate_alias = certificate_alias
+        self.compliance_organization = compliance_organization
+        self.compliance_cert_alias = compliance_cert_alias
         self._msal_app = ConfidentialClientApplication(
             client_id=client_id,
             client_credential=client_secret,
@@ -104,6 +115,7 @@ class PowerShellClient:
             ["docker", "images", "-q", self.DOCKER_IMAGE],
             capture_output=True,
             text=True,
+            check=False,
         )
         if not result.stdout.strip():
             print(
@@ -114,6 +126,7 @@ class PowerShellClient:
                 ["docker", "build", "-t", self.DOCKER_IMAGE, str(dockerfile_dir)],
                 capture_output=True,
                 text=True,
+                check=False,
             )
             if build_result.returncode != 0:
                 raise PowerShellExecutionError(
@@ -125,7 +138,7 @@ class PowerShellClient:
 
     async def run_cmdlet(
         self, module: str, cmdlet: str, **params: Any
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | list[dict[str, Any]] | None:
         """Execute a PowerShell cmdlet.
 
         Uses HTTP service if service_url is configured, otherwise spawns Docker container.
@@ -143,10 +156,14 @@ class PowerShellClient:
                 "SharePointOnline requires the PowerShell HTTP service; "
                 "Docker fallback is not supported"
             )
+        if module == "Compliance" and not self.service_url:
+            raise PowerShellExecutionError(
+                "Compliance requires the PowerShell HTTP service; "
+                "Docker fallback is not supported"
+            )
         if self.service_url:
             return await self._run_via_service(module, cmdlet, params)
-        else:
-            return await self._run_via_docker(module, cmdlet, params)
+        return await self._run_via_docker(module, cmdlet, params)
 
     async def _run_via_service(
         self, module: str, cmdlet: str, params: dict[str, Any]
@@ -166,7 +183,7 @@ class PowerShellClient:
                 raise ValueError(
                     "SharePointOnline requires sharepoint_admin_url and certificate_alias"
                 )
-            payload = {
+            payload: dict[str, Any] = {
                 "module": module,
                 "cmdlet": cmdlet,
                 "params": params,
@@ -174,6 +191,20 @@ class PowerShellClient:
                 "client_id": self.client_id,
                 "sharepoint_admin_url": self.sharepoint_admin_url,
                 "certificate_alias": self.certificate_alias,
+            }
+        elif module == "Compliance":
+            if not self.compliance_organization or not self.compliance_cert_alias:
+                raise ValueError(
+                    "Compliance requires compliance_organization and compliance_cert_alias"
+                )
+            payload = {
+                "module": module,
+                "cmdlet": cmdlet,
+                "params": params,
+                "tenant_id": self.tenant_id,
+                "client_id": self.client_id,
+                "certificate_alias": self.compliance_cert_alias,
+                "organization": self.compliance_organization,
             }
         else:
             # Acquire tokens
@@ -200,7 +231,7 @@ class PowerShellClient:
                     raise RuntimeError(f"Teams token acquisition failed: {error_desc}")
                 token = teams_result["access_token"]
             else:
-                # Exchange and Compliance use single token
+                # Exchange uses a single token
                 scope = self._get_scope_for_module(module)
                 result = self._msal_app.acquire_token_for_client(scopes=[scope])
                 if "access_token" not in result:
@@ -274,7 +305,7 @@ class PowerShellClient:
                 f"TEAMS_TOKEN={teams_result['access_token']}",
             ]
         else:
-            # Exchange and Compliance use single token
+            # Exchange uses a single token
             scope = self._get_scope_for_module(module)
             result = self._msal_app.acquire_token_for_client(scopes=[scope])
             if "access_token" not in result:
@@ -292,6 +323,7 @@ class PowerShellClient:
             capture_output=True,
             text=True,
             timeout=120,
+            check=False
         )
 
         if proc.returncode != 0:
@@ -343,22 +375,7 @@ try {{
     Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 }}
 """
-        elif module == "Compliance":
-            return f"""
-Import-Module ExchangeOnlineManagement
-Connect-IPPSSession -AccessToken $env:EXO_TOKEN -Organization "{self.tenant_id}" -ShowBanner:$false
-try {{
-    $result = {cmdlet}{param_str}
-    if ($null -eq $result) {{
-        Write-Output 'null'
-    }} else {{
-        $result | ConvertTo-Json -Depth 10
-    }}
-}} finally {{
-    Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
-}}
-"""
-        elif module == "Teams":
+        if module == "Teams":
             # Teams module uses -AccessTokens (plural) with Graph and Teams tokens
             return f"""
 Import-Module MicrosoftTeams
@@ -374,14 +391,13 @@ try {{
     Disconnect-MicrosoftTeams -ErrorAction SilentlyContinue
 }}
 """
-        else:
-            raise ValueError(f"Unsupported module: {module}")
+        raise ValueError(f"Unsupported module: {module}")
 
     def _get_scope_for_module(self, module: str) -> str:
         """Get the appropriate scope for a PowerShell module.
 
         Args:
-            module: The module name (ExchangeOnline, Teams, Compliance)
+            module: The module name (ExchangeOnline, Teams)
 
         Returns:
             The OAuth scope for the module.
@@ -389,6 +405,5 @@ try {{
         scopes = {
             "ExchangeOnline": self.EXCHANGE_SCOPE,
             "Teams": self.TEAMS_SCOPE,
-            "Compliance": self.COMPLIANCE_SCOPE,
         }
         return scopes.get(module, self.EXCHANGE_SCOPE)

@@ -90,13 +90,13 @@ module.exports = async ({ github, context, core }) => {
   }
   core.info(`Scanning ${prs.length} open PRs`);
 
-  for (const pr of prs) {
+  async function processOnePr(pr) {
     const pr_number = pr.number;
     const labelNames = pr.labels.map((l) => l.name);
 
     if (pr.draft) {
       core.info(`#${pr_number}: draft, skipping`);
-      continue;
+      return;
     }
     if (labelNames.some((n) => EXEMPT_LABELS.includes(n))) {
       // A manual outcome label means a human has already made the call —
@@ -113,7 +113,7 @@ module.exports = async ({ github, context, core }) => {
       } else {
         core.info(`#${pr_number}: has manual outcome label, skipping`);
       }
-      continue;
+      return;
     }
 
     // Gather every timestamped human event on the PR.
@@ -223,5 +223,33 @@ module.exports = async ({ github, context, core }) => {
         await github.rest.issues.addLabels({ owner, repo, issue_number: pr_number, labels: [targetLabel] });
       }
     }
+  }
+
+  let scanFailures = 0;
+
+  for (const pr of prs) {
+    try {
+      await processOnePr(pr);
+    } catch (e) {
+      // One PR's failure (a deleted PR, a transient API error, anything)
+      // must never abort the scan for every other open PR still queued
+      // behind it. This matters most here — more than in the backfill
+      // workflow's own loop — because the nightly cron and a full manual
+      // run both scan every open PR in a single pass; without this, one
+      // bad PR would silently kill that night's entire backstop scan.
+      core.warning(`#${pr.number}: failed during activity scan, skipping (${e.message})`);
+      scanFailures += 1;
+    }
+  }
+
+  // Per-PR isolation (above) stops one bad PR from killing the whole scan,
+  // but it also means a SHARED failure (rate limit, API outage) would hit
+  // every remaining PR the same way — each one caught, logged, and skipped
+  // individually — and the job would still exit green with nothing actually
+  // done. Failing the job here (after the loop, not per-PR) surfaces that
+  // case as a run someone will notice and rerun, without giving up the
+  // per-PR isolation itself.
+  if (scanFailures > 0) {
+    core.setFailed(`Activity scan failed for ${scanFailures} of ${prs.length} PR(s) — see warnings above for details.`);
   }
 };

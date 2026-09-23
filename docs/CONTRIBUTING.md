@@ -93,7 +93,7 @@ AutoAudit is a compliance automation platform for cloud environments. It collect
 - `collectors/` - Data collectors for cloud APIs (see `/engine/collectors/README.md`)
 - `policies/` - Rego policies organized by framework (see `/engine/policies/README.md`)
 
-**Getting started**: The engine has detailed documentation for writing new collectors and policies. Start with the READMEs in the `/engine/collectors/` and `/engine/policies/` directories.
+**Getting started**: Start with the [Engine onboarding hub](engine/README.md). Then see the collector and policy READMEs under `/engine/collectors/` and `/engine/policies/`.
 
 ---
 
@@ -252,6 +252,7 @@ Each control in metadata.json uses this schema:
 | `data_collector_id` | string | Nullable | Collector registry ID, null for manual |
 | `policy_file` | string | Nullable | Rego policy filename, null for manual |
 | `requires_permissions` | array | Nullable | Required API permissions |
+| `mitre_attack` | array | Nullable | MITRE ATT&CK techniques associated with the security exposure of a failed control |
 | `notes` | string | Nullable | Blockers, special considerations |
 
 ---
@@ -379,4 +380,3 @@ Good pull requests make the review process smoother for everyone:
 - **Microsoft Planner items** - Check what's on the board, add tasks for things you're working on and keep them updated so the team is aware
 - **Code Review** - Ask questions in your PR if you're unsure about something
 - **Team Leads** - Reach out to the relevant module or team lead for guidance
-

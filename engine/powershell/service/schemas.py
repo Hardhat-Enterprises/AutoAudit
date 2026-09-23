@@ -5,7 +5,7 @@ from typing import Any, Dict, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from executor import validate_tenant_id
+from executor import validate_tenant_id, validate_organization
 
 _GUID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -50,7 +50,16 @@ class ExecuteRequest(BaseModel):
     )
     certificate_alias: Optional[str] = Field(
         default=None,
-        description="Certificate alias resolved by the service (required for SharePointOnline)",
+        description=(
+            "Certificate alias resolved by the service "
+            "(required for SharePointOnline and Compliance)"
+        ),
+    )
+    organization: Optional[str] = Field(
+        default=None,
+        description=(
+            "Primary .onmicrosoft.com domain of the tenant (required for Compliance)"
+        ),
     )
 
     @field_validator("tenant_id")
@@ -97,6 +106,13 @@ class ExecuteRequest(BaseModel):
             )
         return stripped
 
+    @field_validator("organization")
+    @classmethod
+    def check_organization(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        return validate_organization(v)
+
     @model_validator(mode="after")
     def check_module_auth_fields(self) -> "ExecuteRequest":
         if self.module == "SharePointOnline":
@@ -117,6 +133,24 @@ class ExecuteRequest(BaseModel):
                 raise ValueError("SharePointOnline must not include token.")
             if self.graph_token:
                 raise ValueError("SharePointOnline must not include graph_token.")
+            return self
+
+        if self.module == "Compliance":
+            missing = [
+                name
+                for name, value in (
+                    ("client_id", self.client_id),
+                    ("certificate_alias", self.certificate_alias),
+                    ("organization", self.organization),
+                )
+                if not value
+            ]
+            if missing:
+                raise ValueError("Compliance requires " + ", ".join(missing) + ".")
+            if self.token:
+                raise ValueError("Compliance must not include token.")
+            if self.graph_token:
+                raise ValueError("Compliance must not include graph_token.")
             return self
 
         if not self.token:

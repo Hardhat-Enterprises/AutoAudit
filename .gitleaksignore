@@ -1,0 +1,25 @@
+# Fingerprint-only ignore list (no secret values stored here — safe to commit).
+# Generated because .gitleaks-baseline.json cannot suppress findings correctly:
+# it was originally generated with --redact, which corrupts the Match/Secret
+# fields gitleaks needs for baseline matching, so that file has never actually
+# suppressed anything since it was created.
+#
+# The three docs/DevSecOps/baseline-audit.md entries, seed_dev.py, and the two
+# preview-deploy.yml/.env.example ENCRYPTION_KEY entries all reference the same
+# value, which the docs themselves describe as an active Fernet key -- flagged
+# to Akshit for rotation, not a confirmed-safe placeholder. Same for the
+# VirusTotal and RapidAPI keys below. These are suppressed here only to keep
+# CI green while rotation is pending, not because they're confirmed non-issues.
+23ea6e5a27c43121138ad750ecf7447265aa8d10:docs/DevSecOps/baseline-audit.md:generic-api-key:11
+ceef78441114074e32ec4d6be2f1832b6cf0105d:docs/DevSecOps/baseline-audit.md:generic-api-key:11
+e85a14b71b778810c3489b29a3ab14243a27ef98:docs/DevSecOps/baseline-audit.md:generic-api-key:11
+0b628b163395cf71ae3bdf328d7f6e78345a5f19:backend-api/app/db/seed_dev.py:generic-api-key:31
+6cd96fc98c8246fc9339b101a1b547f7ad327358:.github/workflows/ci.backend-api.yml:generic-api-key:116
+3310e8591f88dbdb74c6fd02cb90b9b9cae9d793:backend-api/tests/conftest.py:generic-api-key:8
+f5f13553c3dd95af510479ceba2639ce777336f8:.github/workflows/preview-deploy.yml:generic-api-key:213
+f5f13553c3dd95af510479ceba2639ce777336f8:.github/workflows/preview-deploy.yml:generic-api-key:259
+40cab10a463cd7126496867c2c84ece231d9b974:backend-api/.env.example:generic-api-key:20
+2e1b28f39d904381fb0082d06e61618c189da7ea:docker-compose.yml:generic-api-key:93
+2e1b28f39d904381fb0082d06e61618c189da7ea:docker-compose.yml:generic-api-key:127
+4d8e074a653a7cc7b749d11e6eb773e1123155d6:database/tprm_scanner/checkers/threat_intel_checker.py:generic-api-key:4
+4d8e074a653a7cc7b749d11e6eb773e1123155d6:database/tprm_scanner/checkers/reputation_checker.py:rapidapi-access-token:16

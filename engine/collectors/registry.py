@@ -37,9 +37,13 @@ from collectors.entra.conditional_access.e8_mfa_enforcement import (
 )
 
 # Devices
+from collectors.entra.devices.app_control_policy import AppControlPolicyDataCollector
 from collectors.entra.devices.asr_rules import ASRRulesDataCollector
 from collectors.entra.devices.configuration_policies import (
     ConfigurationPoliciesDataCollector,
+)
+from collectors.entra.devices.macro_notification_settings import (
+    MacroNotificationSettingsDataCollector,
 )
 from collectors.entra.devices.device_management_settings import (
     DeviceManagementSettingsDataCollector,
@@ -49,11 +53,10 @@ from collectors.entra.devices.device_registration_policy import (
 )
 from collectors.entra.devices.enrollment_restrictions import (
     EnrollmentRestrictionsDataCollector,
-) 
+)
 from collectors.entra.devices.windows_update_config import (
     WindowsUpdateConfigDataCollector,
 )
-
 # Domains
 from collectors.entra.domains.password_policy import PasswordPolicyDataCollector
 
@@ -137,6 +140,9 @@ from collectors.exchange.protection.hosted_outbound_spam_filter import (
 from collectors.exchange.protection.malware_filter_policy import (
     MalwareFilterPolicyDataCollector,
 )
+from collectors.exchange.protection.priority_account_protection_config import (
+    PriorityAccountProtectionDataCollector,
+)
 from collectors.exchange.protection.safe_attachment_policy import (
     SafeAttachmentPolicyDataCollector,
 )
@@ -179,8 +185,10 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "entra.conditional_access.legacy_auth_block": LegacyAuthBlockDataCollector,
     "entra.conditional_access.e8_mfa_enforcement": E8MfaEnforcementDataCollector,
     # Devices
+    "entra.devices.app_control_policy": AppControlPolicyDataCollector,
     "entra.devices.asr_rules": ASRRulesDataCollector,
     "entra.devices.configuration_policies": ConfigurationPoliciesDataCollector,
+    "entra.devices.macro_notification_settings": MacroNotificationSettingsDataCollector,
     "entra.devices.device_management_settings": DeviceManagementSettingsDataCollector,
     "entra.devices.device_registration_policy": DeviceRegistrationPolicyDataCollector,
     "entra.devices.enrollment_restrictions": EnrollmentRestrictionsDataCollector,
@@ -225,6 +233,7 @@ DATA_COLLECTORS: dict[str, type[BaseDataCollector]] = {
     "exchange.protection.hosted_content_filter": HostedContentFilterDataCollector,
     "exchange.protection.hosted_outbound_spam_filter": HostedOutboundSpamFilterDataCollector,
     "exchange.protection.malware_filter_policy": MalwareFilterPolicyDataCollector,
+    "exchange.protection.priority_account_protection_config": PriorityAccountProtectionDataCollector,
     "exchange.protection.safe_attachment_policy": SafeAttachmentPolicyDataCollector,
     "exchange.protection.safe_links_policy": SafeLinksPolicyDataCollector,
     "exchange.protection.teams_protection_policy": TeamsProtectionPolicyDataCollector,

@@ -11,7 +11,6 @@ import {
   X,
 } from "lucide-react";
 import {
-  logout as apiLogout,
   updateCurrentUser,
   changePassword,
 } from "../api/client";
@@ -167,14 +166,13 @@ export default function AccountPage({
     if (isLoggingOut) return;
     setIsLoggingOut(true);
 
-    try {
-      await apiLogout(token);
-    } catch (error) {
-      console.warn("Logout request failed; clearing local auth anyway:", error);
-    } finally {
-      clearAuth();
-      navigate("/");
-    }
+    // clearAuth() is AuthContext's logout(): it already calls the
+    // /v1/auth/logout endpoint and clears local state, with a guard against
+    // duplicate calls. Calling apiLogout(token) here too was firing a
+    // second, redundant request that always came back 401 once the first
+    // had already cleared the session cookie.
+    await clearAuth();
+    navigate("/");
   };
 
   const handleUpdatePassword = async () => {
