@@ -8,5 +8,7 @@
     "global_admin_count": 2,
     "global_admins": []
   },
-  "expected": {"compliant": true}
+  "expected": {
+    "compliant": true
+  }
 }
