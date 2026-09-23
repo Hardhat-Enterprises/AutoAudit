@@ -7,9 +7,17 @@
   "input": {
     "global_admin_count": 2,
     "global_admins": [
-      {"id": "admin-001", "display_name": "Global Admin 1"},
-      {"id": "admin-002", "display_name": "Global Admin 2"}
+      {
+        "id": "admin-001",
+        "display_name": "Global Admin 1"
+      },
+      {
+        "id": "admin-002",
+        "display_name": "Global Admin 2"
+      }
     ]
   },
-  "expected": {"compliant": true}
+  "expected": {
+    "compliant": true
+  }
 }
