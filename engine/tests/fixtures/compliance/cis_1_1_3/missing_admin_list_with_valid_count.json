@@ -7,5 +7,7 @@
   "input": {
     "global_admin_count": 3
   },
-  "expected": {"compliant": true}
+  "expected": {
+    "compliant": true
+  }
 }
