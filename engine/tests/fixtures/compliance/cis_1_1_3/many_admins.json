@@ -1,0 +1,55 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "1.1.3",
+  "scenario": "Ten global administrators configured",
+  "input": {
+    "global_admin_count": 10,
+    "global_admins": [
+      {
+        "id": "admin-001",
+        "display_name": "Global Admin 1"
+      },
+      {
+        "id": "admin-002",
+        "display_name": "Global Admin 2"
+      },
+      {
+        "id": "admin-003",
+        "display_name": "Global Admin 3"
+      },
+      {
+        "id": "admin-004",
+        "display_name": "Global Admin 4"
+      },
+      {
+        "id": "admin-005",
+        "display_name": "Global Admin 5"
+      },
+      {
+        "id": "admin-006",
+        "display_name": "Global Admin 6"
+      },
+      {
+        "id": "admin-007",
+        "display_name": "Global Admin 7"
+      },
+      {
+        "id": "admin-008",
+        "display_name": "Global Admin 8"
+      },
+      {
+        "id": "admin-009",
+        "display_name": "Global Admin 9"
+      },
+      {
+        "id": "admin-010",
+        "display_name": "Global Admin 10"
+      }
+    ]
+  },
+  "expected": {
+    "compliant": false
+  }
+}
