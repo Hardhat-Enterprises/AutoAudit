@@ -5,7 +5,7 @@ on:
     - cron: "0 3 * * *" # daily at 03:00 UTC — adjust to your timezone/preference; still the backstop for anything the triggers below can't reach for a forked PR (see note on pull_request_review below)
   issue_comment:
     types: [created] # near-real-time: a comment on the Conversation tab
-  pull_request_target:
+  pull_request_target: # zizmor: ignore[dangerous-triggers] — no ref: on checkout below, so it always uses the base branch; the fork's code is never checked out or executed. See pr.area-labeler.yml for the same reasoning in more detail.
     types: [synchronize] # near-real-time: author pushes new commits. Must be pull_request_target (not pull_request) for full write permissions on forked PRs — same reasoning as pr.area-labeler.yml. Checkout below has no `ref:`, so it uses the base branch, never the fork's code.
   pull_request_review:
     types: [submitted] # near-real-time: a maintainer's review (approve/request changes/comment)
@@ -38,11 +38,6 @@ on:
 # 24h regardless, so nothing is silently wrong, just delayed for that one
 # combination of circumstances.
 
-permissions:
-  pull-requests: write
-  issues: write # labels/labels-list live under the Issues API even for PRs
-  contents: read
-
 jobs:
   activity-scan:
     # issue_comment fires for comments on plain issues too, not just PRs —
@@ -52,6 +47,10 @@ jobs:
     # property access) for both of those.
     if: github.event_name != 'issue_comment' || github.event.issue.pull_request
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write # labels/labels-list live under the Issues API even for PRs
+      contents: read
     env:
       STALE_AFTER_DAYS: ${{ inputs.stale_after_days }}
       NEEDS_DECISION_AFTER_DAYS: ${{ inputs.needs_decision_after_days }}
@@ -64,8 +63,10 @@ jobs:
       # (blank by default, meaning "scan everything").
       ONLY_PR_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number || inputs.pr_number }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/github-script@v9
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         with:
           script: |
             const run = require('${{ github.workspace }}/.github/scripts/activity-labeler.js');

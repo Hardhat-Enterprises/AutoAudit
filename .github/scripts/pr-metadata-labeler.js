@@ -21,6 +21,57 @@ function sizeTier(totalLines, filesChanged) {
   return `${SIZE_PREFIX}XS`;
 }
 
+// --- first-contribution ---
+// Deliberately NOT using GitHub's Search API here — it has a much
+// stricter *secondary* rate limit (30/min) than everything else this
+// codebase calls, and hitting it once per PR is what caused a real
+// backfill to fail partway the first time this ran at scale.
+//
+// Also deliberately NOT fetching the repo's full PR history and caching
+// it in memory (an earlier version of this file did exactly that): that
+// works fine for a single backfill process looping over many PRs, but
+// pr.area-labeler.yml runs this in a FRESH process for every single
+// real-time PR event — so that cache was empty every time it mattered,
+// and "fixing" the backfill case reintroduced the same scaling problem
+// on the far more frequent real-time path (every open/push/reopen event,
+// on every PR, forever, would refetch the entire repo's PR history just
+// to check one author).
+//
+// Instead: `creator` filters server-side to just this one author's items
+// — cheap in both contexts regardless of total repo size — and this
+// stops paginating the instant it's seen enough to know the answer.
+async function isFirstContribution(github, owner, repo, author) {
+  try {
+    let prCount = 0;
+    let page = 1;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { data } = await github.rest.issues.listForRepo({
+        owner,
+        repo,
+        creator: author,
+        state: "all",
+        per_page: 100,
+        page,
+      });
+      for (const item of data) {
+        // listForRepo returns issues AND PRs by this author — `pull_request`
+        // is only present on the PR ones, which is all we're counting.
+        if (item.pull_request) prCount++;
+        if (prCount > 1) return false; // already confirmed not their first — stop here, no need to see the rest
+      }
+      if (data.length < 100) break; // last page
+      page++;
+    }
+    return prCount <= 1;
+  } catch (e) {
+    // A missing "nice to have" label is a much smaller problem than
+    // letting this crash the caller's loop — log and move on.
+    console.warn(`first-contribution check failed for ${author}: ${e.message}`);
+    return false;
+  }
+}
+
 async function labelOne({ github, owner, repo, pr }) {
   const pr_number = pr.number;
   const { data: current } = await github.rest.issues.get({ owner, repo, issue_number: pr_number });
@@ -48,11 +99,7 @@ async function labelOne({ github, owner, repo, pr }) {
 
   // --- first-contribution (sticky once set, cheap to skip re-checking) ---
   if (!labelNames.includes("first-contribution")) {
-    const author = pr.user.login;
-    const { data: pastPRs } = await github.rest.search.issuesAndPullRequests({
-      q: `repo:${owner}/${repo} type:pr author:${author}`,
-    });
-    if (pastPRs.total_count <= 1) {
+    if (await isFirstContribution(github, owner, repo, pr.user.login)) {
       await github.rest.issues.addLabels({ owner, repo, issue_number: pr_number, labels: ["first-contribution"] });
     }
   }

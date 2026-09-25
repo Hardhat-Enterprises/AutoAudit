@@ -1,0 +1,13 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "1.1.3",
+  "scenario": "Valid count with administrator resource list omitted",
+  "input": {
+    "global_admin_count": 3
+  },
+  "expected": {
+    "compliant": true
+  }
+}
