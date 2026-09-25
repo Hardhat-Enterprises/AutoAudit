@@ -1,0 +1,14 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "1.1.3",
+  "scenario": "No global administrators configured",
+  "input": {
+    "global_admin_count": 0,
+    "global_admins": []
+  },
+  "expected": {
+    "compliant": false
+  }
+}
