@@ -27,8 +27,8 @@ from app.db.session import get_async_session
 from app.models.user import User
 from app.models.oauth_account import OAuthAccount
 
-logger = logging.getLogger(__name__)
 settings = get_settings()
+logger = logging.getLogger("api")
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
@@ -44,14 +44,33 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def on_after_forgot_password(
         self, user: User, token: str, request: Optional[Request] = None
     ):
-        """Called after forgot password request."""
-        logger.info("User %s requested a password reset.", user.id)
+        """Called after a password reset is requested.
+
+        The reset token is a credential and must never be written to logs in a
+        deployed environment. In production it should be delivered to the user
+        out of band, for example by email. Until an email integration exists,
+        the token is only surfaced in a development environment so the flow can
+        be tested end to end.
+        """
+        logger.info("Password reset requested for user %s", user.id)
+        if settings.APP_ENV == "dev":
+            # Development only: allows local testing of the reset flow.
+            logger.info("DEV ONLY reset token for user %s: %s", user.id, token)
+        # TODO: deliver the reset token to the user's email once mail sending exists.
 
     async def on_after_request_verify(
         self, user: User, token: str, request: Optional[Request] = None
     ):
-        """Called after verification request."""
-        logger.info("Verification requested for user %s.", user.id)
+        """Called after an email verification is requested.
+
+        Like the reset token, the verification token is a credential and must
+        not be written to logs in a deployed environment. It is only surfaced in
+        a development environment for local testing.
+        """
+        logger.info("Email verification requested for user %s", user.id)
+        if settings.APP_ENV == "dev":
+            # Development only.
+            logger.info("DEV ONLY verification token for user %s: %s", user.id, token)
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
