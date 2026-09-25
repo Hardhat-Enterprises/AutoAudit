@@ -37,7 +37,13 @@ class DVMClient:
     DVM_BASE_URL = "https://api.security.microsoft.com/api"
 
     # UNVERIFIED: exact scope string not confirmed against a live tenant.
-    DVM_SCOPE = "https://api.security.microsoft.com/.default"
+    # Fixed per a reviewer's finding and confirmed against Microsoft's own
+    # docs: even though the API base URL is api.security.microsoft.com,
+    # the token audience/resource must be the legacy
+    # api.securitycenter.microsoft.com. Using the base URL as the scope
+    # causes a 403 Forbidden, since the token audience will not match
+    # what the API expects.
+    DVM_SCOPE = "https://api.securitycenter.microsoft.com/.default"
 
     def __init__(self, tenant_id: str, client_id: str, client_secret: str):
         """Initialize the DVM client.
