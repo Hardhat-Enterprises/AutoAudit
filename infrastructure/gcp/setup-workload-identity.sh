@@ -29,7 +29,9 @@
 
 set -euo pipefail
 
-PROJECT_ID="coastal-stone-470308-a0"
+# This script is tied to the credential in engine/legacy/engine/GCPAccess.py
+# It should be extracted to an environment variable.
+# PROJECT_ID="silver-meadow-624813-b2"
 REPO="Hardhat-Enterprises/AutoAudit"
 POOL_ID="github-actions-pool"
 PROVIDER_ID="github-actions-provider"

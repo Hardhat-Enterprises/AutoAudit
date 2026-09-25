@@ -52,25 +52,25 @@ scoped to that one run, valid for minutes. There is nothing to leak.
 
 ## What still needs to happen (requires GCP IAM access)
 
-This repository's automated tooling cannot create GCP resources - someone
-with IAM admin access on `coastal-stone-470308-a0` needs to:
+This repository's automated tooling cannot create GCP resources, and there is
+no currently-available GCP account nor project ID.  Should the GCP require
+re-wiring:
 
+1. Prepare a GCP, `infrastructure/gcp/setup-workload-identity.sh` and
+   `engine/legacy/engine/GCPAccess.py` with the project ID as an environment
+   variable.
 1. Run `infrastructure/gcp/setup-workload-identity.sh` once.
 2. Add the two values it prints as **repository variables** (not
    secrets - they aren't sensitive) under
    `Settings > Secrets and variables > Actions > Variables`:
    - `GCP_WORKLOAD_IDENTITY_PROVIDER`
    - `GCP_SERVICE_ACCOUNT_EMAIL`
+1. Create a `GCP_PROJECT_ID` variable in GitHub as well, so that the workflow
+   is also aware of the full environment.
 3. Confirm `ops.collector.yml` authenticates successfully via
    `workflow_dispatch` with these in place (the job itself stays
    hard-disabled via `if: false` until the point below is also resolved -
    see the comment at the top of the workflow file).
-4. **Revoke the old key.** WIF being wired up does not, by itself, revoke
-   the existing `GCP_CREDENTIALS` key - that's a separate, still-pending
-   action in GCP IAM, and the single most urgent outstanding item from
-   the Workstream 4 baseline audit (see `baseline-audit.md`, section 4a).
-   Delete the `GCP_CREDENTIALS` GitHub secret once the key is confirmed
-   revoked.
 
 ## What this does *not* fix
 

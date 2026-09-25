@@ -119,8 +119,12 @@ class GraphClient:
 
     async def get_conditional_access_policies(self) -> list[dict[str, Any]]:
         """Get all Conditional Access policies."""
-        return await self.get_all_pages("/identity/conditionalAccess/policies")
-
+        return await self.get_all_pages("/identity/conditionalAccess/policies")    
+    
+    async def get_activity_based_timeout_policies(self) -> list[dict[str, Any]]:
+        """Get all ActivityBasedTimeoutPolicy objects (idle session timeout)."""
+        return await self.get_all_pages("/policies/activityBasedTimeoutPolicies")
+        
     async def get_authentication_methods(self, user_id: str) -> list[dict[str, Any]]:
         """Get authentication methods for a user."""
         response = await self.get(
