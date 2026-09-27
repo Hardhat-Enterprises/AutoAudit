@@ -2,7 +2,8 @@
 
 Covers two things this change introduced:
 1. The reset password endpoints are registered on the auth router.
-2. The reset token is never written to logs outside a development environment.
+2. The reset token is only written to logs when the explicit DEBUG_LOG_TOKENS
+   flag is enabled, and is never logged by default.
 """
 
 import logging
@@ -29,8 +30,9 @@ def test_reset_password_endpoint_registered():
 
 
 @pytest.mark.asyncio
-async def test_reset_token_not_logged_outside_dev(monkeypatch, caplog):
-    monkeypatch.setattr(users_module.settings, "APP_ENV", "production", raising=False)
+async def test_reset_token_not_logged_by_default(monkeypatch, caplog):
+    # Default-safe behaviour: with the flag off, the token must never be logged.
+    monkeypatch.setattr(users_module.settings, "DEBUG_LOG_TOKENS", False, raising=False)
     manager = UserManager(AsyncMock())
     user = make_user(role="admin")
 
@@ -43,8 +45,9 @@ async def test_reset_token_not_logged_outside_dev(monkeypatch, caplog):
 
 
 @pytest.mark.asyncio
-async def test_reset_token_logged_only_in_dev(monkeypatch, caplog):
-    monkeypatch.setattr(users_module.settings, "APP_ENV", "dev", raising=False)
+async def test_reset_token_logged_when_flag_enabled(monkeypatch, caplog):
+    # Opt-in behaviour: only when DEBUG_LOG_TOKENS is explicitly True.
+    monkeypatch.setattr(users_module.settings, "DEBUG_LOG_TOKENS", True, raising=False)
     manager = UserManager(AsyncMock())
     user = make_user(role="admin")
 

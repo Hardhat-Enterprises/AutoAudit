@@ -48,13 +48,13 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
         The reset token is a credential and must never be written to logs in a
         deployed environment. In production it should be delivered to the user
-        out of band, for example by email. Until an email integration exists,
-        the token is only surfaced in a development environment so the flow can
-        be tested end to end.
+        out of band, for example by email. Logging the token is gated behind the
+        explicit DEBUG_LOG_TOKENS flag (default False everywhere), so it is only
+        surfaced when a developer deliberately opts in locally.
         """
         logger.info("Password reset requested for user %s", user.id)
-        if settings.APP_ENV == "dev":
-            # Development only: allows local testing of the reset flow.
+        if settings.DEBUG_LOG_TOKENS:
+            # Opt-in local debugging only; never enable in a deployed environment.
             logger.info("DEV ONLY reset token for user %s: %s", user.id, token)
         # TODO: deliver the reset token to the user's email once mail sending exists.
 
@@ -64,12 +64,13 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         """Called after an email verification is requested.
 
         Like the reset token, the verification token is a credential and must
-        not be written to logs in a deployed environment. It is only surfaced in
-        a development environment for local testing.
+        not be written to logs in a deployed environment. Logging it is gated
+        behind the same explicit DEBUG_LOG_TOKENS flag (default False), so it is
+        only surfaced when a developer deliberately opts in locally.
         """
         logger.info("Email verification requested for user %s", user.id)
-        if settings.APP_ENV == "dev":
-            # Development only.
+        if settings.DEBUG_LOG_TOKENS:
+            # Opt-in local debugging only; never enable in a deployed environment.
             logger.info("DEV ONLY verification token for user %s: %s", user.id, token)
 
 
