@@ -43,10 +43,10 @@ Automated cloud security and compliance assessment platform built with FastAPI. 
 
 ## Running tests
 
-Install test and coverage tooling (does not require the heavy `evidence` extra):
+Install test and coverage tooling. The `dev` dependency group (pytest, pytest-asyncio, pytest-cov) is installed by `uv sync` by default and does not require the heavy `evidence` extra:
 
 ```bash
-uv sync --extra dev
+uv sync
 ```
 
 Run the test suite:
