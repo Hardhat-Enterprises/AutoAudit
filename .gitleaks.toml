@@ -1,10 +1,14 @@
 [extend]
 useDefault = true
 
+[[rules]]
+id = "burned-gcp-project"
+description = "Burned project - must never be reintroduced"
+regex = 'coastal-stone-470308-a0|\b5476e8c2dee74f5e7eea55d98bcc2815b71e44ef\b|\b113627683228706962319\b'
+
 [allowlist]
 description = """detect-secrets and gitleaks each store their own baseline metadata (SHA1/redacted hashes of already-audited findings) which structurally look like secrets to the other tool, but are not real secrets. Both baseline files are excluded from scanning entirely rather than chasing this cross-tool false-positive loop on every regeneration. engine/test-sa-key.json contains a known, separately-tracked credential exposure (revocation status handled outside this repo's tooling); excluded so its content is never written into a committed report file."""
 paths = [
   '''\.secrets\.baseline''',
   '''\.gitleaks-baseline\.json''',
-  '''engine/test-sa-key\.json''',
 ]
