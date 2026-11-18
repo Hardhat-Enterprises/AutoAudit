@@ -129,6 +129,8 @@ def test_scan_schemas() -> None:
         failed_count=1,
         skipped_count=0,
         error_count=0,
+        indeterminate_count=0,
+        not_assessable_count=0,
         notes=None,
         results=[result],
     )
@@ -149,6 +151,8 @@ def test_scan_schemas() -> None:
         failed_count=1,
         skipped_count=0,
         error_count=0,
+        indeterminate_count=0,
+        not_assessable_count=0,
     )
     assert listed.id == 1
     created = ScanCreatedResponse(id=1, status="pending", message="queued")
@@ -167,6 +171,8 @@ def test_scan_schemas() -> None:
         failed_count=1,
         skipped_count=0,
         error_count=0,
+        indeterminate_count=0,
+        not_assessable_count=0,
         categories=[
             ControlCategoryBreakdown(
                 category="1",
@@ -175,6 +181,8 @@ def test_scan_schemas() -> None:
                 failed=1,
                 skipped=0,
                 error=0,
+                indeterminate=0,
+                not_assessable=0,
             )
         ],
     )

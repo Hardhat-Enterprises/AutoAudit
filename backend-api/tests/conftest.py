@@ -313,6 +313,10 @@ async def _populate_on_refresh(obj) -> None:
             obj.skipped_count = 0
         if getattr(obj, "error_count", None) is None:
             obj.error_count = 0
+        if getattr(obj, "indeterminate_count", None) is None:
+            obj.indeterminate_count = 0
+        if getattr(obj, "not_assessable_count", None) is None:
+            obj.not_assessable_count = 0
     elif isinstance(obj, ScanResult):
         if getattr(obj, "id", None) is None:
             obj.id = 1
