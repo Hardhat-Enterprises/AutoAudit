@@ -168,6 +168,7 @@ from httpx import ASGITransport, AsyncClient
 
 from app.api.v1 import (
     auth,
+    aws_connections,
     benchmarks,
     contact,
     m365_connections,
@@ -194,6 +195,7 @@ AUDITOR_FORBIDDEN_DETAIL = "Auditor or Admin access required"
 test_app = FastAPI()
 test_app.include_router(test_routes.router, prefix="/v1")
 test_app.include_router(auth.router, prefix="/v1")
+test_app.include_router(aws_connections.router, prefix="/v1")
 test_app.include_router(settings.router, prefix="/v1")
 test_app.include_router(contact.router, prefix="/v1")
 test_app.include_router(platforms.router, prefix="/v1")
