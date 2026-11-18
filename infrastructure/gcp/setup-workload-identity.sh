@@ -45,30 +45,30 @@ echo "Project number: ${PROJECT_NUMBER}"
 echo
 echo "== 1. Enabling required APIs =="
 gcloud services enable \
-  iamcredentials.googleapis.com \
-  sts.googleapis.com \
-  --project="${PROJECT_ID}"
+	iamcredentials.googleapis.com \
+	sts.googleapis.com \
+	--project="${PROJECT_ID}"
 
 echo
 echo "== 2. Creating Workload Identity Pool: ${POOL_ID} =="
 gcloud iam workload-identity-pools create "${POOL_ID}" \
-  --project="${PROJECT_ID}" \
-  --location="global" \
-  --display-name="GitHub Actions Pool" \
-  --description="Trust anchor for short-lived GitHub Actions OIDC tokens"
+	--project="${PROJECT_ID}" \
+	--location="global" \
+	--display-name="GitHub Actions Pool" \
+	--description="Trust anchor for short-lived GitHub Actions OIDC tokens"
 
 echo
 echo "== 3. Creating OIDC Provider: ${PROVIDER_ID} (scoped to ${REPO} only) =="
 # The attribute-condition is the critical security control here: without it,
 # any GitHub repository anywhere could mint a token this pool would accept.
 gcloud iam workload-identity-pools providers create-oidc "${PROVIDER_ID}" \
-  --project="${PROJECT_ID}" \
-  --location="global" \
-  --workload-identity-pool="${POOL_ID}" \
-  --display-name="GitHub Actions Provider" \
-  --issuer-uri="https://token.actions.githubusercontent.com" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner,attribute.ref=assertion.ref" \
-  --attribute-condition="assertion.repository == '${REPO}'"
+	--project="${PROJECT_ID}" \
+	--location="global" \
+	--workload-identity-pool="${POOL_ID}" \
+	--display-name="GitHub Actions Provider" \
+	--issuer-uri="https://token.actions.githubusercontent.com" \
+	--attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner,attribute.ref=assertion.ref" \
+	--attribute-condition="assertion.repository == '${REPO}'"
 
 echo
 echo "== 4. Creating a new, minimally-scoped service account: ${SERVICE_ACCOUNT_NAME} =="
@@ -76,8 +76,8 @@ echo "== 4. Creating a new, minimally-scoped service account: ${SERVICE_ACCOUNT_
 # exposed (its key leaked into git history) and held roles/editor, which
 # is far broader than this collector actually needs. Starting clean.
 gcloud iam service-accounts create "${SERVICE_ACCOUNT_NAME}" \
-  --project="${PROJECT_ID}" \
-  --display-name="GitHub Actions - read-only CI collector"
+	--project="${PROJECT_ID}" \
+	--display-name="GitHub Actions - read-only CI collector"
 
 echo
 echo "== 5. Granting read-only roles matching what GCPAccess.py actually calls =="
@@ -89,23 +89,23 @@ echo "== 5. Granting read-only roles matching what GCPAccess.py actually calls =
 # broader role turns out to be unnecessary, or add roles/iam.securityReviewer
 # if the project-level getIamPolicy call is denied.
 ROLES=(
-  "roles/viewer"
-  "roles/iam.securityReviewer"
+	"roles/viewer"
+	"roles/iam.securityReviewer"
 )
 for ROLE in "${ROLES[@]}"; do
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
-    --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
-    --role="${ROLE}" \
-    --condition=None \
-    --quiet
+	gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+		--member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
+		--role="${ROLE}" \
+		--condition=None \
+		--quiet
 done
 
 echo
 echo "== 6. Allowing ONLY ${REPO}'s workflows to impersonate this service account =="
 gcloud iam service-accounts add-iam-policy-binding "${SERVICE_ACCOUNT_EMAIL}" \
-  --project="${PROJECT_ID}" \
-  --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/attribute.repository/${REPO}"
+	--project="${PROJECT_ID}" \
+	--role="roles/iam.workloadIdentityUser" \
+	--member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/attribute.repository/${REPO}"
 
 echo
 echo "== Done =="
