@@ -44,40 +44,46 @@ scoped to that one run, valid for minutes. There is nothing to leak.
 
 ## What changed in this repo
 
-| File | Change |
-|---|---|
-| `engine/legacy/engine/GCPAccess.py` | `service_account.Credentials.from_service_account_info(json.loads(os.environ["GCP_CREDENTIALS"]))` replaced with `google.auth.default()` |
-| `.github/workflows/ops.collector.yml` | Added a `google-github-actions/auth@v2` step and `id-token: write` permission; removed the `GCP_CREDENTIALS` env var |
-| `infrastructure/gcp/setup-workload-identity.sh` | New - the one-time `gcloud` setup for the Pool, Provider, and service account |
+| File                                            | Change                                                                                                                                   |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine/legacy/engine/GCPAccess.py`             | `service_account.Credentials.from_service_account_info(json.loads(os.environ["GCP_CREDENTIALS"]))` replaced with `google.auth.default()` |
+| `.github/workflows/ops.collector.yml`           | Added a `google-github-actions/auth@v2` step and `id-token: write` permission; removed the `GCP_CREDENTIALS` env var                     |
+| `infrastructure/gcp/setup-workload-identity.sh` | New - the one-time `gcloud` setup for the Pool, Provider, and service account                                                            |
 
 ## What still needs to happen (requires GCP IAM access)
 
 This repository's automated tooling cannot create GCP resources, and there is
-no currently-available GCP account nor project ID.  Should the GCP require
-re-wiring:
+no currently-available GCP account nor project ID. The previously used GCP
+identity's key was leaked and could not be confirmed revoked (attempted to notify
+the owner and received an email bounce-back on 16 Nov 2026). The risk is both
+acceptable because the code is unused legacy (card 26T3-SEC-SA-005) and mitigated
+by ensuring the compromised identity fails CI if used in the code (see `.gitleaks.toml`
+rule `burned-gcp-project` for details on the implementation and identity strings).
+
+Should the GCP require re-wiring, use a **new** account and:
 
 1. Prepare a GCP, `infrastructure/gcp/setup-workload-identity.sh` and
    `engine/legacy/engine/GCPAccess.py` with the project ID as an environment
    variable.
 1. Run `infrastructure/gcp/setup-workload-identity.sh` once.
-2. Add the two values it prints as **repository variables** (not
+1. Add the two values it prints as **repository variables** (not
    secrets - they aren't sensitive) under
    `Settings > Secrets and variables > Actions > Variables`:
    - `GCP_WORKLOAD_IDENTITY_PROVIDER`
    - `GCP_SERVICE_ACCOUNT_EMAIL`
 1. Create a `GCP_PROJECT_ID` variable in GitHub as well, so that the workflow
    is also aware of the full environment.
-3. Confirm `ops.collector.yml` authenticates successfully via
+1. Confirm `ops.collector.yml` authenticates successfully via
    `workflow_dispatch` with these in place (the job itself stays
    hard-disabled via `if: false` until the point below is also resolved -
    see the comment at the top of the workflow file).
 
-## What this does *not* fix
+## What this does _not_ fix
 
 `ops.collector.yml` still auto-commits the data it collects (IAM policy,
 network/firewall config, etc.) directly into the git repository as
-plaintext JSON. WIF fixes *how the workflow authenticates* - it does
-nothing about *what the workflow does once authenticated*. Committing a
+plaintext JSON. WIF fixes _how the workflow authenticates_ - it does
+nothing about _what the workflow does once authenticated_. Committing a
 live infrastructure snapshot into git history on every run is a separate
 problem (broader attack-surface disclosure to anyone with repo/fork
 access) that needs its own redesign - for example, uploading as a
