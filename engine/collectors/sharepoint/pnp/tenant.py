@@ -57,14 +57,12 @@ class PnpTenantDataCollector(BasePowerShellCollector):
         tenant = await client.run_cmdlet("SharePointOnline", "Get-PnPTenant")
         sync_client_restriction = await client.run_cmdlet(
             "SharePointOnline", "Get-PnPTenantSyncClientRestriction"
-)
+        )
 
         return {
             "tenant": tenant,
             "sharing_capability": tenant.get("SharingCapability"),
-            "legacy_auth_protocols_enabled": tenant.get(
-                "LegacyAuthProtocolsEnabled"
-            ),
+            "legacy_auth_protocols_enabled": tenant.get("LegacyAuthProtocolsEnabled"),
             "disallow_infected_file_download": tenant.get(
                 "DisallowInfectedFileDownload"
             ),
@@ -77,23 +75,16 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             "external_user_expiration_required": tenant.get(
                 "ExternalUserExpirationRequired"
             ),
-            "external_user_expire_in_days": tenant.get(
-                "ExternalUserExpireInDays"
-            ),
+            "external_user_expire_in_days": tenant.get("ExternalUserExpireInDays"),
             "is_unmanaged_sync_client_for_tenant_restricted": tenant.get(
                 "IsUnmanagedSyncClientForTenantRestricted"
-),
-            "default_sharing_link_type": tenant.get(
-                "DefaultSharingLinkType"
             ),
-            "restrict_external_domain_sharing":tenant.get(
+            "default_sharing_link_type": tenant.get("DefaultSharingLinkType"),
+            "restrict_external_domain_sharing": tenant.get(
                 "SharingDomainRestrictionMode"
             ),
-            "email_attestation_required": tenant.get(
-                "EmailAttestationRequired"
-            ),
-            "email_attestation_reauth_days": tenant.get(
-                "EmailAttestationReAuthDays"
-            ),
-            "allowed_domain_list": sync_client_restriction.get("AllowedDomainList") or [],
+            "email_attestation_required": tenant.get("EmailAttestationRequired"),
+            "email_attestation_reauth_days": tenant.get("EmailAttestationReAuthDays"),
+            "allowed_domain_list": sync_client_restriction.get("AllowedDomainList")
+            or [],
         }
