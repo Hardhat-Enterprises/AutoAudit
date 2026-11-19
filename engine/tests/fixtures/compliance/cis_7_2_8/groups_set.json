@@ -6,7 +6,9 @@
   "scenario": "External sharing limited to a security group fails until membership can be reviewed",
   "input": {
     "sharing_capability": 1,
-    "guest_sharing_group_allow_list": ["c:0t.c|tenant|00000000-0000-0000-0000-000000000001"]
+    "guest_sharing_group_allow_list": [
+      "c:0t.c|tenant|00000000-0000-0000-0000-000000000001"
+    ]
   },
   "expected": {
     "compliant": false
