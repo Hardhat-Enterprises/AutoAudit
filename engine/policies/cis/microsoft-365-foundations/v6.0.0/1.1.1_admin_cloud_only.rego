@@ -28,9 +28,16 @@ default result := {
     "details": {}
 }
 
+# Checks that the tenant has at least one administrator to assess - no missing keys or empty lists
+evidence_available if {
+    is_array(input.admin_accounts)
+    count(input.admin_accounts) > 0
+}
+
 # Main evaluation rule
 result := output if {
-    admin_accounts := get_array(input, "admin_accounts")
+    evidence_available
+    admin_accounts := input.admin_accounts
     synced_admins := [a | some a in admin_accounts; a.on_premises_sync_enabled == true]
 
     compliant := count(synced_admins) == 0

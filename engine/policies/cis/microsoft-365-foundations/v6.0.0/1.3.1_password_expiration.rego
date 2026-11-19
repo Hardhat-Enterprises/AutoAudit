@@ -30,8 +30,15 @@ default result := {
 # 2147483647 = "never expires" (max int32)
 never_expires := 2147483647
 
+# Checks that the tenant has at least one domain to assess - no missing keys or empty lists
+evidence_available if {
+    is_array(input.domains)
+    count(input.domains) > 0
+}
+
 result := output if {
-  domains := get_array(input, "domains")
+  evidence_available
+  domains := input.domains
   managed_domains := [d | some d in domains; d.is_managed == true]
   non_compliant := [d | some d in managed_domains; d.password_validity_days != never_expires]
 
