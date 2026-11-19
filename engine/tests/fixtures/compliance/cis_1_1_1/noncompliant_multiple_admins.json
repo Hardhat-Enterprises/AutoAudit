@@ -19,7 +19,7 @@
         "displayName": "Administrator2",
         "on_premises_sync_enabled": true,
         "admin_roles": [
-          "Password Administrator"
+          "SharePoint Administrator"
         ]
       },
       {
