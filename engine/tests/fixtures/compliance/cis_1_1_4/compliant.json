@@ -1,0 +1,22 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "1.1.4",
+  "scenario": "Administrator with reduced license footprint",
+  "input": {
+    "admin_accounts": [
+      {
+        "userPrincipalName": "admin@test.com",
+        "displayName": "Administrator",
+        "admin_roles": [
+          "Global Administrator"
+        ],
+        "uses_reduced_license_footprint": true
+      }
+    ]
+  },
+  "expected": {
+    "compliant": true
+  }
+}
