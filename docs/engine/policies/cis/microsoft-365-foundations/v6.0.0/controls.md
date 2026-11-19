@@ -205,7 +205,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 7.2.5 | L2 | Ensure that SharePoint guest users cannot share items they don't own | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
 | 7.2.6 | L2 | Ensure SharePoint external sharing is restricted | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
 | 7.2.7 | L1 | Ensure link sharing is restricted in SharePoint and OneDrive | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.2.8 | L2 | Ensure external sharing is restricted by security group | Manual | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError; CIS says Manual but can be automated |
+| 7.2.8 | L2 | Ensure external sharing is restricted by security group | Manual | Automated | `sharepoint.pnp.tenant` | Implemented | CIS says Manual; automated via GuestSharingGroupAllowListInTenantByPrincipalIdentity. Passes only when sharing is disabled tenant-wide; groups set fails pending membership review |
 | 7.2.9 | L1 | Ensure guest access to a site or OneDrive will expire automatically | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
 | 7.2.10 | L1 | Ensure reauthentication with verification code is restricted | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
 | 7.2.11 | L1 | Ensure the SharePoint default sharing link permission is set | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
