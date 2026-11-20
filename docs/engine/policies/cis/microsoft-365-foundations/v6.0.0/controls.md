@@ -50,17 +50,17 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 1.1.2 | L1 | Ensure two emergency access accounts have been defined | Manual | Manual | | N/A | Organizational policy; requires human designation of accounts |
 | 1.1.3 | L1 | Ensure that between two and four global admins are designated | Automated | Automated | `entra.roles.privileged_roles` | Implemented | |
 | 1.1.4 | L1 | Ensure administrative accounts use licenses with a reduced application footprint | Automated | Automated | `entra.roles.admin_license_footprint` | Implemented | Graph `licenseDetails` per admin; sample `{"admin_accounts":[{"userPrincipalName":"admin@contoso.com","uses_reduced_license_footprint":true,"high_footprint_service_plans_enabled":[],"sku_part_numbers":["AAD_PREMIUM_P2"]}]}` |
-| 1.2.1 | L2 | Ensure that only organizationally managed/approved public groups exist | Automated | Not Started | `entra.groups.groups` | Not Started | Collector exists but control logic not defined |
-| 1.2.2 | L1 | Ensure sign-in to shared mailboxes is blocked | Automated | Not Started | `exchange.mailbox.mailboxes` | Not Started | Collector exists but control logic not defined |
+| 1.2.1 | L2 | Ensure that only organizationally managed/approved public groups exist | Automated | Automated | `entra.groups.groups` | Implemented | Collector exists but control logic not defined |
+| 1.2.2 | L1 | Ensure sign-in to shared mailboxes is blocked | Automated | Automated | `exchange.mailbox.mailboxes` | Implemented | Collector exists but control logic not defined |
 | 1.3.1 | L1 | Ensure the 'Password expiration policy' is set to 'Set passwords to never expire (recommended)' | Automated | Automated | `entra.domains.password_policy` | Implemented | |
-| 1.3.2 | L2 | Ensure 'Idle session timeout' is set to '3 hours (or less)' for unmanaged devices | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires CA policy coverage verification |
-| 1.3.3 | L2 | Ensure 'External sharing' of calendars is not available | Automated | Not Started | `exchange.organization.sharing_policy` | Not Started | Collector exists but control logic not defined |
+| 1.3.2 | L2 | Ensure 'Idle session timeout' is set to '3 hours (or less)' for unmanaged devices | Automated | Automated | `entra.policies.activity_based_timeout` | Implemented | Requires CA policy coverage verification |
+| 1.3.3 | L2 | Ensure 'External sharing' of calendars is not available | Automated | Automated | `exchange.organization.sharing_policy` | Implemented | Collector exists but control logic not defined |
 | 1.3.4 | L1 | Ensure 'User owned apps and services' is restricted | Automated | Automated | `entra.applications.apps_and_services_settings` | Implemented | |
 | 1.3.5 | L1 | Ensure internal phishing protection for Forms is enabled | Automated | Automated | `entra.applications.forms_settings` | Implemented | |
 | 1.3.6 | L2 | Ensure the customer lockbox feature is enabled | Automated | Automated | `exchange.organization.organization_config` | Implemented | |
-| 1.3.7 | L2 | Ensure 'third-party storage services' are restricted in 'Microsoft 365 on the web' | Automated | Not Started | `exchange.organization.owa_mailbox_policy` | Not Started | Collector exists but control logic not defined |
+| 1.3.7 | L2 | Ensure 'third-party storage services' are restricted in 'Microsoft 365 on the web' | Automated | Automated | `entra.applications.third_party_storage_services` | Implemented | Collector exists but control logic not defined |
 | 1.3.8 | L2 | Ensure that Sways cannot be shared with people outside of your organization | Manual | Manual | | N/A | No API available for Sway settings |
-| 1.3.9 | L1 | Ensure shared bookings paged are restricted to select users | Automated | Not Started | | Not Started | Need Bookings API collector |
+| 1.3.9 | L1 | Ensure shared bookings pages are restricted to select users | Automated | Automated | `exchange.organization.owa_mailbox_policy` | Automated | Need Bookings API collector |
 
 ---
 
@@ -84,7 +84,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 2.1.14 | L1 | Ensure inbound anti-spam policies do not contain allowed domains | Automated | Automated | `exchange.protection.hosted_content_filter` | Implemented | |
 | 2.1.15 | L1 | Ensure outbound anti-spam message limits are in place | Automated | Automated | `exchange.protection.hosted_outbound_spam_filter` | Implemented | |
 | 2.2.1 | L1 | Ensure emergency access account activity is monitored | Manual | Manual | | N/A | Organizational policy; requires defining which accounts to monitor |
-| 2.4.1 | L1 | Ensure Priority account protection is enabled and configured | Automated | Blocked | | Blocked | IPPSSession requires certificate auth |
+| 2.4.1 | L1 | Ensure Priority account protection is enabled and configured | Automated | Blocked | `exchange.protection.priority_account_protection_config` | Blocked | IPPSSession requires certificate auth |
 | 2.4.2 | L1 | Ensure Priority accounts have 'Strict protection' presets applied | Automated | Automated | `exchange.protection.priority_account_protection` | Implemented | |
 | 2.4.3 | L2 | Ensure Microsoft Defender for Cloud Apps is enabled and configured | Manual | Manual | | N/A | MCAS configuration requires portal verification |
 | 2.4.4 | L1 | Ensure Zero-hour auto purge for Microsoft Teams is on | Automated | Automated | `exchange.protection.teams_protection_policy` | Implemented | |
@@ -106,7 +106,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 
 | Control ID | Level | Title | CIS Suggested Audit Type | Our Audit Type | Collector ID | Status | Notes |
 |------------|-------|-------|--------------------------|----------------|--------------|--------|-------|
-| 4.1 | L2 | Ensure devices without a compliance policy are marked 'not compliant' | Automated | Not Started | `entra.devices.device_management_settings` | Not Started | Collector exists but control logic not defined |
+| 4.1 | L2 | Ensure devices without a compliance policy are marked 'not compliant' | Automated | Automated | `entra.devices.device_management_settings` | Implemented | Collector exists but control logic not defined |
 | 4.2 | L2 | Ensure device enrollment for personally owned devices is blocked by default | Automated | Automated | `entra.devices.enrollment_restrictions` | Implemented | |
 
 ---
@@ -123,13 +123,13 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 5.1.2.4 | L1 | Ensure access to the Entra admin center is restricted | Manual | Manual | | N/A | Only available via internal Azure API |
 | 5.1.2.5 | L2 | Ensure the option to remain signed in is hidden | Manual | Manual | | N/A | Setting not exposed via Graph API |
 | 5.1.2.6 | L2 | Ensure 'LinkedIn account connections' is disabled | Manual | Manual | | N/A | Only available via internal Azure API |
-| 5.1.3.1 | L1 | Ensure a dynamic group for guest users is created | Automated | Not Started | `entra.groups.groups` | Not Started | Collector exists but control logic not defined |
+| 5.1.3.1 | L1 | Ensure a dynamic group for guest users is created | Automated | Automated | `entra.groups.groups` | Implemented | Collector exists but control logic not defined |
 | 5.1.3.2 | L1 | Ensure users cannot create security groups | Automated | Automated | `entra.policies.authorization_policy` | Implemented | Check allowedToCreateSecurityGroups |
 | 5.1.4.1 | L2 | Ensure the ability to join devices to Entra is restricted | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | |
-| 5.1.4.2 | L1 | Ensure the maximum number of devices per user is limited | Automated | Automated | `entra.devices.device_management_settings` | Implemented | |
-| 5.1.4.3 | L1 | Ensure the GA role is not added as a local administrator during Entra join | Automated | Automated | `entra.devices.device_management_settings` | Implemented | |
-| 5.1.4.4 | L1 | Ensure local administrator assignment is limited during Entra join | Automated | Automated | `entra.devices.device_management_settings` | Implemented | |
-| 5.1.4.5 | L1 | Ensure Local Administrator Password Solution is enabled | Automated | Not Started | | Not Started | Need LAPS configuration collector |
+| 5.1.4.2 | L1 | Ensure the maximum number of devices per user is limited | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | |
+| 5.1.4.3 | L1 | Ensure the GA role is not added as a local administrator during Entra join | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | |
+| 5.1.4.4 | L1 | Ensure local administrator assignment is limited during Entra join | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | |
+| 5.1.4.5 | L1 | Ensure Local Administrator Password Solution is enabled | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | Need LAPS configuration collector |
 | 5.1.4.6 | L2 | Ensure users are restricted from recovering BitLocker keys | Automated | Automated | `entra.policies.authorization_policy` | Implemented | Check allowedToReadBitlockerKeysForOwnedDevice |
 | 5.1.5.1 | L2 | Ensure user consent to apps accessing company data on their behalf is not allowed | Automated | Automated | `entra.policies.authorization_policy` | Implemented | |
 | 5.1.5.2 | L1 | Ensure the admin consent workflow is enabled | Automated | Automated | `entra.policies.admin_consent_request_policy` | Implemented | |
@@ -143,17 +143,17 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | Control ID | Level | Title | CIS Suggested Audit Type | Our Audit Type | Collector ID | Status | Notes |
 |------------|-------|-------|--------------------------|----------------|--------------|--------|-------|
 | 5.2.2.1 | L1 | Ensure multifactor authentication is enabled for all users in administrative roles | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires verification of all 15 admin roles |
-| 5.2.2.2 | L1 | Ensure multifactor authentication is enabled for all users | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires verification of exclusions |
+| 5.2.2.2 | L1 | Ensure multifactor authentication is enabled for all users | Automated | Automated | `entra.conditional_access.policies` | Implemented | Requires verification of exclusions |
 | 5.2.2.3 | L1 | Enable Conditional Access policies to block legacy authentication | Automated | Automated | `entra.conditional_access.legacy_auth_block` | Implemented | |
 | 5.2.2.4 | L1 | Ensure Sign-in frequency is enabled and browser sessions are not persistent for Administrative users | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires admin role verification |
 | 5.2.2.5 | L2 | Ensure 'Phishing-resistant MFA strength' is required for Administrators | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires admin role verification |
 | 5.2.2.6 | L1 | Enable Identity Protection user risk policies | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires policy coverage verification |
 | 5.2.2.7 | L1 | Enable Identity Protection sign-in risk policies | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires policy coverage verification |
 | 5.2.2.8 | L2 | Ensure 'sign-in risk' is blocked for medium and high risk | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires policy coverage verification |
-| 5.2.2.9 | L1 | Ensure a managed device is required for authentication | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires policy coverage verification |
+| 5.2.2.9 | L1 | Ensure a managed device is required for authentication | Automated | Automated | `entra.conditional_access.policies` | Implemented | Requires policy coverage verification |
 | 5.2.2.10 | L1 | Ensure a managed device is required to register security information | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires policy coverage verification |
 | 5.2.2.11 | L1 | Ensure sign-in frequency for Intune Enrollment is set to 'Every time' | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires policy coverage verification |
-| 5.2.2.12 | L1 | Ensure the device code sign-in flow is blocked | Automated | Deferred | `entra.conditional_access.policies` | Implemented | Requires policy coverage verification |
+| 5.2.2.12 | L1 | Ensure the device code sign-in flow is blocked | Automated | Automated | `entra.conditional_access.policies` | Implemented | Requires policy coverage verification |
 | 5.2.3.1 | L1 | Ensure Microsoft Authenticator is configured to protect against MFA fatigue | Automated | Automated | `entra.authentication.mfa_fatigue_protection` | Implemented | |
 | 5.2.3.2 | L1 | Ensure custom banned passwords lists are used | Automated | Automated | `entra.authentication.password_protection` | Implemented | |
 | 5.2.3.3 | L1 | Ensure password protection is enabled for on-prem Active Directory | Automated | Automated | `entra.authentication.password_protection` | Implemented | |
@@ -187,9 +187,9 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 6.2.3 | L1 | Ensure email from external senders is identified | Automated | Automated | `exchange.transport.external_in_outlook` | Implemented | |
 | 6.3.1 | L2 | Ensure users installing Outlook add-ins is not allowed | Automated | Automated | `exchange.mailbox.role_assignment_policy` | Implemented | |
 | 6.5.1 | L1 | Ensure modern authentication for Exchange Online is enabled | Automated | Automated | `exchange.organization.organization_config` | Implemented | Check OAuth2ClientProfileEnabled |
-| 6.5.2 | L1 | Ensure MailTips are enabled for end users | Automated | Not Started | `exchange.organization.organization_config` | Not Started | Collector exists but control logic not defined |
+| 6.5.2 | L1 | Ensure MailTips are enabled for end users | Automated | Automated | `exchange.organization.organization_config` | Implmented | Collector exists but control logic not defined |
 | 6.5.3 | L2 | Ensure additional storage providers are restricted in Outlook on the web | Automated | Automated | `exchange.organization.owa_mailbox_policy` | Implemented | |
-| 6.5.4 | L1 | Ensure SMTP AUTH is disabled | Automated | Automated | `exchange.organization.organization_config` | Implemented | |
+| 6.5.4 | L1 | Ensure SMTP AUTH is disabled | Automated | Automated | `exchange.organization.transport_config` | Implemented | |
 | 6.5.5 | L2 | Ensure Direct Send submissions are rejected | Automated | Not Started | `exchange.organization.transport_config` | Not Started | Collector exists but control logic not defined |
 
 ---
@@ -198,19 +198,19 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 
 | Control ID | Level | Title | CIS Suggested Audit Type | Our Audit Type | Collector ID | Status | Notes |
 |------------|-------|-------|--------------------------|----------------|--------------|--------|-------|
-| 7.2.1 | L1 | Ensure modern authentication for SharePoint applications is required | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.2.2 | L1 | Ensure SharePoint and OneDrive integration with Azure AD B2B is enabled | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.2.3 | L1 | Ensure external content sharing is restricted | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.2.4 | L2 | Ensure OneDrive content sharing is restricted | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.2.5 | L2 | Ensure that SharePoint guest users cannot share items they don't own | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.2.6 | L2 | Ensure SharePoint external sharing is restricted | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.2.7 | L1 | Ensure link sharing is restricted in SharePoint and OneDrive | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
+| 7.2.1 | L1 | Ensure modern authentication for SharePoint applications is required | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector raises NotImplementedError |
+| 7.2.2 | L1 | Ensure SharePoint and OneDrive integration with Azure AD B2B is enabled | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector raises NotImplementedError |
+| 7.2.3 | L1 | Ensure external content sharing is restricted | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector raises NotImplementedError |
+| 7.2.4 | L2 | Ensure OneDrive content sharing is restricted | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector raises NotImplementedError |
+| 7.2.5 | L2 | Ensure that SharePoint guest users cannot share items they don't own | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector raises NotImplementedError |
+| 7.2.6 | L2 | Ensure SharePoint external sharing is restricted | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector raises NotImplementedError |
+| 7.2.7 | L1 | Ensure link sharing is restricted in SharePoint and OneDrive | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector raises NotImplementedError |
 | 7.2.8 | L2 | Ensure external sharing is restricted by security group | Manual | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError; CIS says Manual but can be automated |
 | 7.2.9 | L1 | Ensure guest access to a site or OneDrive will expire automatically | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.2.10 | L1 | Ensure reauthentication with verification code is restricted | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.2.11 | L1 | Ensure the SharePoint default sharing link permission is set | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.3.1 | L2 | Ensure Office 365 SharePoint infected files are disallowed for download | Automated | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError |
-| 7.3.2 | L2 | Ensure OneDrive sync is restricted for unmanaged devices | Automated | Not Started | `sharepoint.spo_sync_client_restriction` | Not Started | Collector exists but control logic not defined |
+| 7.2.10 | L1 | Ensure reauthentication with verification code is restricted | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector raises NotImplementedError |
+| 7.2.11 | L1 | Ensure the SharePoint default sharing link permission is set | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector raises NotImplementedError |
+| 7.3.1 | L2 | Ensure Office 365 SharePoint infected files are disallowed for download | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector raises NotImplementedError |
+| 7.3.2 | L2 | Ensure OneDrive sync is restricted for unmanaged devices | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector exists but control logic not defined |
 
 ---
 
