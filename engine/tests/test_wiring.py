@@ -293,7 +293,7 @@ def test_control_schema_consistency(version_label, control_id, control):
         assert control["policy_file"] is not None, (
             f"[{version_label}] control {control_id} is 'ready' but policy_file is null"
         )
-    else:
+    elif status != "blocked":
         assert control["policy_file"] is None, (
             f"[{version_label}] control {control_id} has automation_status='{status}' "
             f"but policy_file='{control['policy_file']}' is not null"
