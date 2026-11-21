@@ -89,7 +89,7 @@ Every dependency you add is code you didn't write but are still responsible for.
 
 ### Automated scanning
 
-The repo runs Grype (`ci.grype.yml`) on pull requests and pushes to `main` when files change inside `frontend/`, `backend-api/`, or `engine/`, and weekly on a schedule. Grype checks dependency files — `pyproject.toml`, `requirements.txt`, and `package-lock.json` — against public vulnerability databases. Findings are uploaded to the GitHub Security tab as a SARIF report rather than blocking the build, so a flagged dependency will not fail your PR automatically — it is on you to check the Security tab and treat findings seriously rather than ignoring them because the build went green.
+The repo runs Grype (`ci.grype.yml`) on pull requests targeting `main` and pushes to `main` when files change inside `frontend/`, `backend-api/`, or `engine/`, and weekly on a schedule. It scans the repository directory and uploads findings to the GitHub Security tab as a SARIF report. Critical findings fail the scan. Dependency review separately checks dependency changes on every PR and fails on introduced high or critical vulnerabilities. Merge blocking depends on the target branch's required-check settings. See [Dependency checks and automatic updates](sca-setup.md) for triggers, thresholds, and failure guidance.
 
 ### Adding a new dependency
 
@@ -108,7 +108,7 @@ Keep dependency files current rather than letting them drift:
 
 ### A note on Dependabot
 
-Dependabot is currently paused on this repo (`open-pull-requests-limit` set to 0) because the volume of automatic update PRs became difficult to review individually. This means dependency updates are currently a manual responsibility rather than something automation handles for you — don't assume dependencies are being kept current in the background.
+Routine Dependabot version-update PRs are paused for the configured `uv`, `pip`, `npm`, and GitHub Actions entries (`open-pull-requests-limit: 0`). Docker updates remain configured monthly for `backend-api`, `engine`, `frontend`, and `security`. The zero limits do not disable Dependabot security updates; those depend on repository settings. Contributors should still check dependency health and review update PRs. See the [SCA setup page](sca-setup.md#dependabot-propose-dependency-updates) for the full configuration.
 
 ### Why this matters
 
