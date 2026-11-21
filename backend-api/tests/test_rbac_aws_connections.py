@@ -23,7 +23,11 @@ CREATE_BODY = {
 
 @pytest.mark.xfail(
     strict=True,
-    reason="AWS endpoints do not enforce auditor-or-above yet (M365 endpoints do)",
+    raises=AssertionError,
+    reason=(
+        "AWS endpoints do not enforce auditor-or-above yet (M365 endpoints do). "
+        "See https://github.com/Hardhat-Enterprises/AutoAudit/issues/443"
+    ),
 )
 @pytest.mark.asyncio
 @pytest.mark.parametrize(

@@ -1,8 +1,6 @@
 """API tests for AWS connection endpoints: invalid input, missing resources and auth."""
 
 import pytest
-from pydantic import ValidationError
-from app.schemas.aws_connection import AWSConnectionCreate
 
 VALID_CREATE_BODY = {
     "name": "Test AWS",
@@ -98,11 +96,3 @@ async def test_aws_endpoints_require_authentication(client_factory, method, path
     async with client_factory(None) as client:
         response = await getattr(client, method)(path, **({"json": body} if body else {}))
     assert response.status_code == 401
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="account_id is described as a 12-digit number but the schema only enforces length 12-20",
-)
-def test_account_id_must_be_numeric():
-    with pytest.raises(ValidationError):
-        AWSConnectionCreate(**{**VALID_CREATE_BODY, "account_id": "abcdefghijkl"})    

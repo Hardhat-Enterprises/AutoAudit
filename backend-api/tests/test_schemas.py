@@ -330,3 +330,24 @@ def test_control_verification_template_schemas() -> None:
     )
     assert read.id == 1
     assert read.evidence_type == "screenshot"
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason=(
+        "account_id is described as a 12-digit number but only length 12-20 "
+        "is enforced. See https://github.com/Hardhat-Enterprises/AutoAudit/issues/443"
+    ),
+)
+def test_aws_account_id_must_be_numeric() -> None:
+    try:
+        AWSConnectionCreate(
+            name="Prod AWS",
+            account_id="abcdefghijkl",
+            access_key_id="AKIAEXAMPLE",
+            secret_access_key="secret",  # pragma: allowlist secret
+        )
+    except ValidationError:
+        return
+    raise AssertionError("non-numeric account_id was accepted")    

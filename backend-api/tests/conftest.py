@@ -181,6 +181,7 @@ from app.api.v1 import (
 )
 from app.core.auth import get_current_user
 from app.db.session import get_async_session
+from app.models.aws_connection import AWSConnection
 from app.models.contact import ContactSubmission, SubmissionHistory, SubmissionNote
 from app.models.compliance import Scan
 from app.models.m365_connection import M365Connection
@@ -289,6 +290,15 @@ async def _populate_on_refresh(obj) -> None:
     elif isinstance(obj, ManualScanResultDetail):
         if getattr(obj, "id", None) is None:
             obj.id = 1
+        if getattr(obj, "created_at", None) is None:
+            obj.created_at = now
+        if getattr(obj, "updated_at", None) is None:
+            obj.updated_at = now
+    elif isinstance(obj, AWSConnection):
+        if getattr(obj, "id", None) is None:
+            obj.id = 1
+        if getattr(obj, "is_active", None) is None:
+            obj.is_active = True
         if getattr(obj, "created_at", None) is None:
             obj.created_at = now
         if getattr(obj, "updated_at", None) is None:
