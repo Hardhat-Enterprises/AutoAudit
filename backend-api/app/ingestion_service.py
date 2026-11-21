@@ -4,7 +4,7 @@ import hashlib
 import os
 from typing import Tuple
 
-ALLOWED_EXTENSIONS = {".txt", ".pdf", ".png", ".jpg", ".jpeg", ".json", ".csv"}
+ALLOWED_EXTENSIONS = {".txt", ".pdf", ".png", ".jpg", ".jpeg", ".json", ".csv", ".docx"}
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB limit
 
 
