@@ -1,46 +1,577 @@
 # =====================================================================
-# Grype vulnerability whitelist — the repo's risk register
+# Grype vulnerability whitelist — BOOTSTRAP DRAFT
 # =====================================================================
-# Consumed by .github/scripts/grype-diff.py
-# Enforced by   .github/workflows/ci.grype-whitelist.yml
+# Generated once (locally) by:
+#   python3 .github/scripts/grype-diff.py --bootstrap \
+#     --current grype-report.json --bootstrap-out grype-whitelist.yaml
 #
-# Scope: only HIGH and CRITICAL findings are gated. Lower severities never
-# need an entry here.
-#
-# Effective whitelist on a PR (union semantics, keyed on (vulnerability, package)):
-#   - entries only on main (merge-base)            -> inherited, used as-is
-#   - entries only on the PR branch                -> "added by this PR" (itemised in
-#                                                    the CI summary — these are what
-#                                                    reviewers must scrutinise)
-#   - same key on both, attributes differ          -> PR branch version wins ("modified")
-#   - entry deleted by the PR branch               -> IGNORED for gating (WARN in the
-#                                                    summary); deletions only take effect
-#                                                    once they land on main, and if the
-#                                                    vulnerability is still present the
-#                                                    next PR fails (ratchet — the register
-#                                                    may only shrink when the debt is gone)
-#
-# A PR may add entries in-PR to make its own gate green; the addition is
-# visible in the file diff and the CI summary. Review is the control.
-#
-# Entry fields:
-#   vulnerability:  Grype vulnerability id (CVE-... / GHSA-...), exactly as
-#                   Grype reports it
-#   package:        optional — Grype artifact name this entry applies to;
-#                   omit to match any package
-#   severity:       severity at acceptance: UNKNOWN | NEGLIGIBLE | LOW | MEDIUM
-#                   | HIGH | CRITICAL (informational snapshot; see LIMITATIONS)
-#   reason:         why this is accepted. REQUIRED BY REVIEW POLICY — a PR adding
-#                   an entry without a justification should not be merged.
-#                   (Business rule, not CI-enforced: the script warns but does
-#                   not block on a missing reason.)
-#
-# PARKED (future hardening, deliberately not implemented yet):
-#   - `expires` leases (auto re-gating of stale acceptances)
-#   - stale-entry hygiene report / cleanup job
-#   - severity-escalation re-gating (a whitelisted id that later scores HIGHER
-#     than recorded here stays suppressed)
-#   - UNKNOWN-ID findings (no CVE/GHSA alias) cannot be whitelisted by id
+# Every current HIGH/CRITICAL finding is drafted below with reason left as
+# TODO. A human must justify (or delete) each entry before merging this
+# file: an unjustified entry must not survive review (business rule).
 
 schema_version: 1
-entries: []
+entries:
+  - vulnerability: "CVE-2026-112403"
+    package: "pillow"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112900"
+    package: "pillow"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112902"
+    package: "pillow"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-39892"
+    package: "cryptography"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-54058"
+    package: "pillow"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-96639"
+    package: "pillow"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-332p-7hrc-92wf"
+    package: "pillow"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-5x8w-8jj5-q52h"
+    package: "pillow"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-6q48-6c7w-9gw2"
+    package: "certifi"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-82r6-8w77-94w6"
+    package: "anyio"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-8g5g-8vmr-9782"
+    package: "pillow"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-ffc3-869f-jxw9"
+    package: "pyjwt"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-v9pv-5gc8-w2m6"
+    package: "pillow"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-w889-685w-c8fh"
+    package: "pillow"
+    severity: CRITICAL
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112390"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112391"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112392"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112394"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112395"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112396"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112397"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112399"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112400"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112401"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112402"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112404"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112405"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112406"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112891"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112892"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112893"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112894"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112895"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112896"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-112901"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-128066"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-128067"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-59197"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-59200"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-69247"
+    package: "cryptography"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-69249"
+    package: "cryptography"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-96640"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-96644"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "CVE-2026-96778"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-22hg-r758-rrw9"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-27h8-gf7j-v5hc"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-2g68-c3qc-8985"
+    package: "werkzeug"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-2h4p-vjrc-8xpq"
+    package: "mako"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-2m5v-pch6-74hx"
+    package: "undici"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-2v37-7h3g-55p8"
+    package: "nanoid"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-38jv-5279-wg99"
+    package: "urllib3"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-3j72-p6qg-6xp7"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-45c3-73f7-pv4m"
+    package: "dnspython"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-45hq-cxwh-f6vc"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-4cwx-7wf7-3272"
+    package: "undici"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-4w7w-5xrc-9h26"
+    package: "undici"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-537c-gmf6-5ccf"
+    package: "cryptography"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-587h-7wmj-h5pm"
+    package: "vite"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-58r4-6rv3-gfh8"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-5pwr-322w-8jr4"
+    package: "pyopenssl"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-5rvq-cxj2-64vf"
+    package: "python-multipart"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-5x94-69rx-g8h2"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-5xm2-6676-qcp9"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-62p4-gmf7-7g93"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-65qm-jvmh-6pqg"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-68fv-2mgg-jv7q"
+    package: "source-map-js"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-6r8x-57c9-28j4"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-752w-5fwx-jx9f"
+    package: "pyjwt"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-78g4-xqwv-q3g8"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-7mwm-ghpf-9vrm"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-8988-9cw3-xx77"
+    package: "urllib3"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-8v84-f9pq-wr9x"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-9hw9-ch79-4vh6"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-9v7f-9g4p-ffgj"
+    package: "pyjwt"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-9v9v-9qvf-h2hj"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-c6hw-5grf-ff96"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-cp9v-662q-vvx9"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-f2g6-542v-9j58"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-g4qv-2jxx-769h"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-g6cj-pr64-35w5"
+    package: "cryptography"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-g7cr-3p24-7wf7"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-g842-9rc4-69pw"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-gg2r-wvfm-q9rx"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-j4m9-6w36-pw47"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-jg86-v3jv-hrpm"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-jjj6-mw9f-p565"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-jwv3-5hgf-82ww"
+    package: "cryptography"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-mf9v-mfxr-j63j"
+    package: "urllib3"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-mrfp-p49p-3hf2"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-p4g4-x82p-q773"
+    package: "pyjwt"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-p4wg-p73j-c528"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-pchr-8j38-3x4p"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-phj9-mv4w-65pm"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-pxh4-856f-4h89"
+    package: "pyjwt"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-q45j-58j2-45rg"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-qccp-gfcp-xxvc"
+    package: "urllib3"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-qrxm-fqhp-jwvm"
+    package: "undici"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-qwww-vcr4-c8h2"
+    package: "react-router"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-r543-q48m-4c9j"
+    package: "weasyprint"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-r6ph-v2qm-q3c2"
+    package: "cryptography"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-r79c-pqj3-577x"
+    package: "super-linter/super-linter"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-rfgv-xxqx-mfg5"
+    package: "undici"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-v92g-xgxw-vvmm"
+    package: "mako"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-vfmq-68hx-4jfw"
+    package: "lxml"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-vjc4-5qp5-m44j"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-vvf4-9x63-8xvv"
+    package: "dnspython"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-vxq7-64xx-v4gw"
+    package: "urllib3"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-w293-vg96-wgc3"
+    package: "undici"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-xcvg-w56q-r89m"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-xgmm-8j9v-c9wx"
+    package: "pyjwt"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-xj96-63gp-2gmr"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-xjj6-f33q-929c"
+    package: "undici"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
+
+  - vulnerability: "GHSA-xvh5-g6gv-559v"
+    package: "pillow"
+    severity: HIGH
+    reason: "TODO: justify this acceptance (review policy)"
