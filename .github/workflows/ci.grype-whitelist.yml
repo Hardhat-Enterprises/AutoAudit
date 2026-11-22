@@ -1,0 +1,184 @@
+name: Grype Whitelist Gate
+
+# Proof-of-concept single-scan vulnerability gate, evaluated in parallel with
+# ci.grype.yml (the existing un-whitelist-aware critical gate) until deemed
+# satisfactory. Runs on the same triggers as ci.grype.yml, plus its own files.
+#
+# Model (single scan — no merge-base grype run):
+#   1. grype scans the checked-out tree (PR events check out the merge ref, so
+#      the scan sees the prospective post-merge state).
+#   2. The whitelist effective for gating = grype-whitelist.yaml at the
+#      merge-base/main side UNION this branch's copy — see the header of
+#      grype-whitelist.yaml for the resolution rules. A PR may add entries
+#      in-PR to make its own gate green; review is the control.
+#   3. .github/scripts/grype-diff.py classifies every HIGH/CRITICAL finding
+#      (whitelist-suppressed findings skipped) per FAIL_ON and gates via its
+#      exit code (0 pass / 1 blocking findings / 2 data error — fail closed).
+#
+# Decision (2025-11, recorded per review): the GitHub Security tab receives
+# the FULL SARIF so it mirrors the complete scan; the artifacts carry the full
+# JSON report plus the gate-only WARN/FAIL report for reviewers. To switch the
+# Security tab to gate-filtered results, change `sarif_file:` in the upload
+# step below from `grype-full.sarif` to `grype-gate.sarif`.
+#
+# TODO(test-period): the weekly scheduled run and the SARIF upload are
+# commented out for the parallel-evaluation period. Re-enable (and stagger the
+# cron against ci.grype.yml's '37 20 * * 4') once this workflow is trusted.
+on:
+  push:
+    branches: [main, security/grype-overhaul-explicit-allow]
+    paths:
+      - 'frontend/**'
+      - 'backend-api/**'
+      - 'engine/**'
+      - 'grype-whitelist.yaml'
+      - '.github/scripts/grype-diff.py'
+      - '.github/workflows/ci.grype-whitelist.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'backend-api/**'
+      - 'engine/**'
+      - 'grype-whitelist.yaml'
+      - '.github/scripts/grype-diff.py'
+      - '.github/workflows/ci.grype-whitelist.yml'
+  workflow_dispatch:
+    inputs:
+      fail_on:
+        description: 'Gate policy: CRITICAL | HIGH_FIXED | HIGH'
+        type: choice
+        options: [CRITICAL, HIGH_FIXED, HIGH]
+        default: HIGH_FIXED
+      ignore_whitelisted:
+        description: 'Skip whitelisted findings (true) or enforce them anyway (false, audit mode)'
+        type: choice
+        options: ['true', 'false']
+        default: 'true'
+  # TODO(test-period): re-enable the weekly scan after evaluation
+  # schedule:
+  #   - cron: '43 20 * * 4'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: grype-whitelist-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  grype-whitelist-gate:
+    name: Whitelist gate (single scan, HIGH/CRITICAL)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # TODO(test-period): uncomment together with the SARIF upload step below
+      # security-events: write
+    env:
+      # Gate config — also settable ad hoc via workflow_dispatch inputs.
+      # NOTE: on pull_request events GitHub runs this file FROM THE PR BRANCH,
+      # so these values are PR-editable; code review is the accepted mitigation.
+      FAIL_ON: ${{ inputs.fail_on || 'HIGH_FIXED' }}
+      IGNORE_WHITELISTED: ${{ inputs.ignore_whitelisted || 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0  # full history: needed to read the whitelist at the merge-base
+          persist-credentials: false
+
+      - name: Extract main-side whitelist (merge-base)
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          git fetch --quiet origin main
+
+          case "$EVENT_NAME" in
+            pull_request)
+              MB="$(git merge-base HEAD origin/main)" ;;
+            push)
+              # The pre-push commit is the correct "main side" for a merge that just landed.
+              if [[ "$BEFORE_SHA" =~ ^[0-9a-f]{40}$ ]] && git cat-file -e "$BEFORE_SHA^{commit}" 2>/dev/null; then
+                MB="$BEFORE_SHA"
+              else
+                # History rewrite / first push: degrade loudly to an empty baseline.
+                MB=""
+                echo "::warning::github.event.before unavailable; using empty main whitelist baseline"
+              fi ;;
+            workflow_dispatch)
+              # On a branch: compare against main. On main itself there is no "other side".
+              if [ "$(git rev-parse --abbrev-ref HEAD)" != "main" ]; then
+                MB="$(git merge-base HEAD origin/main)"
+              else
+                MB=""
+              fi ;;
+            *)
+              MB="" ;;
+          esac
+
+          if [ -n "$MB" ] && git cat-file -e "$MB:grype-whitelist.yaml" 2>/dev/null; then
+            git show "$MB:grype-whitelist.yaml" > /tmp/grype-whitelist.main.yaml
+            echo "main-side whitelist extracted from $MB"
+          else
+            printf 'schema_version: 1\nentries: []\n' > /tmp/grype-whitelist.main.yaml
+            echo "::warning::no grype-whitelist.yaml at the main side; using empty baseline"
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+
+      - name: Install grype-diff dependencies
+        run: python3 -m pip install --disable-pip-version-check pyyaml==6.0.2
+
+      - name: Run Grype directory scan (full JSON)
+        uses: anchore/scan-action@v6  # TODO: pin to a full commit SHA like the other actions here
+        with:
+          path: '.'
+          # The script owns gating; grype must never fail the job itself.
+          fail-build: false
+          # negligible cutoff = include every severity; the script scopes HIGH/CRITICAL.
+          severity-cutoff: negligible
+          output-format: json
+          output-file: grype-report.json
+
+      - name: Evaluate whitelist gate
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/grype-diff.py \
+            --current grype-report.json \
+            --whitelist-pr grype-whitelist.yaml \
+            --whitelist-main /tmp/grype-whitelist.main.yaml \
+            --report-out grype-gate-report.md \
+            --json-out grype-gate-report.json \
+            --sarif-full grype-full.sarif \
+            --sarif-gate grype-gate.sarif
+
+      - name: Upload reports as artifact (full scan + gate report)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: grype-whitelist-report
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            grype-report.json
+            grype-gate-report.md
+            grype-gate-report.json
+            grype-full.sarif
+            grype-gate.sarif
+
+      # TODO(test-period): SARIF upload disabled during the parallel-evaluation
+      # period (Security tab keeps receiving only ci.grype.yml's upload).
+      #
+      # DECISION: full SARIF uploaded so the Security tab mirrors the complete
+      # scan; switch `sarif_file` to `grype-gate.sarif` for gate-filtered only.
+      # - name: Upload SARIF to GitHub Security tab
+      #   if: always()
+      #   uses: github/codeql-action/upload-sarif@6f5948dfacef28e207b48d0905cf90c03365536d # v3
+      #   with:
+      #     sarif_file: grype-full.sarif
+      #     category: grype-whitelist

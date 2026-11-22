@@ -1,0 +1,46 @@
+# =====================================================================
+# Grype vulnerability whitelist — the repo's risk register
+# =====================================================================
+# Consumed by .github/scripts/grype-diff.py
+# Enforced by   .github/workflows/ci.grype-whitelist.yml
+#
+# Scope: only HIGH and CRITICAL findings are gated. Lower severities never
+# need an entry here.
+#
+# Effective whitelist on a PR (union semantics, keyed on (vulnerability, package)):
+#   - entries only on main (merge-base)            -> inherited, used as-is
+#   - entries only on the PR branch                -> "added by this PR" (itemised in
+#                                                    the CI summary — these are what
+#                                                    reviewers must scrutinise)
+#   - same key on both, attributes differ          -> PR branch version wins ("modified")
+#   - entry deleted by the PR branch               -> IGNORED for gating (WARN in the
+#                                                    summary); deletions only take effect
+#                                                    once they land on main, and if the
+#                                                    vulnerability is still present the
+#                                                    next PR fails (ratchet — the register
+#                                                    may only shrink when the debt is gone)
+#
+# A PR may add entries in-PR to make its own gate green; the addition is
+# visible in the file diff and the CI summary. Review is the control.
+#
+# Entry fields:
+#   vulnerability:  Grype vulnerability id (CVE-... / GHSA-...), exactly as
+#                   Grype reports it
+#   package:        optional — Grype artifact name this entry applies to;
+#                   omit to match any package
+#   severity:       severity at acceptance: UNKNOWN | NEGLIGIBLE | LOW | MEDIUM
+#                   | HIGH | CRITICAL (informational snapshot; see LIMITATIONS)
+#   reason:         why this is accepted. REQUIRED BY REVIEW POLICY — a PR adding
+#                   an entry without a justification should not be merged.
+#                   (Business rule, not CI-enforced: the script warns but does
+#                   not block on a missing reason.)
+#
+# PARKED (future hardening, deliberately not implemented yet):
+#   - `expires` leases (auto re-gating of stale acceptances)
+#   - stale-entry hygiene report / cleanup job
+#   - severity-escalation re-gating (a whitelisted id that later scores HIGHER
+#     than recorded here stays suppressed)
+#   - UNKNOWN-ID findings (no CVE/GHSA alias) cannot be whitelisted by id
+
+schema_version: 1
+entries: []
