@@ -1,0 +1,1 @@
+Baseline trigger for Grype diff-gate experiment (fork only, do not upstream).
