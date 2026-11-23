@@ -2,7 +2,7 @@
 
 This document provides a comprehensive overview of all 140 controls in the CIS Microsoft 365 Foundations Benchmark v6.0.0, including their automation status and implementation progress.
 
-*Last Updated: 2026-11-21*
+*Last Updated: 2026-11-23*
 
 ---
 
@@ -60,7 +60,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 1.3.6 | L2 | Ensure the customer lockbox feature is enabled | Automated | Automated | `exchange.organization.organization_config` | Implemented | |
 | 1.3.7 | L2 | Ensure 'third-party storage services' are restricted in 'Microsoft 365 on the web' | Automated | Automated | `entra.applications.third_party_storage_services` | Implemented | Queries Microsoft Graph for the Third Party Storage Services service principal by app ID. The Rego policy reports compliance when the service principal exists and accountEnabled is false. Graph request exceptions propagate to the worker |
 | 1.3.8 | L2 | Ensure that Sways cannot be shared with people outside of your organization | Manual | Manual | | N/A | No API available for Sway settings |
-| 1.3.9 | L1 | Ensure shared bookings pages are restricted to select users | Automated | Automated | `exchange.organization.owa_mailbox_policy` | Automated | Uses Exchange Online Get-OwaMailboxPolicy and Get-OrganizationConfig evidence. When the default OWA Bookings creation setting is a Boolean, the policy reports compliance if that setting is false or tenant-wide BookingsEnabled is false. A missing or null default OWA setting returns an unable-to-determine result |
+| 1.3.9 | L1 | Ensure shared bookings pages are restricted to select users | Automated | Automated | `exchange.organization.owa_mailbox_policy` | Implemented | Uses Exchange Online Get-OwaMailboxPolicy and Get-OrganizationConfig evidence. When the default OWA Bookings creation setting is a Boolean, the policy reports compliance if that setting is false or tenant-wide BookingsEnabled is false. A missing or null default OWA setting returns an unable-to-determine result |
 
 ---
 
@@ -129,7 +129,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 5.1.4.2 | L1 | Ensure the maximum number of devices per user is limited | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | |
 | 5.1.4.3 | L1 | Ensure the GA role is not added as a local administrator during Entra join | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | |
 | 5.1.4.4 | L1 | Ensure local administrator assignment is limited during Entra join | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | Collector corrected and Rego policy implemented; OPA tests present |
-| 5.1.4.5 | L1 | Ensure Local Administrator Password Solution is enabled | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | CUses Microsoft Graph beta /policies/deviceRegistrationPolicy and maps localAdminPassword.isEnabled to laps_enabled. The Rego policy reports compliance only when laps_enabled is true. Missing, null or invalid values report that LAPS status cannot be determined |
+| 5.1.4.5 | L1 | Ensure Local Administrator Password Solution is enabled | Automated | Automated | `entra.devices.device_registration_policy` | Implemented | Uses Microsoft Graph beta /policies/deviceRegistrationPolicy and maps localAdminPassword.isEnabled to laps_enabled. The Rego policy reports compliance only when laps_enabled is true. Missing, null or invalid values report that LAPS status cannot be determined |
 | 5.1.4.6 | L2 | Ensure users are restricted from recovering BitLocker keys | Automated | Automated | `entra.policies.authorization_policy` | Implemented | Check allowedToReadBitlockerKeysForOwnedDevice |
 | 5.1.5.1 | L2 | Ensure user consent to apps accessing company data on their behalf is not allowed | Automated | Automated | `entra.policies.authorization_policy` | Implemented | |
 | 5.1.5.2 | L1 | Ensure the admin consent workflow is enabled | Automated | Automated | `entra.policies.admin_consent_request_policy` | Implemented | |
@@ -187,10 +187,10 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 6.2.3 | L1 | Ensure email from external senders is identified | Automated | Automated | `exchange.transport.external_in_outlook` | Implemented | |
 | 6.3.1 | L2 | Ensure users installing Outlook add-ins is not allowed | Automated | Automated | `exchange.mailbox.role_assignment_policy` | Implemented | |
 | 6.5.1 | L1 | Ensure modern authentication for Exchange Online is enabled | Automated | Automated | `exchange.organization.organization_config` | Implemented | Check OAuth2ClientProfileEnabled |
-| 6.5.2 | L1 | Ensure MailTips are enabled for end users | Automated | Automated | `exchange.organization.organization_config` | Implmented | Collector and Rego policy implemented; no OPA test file yet |
+| 6.5.2 | L1 | Ensure MailTips are enabled for end users | Automated | Automated | `exchange.organization.organization_config` | Implemented | Collector and Rego policy implemented; no OPA test file yet |
 | 6.5.3 | L2 | Ensure additional storage providers are restricted in Outlook on the web | Automated | Automated | `exchange.organization.owa_mailbox_policy` | Implemented | |
 | 6.5.4 | L1 | Ensure SMTP AUTH is disabled | Automated | Automated | `exchange.organization.transport_config` | Implemented | |
-| 6.5.5 | L2 | Ensure Direct Send submissions are rejected | Automated | Automated | `exchange.organization.transport_config` | Implemented | Collector and Rego policy implemented; no OPA test file yet |
+| 6.5.5 | L2 | Ensure Direct Send submissions are rejected | Automated | Automated | `exchange.organization.organization_config` | Implemented | Collector and Rego policy implemented; no OPA test file yet |
 
 ---
 
@@ -206,8 +206,8 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 7.2.6 | L2 | Ensure SharePoint external sharing is restricted | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector and Rego policy implemented (PnP tenant collector); no OPA test file yet |
 | 7.2.7 | L1 | Ensure link sharing is restricted in SharePoint and OneDrive | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector extended with default_sharing_link_type and policy implemented; OPA tests present |
 | 7.2.8 | L2 | Ensure external sharing is restricted by security group | Manual | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError; CIS says Manual but can be automated |
-| 7.2.9 | L1 | Ensure guest access to a site or OneDrive will expire automatically | Automated | Bloacked | `sharepoint.pnp.tenant` | Blocked | Uses sharepoint.pnp.tenant evidence for ExternalUserExpirationRequired and ExternalUserExpireInDays. Eight policy tests passed using OPA 1.13.1-debug. Live end-to-end validation remains unconfirmed in this review; access to the approved SharePoint PnP certificate credentials is pending. Restore ready status after successful live collection and verification of the policy result against the tenant settings |
-| 7.2.10 | L1 | Ensure reauthentication with verification code is restricted | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Uses the existing sharepoint.pnp.tenant collector with EmailAttestationRequired and EmailAttestationReAuthDays evidence; no OPA test file yet |
+| 7.2.9 | L1 | Ensure guest access to a site or OneDrive will expire automatically | Automated | Blocked | `sharepoint.pnp.tenant` | Blocked | Uses sharepoint.pnp.tenant evidence for ExternalUserExpirationRequired and ExternalUserExpireInDays. Eight policy tests passed using OPA 1.13.1-debug. Live end-to-end validation remains unconfirmed in this review; access to the approved SharePoint PnP certificate credentials is pending. Restore ready status after successful live collection and verification of the policy result against the tenant settings |
+| 7.2.10 | L1 | Ensure reauthentication with verification code is restricted | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Uses the existing sharepoint.pnp.tenant collector with EmailAttestationRequired and EmailAttestationReAuthDays evidence; OPA tests present (inline in the policy file) |
 | 7.2.11 | L1 | Ensure the SharePoint default sharing link permission is set | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector and Rego policy implemented (PnP tenant collector); OPA tests present |
 | 7.3.1 | L2 | Ensure Office 365 SharePoint infected files are disallowed for download | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector and Rego policy implemented (PnP tenant collector); no OPA test file yet |
 | 7.3.2 | L2 | Ensure OneDrive sync is restricted for unmanaged devices | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector and Rego policy implemented (PnP tenant collector); OPA tests present |
@@ -264,7 +264,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | Blocker | Controls Affected | Resolution |
 |---------|-------------------|------------|
 | Teams PowerShell AccessTokens bug | 8.1.1-8.6.1 (16 controls) | Wait for Microsoft fix or implement certificate auth |
-| IPPSSession certificate auth | 2.4.1, 3.2.1, 3.2.2, 3.3.1 (2 controls) | Implement certificate-based authentication |
+| IPPSSession certificate auth | 2.4.1, 3.2.1, 3.2.2, 3.3.1 (4 controls) | Implement certificate-based authentication |
 | Fabric API auth | 9.1.1-9.1.12 (12 controls) | Test and validate Fabric API token auth |
 
 ### Priority 2: Complete SharePoint Controls
