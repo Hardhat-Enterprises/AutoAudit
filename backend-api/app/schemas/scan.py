@@ -35,7 +35,7 @@ class ScanResultRead(BaseModel):
     id: int
     scan_id: int
     control_id: str
-    status: str  # pending, passed, failed, error, skipped
+    status: str  # allowed values: ck_scan_result_status on scan_result
     message: str | None
     evidence: dict | None
     created_at: datetime
@@ -66,6 +66,8 @@ class ScanRead(BaseModel):
     failed_count: int
     skipped_count: int
     error_count: int
+    indeterminate_count: int
+    not_assessable_count: int
     notes: str | None
     results: list[ScanResultRead] | None = None
 
@@ -91,6 +93,8 @@ class ScanListItem(BaseModel):
     failed_count: int
     skipped_count: int
     error_count: int
+    indeterminate_count: int
+    not_assessable_count: int
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -111,6 +115,8 @@ class ControlCategoryBreakdown(BaseModel):
     failed: int
     skipped: int
     error: int
+    indeterminate: int
+    not_assessable: int
 
 
 class ScanSummary(BaseModel):
@@ -129,6 +135,8 @@ class ScanSummary(BaseModel):
     failed_count: int
     skipped_count: int
     error_count: int
+    indeterminate_count: int
+    not_assessable_count: int
     categories: list[ControlCategoryBreakdown]
 
     model_config = ConfigDict(from_attributes=True)
