@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # Security: when True, reset/verification tokens are written to logs for
+    # local debugging only. Defaults False in every environment regardless of
+    # APP_ENV; set to True only in a developer's own uncommitted .env. This keeps
+    # "what environment is this" and "is it safe to log secrets" independent, so
+    # the safe behaviour is the default everywhere unless someone opts out.
+    DEBUG_LOG_TOKENS: bool = False
+
     # Public URLs (used for OAuth redirects)
     # These must be the externally reachable URLs (e.g. localhost from the browser).
     BACKEND_PUBLIC_URL: str = "http://localhost:8000"
