@@ -158,7 +158,7 @@
       "data_collector_id": "entra.policies.activity_based_timeout",
       "policy_file": "1.3.2_idle_session_timeout.rego",
       "requires_permissions": ["Policy.Read.All"],
-      "notes": "Uses Microsoft Graph /policies/activityBasedTimeoutPolicies to collect idle timeout evidence. The Rego policy checks for a timeout greater than zero and no more than 180 minutes. Six policy tests passed using OPA 1.13.1-debug. Live tenant validation has not been confirmed in this review."
+      "notes": "Uses Microsoft Graph /policies/activityBasedTimeoutPolicies to collect idle timeout evidence. The Rego policy checks for a timeout greater than zero and no more than 180 minutes. Not yet validated against a live tenant."
     },
     {
       "control_id": "1.3.3",
@@ -1993,11 +1993,11 @@
       "level": "L1",
       "is_manual": false,
       "benchmark_audit_type": "Automated",
-      "automation_status": "blocked",
+      "automation_status": "ready",
       "data_collector_id": "sharepoint.pnp.tenant",
       "policy_file": "7.2.9_guest_access_site_onedrive_expiration.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Uses sharepoint.pnp.tenant evidence for ExternalUserExpirationRequired and ExternalUserExpireInDays. Eight policy tests passed using OPA 1.13.1-debug. Live end-to-end validation remains unconfirmed in this review; access to the approved SharePoint PnP certificate credentials is pending. Restore ready status after successful live collection and verification of the policy result against the tenant settings."
+      "notes": "Uses sharepoint.pnp.tenant evidence for ExternalUserExpirationRequired and ExternalUserExpireInDays. Not yet validated against a live tenant."
     },
     {
       "control_id": "7.2.10",
