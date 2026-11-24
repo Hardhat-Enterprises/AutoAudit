@@ -562,3 +562,25 @@ async def test_results_filter_by_status_and_ordering(
         "1.1.2",
         "1.1.3",
     ]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason=(
+        "status_filter is not validated: an unknown value returns 200 with an "
+        "empty list. See https://github.com/Hardhat-Enterprises/AutoAudit/issues/454"
+    ),
+)
+async def test_results_rejects_unknown_status_filter(
+    auth_client, registered_user, db_session
+):
+    email, _ = registered_user
+    user_id = await _user_id_for(db_session, email)
+    scan = await _make_scan(db_session, user_id, [("1.1.1", "passed")])
+
+    resp = await auth_client.get(
+        f"/v1/scans/{scan.id}/results", params={"status_filter": "banana"}
+    )
+
+    assert resp.status_code == 422, resp.text  # nosec B101
