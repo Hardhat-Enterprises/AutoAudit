@@ -492,3 +492,73 @@ async def test_delete_own_scan_removes_scan_and_results(
         select(ScanResult).where(ScanResult.scan_id == scan_id)
     )
     assert remaining_results.scalars().all() == []  # nosec B101
+
+
+async def test_summary_category_counts_include_all_statuses(
+    auth_client, registered_user, db_session
+):
+    """The summary groups results by control category and counts every
+    status, including indeterminate and not_assessable (added in #437).
+    A pending result counts toward the category total but has no bucket."""
+    email, _ = registered_user
+    user_id = await _user_id_for(db_session, email)
+    scan = await _make_scan(
+        db_session,
+        user_id,
+        [
+            ("1.1.1", "passed"),
+            ("1.1.2", "failed"),
+            ("1.2.1", "indeterminate"),
+            ("2.1.1", "not_assessable"),
+            ("2.1.2", "skipped"),
+            ("2.1.3", "error"),
+            ("3.1.1", "pending"),
+        ],
+    )
+
+    resp = await auth_client.get(f"/v1/scans/{scan.id}/summary")
+
+    assert resp.status_code == 200, resp.text  # nosec B101
+    categories = {c["category"]: c for c in resp.json()["categories"]}
+    assert sorted(categories) == ["1", "2", "3"]  # nosec B101
+
+    one = categories["1"]
+    assert (one["total"], one["passed"], one["failed"], one["indeterminate"]) == (  # nosec B101
+        3, 1, 1, 1,
+    )
+    two = categories["2"]
+    assert (  # nosec B101
+        two["total"], two["not_assessable"], two["skipped"], two["error"]
+    ) == (3, 1, 1, 1)
+    three = categories["3"]
+    assert three["total"] == 1  # nosec B101
+    assert three["passed"] == three["failed"] == three["indeterminate"] == 0  # nosec B101
+
+
+async def test_results_filter_by_status_and_ordering(
+    auth_client, registered_user, db_session
+):
+    email, _ = registered_user
+    user_id = await _user_id_for(db_session, email)
+    scan = await _make_scan(
+        db_session,
+        user_id,
+        [("1.1.3", "failed"), ("1.1.1", "passed"), ("1.1.2", "failed")],
+    )
+
+    everything = await auth_client.get(f"/v1/scans/{scan.id}/results")
+    only_failed = await auth_client.get(
+        f"/v1/scans/{scan.id}/results", params={"status_filter": "failed"}
+    )
+
+    assert everything.status_code == 200, everything.text  # nosec B101
+    assert [r["control_id"] for r in everything.json()] == [  # nosec B101
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+    ]
+    assert only_failed.status_code == 200, only_failed.text  # nosec B101
+    assert [r["control_id"] for r in only_failed.json()] == [  # nosec B101
+        "1.1.2",
+        "1.1.3",
+    ]
