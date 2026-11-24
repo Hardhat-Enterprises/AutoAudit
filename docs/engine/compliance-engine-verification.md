@@ -459,6 +459,25 @@ number matching enabled  → compliant
 number matching disabled → non-compliant
 ```
 
+### CIS 7.2.8 — External sharing restricted by security group
+
+The policy passes only when external sharing is disabled tenant-wide. When
+security groups are set, their membership needs a person to review, so the
+policy fails until AutoAudit has an outcome for that.
+
+CIS rates this control Manual, so these fixtures run but are not counted in
+behavioural coverage.
+
+Current fixtures verify:
+
+```text
+external sharing disabled          → compliant
+sharing enabled, no groups set     → non-compliant
+sharing enabled, blank group entry → non-compliant
+sharing enabled, groups set        → non-compliant
+allow list missing                 → non-compliant
+```
+
 ### Essential Eight E8-MFA-2.1 — MFA enforcement
 
 The policy checks whether qualifying Conditional Access policies enforce MFA for

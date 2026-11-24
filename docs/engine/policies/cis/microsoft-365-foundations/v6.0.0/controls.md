@@ -2,7 +2,7 @@
 
 This document provides a comprehensive overview of all 140 controls in the CIS Microsoft 365 Foundations Benchmark v6.0.0, including their automation status and implementation progress.
 
-*Last Updated: 2026-11-23*
+*Last Updated: 2026-11-24*
 
 ---
 
@@ -18,11 +18,11 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 
 | Our Audit Type | Count | Description |
 |----------------|-------|-------------|
-| Automated | 87 | Fully automatable with current collectors |
+| Automated | 88 | Fully automatable with current collectors |
 | Deferred | 8 | Collector works but needs "compliant with review" capability |
 | Blocked | 33 | Collector exists but authentication issues prevent execution |
 | Manual | 11 | No API available, truly requires manual verification |
-| Not Started | 1 | No collector implemented yet |
+| Not Started | 0 | No collector implemented yet |
     
 ---
 
@@ -205,7 +205,7 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 | 7.2.5 | L2 | Ensure that SharePoint guest users cannot share items they don't own | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector and Rego policy implemented (PnP tenant collector); no OPA test file yet |
 | 7.2.6 | L2 | Ensure SharePoint external sharing is restricted | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector and Rego policy implemented (PnP tenant collector); no OPA test file yet |
 | 7.2.7 | L1 | Ensure link sharing is restricted in SharePoint and OneDrive | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector extended with default_sharing_link_type and policy implemented; OPA tests present |
-| 7.2.8 | L2 | Ensure external sharing is restricted by security group | Manual | Not Started | `sharepoint.spo_tenant` | Not Started | Collector raises NotImplementedError; CIS says Manual but can be automated |
+| 7.2.8 | L2 | Ensure external sharing is restricted by security group | Manual | Automated | `sharepoint.pnp.tenant` | Implemented | CIS says Manual; automated via GuestSharingGroupAllowListInTenantByPrincipalIdentity. Passes only when sharing is disabled tenant-wide; groups set fails pending membership review |
 | 7.2.9 | L1 | Ensure guest access to a site or OneDrive will expire automatically | Automated | Blocked | `sharepoint.pnp.tenant` | Blocked | Uses sharepoint.pnp.tenant evidence for ExternalUserExpirationRequired and ExternalUserExpireInDays. Eight policy tests passed using OPA 1.13.1-debug. Live end-to-end validation remains unconfirmed in this review; access to the approved SharePoint PnP certificate credentials is pending. Restore ready status after successful live collection and verification of the policy result against the tenant settings |
 | 7.2.10 | L1 | Ensure reauthentication with verification code is restricted | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Uses the existing sharepoint.pnp.tenant collector with EmailAttestationRequired and EmailAttestationReAuthDays evidence; OPA tests present (inline in the policy file) |
 | 7.2.11 | L1 | Ensure the SharePoint default sharing link permission is set | Automated | Automated | `sharepoint.pnp.tenant` | Implemented | Collector and Rego policy implemented (PnP tenant collector); OPA tests present |
@@ -271,9 +271,8 @@ This document provides a comprehensive overview of all 140 controls in the CIS M
 
 | Component | Controls Affected |
 |-----------|-------------------|
-| `sharepoint.pnp.tenant` (implemented) | 7.2.1-7.2.7, 7.2.10, 7.2.11, 7.3.1, 7.3.2 |
+| `sharepoint.pnp.tenant` (implemented) | 7.2.1-7.2.8, 7.2.10, 7.2.11, 7.3.1, 7.3.2 |
 | `sharepoint.pnp.tenant` (blocked, awaiting certificate credentials and live validation) | 7.2.9 |
-| `sharepoint.spo_tenant` (not implemented) | 7.2.8 |
 
 ### Priority 3: Complete Remaining Collectors
 

@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import CheckConstraint, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -20,13 +20,18 @@ class ScanResult(Base):
     __tablename__ = "scan_result"
     __table_args__ = (
         UniqueConstraint("scan_id", "control_id", name="uq_scan_result_scan_control"),
+        CheckConstraint(
+            "status IN ('pending', 'passed', 'failed', 'indeterminate', "
+            "'not_assessable', 'error', 'skipped')",
+            name="ck_scan_result_status",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     scan_id: Mapped[int] = mapped_column(ForeignKey("scan.id"), nullable=False)
     control_id: Mapped[str] = mapped_column(String(50), nullable=False)
 
-    # Status: pending, passed, failed, error, skipped
+    # Only passed and failed count toward the compliance score.
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     evidence: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)

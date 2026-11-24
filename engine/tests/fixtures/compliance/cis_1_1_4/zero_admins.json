@@ -1,0 +1,13 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "1.1.4",
+  "scenario": "No administrators detected - admin_accounts is an empty list",
+  "input": {
+    "admin_accounts": []
+  },
+  "expected": {
+    "compliant": false
+  }
+}
