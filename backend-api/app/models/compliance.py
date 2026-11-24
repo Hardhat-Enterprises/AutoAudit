@@ -60,6 +60,8 @@ class Scan(Base):
     failed_count: Mapped[int] = mapped_column(default=0)
     skipped_count: Mapped[int] = mapped_column(default=0)
     error_count: Mapped[int] = mapped_column(default=0)
+    indeterminate_count: Mapped[int] = mapped_column(default=0)
+    not_assessable_count: Mapped[int] = mapped_column(default=0)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Relationships
