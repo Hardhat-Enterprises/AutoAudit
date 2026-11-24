@@ -1,0 +1,20 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "1.1.1",
+  "scenario": "Administrator synced from on-premises Active Directory",
+  "input": {
+    "admin_accounts": [
+      {
+        "userPrincipalName": "admin@test.com",
+        "displayName": "Administrator",
+        "on_premises_sync_enabled": true,
+        "admin_roles": ["Global Administrator"]
+      }
+    ]
+  },
+  "expected": {
+    "compliant": false
+  }
+}
