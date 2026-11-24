@@ -1,0 +1,14 @@
+{
+  "benchmark": "sample",
+  "controls": [
+    {"control_id": "1.1.1", "title": "Ensure sample setting A is enabled", "automation_status": "ready", "data_collector_id": "entra.sample.a", "benchmark_audit_type": "Automated", "notes": "Uses the sample A collector."},
+    {"control_id": "1.1.2", "title": "Ensure sample setting B is reviewed", "automation_status": "deferred", "data_collector_id": "entra.sample.b", "benchmark_audit_type": "Automated", "notes": ""},
+    {"control_id": "1.1.3", "title": "Ensure sample setting C is enforced", "automation_status": "blocked", "data_collector_id": "exchange.sample.c", "benchmark_audit_type": "Automated", "notes": "Needs certificate auth."},
+    {"control_id": "1.1.4", "title": "Ensure sample setting D is configured", "automation_status": "blocked", "data_collector_id": "", "benchmark_audit_type": "Automated", "notes": ""},
+    {"control_id": "1.1.5", "title": "Ensure sample setting E is documented", "automation_status": "manual", "data_collector_id": "", "benchmark_audit_type": "Manual", "notes": ""},
+    {"control_id": "1.1.6", "title": "Ensure sample setting F is restricted", "automation_status": "not_started", "data_collector_id": "", "benchmark_audit_type": "Automated", "notes": ""},
+    {"control_id": "2.1.1", "title": "Ensure sample setting G is set", "automation_status": "ready", "data_collector_id": "sharepoint.sample.g", "benchmark_audit_type": "Automated", "notes": ""},
+    {"control_id": "2.1.2", "title": "Ensure sample setting H is already correct", "automation_status": "ready", "data_collector_id": "sharepoint.sample.h", "benchmark_audit_type": "Automated", "notes": "Same note as the doc."},
+    {"control_id": "2.1.9", "title": "Ensure sample setting I was added later", "automation_status": "ready", "data_collector_id": "sharepoint.sample.i", "benchmark_audit_type": "Automated", "notes": ""}
+  ]
+}
