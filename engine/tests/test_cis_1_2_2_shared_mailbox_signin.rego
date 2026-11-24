@@ -176,3 +176,26 @@ test_result_structure if {
     _ = result.details.blocked_sign_in_count
     _ = result.details.direct_sign_in_enabled_count
 }
+
+# Missing evidence: the shared_mailboxes key must be present as a list.
+test_non_compliant_shared_mailboxes_key_missing if {
+    result := data.cis.microsoft_365_foundations.v6_0_0.control_1_2_2.result with input as {}
+
+    result.compliant == false
+}
+
+test_non_compliant_shared_mailboxes_null if {
+    result := data.cis.microsoft_365_foundations.v6_0_0.control_1_2_2.result with input as {
+        "shared_mailboxes": null,
+    }
+
+    result.compliant == false
+}
+
+test_non_compliant_shared_mailboxes_not_a_list if {
+    result := data.cis.microsoft_365_foundations.v6_0_0.control_1_2_2.result with input as {
+        "shared_mailboxes": {"display_name": "Support Shared Mailbox", "account_disabled": true},
+    }
+
+    result.compliant == false
+}

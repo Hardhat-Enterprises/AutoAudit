@@ -28,7 +28,12 @@ default result := {
 
 default compliant := false
 
-shared_mailboxes := object.get(input, "shared_mailboxes", [])
+# Fail closed: shared_mailboxes must be present as a list. An empty list is
+# valid (the tenant has no shared mailboxes), but a missing or malformed value
+# is missing evidence and must not pass.
+evidence_present if is_array(input.shared_mailboxes)
+
+shared_mailboxes := input.shared_mailboxes if evidence_present
 
 non_compliant_mailboxes := [
   mailbox |
@@ -43,11 +48,13 @@ unknown_status_mailboxes := [
 ]
 
 compliant if {
+  evidence_present
   count(unknown_status_mailboxes) == 0
   count(non_compliant_mailboxes) == 0
 }
 
 result := output if {
+  evidence_present
   count(unknown_status_mailboxes) == 0
 
   output := {
@@ -66,6 +73,7 @@ result := output if {
 }
 
 result := output if {
+  evidence_present
   count(unknown_status_mailboxes) > 0
 
   output := {
