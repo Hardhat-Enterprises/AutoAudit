@@ -58,11 +58,6 @@ result := output if {
     }
 }
 
-# Helper to get array with default
-get_array(obj, key) := value if {
-    value := obj[key]
-} else := []
-
 build_message(all_admins, synced_admins) := msg if {
     count(synced_admins) == 0
     msg := sprintf("All %d administrative account(s) are cloud-only", [count(all_admins)])
