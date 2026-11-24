@@ -23,6 +23,7 @@ from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+import uuid
 import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -396,3 +397,98 @@ async def test_scan_result_status_check_constraint(db_session, registered_user):
     db_session.add(ScanResult(scan_id=scan.id, control_id="1.1.3", status="unknown"))
     with pytest.raises(IntegrityError, match="ck_scan_result_status"):
         await db_session.flush()
+
+
+async def _user_id_for(db_session, email: str) -> int:
+    result = await db_session.execute(select(User).where(User.email == email))
+    return result.scalar_one().id
+
+
+async def _register_other_user(client, db_session) -> int:
+    """Register a second, unrelated user and return their id."""
+    email = f"other-{uuid.uuid4().hex}@example.com"
+    resp = await client.post(
+        "/v1/auth/register",
+        json={"email": email, "password": "Sup3r-Secret-Test-Pw!"},  # pragma: allowlist secret
+    )
+    assert resp.status_code == 201, resp.text  # nosec B101
+    return await _user_id_for(db_session, email)
+
+
+async def _make_scan(
+    db_session, user_id: int, results: list[tuple[str, str]] | None = None
+) -> Scan:
+    """Insert a scan owned by `user_id`, with (control_id, status) results."""
+    scan = Scan(
+        user_id=user_id,
+        framework="cis",
+        benchmark="microsoft-365-foundations",
+        version="v6.0.0",
+    )
+    db_session.add(scan)
+    await db_session.flush()
+    for control_id, status_ in results or []:
+        db_session.add(
+            ScanResult(scan_id=scan.id, control_id=control_id, status=status_)
+        )
+    await db_session.flush()
+    await db_session.refresh(scan)
+    return scan
+
+
+@pytest.mark.parametrize(
+    "method, suffix",
+    [("get", ""), ("get", "/summary"), ("get", "/results"), ("delete", "")],
+)
+async def test_other_users_scan_returns_404(
+    auth_client, auditor_role, db_session, method, suffix
+):
+    """Scans are scoped to their owner: another user's scan must look like
+    it doesn't exist (404), and a delete attempt must not delete it."""
+    other_user_id = await _register_other_user(auth_client, db_session)
+    scan = await _make_scan(db_session, other_user_id, [("1.1.1", "passed")])
+
+    resp = await getattr(auth_client, method)(f"/v1/scans/{scan.id}{suffix}")
+
+    assert resp.status_code == 404, resp.text  # nosec B101
+    still_there = await db_session.execute(select(Scan).where(Scan.id == scan.id))
+    assert still_there.scalar_one_or_none() is not None  # nosec B101
+
+
+async def test_get_own_scan_returns_scan_with_results(
+    auth_client, registered_user, db_session
+):
+    email, _ = registered_user
+    user_id = await _user_id_for(db_session, email)
+    scan = await _make_scan(
+        db_session, user_id, [("1.1.1", "passed"), ("1.1.2", "failed")]
+    )
+
+    resp = await auth_client.get(f"/v1/scans/{scan.id}")
+
+    assert resp.status_code == 200, resp.text  # nosec B101
+    body = resp.json()
+    assert body["id"] == scan.id  # nosec B101
+    statuses = {r["control_id"]: r["status"] for r in body["results"]}
+    assert statuses == {"1.1.1": "passed", "1.1.2": "failed"}  # nosec B101
+
+
+async def test_delete_own_scan_removes_scan_and_results(
+    auth_client, auditor_role, registered_user, db_session
+):
+    email, _ = registered_user
+    user_id = await _user_id_for(db_session, email)
+    scan = await _make_scan(
+        db_session, user_id, [("1.1.1", "passed"), ("1.1.2", "failed")]
+    )
+    scan_id = scan.id
+
+    resp = await auth_client.delete(f"/v1/scans/{scan_id}")
+
+    assert resp.status_code == 204, resp.text  # nosec B101
+    remaining_scan = await db_session.execute(select(Scan).where(Scan.id == scan_id))
+    assert remaining_scan.scalar_one_or_none() is None  # nosec B101
+    remaining_results = await db_session.execute(
+        select(ScanResult).where(ScanResult.scan_id == scan_id)
+    )
+    assert remaining_results.scalars().all() == []  # nosec B101
