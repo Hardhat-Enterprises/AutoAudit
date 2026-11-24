@@ -10,9 +10,7 @@
         "userPrincipalName": "admin@test.com",
         "displayName": "Administrator",
         "on_premises_sync_enabled": false,
-        "admin_roles": [
-          "Global Administrator"
-        ]
+        "admin_roles": ["Global Administrator"]
       }
     ]
   },

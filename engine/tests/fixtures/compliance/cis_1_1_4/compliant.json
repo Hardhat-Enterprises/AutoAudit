@@ -9,9 +9,7 @@
       {
         "userPrincipalName": "admin@test.com",
         "displayName": "Administrator",
-        "admin_roles": [
-          "Global Administrator"
-        ],
+        "admin_roles": ["Global Administrator"],
         "uses_reduced_license_footprint": true
       }
     ]
