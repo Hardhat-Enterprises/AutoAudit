@@ -13,6 +13,9 @@ def test_validate_file_extension():
     assert validate_file_extension("test.pdf") is True
     assert validate_file_extension("test.exe") is False
     assert validate_file_extension("test.sh") is False
+    assert validate_file_extension("test.docx") is True
+    # Macro-enabled Word files stay blocked.
+    assert validate_file_extension("test.docm") is False
 
 
 def test_calculate_sha256():

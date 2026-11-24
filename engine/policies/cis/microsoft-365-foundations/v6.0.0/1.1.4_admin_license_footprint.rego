@@ -28,8 +28,16 @@ default result := {
     "details": {},
 }
 
+# Checks that the tenant has at least one administrator to assess - no missing keys or empty lists
+evidence_available if {
+    is_array(input.admin_accounts)
+    count(input.admin_accounts) > 0
+}
+
+# Main evaluation rule
 result := output if {
-    admin_accounts := get_array(input, "admin_accounts")
+    evidence_available
+    admin_accounts := input.admin_accounts
     violating := [a |
         some a in admin_accounts
         object.get(a, "uses_reduced_license_footprint", false) == false
@@ -55,10 +63,6 @@ result := output if {
         },
     }
 }
-
-get_array(obj, key) := value if {
-    value := obj[key]
-} else := []
 
 build_message(all_admins, violating) := msg if {
     count(violating) == 0

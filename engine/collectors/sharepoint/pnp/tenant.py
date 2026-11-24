@@ -1,7 +1,7 @@
 """PnP SharePoint tenant collector.
 
 CIS Microsoft 365 Foundations Benchmark Controls:
-    v6.0.0: 7.2.1, 7.2.2, 7.2.4, 7.2.5, 7.2.7, 7.2.9, 7.2.10, 7.3.1
+    v6.0.0: 7.2.1, 7.2.2, 7.2.4, 7.2.5, 7.2.7, 7.2.8, 7.2.9, 7.2.10, 7.3.1
 
 Control Descriptions:
     7.2.1 - Ensure modern authentication for SharePoint applications is required
@@ -9,6 +9,7 @@ Control Descriptions:
     7.2.4 - Ensure OneDrive content sharing is restricted
     7.2.5 - Ensure SharePoint guest users cannot share items they don't own
     7.2.7 - Ensure link sharing is restricted in SharePoint and OneDrive
+    7.2.8 - Ensure external sharing is restricted by security group
     7.2.9 - Ensure guest access to a site or OneDrive will expire automatically
     7.2.10 - Ensure reauthentication with verification code is restricted
     7.3.1 - Ensure Office 365 SharePoint infected files are disallowed for download
@@ -31,7 +32,8 @@ class PnpTenantDataCollector(BasePowerShellCollector):
     evaluates LegacyAuthProtocolsEnabled; CIS 7.2.2 evaluates
     EnableAzureADB2BIntegration; CIS 7.2.4
     evaluates SharingCapability; CIS 7.2.5 evaluates
-    PreventExternalUsersFromResharing; CIS 7.2.9 evaluates
+    PreventExternalUsersFromResharing; CIS 7.2.8 evaluates
+    GuestSharingGroupAllowListInTenantByPrincipalIdentity; CIS 7.2.9 evaluates
     ExternalUserExpirationRequired and ExternalUserExpireInDays; CIS 7.2.10
     evaluates EmailAttestationRequired and EmailAttestationReAuthDays; CIS
     7.3.1 evaluates DisallowInfectedFileDownload. Later controls can reuse
@@ -48,6 +50,7 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             - azure_ad_b2b_integration_enabled: Azure AD B2B integration status (CIS 7.2.2)
             - sharing_capability: External sharing capability (CIS 7.2.4)
             - prevent_external_users_from_resharing: Guest resharing restriction status (CIS 7.2.5)
+            - guest_sharing_group_allow_list: Security groups allowed to share externally (CIS 7.2.8)
             - external_user_expiration_required: Guest access expiration requirement (CIS 7.2.9)
             - external_user_expire_in_days: Guest access expiration period in days (CIS 7.2.9)
             - email_attestation_required: Verification code reauthentication requirement (CIS 7.2.10)
@@ -57,14 +60,12 @@ class PnpTenantDataCollector(BasePowerShellCollector):
         tenant = await client.run_cmdlet("SharePointOnline", "Get-PnPTenant")
         sync_client_restriction = await client.run_cmdlet(
             "SharePointOnline", "Get-PnPTenantSyncClientRestriction"
-)
+        )
 
         return {
             "tenant": tenant,
             "sharing_capability": tenant.get("SharingCapability"),
-            "legacy_auth_protocols_enabled": tenant.get(
-                "LegacyAuthProtocolsEnabled"
-            ),
+            "legacy_auth_protocols_enabled": tenant.get("LegacyAuthProtocolsEnabled"),
             "disallow_infected_file_download": tenant.get(
                 "DisallowInfectedFileDownload"
             ),
@@ -74,26 +75,22 @@ class PnpTenantDataCollector(BasePowerShellCollector):
             "prevent_external_users_from_resharing": tenant.get(
                 "PreventExternalUsersFromResharing"
             ),
+            "guest_sharing_group_allow_list": tenant.get(
+                "GuestSharingGroupAllowListInTenantByPrincipalIdentity"
+            ),
             "external_user_expiration_required": tenant.get(
                 "ExternalUserExpirationRequired"
             ),
-            "external_user_expire_in_days": tenant.get(
-                "ExternalUserExpireInDays"
-            ),
+            "external_user_expire_in_days": tenant.get("ExternalUserExpireInDays"),
             "is_unmanaged_sync_client_for_tenant_restricted": tenant.get(
                 "IsUnmanagedSyncClientForTenantRestricted"
-),
-            "default_sharing_link_type": tenant.get(
-                "DefaultSharingLinkType"
             ),
-            "restrict_external_domain_sharing":tenant.get(
+            "default_sharing_link_type": tenant.get("DefaultSharingLinkType"),
+            "restrict_external_domain_sharing": tenant.get(
                 "SharingDomainRestrictionMode"
             ),
-            "email_attestation_required": tenant.get(
-                "EmailAttestationRequired"
-            ),
-            "email_attestation_reauth_days": tenant.get(
-                "EmailAttestationReAuthDays"
-            ),
-            "allowed_domain_list": sync_client_restriction.get("AllowedDomainList") or [],
+            "email_attestation_required": tenant.get("EmailAttestationRequired"),
+            "email_attestation_reauth_days": tenant.get("EmailAttestationReAuthDays"),
+            "allowed_domain_list": sync_client_restriction.get("AllowedDomainList")
+            or [],
         }

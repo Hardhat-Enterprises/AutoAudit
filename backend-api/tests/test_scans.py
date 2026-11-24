@@ -25,9 +25,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import pytest_asyncio
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.models.compliance import Scan
 from app.models.m365_connection import M365Connection
+from app.models.scan_result import ScanResult
 from app.models.user import User
 from app.services.encryption import encrypt
 
@@ -290,6 +292,8 @@ def _scan(*, user_id: int = 1) -> Scan:
     scan.failed_count = 1
     scan.skipped_count = 0
     scan.error_count = 0
+    scan.indeterminate_count = 0
+    scan.not_assessable_count = 0
     scan.results = []
     scan.m365_connection = None
     return scan
@@ -366,3 +370,29 @@ async def test_list_scans_rejects_invalid_filter_parameters(
 
     assert response.status_code == 422
     mock_db_session.execute.assert_not_awaited()
+
+async def test_scan_result_status_check_constraint(db_session, registered_user):
+    """The DB accepts the new statuses and rejects unknown ones; the worker
+    writes with raw SQL, so this constraint is the only shared guard."""
+    email, _ = registered_user
+    result = await db_session.execute(select(User).where(User.email == email))
+    scan = Scan(
+        user_id=result.scalar_one().id,
+        framework="cis",
+        benchmark="microsoft-365-foundations",
+        version="v6.0.0",
+    )
+    db_session.add(scan)
+    await db_session.flush()
+
+    db_session.add_all(
+        [
+            ScanResult(scan_id=scan.id, control_id="1.1.1", status="indeterminate"),
+            ScanResult(scan_id=scan.id, control_id="1.1.2", status="not_assessable"),
+        ]
+    )
+    await db_session.flush()
+
+    db_session.add(ScanResult(scan_id=scan.id, control_id="1.1.3", status="unknown"))
+    with pytest.raises(IntegrityError, match="ck_scan_result_status"):
+        await db_session.flush()

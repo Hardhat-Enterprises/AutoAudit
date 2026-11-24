@@ -1970,11 +1970,11 @@
       "severity": "medium",
       "service": "SharePoint",
       "level": "L2",
-      "is_manual": true,
+      "is_manual": false,
       "benchmark_audit_type": "Manual",
-      "automation_status": "not_started",
-      "data_collector_id": "sharepoint.spo_tenant",
-      "policy_file": null,
+      "automation_status": "ready",
+      "data_collector_id": "sharepoint.pnp.tenant",
+      "policy_file": "7.2.8_restrict_external_sharing_by_security_group.rego",
       "requires_permissions": ["SharePoint.Admin"],
       "mitre_attack": [
         {
@@ -1982,7 +1982,7 @@
           "technique_name": "Exfiltration to Cloud Storage"
         }
       ],
-      "notes": "Collector raises NotImplementedError; CIS says Manual but can be automated"
+      "notes": "CIS audits this manually; automated from GuestSharingGroupAllowListInTenantByPrincipalIdentity via sharepoint.pnp.tenant. Passes only when SharingCapability is Disabled (0), since no one can share externally then. When groups are set it fails, because group membership needs a person to check and AutoAudit has no outcome for that yet. Not yet confirmed against a live tenant."
     },
     {
       "control_id": "7.2.9",
