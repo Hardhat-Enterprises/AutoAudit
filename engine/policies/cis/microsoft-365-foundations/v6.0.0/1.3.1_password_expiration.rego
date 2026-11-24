@@ -23,17 +23,18 @@ import rego.v1
 
 default result := {
   "compliant": false,
-  "message": "Evaluation failed: unable to retrieve domain password policy data",
+  "message": "Evaluation failed: unable to retrieve managed domain password policy data",
   "details": {}
 }
 
 # 2147483647 = "never expires" (max int32)
 never_expires := 2147483647
 
-# Checks that the tenant has at least one domain to assess - no missing keys or empty lists
+# Checks that the tenant has at least one managed domain to assess
 evidence_available if {
     is_array(input.domains)
-    count(input.domains) > 0
+    some d in input.domains
+    d.is_managed == true
 }
 
 result := output if {
@@ -64,7 +65,3 @@ generate_message(managed_domains, non_compliant) := msg if {
   count(non_compliant) > 0
   msg := sprintf("%d of %d managed domain(s) have password expiration enabled", [count(non_compliant), count(managed_domains)])
 }
-
-get_array(obj, key) := value if {
-  value := obj[key]
-} else := []
