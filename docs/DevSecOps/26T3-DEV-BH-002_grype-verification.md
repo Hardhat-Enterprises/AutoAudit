@@ -10,13 +10,13 @@
 - **Detection works.** Grype turns the check red when Critical vulnerabilities exist. Seen in real CI runs and reproduced locally.
 - **`main` is not clean.** It currently fails the same check: 19 Critical findings, nearly all fixable by version bumps.
 - **So "clean PR passes" cannot currently be shown.** Any PR touching `frontend/`, `backend-api/` or `engine/` inherits `main`'s Criticals and fails regardless of what the PR changes.
-- **Red probably does not block merging.** On PR #439 the failing Grype check has no "Required" label (only review rules are shown). Admin confirmation still needed.
+- **Red does not block merging.** Confirmed: the PR #439 merge box shows no "Required" label, the project mentor confirmed there are no rulesets (only classic branch protection), and a reviewer checked that `main` has no required status checks.
 - **GitHub already computes a diff.** On the same PR, `Code scanning results / grype` reports "No new alerts in code changed by this pull request" while the scan check is red. This is direct evidence for a diff gate, and may make it mostly a settings change.
-- **Consequence:** this supports a diff-style gate (fail only on findings a PR introduces), which becomes its own card and decides 003.
+- **Consequence (superseded, see section 12):** this originally pointed to a diff-style gate. After testing and team discussion, the direction changed to an explicit allowlist.
 
 ## 2. What the card asked for
 
-> A test PR in a fork with a known-Critical dependency fails CI, and a clean PR passes. Screenshots and notes attached. We are VERIFYING that PR #326 actually works.
+> A test PR in a fork with a known-Critical dependency fails CI, and a clean PR passes. We are VERIFYING that PR #326 actually works.
 
 ## 3. What the workflow does (read from `ci.grype.yml`)
 
@@ -75,7 +75,7 @@ Note: the pasted table showed 18 rows against 19 in the summary. The JSON output
 
 ## 6. Not verified / open items
 
-- **Does red block merging?** PR #439's merge box shows review requirements but no "Required" label on the failing Grype check (3 failing, 1 neutral, 17 successful). Likely advisory, but not confirmed from Settings > Rules/Branches. Needs a repo admin.
+- **Does red block merging?** Resolved (see section 12). `main` has no required status checks and no rulesets, so a red Grype check does not block merging.
 - **Engine CI/CD #376** also failed on the same `main` push. Cause not yet investigated. (On #439, the Engine failure is Prettier JSON formatting, unrelated to Grype.)
 - **`Code scanning results / CodeQL` is neutral: "1 configuration not found".** Possible misconfiguration, out of scope for 002.
 - **Local scan may include untracked files** (`node_modules`, `.venv`), so 450 packages could be higher than what CI sees.
@@ -127,3 +127,11 @@ Attendees: Ben Holloway, Steven Duzevich.
 - **Policy question raised:** block on fixable Criticals and never allow them to be allowlisted? Open design question for the new card, including whether unfixable Criticals are treated differently.
 - **Ideas logged:** upload the Grype report as a build artifact (single `upload-artifact` step); evaluate an additional code scanning tool for Sprint 2 (possible overlap with Gitleaks); ask other teams what in the workflows they are unhappy with.
 - **Handoff:** the 19 Critical findings go to the owning teams to bump (existing issue #432), via the agreed issue, Planner card and team-chat process.
+
+## 12. Addendum (25 Nov 2026)
+
+- **Merge blocking confirmed.** A reviewer checked that `main` has no required status checks and no rulesets, and the project mentor's branch-rule screenshots (24 Nov) show no rulesets, only classic branch protection on `main`, `staging` and `dev`. Section 6's open item is closed.
+- **Fork experiment (PR A, fork only, never merged).** Adding `PyYAML==5.3.1` (1 Critical, GHSA-8q59-q68h-6hv4) under `backend-api/` gave: the Grype scan check red (expected), the Dependency Review check failed, but `Code scanning results / grype` still reported "No new alerts". GitHub's code scanning diff did not flag the new vulnerable package, so the "diff gate via code scanning" idea in section 8 does not hold.
+- **Dependency Review.** Per a reviewer, `ci.dependency-review.yml` already fails PRs that add new High or Critical dependencies (see `docs/DevSecOps/dependency-review.md`). This matches PR A. If it is ever made a required check, a High threshold would conflict with the decision not to block on High.
+- **Direction changed.** The diff-gate plan is superseded by decision note 26T3-DEC-BH-003: an explicit allowlist with a reason for every entry, built mostly from Grype's native ignore rules, switched on only after the Critical findings are fixed or allowlisted (target end of Sprint 2).
+- **Stale docs corrected.** `workflow-documentation.md` and `secure-coding-guide.md` said Grype does not fail PRs. Since #326 it turns the check red on Critical findings, but it is not a required check, so it does not block merging.
