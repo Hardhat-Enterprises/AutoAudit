@@ -107,7 +107,7 @@
           "technique_name": "Data from Information Repositories: SharePoint"
         }
       ],
-      "notes": "Collector exists but control logic not defined"
+      "notes": "Uses Microsoft Graph /groups to identify groups with Public visibility. The Rego policy passes when no public groups exist and flags existing public groups for organisational review. The automated check does not establish whether a public group is approved."
     },
     {
       "control_id": "1.2.2",
@@ -158,7 +158,7 @@
       "data_collector_id": "entra.policies.activity_based_timeout",
       "policy_file": "1.3.2_idle_session_timeout.rego",
       "requires_permissions": ["Policy.Read.All"],
-      "notes": "Collector and Rego policy implemented; OPA tests passing with mock data. Uses documented Graph endpoint /policies/activityBasedTimeoutPolicies. Not yet run end-to-end against a real tenant; flip to 'verified' once confirmed."
+      "notes": "Uses Microsoft Graph /policies/activityBasedTimeoutPolicies to collect idle timeout evidence. The Rego policy checks for a timeout greater than zero and no more than 180 minutes. Not yet validated against a live tenant."
     },
     {
       "control_id": "1.3.3",
@@ -173,7 +173,7 @@
       "data_collector_id": "exchange.organization.sharing_policy",
       "policy_file": "1.3.3_external_calendar_sharing_restricted.rego",
       "requires_permissions": ["Exchange.Manage"],
-      "notes": "Collector exists but control logic not defined"
+      "notes": "Uses Exchange Online Get-SharingPolicy evidence to flag enabled external-sharing policies and an enabled Default Sharing Policy. Current Rego behaviour treats absent policy evidence as compliant; missing-evidence handling requires review."
     },
     {
       "control_id": "1.3.4",
@@ -251,7 +251,7 @@
           "technique_name": "Exfiltration to Cloud Storage"
         }
       ],
-      "notes": null
+      "notes": "Queries Microsoft Graph for the Third Party Storage Services service principal by app ID. The Rego policy reports compliance when the service principal exists and accountEnabled is false. Graph request exceptions propagate to the worker."
     },
     {
       "control_id": "1.3.8",
@@ -287,7 +287,7 @@
           "technique_name": "Social Engineering: Impersonation"
         }
       ],
-      "notes": "Need Bookings API collector"
+      "notes": "Uses Exchange Online Get-OwaMailboxPolicy and Get-OrganizationConfig evidence. When the default OWA Bookings creation setting is a Boolean, the policy reports compliance if that setting is false or tenant-wide BookingsEnabled is false. A missing or null default OWA setting returns an unable-to-determine result."
     },
     {
       "control_id": "2.1.1",
@@ -758,7 +758,7 @@
       "data_collector_id": "entra.devices.device_management_settings",
       "policy_file": "4.1_mark_unmanaged_devices_not_compliant.rego",
       "requires_permissions": ["DeviceManagementConfiguration.Read.All"],
-      "notes": "Collector exists but control logic not defined"
+      "notes": "Uses Microsoft Graph beta /deviceManagement/settings. The Rego policy applies a heuristic requiring secureByDefault and isScheduledActionEnabled to both be true. This heuristic requires validation against the benchmark requirement."
     },
     {
       "control_id": "4.2",
@@ -896,7 +896,7 @@
       "data_collector_id": "entra.groups.groups",
       "policy_file": "5.1.3.1_dynamic_guest_group_exists.rego",
       "requires_permissions": ["Group.Read.All"],
-      "notes": "Collector exists but control logic not defined"
+      "notes": "Uses the groups collector's dynamic_groups evidence. The Rego policy reports compliance when at least one dynamic membership rule contains 'guest' (case-insensitive). It does not fully validate the rule's meaning; review matching rules to confirm they select guest users."
     },
     {
       "control_id": "5.1.3.2",
@@ -998,7 +998,7 @@
       "data_collector_id": "entra.devices.device_registration_policy",
       "policy_file": "5.1.4.5_enable_laps.rego",
       "requires_permissions": ["Policy.Read.DeviceConfiguration"],
-      "notes": null
+      "notes": "Uses Microsoft Graph beta /policies/deviceRegistrationPolicy and maps localAdminPassword.isEnabled to laps_enabled. The Rego policy reports compliance only when laps_enabled is true. Missing, null or invalid values report that LAPS status cannot be determined."
     },
     {
       "control_id": "5.1.4.6",
@@ -1997,7 +1997,7 @@
       "data_collector_id": "sharepoint.pnp.tenant",
       "policy_file": "7.2.9_guest_access_site_onedrive_expiration.rego",
       "requires_permissions": ["SharePoint.Admin"],
-      "notes": "Reuses the existing sharepoint.pnp.tenant collector (extended to expose ExternalUserExpirationRequired/ExternalUserExpireInDays from the same Get-PnPTenant call already used for 7.3.1). Rego policy implemented; 7/7 opa tests passing. Not yet run end-to-end against a real tenant via the PnP local scan runtime -- flip automation_status to \"ready\" once verified."
+      "notes": "Uses sharepoint.pnp.tenant evidence for ExternalUserExpirationRequired and ExternalUserExpireInDays. Not yet validated against a live tenant."
     },
     {
       "control_id": "7.2.10",
