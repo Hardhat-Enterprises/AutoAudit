@@ -63,7 +63,7 @@ The `security/` directory contains the TPRM Scanner from T2 2025 and is no longe
 
 Grype walks the repo and checks dependency files (`pyproject.toml`, `requirements.txt`, `package-lock.json`) against public vulnerability databases without needing a Docker build. Results upload to the GitHub Security tab as a SARIF report.
 
-`fail-build` is false so findings are surfaced for review rather than blocking merges.
+`fail-build` is true with a severity cutoff of Critical, so the check goes red when Grype finds a Critical vulnerability. It is not a required status check, so a red result does not block merging.
 
 Note: the Security tab upload requires GitHub Advanced Security, which is free for public repos and requires a paid plan for private ones.
 
