@@ -1,0 +1,14 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "7.2.8",
+  "scenario": "External sharing enabled with no security group set",
+  "input": {
+    "sharing_capability": 1,
+    "guest_sharing_group_allow_list": []
+  },
+  "expected": {
+    "compliant": false
+  }
+}

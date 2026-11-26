@@ -89,7 +89,9 @@ Every dependency you add is code you didn't write but are still responsible for.
 
 ### Automated scanning
 
-The repo runs Grype (`ci.grype.yml`) on pull requests targeting `main` and pushes to `main` when files change inside `frontend/`, `backend-api/`, or `engine/`, and weekly on a schedule. It scans the repository directory and uploads findings to the GitHub Security tab as a SARIF report. Critical findings fail the scan. Dependency review separately checks dependency changes on every PR and fails on introduced high or critical vulnerabilities. Merge blocking depends on the target branch's required-check settings. See [Dependency checks and automatic updates](sca-setup.md) for triggers, thresholds, and failure guidance.
+The repo runs Grype (`ci.grype.yml`) on pull requests targeting `main` and pushes to `main` when files change inside `frontend/`, `backend-api/`, or `engine/`, and weekly on a schedule. It scans the repository directory and uploads findings to the GitHub Security tab as a SARIF report. Critical findings fail the scan. The [Grype verification write-up](26T3-DEV-BH-002_grype-verification.md), updated 25 November 2026, records that Grype is not a required check on `main`, so its red result does not block merging. It also records existing Critical findings on `main`; a red check does not necessarily mean your PR introduced one. Check the Security tab and scan results to understand the findings.
+
+Dependency review separately checks dependency changes on every PR and fails on introduced high or critical vulnerabilities. See [Dependency checks and automatic updates](sca-setup.md) for triggers, thresholds, and failure guidance.
 
 ### Adding a new dependency
 

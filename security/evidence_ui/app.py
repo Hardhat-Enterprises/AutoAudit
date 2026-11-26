@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import re
+import secrets
 import time
 from pathlib import Path
 from typing import Any, Optional
@@ -315,8 +316,10 @@ async def scan(
 
         for r in findings:
             base_uid = _safe_uid(f"{user_id}-{strategy.name}-{Path(evidence.filename).stem}")
-            # make name unique to avoid 'Permission denied' if file is locked from previous run
-            uid = f"{base_uid}-{int(time.time())}"
+            # make name unique to avoid 'Permission denied' if file is locked from previous run;
+            # the random suffix also makes report names unguessable. The leading
+            # "<user_id>-" must be kept: the backend uses it to check report ownership.
+            uid = f"{base_uid}-{int(time.time())}-{secrets.token_hex(8)}"
 
             # payload for the existing template flow
             payload = {

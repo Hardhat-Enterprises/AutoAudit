@@ -42,6 +42,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U autoaudit"]
       interval: 10s
@@ -56,6 +61,11 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -178,6 +188,16 @@ services:
     volumes:
       - ./engine:/app/engine:ro
       - ./engine/policies:/app/policies:ro
+
+    healthcheck:
+      # Asks this worker over the Redis broker whether it is alive and replying.
+      # Healthy only when Celery answers "pong" - not just when the process exists.
+      test: ["CMD-SHELL", "celery -A worker.celery_app inspect ping -d celery@$$HOSTNAME --timeout 10"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+    
     depends_on:
       db:
         condition: service_healthy
@@ -198,7 +218,7 @@ services:
           memory: 256M
           cpus: "0.5"
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:3000"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000"]
       interval: 10s
       timeout: 5s
       retries: 5

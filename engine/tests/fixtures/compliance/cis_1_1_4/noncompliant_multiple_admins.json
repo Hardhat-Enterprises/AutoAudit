@@ -1,0 +1,32 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "1.1.4",
+  "scenario": "Two out of three administrators use licenses with a reduced application footprint",
+  "input": {
+    "admin_accounts": [
+      {
+        "userPrincipalName": "admin@test.com",
+        "displayName": "Administrator",
+        "admin_roles": ["Global Administrator"],
+        "uses_reduced_license_footprint": true
+      },
+      {
+        "userPrincipalName": "admin2@test.com",
+        "displayName": "Administrator2",
+        "admin_roles": ["Exchange Administrator"],
+        "uses_reduced_license_footprint": true
+      },
+      {
+        "userPrincipalName": "admin3@test.com",
+        "displayName": "Administrator3",
+        "admin_roles": ["User Administrator"],
+        "uses_reduced_license_footprint": false
+      }
+    ]
+  },
+  "expected": {
+    "compliant": false
+  }
+}

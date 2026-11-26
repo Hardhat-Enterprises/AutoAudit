@@ -34,6 +34,13 @@ The settings `fail-build: true` and `severity-cutoff: critical` mean a critical
 finding fails the scan. Lower-severity findings are reported but do not fail this
 policy. Grype can flag an existing package even if your PR did not change it.
 
+The [Grype verification write-up from #441](26T3-DEV-BH-002_grype-verification.md),
+updated 25 November 2026, records **19 pre-existing Critical findings** on `main`
+at `9c22b0ce`, tracked in [#432](https://github.com/Hardhat-Enterprises/AutoAudit/issues/432).
+PRs that trigger Grype inherit that baseline, so a red scan does not by itself
+mean the PR introduced a vulnerability. Check the current report, as the findings
+can change when dependencies or the vulnerability database are updated.
+
 Results go into `grype-report.sarif`, a report GitHub displays under **Security →
 Code scanning**. **Upload vulnerability report** uses `if: always()`, so it tries
 to upload even after a failed scan. If the scanner stopped before writing the
@@ -84,6 +91,10 @@ Review Dependabot PRs like any other change: read the version changes and releas
 notes, and check the CI results. This file does not set up automatic merging.
 
 ## What actually blocks merging?
+
+The [#441 verification write-up](26T3-DEV-BH-002_grype-verification.md#12-addendum-25-nov-2026)
+records that, as of 25 November 2026, `main` had no required status checks or
+rulesets. Grype's red check therefore did not block merging at that point.
 
 GitHub blocks a PR when a failed check is required by the target branch's
 protection rules or ruleset, unless a permitted bypass is used. The workflow

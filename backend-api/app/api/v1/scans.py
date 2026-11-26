@@ -304,7 +304,15 @@ async def get_scan_summary(
     rows = results.all()
 
     buckets: dict[str, dict[str, int]] = defaultdict(
-        lambda: {"total": 0, "passed": 0, "failed": 0, "skipped": 0, "error": 0}
+        lambda: {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0,
+            "error": 0,
+            "indeterminate": 0,
+            "not_assessable": 0,
+        }
     )
     for control_id, status_ in rows:
         prefix = (
@@ -335,6 +343,8 @@ async def get_scan_summary(
         failed_count=scan.failed_count,
         skipped_count=scan.skipped_count,
         error_count=scan.error_count,
+        indeterminate_count=scan.indeterminate_count,
+        not_assessable_count=scan.not_assessable_count,
         categories=categories,
     )
 
