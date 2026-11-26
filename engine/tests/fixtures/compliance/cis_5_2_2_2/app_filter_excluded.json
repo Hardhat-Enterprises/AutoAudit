@@ -1,0 +1,39 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "5.2.2.2",
+  "scenario": "Only MFA policy excludes apps with an application filter",
+  "input": {
+    "policies_requiring_mfa": [
+      {
+        "id": "policy-001",
+        "displayName": "Require MFA for all users",
+        "state": "enabled",
+        "conditions": {
+          "users": {
+            "includeUsers": ["All"],
+            "excludeUsers": [],
+            "excludeGroups": [],
+            "excludeRoles": []
+          },
+          "applications": {
+            "includeApplications": ["All"],
+            "excludeApplications": [],
+            "applicationFilter": {
+              "mode": "exclude",
+              "rule": "CustomSecurityAttribute.AppTier -eq \"Legacy\""
+            }
+          }
+        },
+        "grantControls": {
+          "operator": "OR",
+          "builtInControls": ["mfa"]
+        }
+      }
+    ]
+  },
+  "expected": {
+    "compliant": false
+  }
+}

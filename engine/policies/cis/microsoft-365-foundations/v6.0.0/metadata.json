@@ -1157,7 +1157,7 @@
           "technique_name": "Valid Accounts: Cloud Accounts"
         }
       ],
-      "notes": "Automated: at least one enabled CA policy requires MFA for all users across all cloud apps. Exclusions are surfaced in details for assessor review, not treated as an automatic fail."
+      "notes": "Automated: at least one enabled CA policy requires MFA for all users across all cloud apps. Policies that exclude any cloud app (by list or by filter) other than Microsoft Rights Management Services (which CIS recommends excluding) do not count. User, group and role exclusions are surfaced in details for assessor review, not treated as an automatic fail."
     },
     {
       "control_id": "5.2.2.3",
