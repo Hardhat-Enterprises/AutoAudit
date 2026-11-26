@@ -1,4 +1,4 @@
-# Compliance Engine Verification Framework
+﻿# Compliance Engine Verification Framework
 
 ## Overview
 
@@ -417,24 +417,41 @@ verification.
 At the time of writing, the framework reports:
 
 ```text
-Ready automated controls:   79
-Behaviour-tested controls:   3
-Behavioural coverage:        3.8%
+Ready automated controls:   104
+Behaviour-tested controls:   6
+Behavioural coverage:        5.8%
 ```
 
 Current behaviour-tested controls are:
 
 ```text
+CIS Microsoft 365 Foundations v6.0.0 / 1.1.1
 CIS Microsoft 365 Foundations v6.0.0 / 1.1.3
+CIS Microsoft 365 Foundations v6.0.0 / 1.1.4
+CIS Microsoft 365 Foundations v6.0.0 / 1.3.1
 CIS Microsoft 365 Foundations v6.0.0 / 5.2.3.1
+CIS Microsoft 365 Foundations v6.0.0 / 7.2.8
 Essential Eight v2025 / E8-MFA-2.1
 ```
 
-The current fixture suite contains seven behavioural scenarios.
+The current fixture suite contains 38 behavioural scenarios.
 
 ---
 
 ## Current Verification Scenarios
+
+### CIS 1.1.1 — Cloud-only Administrator accounts
+
+The policy requires all accounts holding an administrative role to be cloud-only.
+
+Current fixtures verify:
+
+```text
+administrators are all cloud-only                 → compliant
+administrators are all synced from on-premises AD → non-compliant
+mix of cloud-only and synced admins               → non-compliant
+admins list is missing, empty, or null            → non-compliant
+```
 
 ### CIS 1.1.3 — Global Administrator count
 
@@ -443,9 +460,40 @@ The policy requires between two and four Global Administrators.
 Current fixtures verify:
 
 ```text
-3 administrators → compliant
-1 administrator  → non-compliant
-5 administrators → non-compliant
+2 administrators                    → compliant
+3 administrators with admin list    → compliant
+3 administrators without admin list → compliant
+4 administrators                    → compliant
+0 administrators                    → non-compliant
+1 administrator                     → non-compliant
+5 administrators                    → non-compliant
+10 administrators                   → non-compliant
+```
+### CIS 1.1.4 — Administrator license footprint
+
+The policy requires administrative accounts to use licenses with a reduced application footprint, with no high-footprint application service plans enabled.
+
+Current fixtures verify:
+
+```text
+administrators all use reduced license footprint → compliant
+administrators all use high license footprint    → non-compliant
+mix of reduced and high license footprint        → non-compliant
+admins list is missing, empty, or null           → non-compliant
+```
+### CIS 1.3.1 — Password expiration policy
+
+The policy requires every managed domain to be set to never expire passwords, ignoring federated domains. It returns non-compliant if no managed domains are found.
+
+Current fixtures verify:
+
+```test
+managed domain with password set to never expire    → compliant
+managed domain with short password validity         → non-compliant
+managed domain with long password validity          → non-compliant
+mix of password validity days and domain types      → non-compliant
+all domains are federated                           → non-compliant
+domains list is empty, missing, or null             → non-compliant
 ```
 
 ### CIS 5.2.3.1 — MFA fatigue protection
@@ -685,30 +733,30 @@ identified.
 
 The framework was built around the following principles:
 
-1. **Policy-agnostic execution**  
+1. **Policy-agnostic execution**
    The runner should not contain control-specific policy paths or queries.
 
-2. **Metadata-driven discovery**  
+2. **Metadata-driven discovery**
    Existing AutoAudit metadata should remain the source of truth for locating
    policies.
 
-3. **Version-aware identity**  
+3. **Version-aware identity**
    Controls are identified by framework, benchmark, version, and control ID
    rather than control ID alone.
 
-4. **Fixture-driven extensibility**  
+4. **Fixture-driven extensibility**
    Adding verification for a new control should normally require only new
    fixture data.
 
-5. **Real policy execution**  
+5. **Real policy execution**
    Tests execute the actual Rego policy through OPA instead of recreating policy
    logic in Python.
 
-6. **Separation of structure and behaviour**  
+6. **Separation of structure and behaviour**
    Existing wiring tests remain responsible for structural consistency, while
    this framework validates behavioural correctness.
 
-7. **CI-enforceable failures**  
+7. **CI-enforceable failures**
    Verification failures must produce a non-zero exit code so policy regressions
    can be blocked in CI.
 
