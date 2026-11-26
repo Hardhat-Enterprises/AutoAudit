@@ -10,7 +10,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 DOC = ROOT / "docs/engine/policies/cis/microsoft-365-foundations/v6.0.0/controls.md"
 META = ROOT / "engine/policies/cis/microsoft-365-foundations/v6.0.0/metadata.json"
 

@@ -2,11 +2,11 @@
 
 Keeps `controls.md` in sync with `metadata.json`.
 
-`metadata.json` is the source of truth (the engine reads it). `controls.md` is the
-human-readable status table that GRC maintains. This script fixes the parts of `controls.md`
+`metadata.json` is the source of truth. `controls.md` is the
+readable status table that GRC maintains. This script fixes the parts of `controls.md`
 that can be worked out from the metadata.
 
-Python 3.10 or newer, standard library only. It writes only to the `controls.md` you point it at.
+Python 3.10 or newer. It writes only to the `controls.md` you point it at.
 
 ## How to run
 
@@ -14,15 +14,15 @@ Run from the repository root. In Git Bash on Windows, use `python` if `python3` 
 
 ```bash
 # Check only. Changes nothing. Exits with 1 if controls.md is out of date.
-python3 tools/sync_controls_doc.py --check
+python3 tools/sync-controls-doc/sync_controls_doc.py --check
 
 # Update controls.md.
-python3 tools/sync_controls_doc.py
+python3 tools/sync-controls-doc/sync_controls_doc.py
 ```
 
 Run it after any change to `metadata.json`.
 
-The script updates what it can without listing every change. It prints one status line, plus one
+The script updates what it can. It prints one status line, plus one
 message for each thing a person has to do by hand (see "New controls").
 
 ## What it updates
@@ -88,17 +88,17 @@ the script should produce. It covers every status, a row that is already correct
 with no row, and a removed control.
 
 ```bash
-cp tools/sample/controls_before.md /tmp/sample.md
+cp tools/sync-controls-doc/sample/controls_before.md /tmp/sample.md
 
 # 1. Out of date: prints "controls.md is out of date...", then the two manual-work messages. Exit 1.
-python3 tools/sync_controls_doc.py --doc /tmp/sample.md --metadata tools/sample/metadata.json --check
+python3 tools/sync-controls-doc/sync_controls_doc.py --doc /tmp/sample.md --metadata tools/sync-controls-doc/sample/metadata.json --check
 
 # 2. Update it (prints "Updated ..."), then compare with the expected file (no diff output = identical)
-python3 tools/sync_controls_doc.py --doc /tmp/sample.md --metadata tools/sample/metadata.json --date 2026-01-15
-diff /tmp/sample.md tools/sample/controls_expected.md
+python3 tools/sync-controls-doc/sync_controls_doc.py --doc /tmp/sample.md --metadata tools/sync-controls-doc/sample/metadata.json --date 2026-01-15
+diff /tmp/sample.md tools/sync-controls-doc/sample/controls_expected.md
 
 # 3. Check again: "controls.md is up to date." (the two manual-work messages stay). Exit 0.
-python3 tools/sync_controls_doc.py --doc /tmp/sample.md --metadata tools/sample/metadata.json --check
+python3 tools/sync-controls-doc/sync_controls_doc.py --doc /tmp/sample.md --metadata tools/sync-controls-doc/sample/metadata.json --check
 ```
 
 Notes are left as they are on purpose (row 2.1.1 keeps its old note).
