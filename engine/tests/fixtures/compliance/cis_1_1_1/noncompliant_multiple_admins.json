@@ -1,0 +1,32 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "1.1.1",
+  "scenario": "Two out of three administrators are cloud-only",
+  "input": {
+    "admin_accounts": [
+      {
+        "userPrincipalName": "admin@test.com",
+        "displayName": "Administrator",
+        "on_premises_sync_enabled": false,
+        "admin_roles": ["Global Administrator"]
+      },
+      {
+        "userPrincipalName": "admin2@test.com",
+        "displayName": "Administrator2",
+        "on_premises_sync_enabled": true,
+        "admin_roles": ["SharePoint Administrator"]
+      },
+      {
+        "userPrincipalName": "admin3@test.com",
+        "displayName": "Administrator3",
+        "on_premises_sync_enabled": false,
+        "admin_roles": ["Security Administrator"]
+      }
+    ]
+  },
+  "expected": {
+    "compliant": false
+  }
+}

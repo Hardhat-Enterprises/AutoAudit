@@ -89,7 +89,7 @@ Every dependency you add is code you didn't write but are still responsible for.
 
 ### Automated scanning
 
-The repo runs Grype (`ci.grype.yml`) on pull requests and pushes to `main` when files change inside `frontend/`, `backend-api/`, or `engine/`, and weekly on a schedule. Grype checks dependency files — `pyproject.toml`, `requirements.txt`, and `package-lock.json` — against public vulnerability databases. Findings are uploaded to the GitHub Security tab as a SARIF report rather than blocking the build, so a flagged dependency will not fail your PR automatically — it is on you to check the Security tab and treat findings seriously rather than ignoring them because the build went green.
+The repo runs Grype (`ci.grype.yml`) on pull requests and pushes to `main` when files change inside `frontend/`, `backend-api/`, or `engine/`, and weekly on a schedule. Grype checks dependency files — `pyproject.toml`, `requirements.txt`, and `package-lock.json` — against public vulnerability databases. Findings are uploaded to the GitHub Security tab as a SARIF report. The check goes red when Grype finds a Critical vulnerability, but it is not a required check, so it does not block merging. At the time of writing `main` already has Critical findings, so a red check does not necessarily mean your PR introduced one. It is on you to check the Security tab for new findings tied to your PR and treat them seriously.
 
 ### Adding a new dependency
 
