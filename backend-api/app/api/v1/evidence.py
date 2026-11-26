@@ -201,4 +201,14 @@ async def download_report(
     filename: str,
     current_user: User = Depends(get_current_user),
 ) -> Any:
+    # Reports share one directory across all users. evidence_ui.scan names them
+    # "<owner user id>-<strategy>-<file stem>-<ts>...", with the id taken from
+    # current_user in scan() above (never from the client), so the prefix
+    # identifies the owner. Anything else is reported as not found, identical
+    # to a missing file, so other users' report names cannot be probed.
+    if not filename.startswith(f"{current_user.id}-"):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Report not found",
+        )
     return evidence_ui.download_report(filename)
