@@ -1,0 +1,35 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "5.2.2.2",
+  "scenario": "MFA policy excludes a break-glass account (surfaced for review, still compliant)",
+  "input": {
+    "policies_requiring_mfa": [
+      {
+        "id": "policy-001",
+        "displayName": "Require MFA for all users",
+        "state": "enabled",
+        "conditions": {
+          "users": {
+            "includeUsers": ["All"],
+            "excludeUsers": ["8f3b2c1a-4d5e-4f60-9a7b-1c2d3e4f5a6b"],
+            "excludeGroups": [],
+            "excludeRoles": []
+          },
+          "applications": {
+            "includeApplications": ["All"],
+            "excludeApplications": []
+          }
+        },
+        "grantControls": {
+          "operator": "OR",
+          "builtInControls": ["mfa"]
+        }
+      }
+    ]
+  },
+  "expected": {
+    "compliant": true
+  }
+}

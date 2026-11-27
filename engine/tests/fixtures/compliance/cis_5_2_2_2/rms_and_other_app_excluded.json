@@ -1,0 +1,38 @@
+{
+  "framework": "cis",
+  "benchmark": "microsoft-365-foundations",
+  "version": "v6.0.0",
+  "control_id": "5.2.2.2",
+  "scenario": "Only MFA policy excludes Microsoft Rights Management Services and SharePoint Online",
+  "input": {
+    "policies_requiring_mfa": [
+      {
+        "id": "policy-001",
+        "displayName": "Require MFA for all users",
+        "state": "enabled",
+        "conditions": {
+          "users": {
+            "includeUsers": ["All"],
+            "excludeUsers": [],
+            "excludeGroups": [],
+            "excludeRoles": []
+          },
+          "applications": {
+            "includeApplications": ["All"],
+            "excludeApplications": [
+              "00000012-0000-0000-c000-000000000000",
+              "00000003-0000-0ff1-ce00-000000000000"
+            ]
+          }
+        },
+        "grantControls": {
+          "operator": "OR",
+          "builtInControls": ["mfa"]
+        }
+      }
+    ]
+  },
+  "expected": {
+    "compliant": false
+  }
+}
