@@ -24,12 +24,14 @@ _second_policy_external_enabled := {
 	"enabled": true,
 }
 
+_default_policy_disabled := {"Name": "Default Sharing Policy", "Enabled": false}
+
 # ---------------------------------------------------------------------------
 # Test: compliant — no sharing policies at all
 # ---------------------------------------------------------------------------
 
 test_compliant_no_policies if {
-	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"policies_allowing_external": []}
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"default_policy": _default_policy_disabled, "policies_allowing_external": []}
 	result.compliant == true
 	contains(result.message, "No sharing policies")
 }
@@ -39,7 +41,7 @@ test_compliant_no_policies if {
 # ---------------------------------------------------------------------------
 
 test_compliant_external_policy_disabled if {
-	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"policies_allowing_external": [_policy_external_disabled]}
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"default_policy": _default_policy_disabled, "policies_allowing_external": [_policy_external_disabled]}
 	result.compliant == true
 	count(result.details.enabled_external_policies) == 0
 }
@@ -49,7 +51,7 @@ test_compliant_external_policy_disabled if {
 # ---------------------------------------------------------------------------
 
 test_non_compliant_one_enabled_policy if {
-	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"policies_allowing_external": [_policy_external_enabled]}
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"default_policy": _default_policy_disabled, "policies_allowing_external": [_policy_external_enabled]}
 	result.compliant == false
 	count(result.details.enabled_external_policies) == 1
 	contains(result.message, "1 sharing policy")
@@ -60,7 +62,7 @@ test_non_compliant_one_enabled_policy if {
 # ---------------------------------------------------------------------------
 
 test_non_compliant_multiple_enabled_policies if {
-	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"policies_allowing_external": [_policy_external_enabled, _second_policy_external_enabled]}
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"default_policy": _default_policy_disabled, "policies_allowing_external": [_policy_external_enabled, _second_policy_external_enabled]}
 	result.compliant == false
 	count(result.details.enabled_external_policies) == 2
 	count(result.affected_resources) == 2
@@ -71,18 +73,18 @@ test_non_compliant_multiple_enabled_policies if {
 # ---------------------------------------------------------------------------
 
 test_mixed_enabled_and_disabled_policies if {
-	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"policies_allowing_external": [_policy_external_disabled, _policy_external_enabled]}
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"default_policy": _default_policy_disabled, "policies_allowing_external": [_policy_external_disabled, _policy_external_enabled]}
 	result.compliant == false
 	count(result.details.enabled_external_policies) == 1
 }
 
 # ---------------------------------------------------------------------------
-# Test: missing data — field absent entirely, treated as no external sharing
+# Test: missing data — no evidence at all must fail closed
 # ---------------------------------------------------------------------------
 
 test_missing_policies_field if {
 	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {}
-	result.compliant == true
+	result.compliant == false
 }
 
 # ---------------------------------------------------------------------------
@@ -90,7 +92,7 @@ test_missing_policies_field if {
 # ---------------------------------------------------------------------------
 
 test_result_structure if {
-	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"policies_allowing_external": [_policy_external_enabled]}
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"default_policy": _default_policy_disabled, "policies_allowing_external": [_policy_external_enabled]}
 	_ = result.compliant
 	_ = result.message
 	_ = result.affected_resources
@@ -121,4 +123,29 @@ test_compliant_default_policy_disabled if {
 		"default_policy": {"Name": "Default Sharing Policy", "Enabled": false},
 	}
 	result.compliant == true
+}
+
+# ---------------------------------------------------------------------------
+# Missing evidence: Default Sharing Policy not collected must fail closed
+# ---------------------------------------------------------------------------
+
+test_non_compliant_default_policy_missing if {
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {"policies_allowing_external": []}
+	result.compliant == false
+}
+
+test_non_compliant_default_policy_null if {
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {
+		"policies_allowing_external": [],
+		"default_policy": null,
+	}
+	result.compliant == false
+}
+
+test_non_compliant_default_policy_enabled_flag_missing if {
+	result := data.cis.microsoft_365_foundations.v6_0_0.control_1_3_3.result with input as {
+		"policies_allowing_external": [],
+		"default_policy": {"Name": "Default Sharing Policy"},
+	}
+	result.compliant == false
 }

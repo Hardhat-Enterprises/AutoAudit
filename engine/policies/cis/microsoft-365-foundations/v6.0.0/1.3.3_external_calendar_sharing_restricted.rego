@@ -19,9 +19,15 @@
 
 package cis.microsoft_365_foundations.v6_0_0.control_1_3_3
 
-default result := {"compliant": false, "message": "Evaluation failed"}
+default result := {"compliant": false, "message": "Unable to determine the Default Sharing Policy configuration"}
 
 result := output if {
+	# Fail closed: CIS 1.3.3 audits the Default Sharing Policy, so it must be
+	# present with a true/false Enabled flag. Missing evidence uses the default
+	# (non-compliant) result instead of passing.
+	is_object(input.default_policy)
+	is_boolean(object.get(input.default_policy, "Enabled", null))
+
 	policies_allowing_external := object.get(input, "policies_allowing_external", [])
 
 	enabled_external_policies := [p |
