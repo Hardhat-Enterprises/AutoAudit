@@ -89,7 +89,9 @@ Every dependency you add is code you didn't write but are still responsible for.
 
 ### Automated scanning
 
-The repo runs Grype (`ci.grype.yml`) on pull requests and pushes to `main` when files change inside `frontend/`, `backend-api/`, or `engine/`, and weekly on a schedule. Grype checks dependency files — `pyproject.toml`, `requirements.txt`, and `package-lock.json` — against public vulnerability databases. Findings are uploaded to the GitHub Security tab as a SARIF report. The check goes red when Grype finds a Critical vulnerability, but it is not a required check, so it does not block merging. At the time of writing `main` already has Critical findings, so a red check does not necessarily mean your PR introduced one. It is on you to check the Security tab for new findings tied to your PR and treat them seriously.
+The repo runs Grype (`ci.grype.yml`) on pull requests targeting `main` and pushes to `main` when files change inside `frontend/`, `backend-api/`, or `engine/`, and weekly on a schedule. It scans the repository directory and uploads findings to the GitHub Security tab as a SARIF report. Critical findings fail the scan. The [Grype verification write-up](26T3-DEV-BH-002_grype-verification.md), updated 25 November 2026, records that Grype is not a required check on `main`, so its red result does not block merging. It also records existing Critical findings on `main`; a red check does not necessarily mean your PR introduced one. Check the Security tab and scan results to understand the findings.
+
+Dependency review separately checks dependency changes on every PR and fails on introduced high or critical vulnerabilities. See [Dependency checks and automatic updates](sca-setup.md) for triggers, thresholds, and failure guidance.
 
 ### Adding a new dependency
 
@@ -108,7 +110,7 @@ Keep dependency files current rather than letting them drift:
 
 ### A note on Dependabot
 
-Dependabot is currently paused on this repo (`open-pull-requests-limit` set to 0) because the volume of automatic update PRs became difficult to review individually. This means dependency updates are currently a manual responsibility rather than something automation handles for you — don't assume dependencies are being kept current in the background.
+Routine Dependabot version-update PRs are paused for the configured `uv`, `pip`, `npm`, and GitHub Actions entries (`open-pull-requests-limit: 0`). Docker updates remain configured monthly for `backend-api`, `engine`, `frontend`, and `security`. The zero limits do not disable Dependabot security updates; those depend on repository settings. Contributors should still check dependency health and review update PRs. See the [SCA setup page](sca-setup.md#dependabot-propose-dependency-updates) for the full configuration.
 
 ### Why this matters
 
