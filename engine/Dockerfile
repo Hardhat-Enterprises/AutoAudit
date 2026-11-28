@@ -12,9 +12,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN adduser --disabled-password --gecos "" --uid 1000 appuser
 RUN chown appuser:appuser /app
 
-# Copy and install Python dependencies
-COPY --chown=appuser:appuser pyproject.toml .
-RUN pip install --no-cache-dir .
+# Install uv
+RUN pip install uv
+
+# Copy dependency files and install dependencies
+COPY --chown=appuser:appuser pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project \
+    && chown -R appuser:appuser /app/.venv
+
+# Make celery and venv's python findable
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application code
 COPY --chown=appuser:appuser worker/ ./worker/
